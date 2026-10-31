@@ -3,6 +3,7 @@ package engine
 
 import "base:runtime"
 import "core:os"
+import "core:strings"
 
 // ============================================================================
 // Platform allocators: the desktop's are the runtime's own (the C heap);
@@ -29,4 +30,15 @@ Engine_TempDir :: proc() -> string {
 Engine_DefaultContext :: proc "contextless" () -> runtime.Context {return runtime.default_context()}
 
 // Shader_Port: shader source for this platform (desktop: as written).
-Shader_Port :: proc(src: cstring) -> cstring {return src}
+Shader_Port :: proc(src: cstring) -> cstring {
+	// (Android: OpenGL ES 3, as WebGL 2 - GLSL 330 with an ES version line.)
+	when ODIN_PLATFORM_SUBTARGET == .Android {
+		text := string(src)
+		if !strings.has_prefix(text, "#version 330") do return src
+		rest := text[len("#version 330"):]
+		if i := strings.index_byte(rest, '\n'); i >= 0 do rest = rest[i + 1:]
+		return strings.clone_to_cstring(strings.concatenate({"#version 300 es\nprecision highp float;\nprecision highp int;\n", rest}, context.temp_allocator), context.temp_allocator)
+	} else {
+		return src
+	}
+}

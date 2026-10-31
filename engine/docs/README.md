@@ -17,6 +17,7 @@ editor overview is [`../../editor/README.md`](../../editor/README.md).
 | [Navigation](navigation.md) | Path finding on tile maps, LDtk levels and Navigation Regions; agents that walk there (radius, avoidance, doors) - with tutorials. |
 | [Accessibility](accessibility.md) | UI scale, colour-blind filters (and an editor preview), subtitles from dialogue and sound captions, screen shake scale; the Accessibility Menu template - with a tutorial. |
 | [Advanced camera](advanced_camera.md) | Virtual cameras with priorities and blending, follow modes (group, path, dead zone, look-ahead), limits incl. the LDtk level the target is in, trauma shake - with tutorials. |
+| [Android export](android_export.md) | Export to Android phones and tablets: an APK and an AAB (arm64, Android 7+), what the computer needs (SDK, Java, bundletool), signing, testing on an emulator, building the runner. |
 | [Web export](web_export.md) | Export to the browser (a static folder for itch.io etc.), what works there, the prebuilt web runner and how the engine runs on WebAssembly. |
 | [Sprite atlases](atlas.md) | Tick Atlas on textures: export packs them into pages (fewer draw calls); how it works, what to leave out, helpers for engine code. |
 | [Import settings](import_settings.md) | Per-asset settings next to the file: texture filter / wrap / mipmaps / slicing preset / QOI on export, audio gain and default bus - with tutorials. |

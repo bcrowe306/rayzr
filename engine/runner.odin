@@ -307,12 +307,21 @@ Engine_FindBundledProject :: proc(exePath: string, allocator := context.allocato
 	return ""
 }
 
+// Runner_FontPath: the UI font, when the runner knows where it is (Android:
+// copied out of the APK).
+Runner_FontPath: string
+
+// Runner_AfterWindow: called once the game's window is open (Android: its
+// app-lifecycle hooks go in then).
+Runner_AfterWindow: proc()
+
 // runner_font_path: the UI font from the engine checkout, or fonts/ next
 // to the executable / in a macOS .app's Resources (exported games).
 @(private = "file")
 runner_font_path :: proc() -> cstring {
 	dev :: "engine/Open_Sans/static/OpenSans-Regular.ttf"
 	when ODIN_OS == .JS do return "/fonts/OpenSans-Regular.ttf" // (the page fetches fonts/ next to it)
+	if Runner_FontPath != "" do return strings.clone_to_cstring(Runner_FontPath, context.temp_allocator)
 	if os.is_file(dev) || len(os.args) == 0 do return dev
 	exeDir := filepath.dir(os.args[0], context.temp_allocator)
 	nextTo, _ := filepath.join({exeDir, "fonts", "OpenSans-Regular.ttf"}, context.temp_allocator)
@@ -430,6 +439,7 @@ Runner_Start :: proc(opts: Run_Options) -> (^Runner_State, bool) {
 	when ODIN_OS == .JS do rl.SetTraceLogLevel(.WARNING) // (the browser console: shader / GL problems)
 	titleC := strings.clone_to_cstring(winTitle, context.temp_allocator)
 	rl.InitWindow(winW, winH, titleC)
+	if Runner_AfterWindow != nil do Runner_AfterWindow()
 	if !rl.IsWindowReady() {
 		// (No OpenGL 3.3 context: a machine without a GPU / display - raylib
 		// would crash on the next window call.)

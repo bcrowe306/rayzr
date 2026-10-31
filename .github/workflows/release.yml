@@ -5,7 +5,8 @@
 #   - a release when a version tag is pushed (v1.2.3, v0.4.0-beta.1) - then
 #     bump VERSION so the dev builds after it sort above it.
 # Each one builds:
-#   1. the runners on each platform (macOS, Linux, Windows) and the web runner;
+#   1. the runners on each platform (macOS, Linux, Windows), the web runner
+#      and the Android runner;
 #   2. the editor packaged on each platform with every platform's runners in
 #      it (any editor exports every desktop target and the web);
 #   3. a GitHub Release with the packages and their SHA-256 checksums
@@ -149,9 +150,30 @@ jobs:
           name: runners-web
           path: runners-web.tar.gz
 
+  android-runner:
+    name: Runner (Android)
+    needs: version
+    if: needs.version.outputs.version != ''
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.version.outputs.sha }}
+      - run: git submodule update --init --depth 1 ui odin_editor ldtk
+      - uses: laytan/setup-odin@v2
+        with:
+          release: ${{ env.ODIN_RELEASE }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - run: scripts/build_android_runner.sh -define:RAYZR_RELEASE=${{ needs.version.outputs.version }}
+      - run: tar -C bin/runners -czf runners-android.tar.gz android
+      - uses: actions/upload-artifact@v4
+        with:
+          name: runners-android
+          path: runners-android.tar.gz
+
   package:
     name: Editor (${{ matrix.platform }})
-    needs: [version, runners, web-runner]
+    needs: [version, runners, web-runner, android-runner]
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:

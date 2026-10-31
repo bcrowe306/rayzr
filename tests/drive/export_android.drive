@@ -1,0 +1,24 @@
+# Android export (#276): the Android target and its settings, Save and
+# Export: an APK (signed with the debug key, its manifest the project's)
+# and an AAB. Needs the Android runner (scripts/build_android_runner.sh),
+# the SDK (build-tools 34, android-34) and Java 17+; bundletool for the AAB
+# (bin/android_tools: scripts/package_android.sh fetches it).
+# drive: serial (touches bin/runners or other shared files; runs after the parallel drives)
+exec test -s bin/runners/android/libmain.so
+wait 5
+click @toolbar.settings
+click @settings.page:Export
+click @settings.export-name
+key ctrl+a
+type SpaceGame
+click @settings.target:android
+expect item:settings.android-package == visible
+expect item:settings.android-code == visible
+screenshot export_android_settings
+click @settings.export-now
+wait 30
+expect log contains Exported android (android):
+expect log contains signed with the debug key
+expect log contains com.rayzr.spacegame
+expect log contains (Google Play)
+exec scripts/check_android_package.sh $PROJECT_standalone/android/spacegame.apk com.rayzr.spacegame $PROJECT_standalone/android/spacegame.aab

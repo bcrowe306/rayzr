@@ -453,6 +453,14 @@ Mixer_SetVoice :: proc(h: Mixer_Voice_Handle, volume, pan, pitch: f32) {
 
 Mixer_SetVoiceBus :: proc(h: Mixer_Voice_Handle, bus: int) {if v := mixer_voice(h); v != nil && mixer_bus_ok(bus) do v.bus = bus}
 Mixer_SetVoicePaused :: proc(h: Mixer_Voice_Handle, paused: bool) {if v := mixer_voice(h); v != nil do v.paused = paused}
+
+// Mixer_Suspend stops (or restarts) all sound: the app is in the background
+// (Android: the Home button, a call) - the voices carry on from where they were.
+Mixer_Suspend :: proc(on: bool) {
+	if !mixer.running do return
+	if on do rl.PauseAudioStream(mixer.stream)
+	else do rl.ResumeAudioStream(mixer.stream)
+}
 Mixer_SetVoiceLoop :: proc(h: Mixer_Voice_Handle, loop: bool) {if v := mixer_voice(h); v != nil do v.loop = loop}
 
 // Mixer_VoiceTime: seconds into the sound / music.

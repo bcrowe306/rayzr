@@ -31,6 +31,7 @@ RUNNER_FONT :: "OpenSans-Regular.ttf"
 
 runner_file_name :: proc(t: e.Export_Target, debug := false) -> string {
 	if t == .Web do return "index.wasm" // (one web runner: index.html / .js / .wasm + odin.js)
+	if t == .Android do return "libmain.so" // (NativeActivity's library; export_android.odin)
 	base := "runner-debug" if debug else "runner"
 	return strings.concatenate({base, ".exe"}, context.temp_allocator) if t == .Windows else base
 }
@@ -229,6 +230,7 @@ export_preset :: proc(state: ^EditorState, p: ^e.Export_Preset, outDir: string) 
 	case .Linux:   return export_linux(state, &pc, runner, rayzr, dir, name)
 	case .Windows: return export_windows(state, &pc, runner, rayzr, dir, name)
 	case .Web:     return export_web(state, &pc, runner, rayzr, dir, name)
+	case .Android: return export_android(state, &pc, runner, rayzr, dir, name)
 	}
 	return "", false
 }

@@ -5,15 +5,18 @@
 #   Linux    engine/clipper/lib/libclipper_linux_x64.a   (CI builds it)
 #   Windows  engine/clipper/lib/clipper_windows_x64.lib  (MSVC, static CRT; CI)
 #   --web    bin/web_deps/clipper/libclipper.a           (em++; build_web_runner.sh)
-#   scripts/build_clipper.sh [--if-missing] [--web]
+#   --android bin/android_deps/clipper/libclipper.a      (the NDK's clang++ in $ANDROID_CXX; build_android_runner.sh)
+#   scripts/build_clipper.sh [--if-missing] [--web | --android]
 # Needs git and a C++17 compiler (Windows: MSVC's environment).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 VERSION=Clipper2_2.0.1
-web=0; if_missing=0
-for a in "$@"; do case "$a" in --web) web=1 ;; --if-missing) if_missing=1 ;; esac; done
+web=0; android=0; if_missing=0
+for a in "$@"; do case "$a" in --web) web=1 ;; --android) android=1 ;; --if-missing) if_missing=1 ;; esac; done
 if [ $web = 1 ]; then
 	out=bin/web_deps/clipper/libclipper.a
+elif [ $android = 1 ]; then
+	out=bin/android_deps/clipper/libclipper.a
 else
 	case "$(uname -s)" in
 		Darwin) out=engine/clipper/lib/libclipper_darwin.a ;;
@@ -29,7 +32,10 @@ git -c advice.detachedHead=false clone -q --depth 1 --branch "$VERSION" https://
 lib="$tmp/clipper2/CPP/Clipper2Lib"
 srcs=("$lib/src/clipper.engine.cpp" "$lib/src/clipper.offset.cpp" "$lib/src/clipper.rectclip.cpp" engine/clipper/rayzr_clipper.cpp)
 mkdir -p "$(dirname "$out")" "$tmp/obj"
-if [ $web = 1 ]; then
+if [ $android = 1 ]; then
+	for s in "${srcs[@]}"; do "$ANDROID_CXX" -std=c++17 -O2 -DNDEBUG -fPIC -I"$lib/include" -c "$s" -o "$tmp/obj/$(basename "${s%.cpp}").o"; done
+	"$ANDROID_AR" rcs "$out" "$tmp"/obj/*.o
+elif [ $web = 1 ]; then
 	for s in "${srcs[@]}"; do em++ -std=c++17 -O2 -DNDEBUG -I"$lib/include" -c "$s" -o "$tmp/obj/$(basename "${s%.cpp}").o"; done
 	emar rcs "$out" "$tmp"/obj/*.o
 else
