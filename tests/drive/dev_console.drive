@@ -1,0 +1,16 @@
+# The developer console (#285): Project Settings > General > Developer
+# Console - In Release Builds and the key, saved in project.json's "debug".
+wait 5
+key ctrl+comma
+expect project-settings-open == true
+click @settings.tab:project
+click @settings.page:General
+click @section:Developer Console
+wait 1
+expect item:settings.console-release == visible
+click @settings.console-release
+expect item:settings.console-key == visible
+screenshot settings_console
+click @settings.save
+wait 2
+expect file:project.json contains "console_in_release": true

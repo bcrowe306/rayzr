@@ -33,6 +33,7 @@ Run_Options :: struct {
 	crashTest:      string, // --crash-test panic | segv | abort: crash once loaded (crash report tests)
 	inputScript:    string, // --input-script <file>: keys pressed on given frames (Runner_LoadInputScript; game tests)
 	trace:          string, // --trace <node name>: print "@trace <frame> <scene> <x> <y>" every frame (game tests, bots)
+	console:        string, // --console "perf; outlines; open": the developer console on, these lines run once loaded (tests; dev_console.odin)
 }
 
 // An --input-script event: `key` goes down / up at `frame`; pad events
@@ -266,6 +267,8 @@ Engine_ParseRunArgs :: proc(args: []string) -> (opts: Run_Options) {
 			opts.inputScript = next; i += 1
 		case arg == "--crash-test" && next != "":
 			opts.crashTest = next; i += 1
+		case arg == "--console" && next != "":
+			opts.console = next; i += 1
 		case arg == "--editor-link":
 			opts.editorLink = true
 		case arg == "--bench" && next != "":
@@ -496,6 +499,16 @@ Runner_Start :: proc(opts: Run_Options) -> (^Runner_State, bool) {
 	// The editor's Play: it drives the game over stdin/stdout. (Read from the
 	// command line too: front ends pass on only the options they know.)
 	if opts.editorLink || slice.contains(os.args, "--editor-link") do EditorLink_Enable(game)
+	// The developer console: debug builds, the editor's Play, or a release
+	// build when the project allows it.
+	if ODIN_DEBUG || EditorLink_Enabled() || video.consoleInRelease || opts.console != "" {
+		Console_Enable(game, video.consoleKey)
+		for line in strings.split(opts.console, ";", context.temp_allocator) {
+			l := strings.trim_space(line)
+			if l == "open" do devConsole.open = true
+			else if l != "" do Console_Exec(game, l)
+		}
+	}
 
 	rs.targetCaptureFrame = max(25, opts.maxFrames) if opts.maxFrames > 0 else 30
 	// Captures for tests step a fixed 1/60 s, so runs are comparable.
@@ -536,6 +549,7 @@ Runner_Frame :: proc(rs: ^Runner_State) -> bool {
 		}
 		EditorLink_BeginFrame(game)
 		if game.linkPaused && !game.frozen do dt = 1.0 / 60 // a step
+		if Console_Frame(game, rl.GetFrameTime()) do dt = 1.0 / 60 // (the console's step)
 
 		if on, asked := game.fullscreenRequest.?; asked && rs.frameCount >= 2 {
 			Runner_ApplyFullscreen(game, on)
@@ -600,6 +614,7 @@ Runner_Frame :: proc(rs: ^Runner_State) -> bool {
 		}
 		if filtered do Colorblind_End()
 		if opts.uncapped && opts.benchFrames <= 0 do runner_draw_frame_time(rs)
+		Console_DrawScreen(game) // (the developer console and its overlays)
 		Prof_Begin("present")
 		rl.EndDrawing()
 		Prof_End()
@@ -670,6 +685,7 @@ Runner_Stop :: proc(rs: ^Runner_State) {
 		runnerTarget = {}
 	}
 	if rs.windowOpen do rl.CloseWindow()
+	Console_Shutdown() // (before the game: its Lua commands)
 	rs.game->terminate()
 	free(rs)
 }

@@ -109,6 +109,15 @@ Once the game is linked:
 **Local** goes back to the edited scene; stopping the game does too. The
 [Game tab](tab-game.md) shows the same tree and properties side by side.
 
+### The developer console
+
+Press ` in the running game for the developer console. A line is a
+command (`help` lists them) or else Lua run in the game: `pause` and `step`
+freeze it and step frame by frame, `timescale 0.25` slows it, `perf` shows
+frame times, and `physics`, `nav`, `camera` and `outlines` draw what's
+otherwise invisible. Scripts add their own commands with
+[Console.register](../lua/Console.md). Exported debug builds have it too.
+
 ### Simulate in Editor
 
 **Simulate** (F7) runs the open scene in the editor's own viewport:

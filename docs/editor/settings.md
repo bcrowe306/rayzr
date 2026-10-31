@@ -135,6 +135,15 @@ See [scene flow](../../engine/docs/scene_flow.md).
 | **Gravity** | x, y in pixels per second squared. **Zero-G** sets (0, 0); **Earth (0, 980)** sets (0, 980). |
 | **Show Colliders** | The running game draws collision shapes, joints and areas (on by default). The editor's viewport shows them either way. The same switch is in the toolbar and **Game > Show Colliders in Game**. |
 
+**Developer Console** (closed at first): the in-game console that opens with
+` - commands, Lua, a perf overlay, debug drawing, pause and step (see
+[Console](../lua/Console.md)).
+
+| Option | What it does |
+|---|---|
+| **In Release Builds** | Release exports have the console too. Debug builds and Play always have it. |
+| **Key** | The key that opens and closes it: ` (backquote), F1, F2, F12, Tab or Backslash. |
+
 **Collision Layers** (closed at first): names for layers 1-16. Bodies'
 layer lists show them, and scripts use them:
 `body:set_collision_layer("Player")`.
