@@ -59,6 +59,8 @@ jobs:
           distribution: temurin
           java-version: 21
       - run: scripts/build_android_runner.sh
+      # (Packing the project runs the engine on this machine: Box2D, Clipper2.)
+      - run: scripts/ci/setup_deps.sh
       - run: scripts/package_android.sh templates/platformer /tmp/android_app
       - run: scripts/check_android_package.sh /tmp/android_app/platformer.apk com.rayzr.platformer /tmp/android_app/platformer.aab
 
