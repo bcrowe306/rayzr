@@ -112,6 +112,7 @@ def run_test(runner, tid, test, tmp):
     dump = os.path.join(tmp, "dump.json")
     cmd = [runner, proj, "--hidden", "--user-data", os.path.join(tmp, "userdata"), "--frames", str(test["frames"]),
            "--input-script", inp, "--dump-scene", dump, "--scene", scene_rel]
+    cmd += test.get("args", [])  # ("args": extra runner arguments, e.g. ["--console", "perf"])
     shot = test.get("screenshot")
     golden = test.get("golden")
     if golden:

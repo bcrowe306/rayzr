@@ -11746,6 +11746,64 @@ Locale = LocaleModule
 Log = LogModule
 
 
+---@class ConsoleModule
+---The in-game developer console (` opens it): debug builds and the editor's
+---Play always, release builds when Project Settings > General > Developer
+---Console allows it. A line is a command or else Lua. Elsewhere these calls
+---do nothing (is_enabled tells you).
+local ConsoleModule = {}
+
+---Adds a console command - cheats, warps, spawners. The function gets the
+---words typed after the name; what it returns is printed. A name already
+---taken is replaced.
+---
+---Example: `Console.register("give", "give <item> [count]", function(args) Inventory.add(args[1], tonumber(args[2]) or 1) return "gave " .. args[1] end)`
+---@param name string One word (what is typed)
+---@param help? string One line for `help`
+---@param fn fun(args: string[]): any
+function ConsoleModule.register(name, help, fn) end
+
+---Removes a command added with register.
+---
+---Example: `Console.unregister("give")`
+---@param name string The command's name
+function ConsoleModule.unregister(name) end
+
+---Prints a line in the console (only there - Log goes to the console and
+---the game's log).
+---
+---Example: `Console.print("enemies:", #Scene.find_by_tag("enemy"))`
+---@param ... any Values, any type (joined by tabs)
+function ConsoleModule.print(...) end
+
+---Whether the console is open (the game gets no keys meanwhile).
+---
+---Example: `if Console.is_open() then return end`
+---@return boolean open
+function ConsoleModule.is_open() end
+
+---Whether this build has the console.
+---
+---Example: `if Console.is_enabled() then Console.register("god", "", toggle_god) end`
+---@return boolean enabled
+function ConsoleModule.is_enabled() end
+
+---Opens (or with false, closes) the console.
+---
+---Example: `Console.open()`
+---@param open? boolean Default true
+function ConsoleModule.open(open) end
+
+---Runs a console line as if typed: a command, or Lua.
+---
+---Example: `Console.execute("perf")`
+---@param line string What would be typed, e.g. "timescale 0.5"
+function ConsoleModule.execute(line) end
+
+---@type ConsoleModule
+Console = ConsoleModule
+
+
 ---@class ProjectModule
 ---Engine project management, data-driven scene serialization, and .rayzr package access.
 local ProjectModule = {}

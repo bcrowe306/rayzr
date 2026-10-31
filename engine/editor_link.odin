@@ -90,6 +90,9 @@ link_wait_command :: proc() -> string {
 	}
 }
 
+// EditorLink_Enabled: the editor drives this game (its Play).
+EditorLink_Enabled :: proc() -> bool {return editorLink.enabled}
+
 // EditorLink_BeginFrame reads pending commands and decides whether this
 // frame runs (game.frozen = false) or only draws.
 EditorLink_BeginFrame :: proc(game: ^Game) {

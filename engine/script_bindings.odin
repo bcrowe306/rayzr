@@ -2504,6 +2504,13 @@ lua_engine_get_virtual_size :: proc "c" (L: ^lua.State) -> c.int {
 // Input Bindings (Engine.Input)
 // ----------------------------------------------------------------------------
 
+// sm_keyboard_blocked: the developer console has the keyboard.
+@(private="file")
+sm_keyboard_blocked :: proc(L: ^lua.State) -> bool {
+	sm := get_script_manager(L)
+	return sm != nil && sm.game != nil && sm.game.input.keyboardBlocked
+}
+
 // parse_keyboard_key: any raylib key name ("Z", "F5", "KP_1", "LEFT_ALT"),
 // plus a few short forms (RETURN, ESC, SHIFT, CTRL, ALT, 0-9).
 parse_keyboard_key :: proc(name: string) -> (rl.KeyboardKey, bool) {
@@ -2658,7 +2665,7 @@ lua_input_is_key_down :: proc "c" (L: ^lua.State) -> c.int {
 		lua.pushboolean(L, b32(isDown))
 		return 1
 	}
-	isDown := rl.IsWindowReady() && rl.IsKeyDown(key)
+	isDown := rl.IsWindowReady() && !sm_keyboard_blocked(L) && rl.IsKeyDown(key)
 	lua.pushboolean(L, b32(isDown))
 	return 1
 }
@@ -2680,7 +2687,7 @@ lua_input_is_key_pressed :: proc "c" (L: ^lua.State) -> c.int {
 		lua.pushboolean(L, b32(Input_SimulatedKeyPressed(&sm.game.input, key)))
 		return 1
 	}
-	isPressed := rl.IsWindowReady() && rl.IsKeyPressed(key)
+	isPressed := rl.IsWindowReady() && !sm_keyboard_blocked(L) && rl.IsKeyPressed(key)
 	lua.pushboolean(L, b32(isPressed))
 	return 1
 }
@@ -2702,7 +2709,7 @@ lua_input_is_key_released :: proc "c" (L: ^lua.State) -> c.int {
 		lua.pushboolean(L, b32(Input_SimulatedKeyReleased(&sm.game.input, key)))
 		return 1
 	}
-	isRel := rl.IsWindowReady() && rl.IsKeyReleased(key)
+	isRel := rl.IsWindowReady() && !sm_keyboard_blocked(L) && rl.IsKeyReleased(key)
 	lua.pushboolean(L, b32(isRel))
 	return 1
 }
@@ -4662,6 +4669,7 @@ scriptLogger: runtime.Logger
 // (the editor: Console and Code tab diagnostics), else the game's log.
 Script_Problem :: proc(level: log.Level, format: string, args: ..any) {
 	text := fmt.tprintf(format, ..args)
+	Console_Log(level, text) // (the developer console, when on)
 	if scriptLogSink != nil {
 		scriptLogSink(level, text)
 		return
@@ -4704,6 +4712,7 @@ script_log_args :: proc(L: ^lua.State) -> string {
 
 @(private="file")
 script_log :: proc(level: log.Level, text: string) {
+	Console_Log(level, text) // (the developer console, when on)
 	if scriptLogSink != nil {
 		scriptLogSink(level, text)
 		return
@@ -5522,6 +5531,7 @@ RegisterEngineLuaBindings :: proc(L: ^lua.State, sm: ^ScriptManager) {
 	lua.pushcfunction(L, lua_log_error)
 	lua.setfield(L, -2, "error")
 	lua.setglobal(L, "Log")
+	Script_RegisterConsole(L) // Console (dev_console.odin)
 
 	// 9. Global "Project" table
 	lua.newtable(L)

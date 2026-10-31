@@ -61,6 +61,8 @@ ProjectConfig :: struct {
 	// Input actions (empty = the built-in defaults)
 	actions:       [dynamic]Input_Action_Config,
 	touchAsMouse:  bool, // a finger is the left mouse button (default on; "input": {"touch_as_mouse"})
+	consoleInRelease: bool,   // the developer console in release exports too ("debug": {"console_in_release"}; dev_console.odin)
+	consoleKey:       string, // its key ("debug": {"console_key"}; "" = the backquote)
 	// Export
 	export:        Export_Settings,
 	// Per-texture filtering / wrap / mipmaps (asset_paths.odin)
@@ -110,6 +112,7 @@ ProjectConfig_Destroy :: proc(cfg: ^ProjectConfig, allocator := context.allocato
 	if cfg.windowTitle != "" do delete(cfg.windowTitle, allocator)
 	if cfg.icon != "" do delete(cfg.icon, allocator)
 	if cfg.language != "" do delete(cfg.language, allocator)
+	if cfg.consoleKey != "" do delete(cfg.consoleKey, allocator)
 	if cfg.transition != "" do delete(cfg.transition, allocator)
 	if cfg.transitionEasing != "" do delete(cfg.transitionEasing, allocator)
 	if cfg.mixerBuses != "" do delete(cfg.mixerBuses, allocator)
@@ -149,6 +152,7 @@ ProjectConfig_Clone :: proc(src: ^ProjectConfig, allocator := context.allocator)
 	c.windowTitle = strings.clone(src.windowTitle, allocator)
 	c.icon = strings.clone(src.icon, allocator)
 	c.language = strings.clone(src.language, allocator)
+	c.consoleKey = strings.clone(src.consoleKey, allocator) if src.consoleKey != "" else ""
 	c.transition = strings.clone(src.transition, allocator) if src.transition != "" else ""
 	c.transitionEasing = strings.clone(src.transitionEasing, allocator) if src.transitionEasing != "" else ""
 	c.mixerBuses = strings.clone(src.mixerBuses, allocator) if src.mixerBuses != "" else ""
@@ -386,6 +390,10 @@ Project_ParseConfig :: proc(jsonBytes: []u8, allocator := context.allocator) -> 
 	if accObj, ok := json_get_obj(rootObj, "accessibility"); ok {
 		if text, merr := json.marshal(accObj, {}, context.temp_allocator); merr == nil && len(accObj) > 0 do cfg.accessibility = strings.clone(string(text), allocator)
 	}
+	if debugObj, ok := json_get_obj(rootObj, "debug"); ok {
+		cfg.consoleInRelease = json_get_bool(debugObj, "console_in_release", false)
+		if k := json_get_string(debugObj, "console_key", ""); k != "" do cfg.consoleKey = strings.clone(k, allocator)
+	}
 	if inputObj, ok := json_get_obj(rootObj, "input"); ok {
 		cfg.touchAsMouse = json_get_bool(inputObj, "touch_as_mouse", true)
 		if arr, has := json_get_arr(inputObj, "actions"); has {
@@ -511,6 +519,11 @@ Project_SerializeToJSON :: proc(cfg: ^ProjectConfig, allocator := context.alloca
 	fmt.sbprintf(&sb, "    \"target_fps\": %d\n", cfg.targetFPS)
 	strings.write_string(&sb, "  },\n")
 	fmt.sbprintf(&sb, "  \"video\": {{\"fill\": \"%s\", \"fullscreen\": %t, \"vsync\": %t, \"resizable\": %t, \"msaa\": %t, \"high_dpi\": %t, \"sharp_scaling\": %t, \"integer_scaling\": %t, \"pixel_snap\": %t, \"smooth_camera\": %t}},\n", Screen_Fill_Name(cfg.fill), cfg.fullscreen, cfg.vsync, cfg.resizable, cfg.msaa, cfg.highDPI, cfg.sharpScaling, cfg.integerScaling, cfg.pixelSnap, cfg.smoothCamera)
+	if cfg.consoleInRelease || cfg.consoleKey != "" {
+		fmt.sbprintf(&sb, "  \"debug\": {{\"console_in_release\": %t", cfg.consoleInRelease)
+		if cfg.consoleKey != "" {strings.write_string(&sb, ", \"console_key\": "); jstr(&sb, cfg.consoleKey)}
+		strings.write_string(&sb, "},\n")
+	}
 	fmt.sbprintf(&sb, "  \"audio\": {{\"master_volume\": %.2f, \"music_volume\": %.2f, \"sfx_volume\": %.2f", cfg.masterVolume, cfg.musicVolume, cfg.sfxVolume)
 	if cfg.mixerBuses != "" do fmt.sbprintf(&sb, ", \"buses\": %s", cfg.mixerBuses)
 	strings.write_string(&sb, "},\n")

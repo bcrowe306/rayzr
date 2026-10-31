@@ -631,6 +631,28 @@ project_general :: proc(state: ^EditorState) {
 		UI_Tooltip("Draw collision shapes, joints and areas while the game runs (debugging). The editor's viewport shows them either way; scripts: Physics.set_debug_draw(false)")
 		UI_EndProps()
 	}
+	if UI_SectionHeader("Developer Console", false) && UI_BeginProps("##console") {
+		UI_PropLabel("In Release Builds")
+		imgui.Checkbox("##console_release", &d.consoleInRelease)
+		Drive_Item("settings.console-release")
+		UI_Tooltip("The in-game developer console (commands, Lua, perf overlay, debug drawing, pause and step) is always in debug builds and the editor's Play. On: release exports have it too")
+		UI_PropLabel("Key")
+		imgui.SetNextItemWidth(-1)
+		keys := [?]string{"GRAVE", "F1", "F2", "F12", "TAB", "BACKSLASH"}
+		cur := d.consoleKey if d.consoleKey != "" else "GRAVE"
+		if imgui.BeginCombo("##console_key", fmt.ctprintf("%s", "` (backquote)" if cur == "GRAVE" else cur)) {
+			for k in keys {
+				if imgui.Selectable(fmt.ctprintf("%s", "` (backquote)" if k == "GRAVE" else k), k == cur) {
+					if d.consoleKey != "" do delete(d.consoleKey)
+					d.consoleKey = strings.clone(k) if k != "GRAVE" else ""
+				}
+			}
+			imgui.EndCombo()
+		}
+		Drive_Item("settings.console-key")
+		UI_Tooltip("The key that opens and closes the console")
+		UI_EndProps()
+	}
 	if UI_SectionHeader("Collision Layers", false) && UI_BeginProps("##layers") {
 		// Names for the 16 collision layers (shown in body shapes' layer lists;
 		// scripts use them: body:set_collision_layer("Player")).

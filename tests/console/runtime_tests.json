@@ -1,0 +1,21 @@
+[
+ {
+  "name": "developer console: open, with help, a Lua result, outlines and the camera's bounds",
+  "project": "templates/platformer",
+  "frames": 40,
+  "args": ["--console", "outlines; camera; help; 1 + 1; open"],
+  "expect": [
+   [
+    "Player",
+    "exists",
+    "==",
+    true
+   ]
+  ],
+  "golden": {
+   "image": "tests/console/expected/open.png",
+   "max_pixels": 0.01,
+   "threshold": 48
+  }
+ }
+]

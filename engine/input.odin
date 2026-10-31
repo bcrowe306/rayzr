@@ -82,6 +82,7 @@ InputSystem :: struct {
 	simulatedActionVals:  [InputAction]f32,
 	useSimulatedInput:    bool,
 	mouseBlocked:         bool, // a UI widget has the mouse: mouse bindings read up (#228)
+	keyboardBlocked:      bool, // the developer console is open: key bindings read up (#285)
 
 	// Project-defined actions (input_actions.odin).
 	named: [dynamic]Named_Action,
@@ -400,7 +401,7 @@ Input_EvaluateBindingFor :: proc(input: ^InputSystem, bind: InputBinding, pad: i
 				return true, 1.0
 			}
 		}
-		if rl.IsWindowReady() && rl.IsKeyDown(bind.key) {
+		if !input.keyboardBlocked && rl.IsWindowReady() && rl.IsKeyDown(bind.key) {
 			return true, 1.0
 		}
 
