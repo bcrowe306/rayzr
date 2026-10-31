@@ -76,7 +76,7 @@ aabb_of :: proc(pts: [4][2]f32) -> rl.Rectangle {
 
 // rect_aabb: world AABB of a rect of size `size` drawn at `pos` with
 // `origin` (pivot, in drawn units) and rotation in degrees.
-@(private = "file")
+@(private)
 rect_aabb :: proc(pos, size, origin: [2]f32, rotDeg: f32) -> rl.Rectangle {
 	r := rotDeg * math.RAD_PER_DEG
 	c, s := math.cos(r), math.sin(r)
@@ -93,6 +93,10 @@ Node_RenderBounds :: proc(node: ^Node) -> (rect: rl.Rectangle, ok: bool) {
 	switch node.typeId {
 	case SkeletonNode:
 		return SkeletonNode_WorldBounds(cast(^SkeletonNode)node)
+	case ViewportNode:
+		v := cast(^ViewportNode)node
+		if !v.display do return {}, false
+		return ViewportNode_Rect(v), true
 	case TextureNode:
 		tn := cast(^TextureNode)node
 		if tn.texture == nil do return {}, false

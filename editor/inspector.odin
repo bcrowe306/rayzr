@@ -744,6 +744,11 @@ Editor_SetTexture :: proc(state: ^EditorState, tn: ^e.TextureNode, rel: string) 
 	e.TextureNode_SetTexture(tn, nil) // releases the previous texture
 	tn.size = {0, 0}
 	if rel == "" do return
+	if e.Viewport_IsPath(rel) {
+		// A Viewport's picture (drawn at the viewport's size).
+		if v := e.Viewport_Find(state.activeScene, rel); v != nil do tn.size = v.size
+		return
+	}
 	ctx := &state.game.gameContext
 	rm := &state.game.resourceManager
 	tex, ok := rm.loadTexture(rm, e.Project_ResolveAssetPath(ctx, rel))
@@ -789,7 +794,13 @@ inspector_resources :: proc(state: ^EditorState, node: ^e.Node) {
 			if UI_BeginProps("##sprite") {
 				UI_PropLabel("Texture")
 				imgui.SetNextItemWidth(field_width())
-				if path, ok := asset_picker("insp.texture", tn.filePath, Editor_ListProjectFiles(state, "textures", TEXTURE_EXTS)); ok {
+				// The textures, and the scene's Viewports' pictures ("viewport:<name>").
+				choices := make([dynamic]string, context.temp_allocator)
+				append(&choices, ..Editor_ListProjectFiles(state, "textures", TEXTURE_EXTS))
+				if state.activeScene != nil && state.activeScene.manager != nil {
+					for n in state.activeScene.manager.nodes do if n != nil && n.typeId == e.ViewportNode do append(&choices, e.Viewport_Path(cast(^e.ViewportNode)n))
+				}
+				if path, ok := asset_picker("insp.texture", tn.filePath, choices[:]); ok {
 					Editor_RecordUndo(state, "Set texture")
 					Editor_SetTexture(state, tn, path)
 				}
@@ -797,7 +808,7 @@ inspector_resources :: proc(state: ^EditorState, node: ^e.Node) {
 					Editor_RecordUndo(state, "Clear texture")
 					Editor_SetTexture(state, tn, "")
 				}
-				if tn.texture != nil {
+				if tn.texture != nil || e.Viewport_IsPath(tn.filePath) {
 					UI_PropLabel("Size")
 					UI_DimText(fmt.tprintf("%.0f × %.0f px", tn.size.x, tn.size.y))
 				}

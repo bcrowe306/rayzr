@@ -520,6 +520,24 @@
       ]
     },
     {
+      "type": "ViewportNode",
+      "name": "Viewport",
+      "category": "Graphics & Rendering",
+      "description": "Draws a view into a texture: the scene through its own Camera child (minimap, split-screen, security camera) or only its children (an in-world screen). Shows itself at its size; Sprites and materials use it as \"viewport:<name>\".",
+      "aliases": ["viewport", "render texture", "render target", "subviewport", "minimap", "split screen", "picture in picture"],
+      "hasOrigin": false,
+      "properties": [
+        {"name": "mode", "kind": "enum", "owner": "ViewportNode", "default": "World", "values": ["World", "Children"], "doc": "World: the running scene through the viewport's Camera child (add one: its follow target, zoom and limits) - minimaps, split-screen. Children: only the viewport's own children - an in-world screen, a preview."},
+        {"name": "size", "kind": "vec2", "owner": "ViewportNode", "default": [320, 180], "min": 1, "max": 8192, "doc": "The size it's drawn at (Display), in px."},
+        {"name": "renderSize", "kind": "vec2", "owner": "ViewportNode", "default": [0, 0], "min": 0, "max": 8192, "doc": "How many pixels it renders (0, 0: Size). Smaller is cheaper and pixelated - a 160x90 minimap drawn at 320x180."},
+        {"name": "updateMode", "kind": "enum", "owner": "ViewportNode", "default": "Every_Frame", "values": ["Every_Frame", "When_Visible", "Once"], "doc": "Every Frame; When Visible (skipped while hidden or off screen); Once (a snapshot: node:refresh() redraws it)."},
+        {"name": "display", "kind": "boolean", "owner": "ViewportNode", "default": true, "doc": "Draws its picture where it stands, at Size. Off: only used elsewhere (a Sprite's texture \"viewport:<name>\", a material)."},
+        {"name": "coversScreen", "kind": "boolean", "owner": "ViewportNode", "default": false, "doc": "World: it covers the screen (split-screen), so the main view's world isn't drawn underneath - only Screen Layers."},
+        {"name": "pixelated", "kind": "boolean", "owner": "ViewportNode", "default": false, "doc": "Scaled nearest-neighbour (crisp pixels) instead of smoothly."},
+        {"name": "background", "kind": "color", "owner": "ViewportNode", "default": "#00000000", "doc": "What's behind its picture. None: the scene's background colour (World) or transparent (Children)."}
+      ]
+    },
+    {
       "type": "SkeletonNode",
       "name": "Skeleton",
       "category": "Animation & Effects",

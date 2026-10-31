@@ -93,6 +93,9 @@ Save_UserDataDir :: proc(gameName: string, allocator := context.temp_allocator) 
 	return dir
 }
 
+// Save_GameDataDir: the game's save-data folder.
+Save_GameDataDir :: proc(allocator := context.temp_allocator) -> string {return Save_UserDataDir(save.gameName, allocator)}
+
 // Save_FilePath: the current slot's file.
 Save_FilePath :: proc(allocator := context.temp_allocator) -> string {
 	slot := save.slot if save.slot != "" else "save"

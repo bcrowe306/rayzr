@@ -192,6 +192,7 @@ Viewport_RenderOffscreen :: proc(state: ^EditorState) {
 		if viewportLighting do lit = e.Lighting_Prepare(state.activeScene, cam, i32(state.viewportSize.x), i32(state.viewportSize.y))
 		e.TileCache_Prepare(state.activeScene, e.Camera2D_ViewRect(cam, state.viewportSize.x, state.viewportSize.y), ctx)
 		e.Vector_FiltersPrepare(state.activeScene, cam.zoom) // (filtered vector art: textures made before the frame)
+		e.Viewports_Render(state.activeScene, ctx, placed = !state.isSimulating) // Viewport nodes' pictures: a live preview (viewport_node.odin)
 	}
 
 	rl.BeginTextureMode(state.renderTexture)
@@ -552,6 +553,14 @@ Viewport_DrawCameraBounds :: proc(state: ^EditorState) {
 		// runtime cache).
 		d := Editor_DesignSize(state)
 		vW, vH := d.x, d.y
+		label := cam.name
+		// A Viewport's camera: its picture's size (viewport_node.odin).
+		if cam.parent != nil && cam.parent.typeId == e.ViewportNode {
+			rs := e.ViewportNode_RenderSize(cast(^e.ViewportNode)cam.parent)
+			vW, vH = f32(rs.x), f32(rs.y)
+			label = fmt.tprintf("%s (Viewport %s)", cam.name, cam.parent.name)
+			isPrimary = false
+		}
 
 		zoom: f32 = 1.0
 		if cam.currentZoom > 0 do zoom = cam.currentZoom
@@ -564,7 +573,7 @@ Viewport_DrawCameraBounds :: proc(state: ^EditorState) {
 		center := e.CameraNode_ViewCenter(cam)
 		if state.isSimulating do center = cam.currentPosition
 
-		draw_camera_frustum(state, cam, cam.name, center, vW, vH, zoom, isPrimary || isSelected)
+		draw_camera_frustum(state, cam, label, center, vW, vH, zoom, isPrimary || isSelected)
 		if isPrimary do draw_expand_frame(state, center, zoom)
 	}
 }
