@@ -199,13 +199,16 @@ the [Mixer tab](tab-mixer.md).
 |---|---|
 | **Executable Name** | The exported program's name (default: the project name without spaces). |
 | **Output Folder** | Where exports go (default: `<project>_standalone` next to the project). **Browse...** picks a folder. |
-| **Targets** | Without presets: **macos**, **windows**, **linux**, **web** - one export each. |
+| **Targets** | Without presets: **macos**, **windows**, **linux**, **web**, **android** - one export each. |
 | **Runners** | Whether each platform's prebuilt game runner is *ready*, *missing*, or (this computer's platform) *built on export*. Hover for where runners live. |
 | **Compress Package** | Compresses `game.rayzr`. |
 | **Include UI Font** | Ships the UI font with the game. |
 | **macOS Bundle ID** | With a macOS export: the app's bundle identifier. |
 | **Signing Identity** | With a macOS export: the codesign identity. Empty is ad-hoc (runs on this Mac); a Developer ID is needed to distribute and notarize. |
 | **Notary Profile** | With a macOS export and a Developer ID: the keychain profile (`xcrun notarytool store-credentials`); the app is then notarized and stapled after export. |
+| **Android Package** | With an Android export: the app's id (`com.yourname.game`). Never change it once published. |
+| **Version Code** | With an Android export: the number Google Play needs higher for every upload. |
+| **Keystore** / **Key Alias** | With an Android export: a release keystore to sign with (its password: the `RAYZR_ANDROID_KEYSTORE_PASSWORD` environment variable). Empty: the debug key, for testing. |
 
 **Presets** give each platform (or a demo or debug build) its own
 settings. **Use Presets** turns the ticked targets into presets. Then:
@@ -226,7 +229,8 @@ settings. **Use Presets** turns the ticked targets into presets. Then:
 **Save and Export** (or **Save and Export All** with several presets) at
 the bottom saves the settings and exports everything. See
 [Playtesting](playtesting.md) for what an export writes, and
-[web export](../../engine/docs/web_export.md).
+[web export](../../engine/docs/web_export.md) and
+[Android export](../../engine/docs/android_export.md).
 
 ### Project > Globals
 

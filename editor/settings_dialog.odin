@@ -987,6 +987,25 @@ project_export :: proc(state: ^EditorState) {
 			text_field("settings.mac-notary", &x.macNotaryProfile, "keychain profile (xcrun notarytool store-credentials)")
 			UI_Tooltip("With a Developer ID identity: the app is notarized and stapled after export")
 		}
+		hasAndroid := false
+		for &p in e.Export_EffectivePresets(x) do if p.target == .Android do hasAndroid = true
+		if hasAndroid {
+			exeName := x.executableName if x.executableName != "" else export_default_name(d)
+			UI_PropLabel("Android Package")
+			text_field("settings.android-package", &x.androidPackage, strings.clone_to_cstring(Android_PackageId(d, exeName), context.temp_allocator))
+			UI_Tooltip("The app's id on the phone and on Google Play (com.yourname.game): set it once, never change it after publishing")
+			UI_PropLabel("Version Code")
+			code := i32(max(x.androidVersionCode, 1))
+			imgui.SetNextItemWidth(-1)
+			if imgui.InputInt("##settings.android-code", &code) do x.androidVersionCode = int(max(code, 1))
+			Drive_Item("settings.android-code")
+			UI_Tooltip("A whole number Google Play needs higher for every upload (the version people see is the project's Version)")
+			UI_PropLabel("Keystore")
+			text_field("settings.android-keystore", &x.androidKeystore, "the debug key (for testing)")
+			UI_Tooltip("A release keystore (.jks / .keystore, made with keytool) to sign with for Google Play. Its password comes from the RAYZR_ANDROID_KEYSTORE_PASSWORD environment variable, never the project")
+			UI_PropLabel("Key Alias")
+			text_field("settings.android-alias", &x.androidKeyAlias, "the keystore's key")
+		}
 		UI_EndProps()
 	}
 	export_presets_section(state)

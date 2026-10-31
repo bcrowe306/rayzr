@@ -39,6 +39,29 @@ jobs:
       - run: scripts/build_web_runner.sh
       - run: test -s bin/runners/web/index.wasm && test -s bin/runners/web/index.js
 
+  # The Android runner (linux_arm64 / android + the NDK), as release.yml
+  # builds it; then a test app packaged and checked (APK + AAB). The runner
+  # image has the Android SDK and NDK.
+  android-runner:
+    name: Runner (Android)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+      - run: git submodule update --init --depth 1 ui odin_editor ldtk
+      - uses: laytan/setup-odin@v2
+        with:
+          release: ${{ env.ODIN_RELEASE }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: scripts/build_android_runner.sh
+      - run: scripts/package_android.sh templates/platformer /tmp/android_app
+      - run: scripts/check_android_package.sh /tmp/android_app/platformer.apk com.rayzr.platformer /tmp/android_app/platformer.aab
+
   build-test:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}

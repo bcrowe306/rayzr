@@ -69,7 +69,8 @@
         { "file": "engine/docs/gamepads.md", "slug": "guides/gamepads" },
         { "file": "engine/docs/accessibility.md", "slug": "guides/accessibility" },
         { "file": "engine/docs/crash_reports.md", "slug": "guides/crash-reports" },
-        { "file": "engine/docs/web_export.md", "slug": "guides/web-export" }
+        { "file": "engine/docs/web_export.md", "slug": "guides/web-export" },
+        { "file": "engine/docs/android_export.md", "slug": "guides/android-export" }
       ]
     },
     {

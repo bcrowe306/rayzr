@@ -80,6 +80,7 @@ Export_Target :: enum {
 	Windows,
 	Linux,
 	Web, // a page (index.html + wasm) and game.rayzr - runners/web/ (scripts/build_web_runner.sh)
+	Android, // an APK and an AAB (arm64, Android 7+) - runners/android/ (scripts/build_android_runner.sh)
 }
 
 Export_Settings :: struct {
@@ -92,6 +93,11 @@ Export_Settings :: struct {
 	bundleId:       string,           // "" = com.rayzr.<executable, lower case>
 	macSign:        string,           // codesign identity: "" = ad-hoc, "none" = don't sign
 	macNotaryProfile: string,         // notarytool keychain profile ("" = don't notarize)
+	// Android (the APK / AAB)
+	androidPackage:  string,          // the app's id: "" = com.rayzr.<executable, lower case>
+	androidVersionCode: int,          // Google Play's version number: 0 = 1 (raise it for every upload)
+	androidKeystore: string,          // release keystore (.jks / .keystore): "" = the debug key
+	androidKeyAlias: string,          // its key's alias (the password: RAYZR_ANDROID_KEYSTORE_PASSWORD)
 	presets:        [dynamic]Export_Preset, // export_presets.odin (empty = one per target)
 }
 
@@ -119,6 +125,9 @@ ProjectConfig_Destroy :: proc(cfg: ^ProjectConfig, allocator := context.allocato
 	if cfg.export.bundleId != "" do delete(cfg.export.bundleId, allocator)
 	if cfg.export.macSign != "" do delete(cfg.export.macSign, allocator)
 	if cfg.export.macNotaryProfile != "" do delete(cfg.export.macNotaryProfile, allocator)
+	if cfg.export.androidPackage != "" do delete(cfg.export.androidPackage, allocator)
+	if cfg.export.androidKeystore != "" do delete(cfg.export.androidKeystore, allocator)
+	if cfg.export.androidKeyAlias != "" do delete(cfg.export.androidKeyAlias, allocator)
 	for &pr in cfg.export.presets do Export_Preset_Destroy(&pr, allocator)
 	delete(cfg.export.presets)
 	for t in cfg.textureImport do delete(t.path, allocator)
@@ -158,6 +167,9 @@ ProjectConfig_Clone :: proc(src: ^ProjectConfig, allocator := context.allocator)
 	c.export.bundleId = strings.clone(src.export.bundleId, allocator)
 	c.export.macSign = strings.clone(src.export.macSign, allocator)
 	c.export.macNotaryProfile = strings.clone(src.export.macNotaryProfile, allocator)
+	c.export.androidPackage = strings.clone(src.export.androidPackage, allocator)
+	c.export.androidKeystore = strings.clone(src.export.androidKeystore, allocator)
+	c.export.androidKeyAlias = strings.clone(src.export.androidKeyAlias, allocator)
 	c.export.presets = make([dynamic]Export_Preset, allocator)
 	for &pr in src.export.presets do append(&c.export.presets, Export_Preset_Clone(&pr, allocator))
 	c.textureImport = make([dynamic]Texture_Import, allocator)
@@ -401,6 +413,10 @@ Project_ParseConfig :: proc(jsonBytes: []u8, allocator := context.allocator) -> 
 		cfg.export.bundleId = strings.clone(json_get_string(exportObj, "bundle_id", ""), allocator)
 		cfg.export.macSign = strings.clone(json_get_string(exportObj, "macos_sign", ""), allocator)
 		cfg.export.macNotaryProfile = strings.clone(json_get_string(exportObj, "macos_notary_profile", ""), allocator)
+		cfg.export.androidPackage = strings.clone(json_get_string(exportObj, "android_package", ""), allocator)
+		cfg.export.androidVersionCode = json_get_int(exportObj, "android_version_code", 0)
+		cfg.export.androidKeystore = strings.clone(json_get_string(exportObj, "android_keystore", ""), allocator)
+		cfg.export.androidKeyAlias = strings.clone(json_get_string(exportObj, "android_key_alias", ""), allocator)
 		cfg.export.compress = json_get_bool(exportObj, "compress", cfg.export.compress)
 		cfg.export.includeFont = json_get_bool(exportObj, "include_font", cfg.export.includeFont)
 		Export_PresetsParse(exportObj, &cfg.export, allocator)
@@ -543,6 +559,10 @@ Project_SerializeToJSON :: proc(cfg: ^ProjectConfig, allocator := context.alloca
 	if cfg.export.bundleId != "" {strings.write_string(&sb, ", \"bundle_id\": "); jstr(&sb, cfg.export.bundleId)}
 	if cfg.export.macSign != "" {strings.write_string(&sb, ", \"macos_sign\": "); jstr(&sb, cfg.export.macSign)}
 	if cfg.export.macNotaryProfile != "" {strings.write_string(&sb, ", \"macos_notary_profile\": "); jstr(&sb, cfg.export.macNotaryProfile)}
+	if cfg.export.androidPackage != "" {strings.write_string(&sb, ", \"android_package\": "); jstr(&sb, cfg.export.androidPackage)}
+	if cfg.export.androidVersionCode > 0 do fmt.sbprintf(&sb, ", \"android_version_code\": %d", cfg.export.androidVersionCode)
+	if cfg.export.androidKeystore != "" {strings.write_string(&sb, ", \"android_keystore\": "); jstr(&sb, cfg.export.androidKeystore)}
+	if cfg.export.androidKeyAlias != "" {strings.write_string(&sb, ", \"android_key_alias\": "); jstr(&sb, cfg.export.androidKeyAlias)}
 	Export_PresetsWrite(&sb, &cfg.export)
 	strings.write_string(&sb, "},\n")
 	texture_imports_write(&sb, cfg.textureImport[:])
@@ -570,6 +590,7 @@ export_target_name :: proc(t: Export_Target) -> string {
 	case .Windows: return "windows"
 	case .Linux: return "linux"
 	case .Web: return "web"
+	case .Android: return "android"
 	}
 	return ""
 }

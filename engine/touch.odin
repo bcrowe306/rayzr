@@ -120,7 +120,7 @@ touch_raw :: proc(game: ^Game) -> (out: [TOUCH_MAX]Touch_Sim, n: int) {
 		}
 		return
 	}
-	when ODIN_OS == .JS {
+	when ODIN_OS == .JS || ODIN_PLATFORM_SUBTARGET == .Android {
 		if !rl.IsWindowReady() do return
 		for i in 0 ..< min(int(rl.GetTouchPointCount()), TOUCH_MAX) {
 			p := rl.GetTouchPosition(i32(i))
