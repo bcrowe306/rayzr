@@ -28,6 +28,8 @@ Game :: struct {
 	arena:           vmem.Arena,
 	inEditor:        bool,        // the editor's own game (on-screen controls always show)
 	touchMouse:      Touch_Mouse, // a finger as the mouse (touch.odin)
+	clock:           f64,         // seconds of game frames (the steps' sum): tile animations
+	clockRunning:    bool,
 	screenToGame:    [4]f32,      // window pixel -> game unit: (p + xy) * zw (the runner; 0: as is)
 	state:           GameState,
 	sceneManager:    SceneManager,
@@ -188,6 +190,8 @@ GameRun :: proc(game: ^Game, deltaTime: f32) {
 	// 1. Poll and update Two-Tier Input System once per frame (before physics and game/scene update)
 	Prof_Begin("input")
 	touch_mouse_game = game
+	if !game.treePaused do game.clock += f64(deltaTime) // (Engine.set_paused stops tile animations too)
+	game.clockRunning = true
 	Touch_Update(game, deltaTime) // (fingers, gestures, on-screen controls: before the actions)
 	InputSystem_Update(&game.input, deltaTime)
 	Mixer_Reap() // voices that ended

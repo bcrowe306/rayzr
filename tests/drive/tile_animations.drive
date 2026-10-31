@@ -1,0 +1,37 @@
+# Animated tiles (#275): the Tile Map tab's Animate button on a picked tile,
+# frames added by clicking tiles, a frame's time, Desync; saved in the
+# tileset's sidecar; the palette marks the animated tile.
+wait 5
+click @menu:View
+click @menu:View/Workspaces
+click @menu:Workspaces/Animation
+wait 3
+key escape
+key ctrl+a
+type tile map
+key enter
+expect selected == TileMap
+wait 2
+click @tile.tileset
+click @pick:textures/Asteroid_1.png
+wait 2
+click @tile.palette:97
+click @tile.animate
+wait 1
+expect item:tile-anim.adding == visible
+click @tile.palette:98
+click @tile.palette:99
+wait 1
+expect item:tile-anim.ms:2 == visible
+expect file:textures/Asteroid_1.tileset.json contains "animations"
+expect file:textures/Asteroid_1.tileset.json contains [97, 120], [98, 120], [99, 120]
+click @tile-anim.desync
+wait 1
+expect file:textures/Asteroid_1.tileset.json contains "desync": true
+screenshot tile_animation_window
+# Painting the animated tile.
+click @tile-anim.adding
+click @tile.palette:97
+drag @world:300,330 @world:380,330
+expect node:TileMap.tiles >= 3
+screenshot painted_animated

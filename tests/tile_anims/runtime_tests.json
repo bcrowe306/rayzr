@@ -1,0 +1,31 @@
+[
+ {
+  "name": "animated tiles: the first frame (cached chunks + animated tiles drawn over)",
+  "project": "tests/tile_anims/project",
+  "frames": 20,
+  "expect": [
+   [
+    "Map",
+    "exists",
+    "==",
+    true
+   ]
+  ],
+  "golden": {
+   "image": "tests/tile_anims/expected/frame1.png",
+   "max_pixels": 0.005,
+   "threshold": 48
+  }
+ },
+ {
+  "name": "animated tiles: a second later, the second frame",
+  "project": "tests/tile_anims/project",
+  "frames": 80,
+  "expect": [],
+  "golden": {
+   "image": "tests/tile_anims/expected/frame2.png",
+   "max_pixels": 0.005,
+   "threshold": 48
+  }
+ }
+]

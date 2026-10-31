@@ -51,8 +51,9 @@ Tile_Terrain :: struct {
 
 // A tileset's terrains (Terrains_Parse / Terrains_Load).
 Tile_Terrains :: struct {
-	terrains:  [dynamic]Tile_Terrain,
-	allocator: runtime.Allocator,
+	terrains:   [dynamic]Tile_Terrain,
+	animations: [dynamic]Tile_Anim, // animated tiles (tile_anims.odin)
+	allocator:  runtime.Allocator,
 }
 
 // The blob masks' bits.
@@ -193,6 +194,7 @@ Terrains_Find :: proc(ts: ^Tile_Terrains, name: string) -> (^Tile_Terrain, int) 
 Terrains_Parse :: proc(data: []u8, allocator := context.allocator) -> (ts: Tile_Terrains, err: string) {
 	ts.allocator = allocator
 	ts.terrains = make([dynamic]Tile_Terrain, allocator)
+	ts.animations = make([dynamic]Tile_Anim, allocator)
 	if len(data) == 0 do return
 	value, perr := json.parse(data, allocator = context.temp_allocator)
 	if perr != .None do return ts, fmt.tprintf("not valid JSON (%v)", perr)
@@ -215,7 +217,31 @@ Terrains_Parse :: proc(data: []u8, allocator := context.allocator) -> (ts: Tile_
 			append(&t.tiles[int(m)], i32(tile))
 		}
 	}
+	anims, _ := root["animations"].(json.Array)
+	for v in anims {
+		obj, ok := v.(json.Object)
+		if !ok do continue
+		a := Tile_Anim{make([dynamic]i32, allocator), make([dynamic]f32, allocator), false}
+		a.desync, _ = obj["desync"].(json.Boolean)
+		if frames, fok := obj["frames"].(json.Array); fok do for fv in frames {
+			pair, isArr := fv.(json.Array)
+			if !isArr || len(pair) < 1 do continue
+			tile, _ := json_number(pair[0])
+			ms: f32 = 100
+			if len(pair) > 1 do ms, _ = json_number(pair[1])
+			append(&a.frames, i32(tile))
+			append(&a.durations, max(ms, 1) / 1000)
+		}
+		append(&ts.animations, a)
+	}
 	return
+}
+
+// Terrains_AnimationOf: the animation starting on a tile (-1: none).
+Terrains_AnimationOf :: proc(ts: ^Tile_Terrains, tile: i32) -> int {
+	if ts == nil do return -1
+	for &a, i in ts.animations do if len(a.frames) > 0 && a.frames[0] == tile do return i
+	return -1
 }
 
 Terrains_Serialize :: proc(ts: ^Tile_Terrains, allocator := context.allocator) -> string {
@@ -236,7 +262,18 @@ Terrains_Serialize :: proc(ts: ^Tile_Terrains, allocator := context.allocator) -
 		}
 		strings.write_string(&w.sb, "]}")
 	}
-	strings.write_string(&w.sb, "\n]}\n")
+	strings.write_string(&w.sb, "\n]")
+	if len(ts.animations) > 0 {
+		strings.write_string(&w.sb, ",\n\"animations\": [")
+		for &a, i in ts.animations {
+			strings.write_string(&w.sb, "," if i > 0 else "")
+			strings.write_string(&w.sb, "\n  {\"frames\": [")
+			for f, k in a.frames do fmt.sbprintf(&w.sb, "%s[%d, %d]", ", " if k > 0 else "", f, int(a.durations[k] * 1000 + 0.5))
+			fmt.sbprintf(&w.sb, "], \"desync\": %t}}", a.desync)
+		}
+		strings.write_string(&w.sb, "\n]")
+	}
+	strings.write_string(&w.sb, "}\n")
 	return strings.to_string(w.sb)
 }
 
@@ -268,6 +305,11 @@ terrain_free :: proc(ts: ^Tile_Terrains, t: ^Tile_Terrain) {
 Terrains_Destroy :: proc(ts: ^Tile_Terrains) {
 	for &t in ts.terrains do terrain_free(ts, &t)
 	delete(ts.terrains)
+	for &a in ts.animations {
+		delete(a.frames)
+		delete(a.durations)
+	}
+	delete(ts.animations)
 	ts^ = {}
 }
 
