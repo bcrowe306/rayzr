@@ -274,6 +274,7 @@ editor_main :: proc() -> int {
 		AudioPreview_Update(&GlobalEditor)
 		LevelGenEditor_Render(&GlobalEditor) // (level_gen_editor.odin)
 		TerrainEditor_Render(&GlobalEditor) // (terrain_editor.odin)
+		TileAnimEditor_Render(&GlobalEditor) // (tile_anim_editor.odin)
 		ProjectSettingsDialog_Render(&GlobalEditor)
 		Palette_Render(&GlobalEditor)
 		Shortcuts_Render(&GlobalEditor)

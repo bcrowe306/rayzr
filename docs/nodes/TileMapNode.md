@@ -83,6 +83,16 @@ can also hold components - coins, enemies, spikes - one per cell.
   painted tiles (isometric: one slanted shape per run; staggered and hex:
   one per cell, the cell's shape). Its colliders also cast [Light](LightNode.md) shadows.
   They are not saved and aren't there while you edit.
+- **Animated tiles**: pick a tile in the Tile Map tab, then the film
+  button next to its number (**Animate**). In the **Tile Animation**
+  window, turn on **Add Frames** and click the tiles that follow it in the
+  tab; set how long each frame shows (ms, or **Set Every Frame**). Wherever
+  the first tile is painted it plays those frames, on every Tile Map using
+  the tileset. All copies move in step (water); **Desync** starts each
+  copy at its own point (grass, candles). Animated tiles have a corner mark
+  in the tile list. They're kept with the tileset's terrains in
+  `<name>.tileset.json`, as `"animations": [{"frames": [[tile, ms], ...],
+  "desync": true}]`, and play by the game's clock (paused with the game).
 - **Terrains** (auto-tiling): a tileset's terrains - kept next to its
   image in `<name>.tileset.json` - give each cell the tile for its pattern
   of same-terrain neighbours (16 edge patterns, the 47-tile blob, or 64

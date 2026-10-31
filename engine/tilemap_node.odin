@@ -64,6 +64,8 @@ TileMapNode :: struct {
 	// drawn one per render call from bandNext.
 	bandLo, bandHi, bandNext: int,
 	bandMode: bool,
+	// Animated tiles (tile_anims.odin): by the tile they start on.
+	anims: map[i32]Tile_Anim,
 }
 
 TileMapNode_Create :: proc(scene: ^Scene, name: string = "TileMap", parent: ^Node = nil) -> ^TileMapNode {
@@ -261,6 +263,12 @@ TileMapNode_SetTileset :: proc(tm: ^TileMapNode, path: string, ctx: ^GameContext
 	tm.tilesetPath = strings.clone(path, tm.allocator)
 	if path == "" || rm == nil || !rl.IsWindowReady() do return
 	if tex, ok := rm.loadTexture(rm, Project_ResolveAssetPath(ctx, path)); ok do tm.tileset = tex
+	// Its animated tiles, from the tileset's sidecar.
+	gc := ctx if ctx != nil else tm.gameContext
+	if gc != nil && gc.game != nil {
+		ts, _ := Terrains_Load(gc, path, context.temp_allocator)
+		TileMapNode_SetAnimations(tm, ts.animations[:])
+	}
 }
 
 // TileMapNode_CellAt: the cell under a world position (may be outside the map).
@@ -310,17 +318,36 @@ tilemap_chunk_version :: proc(tm: ^TileMapNode, c: [2]i32) -> u64 {
 	return v + tm.chunkVer[c] * 0x9E3779B97F4A7C15
 }
 
+// tilemap_tile_now: the tile a cell shows now (an animated tile's frame).
 @(private = "file")
-draw_cells :: proc(tm: ^TileMapNode, cols, x0, y0, x1, y1: int, local: bool, origin: [2]int = {}) {
+tilemap_tile_now :: #force_inline proc(tm: ^TileMapNode, t: i32, x, y: int, now: f64) -> i32 {
+	if len(tm.anims) == 0 do return t
+	if a, ok := &tm.anims[t]; ok do return Tile_AnimFrame(a, now, {x, y})
+	return t
+}
+
+// draw_cells draws cells' tiles; `local`: into a cache chunk (animated
+// tiles left out: drawn every frame); `onlyAnimated`: just those.
+@(private = "file")
+draw_cells :: proc(tm: ^TileMapNode, cols, x0, y0, x1, y1: int, local: bool, origin: [2]int = {}, onlyAnimated := false) {
 	tw, th := f32(tm.tileSize.x), f32(tm.tileSize.y)
 	sx := tm.globalScale.x if tm.globalScale.x != 0 else 1
 	sy := tm.globalScale.y if tm.globalScale.y != 0 else 1
+	now := Tile_AnimClock(tm.gameContext)
+	animated := len(tm.anims) > 0
 	for y in y0 ..< y1 {
 		for x in x0 ..< x1 {
 			i, ok := tilemap_index(tm, x, y)
 			if !ok do continue
 			t := tm.tiles[i]
 			if t < 0 do continue
+			if animated {
+				isAnim := t in tm.anims
+				if (local && isAnim) || (onlyAnimated && !isAnim) do continue
+				t = tilemap_tile_now(tm, t, x, y, now)
+			} else if onlyAnimated {
+				return
+			}
 			src := Texture_Src(tm.tileset, {f32(int(t) % cols) * tw, f32(int(t) / cols) * th, tw, th})
 			if local {
 				// Into a chunk: unscaled pixels from the chunk's corner.
@@ -382,6 +409,7 @@ draw_band :: proc(tm: ^TileMapNode, b: int, lo, hi: [2]int) {
 		if !ok do return
 		t := tm.tiles[i]
 		if t < 0 do return
+		t = tilemap_tile_now(tm, t, cell.x, cell.y, Tile_AnimClock(tm.gameContext))
 		cols := TileMapNode_Columns(tm)
 		tw, th := f32(tm.tileSize.x), f32(tm.tileSize.y)
 		src := Texture_Src(tm.tileset, {f32(int(t) % cols) * tw, f32(int(t) / cols) * th, tw, th})
@@ -455,6 +483,19 @@ TileMapNode_Render :: proc(node: ^Node, ctx: ^GameContext, dt: f32) {
 	// Chunks of a map don't overlap: the rest can follow.
 	for o in missing {
 		draw_cells(tm, cols, max(o.x, x0), max(o.y, y0), min(o.x + cs.x, x1), min(o.y + cs.y, y1), false)
+	}
+	// Animated tiles aren't in the chunks: their frame now (cells drawn in
+	// full above already showed theirs).
+	if len(tm.anims) > 0 {
+		missed :: proc(missing: [][2]int, x, y: int, cs: [2]int) -> bool {
+			for o in missing do if x >= o.x && y >= o.y && x < o.x + cs.x && y < o.y + cs.y do return true
+			return false
+		}
+		if len(missing) == 0 {
+			draw_cells(tm, cols, x0, y0, x1, y1, false, onlyAnimated = true)
+		} else {
+			for y in y0 ..< y1 do for x in x0 ..< x1 do if !missed(missing[:], x, y, cs) do draw_cells(tm, cols, x, y, x + 1, y + 1, false, onlyAnimated = true)
+		}
 	}
 }
 
@@ -545,6 +586,8 @@ TileMapNode_Destroy :: proc(node: ^Node, ctx: ^GameContext) {
 	}
 	ResourceManager_ReleaseAseprite(tm.aseRes)
 	tm.aseRes = nil
+	tilemap_free_anims(tm)
+	delete(tm.anims)
 }
 
 // TileMapNode_EncodeRLE writes the tiles as [[count, tile], ...].

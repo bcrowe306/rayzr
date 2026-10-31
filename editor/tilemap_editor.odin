@@ -124,8 +124,10 @@ TileMapPanel_Render :: proc(state: ^EditorState) {
 		imgui.SetCursorScreenPos(p)
 		imgui.PushIDInt(c.int(i))
 		if imgui.InvisibleButton("##tile", {cw, ch}) {
-			ts.brush = i32(i)
-			if ts.tool == .None || ts.tool == .Erase do ts.tool = .Paint
+			if !TileAnimEditor_TakeClick(state, tm.tilesetPath, i32(i)) { // (adding frames: tile_anim_editor.odin)
+				ts.brush = i32(i)
+				if ts.tool == .None || ts.tool == .Erase do ts.tool = .Paint
+			}
 		}
 		hovered := imgui.IsItemHovered()
 		if hovered do imgui.SetItemTooltip("Tile %d  (column %d, row %d)", c.int(i), c.int(cx), c.int(cy))
@@ -139,6 +141,10 @@ TileMapPanel_Render :: proc(state: ^EditorState) {
 		if hovered do imgui.DrawList_AddRect(dl, p, p + {cw, ch}, col_u32({1, 1, 1, 0.7}), 0, {}, 1)
 		if ts.brush == i32(i) {
 			imgui.DrawList_AddRect(dl, p - 1, p + {cw, ch} + 1, col_u32(UI_ACCENT), 0, {}, 2)
+		}
+		if TileAnimEditor_Badge(state, tm.tilesetPath, i32(i)) {
+			// (An animated tile: a film corner.)
+			imgui.DrawList_AddTriangleFilled(dl, p + {cw - 12, 0}, p + {cw, 0}, p + {cw, 12}, col_u32(UI_ACCENT))
 		}
 	}
 	// (The scroll area: the whole grid plus a margin.)
@@ -317,6 +323,10 @@ tilemap_tools_row :: proc(tm: ^e.TileMapNode) {
 	}
 	if tm.tileset != nil {
 		UI_DimText(fmt.tprintf("Tile %d of %d", ts.brush, e.TileMapNode_TileCount(tm)))
+		imgui.SameLine(0, 6)
+		if UI_IconButton(ICON_FA_FILM, "tile.animate", "Animate the picked tile: its frames and how long each shows (every Tile Map on this tileset plays it)", size = 28) {
+			TileAnimEditor_Open(&GlobalEditor, tm.tilesetPath, ts.brush)
+		}
 	} else {
 		UI_DimText(fmt.tprintf("Tile %d", ts.brush))
 	}
