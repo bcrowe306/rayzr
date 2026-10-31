@@ -4,6 +4,7 @@
 - **Framing several nodes**: `Camera.add_target` / `remove_target` build a group the camera centres on - with **Auto Zoom** on, it zooms out to keep them all on screen (co-op, a boss fight). `clear_targets` drops them all.
 - **Cutscenes and points of interest**: `Camera.set_target_position(x, y)` sends it to a world point, `set_zoom` and `set_rotation` ease it there when the camera's smoothing is on.
 - **Hits and explosions**: `Camera.shake(strength, duration)` plays the camera's **Shake Preset**; with [Advanced Cameras](../nodes/AdvancedCameraNode.md), `Camera.add_trauma` stacks shake hit after hit.
+- **A punch**: `Camera.kick(x, y)` knocks the view a few pixels that way and springs it back - the recoil of a shot or the push of a hit, without shaking.
 - **Rooms and level edges**: `Camera.set_limits(left, right, top, bottom)` keeps the view inside a rectangle of the world; `clear_limits` lets it roam.
 - **Mouse aiming and on-screen markers**: `screen_to_world` turns the mouse position into a world point, `world_to_screen` the other way; `get_visible_world_bounds` is the part of the world on screen.
 

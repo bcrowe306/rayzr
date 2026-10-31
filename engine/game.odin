@@ -30,6 +30,7 @@ Game :: struct {
 	touchMouse:      Touch_Mouse, // a finger as the mouse (touch.odin)
 	clock:           f64,         // seconds of game frames (the steps' sum): tile animations
 	clockRunning:    bool,
+	feel:            Game_Feel,   // time scale, hit-stop, slow motion (game_feel.odin)
 	screenToGame:    [4]f32,      // window pixel -> game unit: (p + xy) * zw (the runner; 0: as is)
 	state:           GameState,
 	sceneManager:    SceneManager,
@@ -111,6 +112,7 @@ Game :: struct {
 
 InitializeGame :: proc(game: ^Game) {
 	game.scriptManager.hotReload = true // turned off for .rayzr packages
+	game.feel.timeScale = 1
 
 	log.info("Initializing game")
 	err := vmem.arena_init_growing(&game.arena)
@@ -190,8 +192,6 @@ GameRun :: proc(game: ^Game, deltaTime: f32) {
 	// 1. Poll and update Two-Tier Input System once per frame (before physics and game/scene update)
 	Prof_Begin("input")
 	touch_mouse_game = game
-	if !game.treePaused do game.clock += f64(deltaTime) // (Engine.set_paused stops tile animations too)
-	game.clockRunning = true
 	Touch_Update(game, deltaTime) // (fingers, gestures, on-screen controls: before the actions)
 	InputSystem_Update(&game.input, deltaTime)
 	Mixer_Reap() // voices that ended
@@ -202,9 +202,15 @@ GameRun :: proc(game: ^Game, deltaTime: f32) {
 	if game.scriptManager.hotReload do Component_HotReload(game) // edited component files (#83)
 	Prof_End()
 
+	// Game feel (game_feel.odin): from here on dt is scaled (time scale,
+	// hit-stop, slow motion); nodes that keep real time read feel.rawDelta.
+	dt := GameFeel_Frame(game, deltaTime)
+	if !game.treePaused do game.clock += f64(dt) // (tile animations; Engine.set_paused / a hit-stop stop them)
+	game.clockRunning = true
+
 	// 2. Process Scene Transitions (and load scenes' assets in the background)
 	Prof_Begin("scene.flow")
-	Scene_FlowUpdate(game, deltaTime)
+	Scene_FlowUpdate(game, deltaTime) // (transitions: real time)
 	ProcessSceneChange(&game.sceneManager, &game.gameContext)
 	Scene_FlowAfterChange(game)
 	game.gameContext.scene = game.sceneManager.currentScene
@@ -220,13 +226,13 @@ GameRun :: proc(game: ^Game, deltaTime: f32) {
 			ProcessNodeQueues(s.manager, &game.gameContext)
 			Scene_CallReady(s, s.rootNode, &game.gameContext)
 		}
-		PhysicsWorld_Step(&game.physicsWorld, deltaTime, &game.gameContext)
+		if dt > 0 do PhysicsWorld_Step(&game.physicsWorld, dt, &game.gameContext) // (a hit-stop: no step)
 	}
 
 	// 4. Run game update proc if defined
 	if game.update != nil {
 		Prof_Scope("game.update")
-		game->update(game.sceneManager.currentScene, deltaTime)
+		game->update(game.sceneManager.currentScene, dt)
 	}
 
 	if game.shouldQuit || game.state == .Quitting {
@@ -239,7 +245,7 @@ GameRun :: proc(game: ^Game, deltaTime: f32) {
 	game.gameContext.scene = game.sceneManager.currentScene
 
 	// 5. Update and render active scene nodes
-	RunScene(game.sceneManager.currentScene, &game.gameContext, deltaTime)
+	RunScene(game.sceneManager.currentScene, &game.gameContext, dt)
 	Scene_DrawTransition(game)
 
 	// 6. Deliver the events published deferred this frame (Events.emit_deferred)
@@ -248,6 +254,7 @@ GameRun :: proc(game: ^Game, deltaTime: f32) {
 
 GameTerminate :: proc(game: ^Game) {
 	if game == nil do return
+	GameFeel_Destroy(game)
 	Tween_Destroy(&game.tweens, game.scriptManager.L) // releases Lua callbacks: before the Lua state goes
 	EventBus_Destroy(&game.events, game.scriptManager.L) // (likewise: queued Lua values)
 	Scene_FlowShutdown(game)

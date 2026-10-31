@@ -5014,6 +5014,7 @@ RegisterEngineLuaBindings :: proc(L: ^lua.State, sm: ^ScriptManager) {
 		Script_RegisterVectorColliderBindings(L) // vector_cut / vector_point_at / ... (vector_collider.odin)
 		Script_RegisterTileMapComponentBindings(L) // tilemap_component_at / ... (tilemap_components.odin)
 		Script_RegisterTouchControlBindings(L) // touch_get_vector / touch_is_down (touch_controls.odin)
+		Script_RegisterFeelNodeBindings(L) // flash / blink / squash (game_feel.odin)
 		Script_RegisterUIListBindings(L) // ui_set_items / ui_get_items (ui_list_props.odin)
 
 		// DynamicBodyNode Physics
@@ -5286,6 +5287,7 @@ RegisterEngineLuaBindings :: proc(L: ^lua.State, sm: ^ScriptManager) {
 	lua.setfield(L, -2, "get_virtual_size")
 	lua.pushcfunction(L, lua_engine_set_paused)
 	lua.setfield(L, -2, "set_paused")
+	Script_RegisterFeelEngineBindings(L) // set_time_scale, hit_stop, slow_motion (game_feel.odin)
 	lua.pushcfunction(L, lua_engine_is_paused)
 	lua.setfield(L, -2, "is_paused")
 	lua.pushcfunction(L, lua_engine_set_fullscreen)

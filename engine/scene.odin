@@ -423,13 +423,26 @@ update_tree :: proc(scene: ^Scene, node: ^Node, gameContext: ^GameContext, delta
 	mode := node.pauseMode if node.pauseMode != .Inherit else parentMode
 	paused := node.paused || (mode == .Pausable && parentPaused)
 	node.pausedNow = paused
-	if paused != node.bodyPaused {
+	// Game feel (game_feel.odin): this node's dt - real time for UI, cameras
+	// and Always nodes; else the game's scaled dt times its tags' scale
+	// (passed on to its children). A tag scale of 0 freezes its body too.
+	deltaTime := deltaTime
+	frozen := false
+	if game := gameContext.game if gameContext != nil else nil; game != nil {
+		if GameFeel_KeepsRealTime(node, mode) {
+			deltaTime = game.feel.rawDelta
+		} else if s := Node_TimeScale(game, node); s != 1 {
+			deltaTime *= s
+			frozen = s == 0
+		}
+	}
+	if (paused || frozen) != node.bodyPaused {
 		// Freeze / release its physics body with it.
 		if body := Physics_BodyOf(node); b2.Body_IsValid(body) {
-			if paused do b2.Body_Disable(body)
+			if paused || frozen do b2.Body_Disable(body)
 			else do b2.Body_Enable(body)
 		}
-		node.bodyPaused = paused
+		node.bodyPaused = paused || frozen
 	}
 
 	if gameContext != nil {
@@ -541,6 +554,11 @@ render_bucket :: proc(scene: ^Scene, nodes: []^Node, gameContext: ^GameContext, 
 	Prof_End()
 	Prof_Scope("render.draw")
 	for node in order {
+		// Game feel: blinked out, or drawn in a flash colour (game_feel.odin).
+		draw, flashing := true, false
+		if len(nodeFx) > 0 do draw, flashing = Fx_BeginDraw(node, node.material == nil)
+		if !draw do continue
+		defer if flashing do Fx_EndDraw()
 		renderStats.drawn += 1
 		withMaterial := node.material != nil && Material_Begin(node, gameContext)
 		scaled := node.isUI && access.uiScale != 1 && UI_BeginScaled(node) // (accessibility UI scale)

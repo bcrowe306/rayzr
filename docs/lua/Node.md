@@ -3,6 +3,7 @@
 - **Finding nodes**: `get_node("Body/Gun")` follows a path from this node (`..` is the parent), `get_child(name)` looks only at direct children, and `get_parent()` / `get_children()` walk the tree. `Scene.find_node(name)` and `Scene.find_by_tag(tag)` search the whole scene.
 - **Moving**: `set_position`, `translate`, `set_rotation`, `rotate` and `set_scale` work relative to the parent, in px and degrees. `get_global_position()` and `get_global_rotation()` give where it ends up in the world.
 - **Showing and hiding**: `set_visible(false)` stops the node drawing itself. `set_enabled(false)` switches off the node and its children - no update, no drawing, no physics. `set_paused` and `set_pause_mode` decide what stops when the game pauses.
+- **Hit feedback**: `flash("#ffffff", 0.1)` tints a sprite (or animation, tile map, text) a colour that fades back; `blink(1.0)` blinks the node and its children on and off (invulnerability); `squash(0.25, 0.3)` stretches the node tall and thin and springs it back - a negative amount squashes it flat first (a landing).
 - **Tags and types**: `add_tag("enemy")` and `has_tag` group nodes without a common parent. `is("AreaNode")` checks a node's type - a custom type, its built-in type, or `"Node"`.
 - **Events**: `emit("died", value)` calls the node script's `on_died` and every handler added with `connect`. `connect` returns an id for `disconnect`.
 - **Talking to another script**: `get_script()` returns that node's `self` - read its fields and call its methods (`enemy:get_script():take_damage(1)`).
