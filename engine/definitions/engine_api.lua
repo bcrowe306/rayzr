@@ -366,6 +366,31 @@ function Node:is_visible() end
 ---@param visible boolean false stops this node drawing itself; it keeps updating, and its children still draw
 function Node:set_visible(visible) end
 
+---Flashes the node a colour (white on a hit), fading back over `seconds`.
+---Works on anything drawn from a texture (sprites, animations, tile maps,
+---text); a node with a material isn't flashed.
+---
+---Example: `self.node:get_child("Sprite"):flash("#ffffff", 0.12)`
+---@param color? string|number[] "#rrggbb[aa]" or {r, g, b[, a]} 0..1 (default white; alpha: how strong)
+---@param seconds? number Default 0.1
+function Node:flash(color, seconds) end
+
+---Blinks the node (and its children) on and off - invulnerability after a hit.
+---
+---Example: `self.node:blink(1.0)`
+---@param seconds? number How long (default 1; 0 stops it)
+---@param rate? number Changes per second (default 12)
+function Node:blink(seconds, rate) end
+
+---Squash and stretch: the node (and its children) stretches tall and thin,
+---then springs back - jumps, landings, pickups. Negative amounts squash
+---flat first.
+---
+---Example: `self.node:squash(-0.3, 0.25) -- landing`
+---@param amount? number How much (default 0.25: 25% taller at first)
+---@param seconds? number Default 0.3
+function Node:squash(amount, seconds) end
+
 ---Returns the component path of this node if it is a component root, or nil if it is not an instance root.
 ---
 ---Example: `local path = self.node:get_component(); if path then Log.info("Instance of " .. path) end`
@@ -10221,6 +10246,42 @@ function EngineModule.get_virtual_size() end
 ---@param paused boolean true pauses the game, false resumes it
 function EngineModule.set_paused(paused) end
 
+---Sets the time scale: the whole game's (no tag), or that of the nodes with
+---a tag and their children. 0.5 is half speed, 0 stops, 1 is normal. The
+---whole game's scales physics, animation, tweens and every script's dt; a
+---tag's scales those nodes' updates (their bodies freeze at 0). Scales
+---multiply. UI nodes, cameras and Always nodes keep real time.
+---
+---Example: `Engine.set_time_scale(0.3, "enemy") -- a "bullet time" power-up`
+---@param scale number 0 or more (1: normal)
+---@param tag? string A node tag; nil: the whole game
+function EngineModule.set_time_scale(scale, tag) end
+
+---The time scale (the whole game's, or a tag's: 1 when none is set).
+---
+---Example: `if Engine.get_time_scale() < 1 then self.label.text = "SLOW" end`
+---@param tag? string A node tag; nil: the whole game
+---@return number scale
+function EngineModule.get_time_scale(tag) end
+
+---Hit-stop / freeze frames: stops the game (or only the nodes with the given
+---tags) for a moment of real time - the weight of a heavy hit. UI nodes,
+---cameras (their shake goes on) and Always nodes keep going.
+---
+---Example: `Engine.hit_stop(0.08); Camera.add_trauma(0.4)`
+---@param seconds number How long (real time), e.g. 0.05 - 0.15
+---@param tags? string|string[] Only nodes with one of these tags; nil: the whole game
+function EngineModule.hit_stop(seconds, tags) end
+
+---Slow motion that eases down to a time scale, holds, and eases back to
+---normal over `seconds` of real time.
+---
+---Example: `Engine.slow_motion(0.25, 1.2) -- the last enemy falls`
+---@param scale number The slowest (0..1)
+---@param seconds number The whole effect, real time
+---@param ease? EaseName The ramps' curve (default "out_quad")
+function EngineModule.slow_motion(scale, seconds, ease) end
+
 ---Returns whether the game is currently paused.
 ---
 ---Example: `if Engine.is_paused() then return end`
@@ -11011,6 +11072,16 @@ function CameraModule.is_shaking() end
 ---Example: `Camera.add_trauma(0.3)`
 ---@param amount number Trauma to add, 0 to 1; the total is capped at 1 and does nothing without an Advanced Camera
 function CameraModule.add_trauma(amount) end
+
+---Kicks the camera in a direction - a nudge that springs back, for recoil
+---or a hit's direction (on top of the shake; the accessibility screen-shake
+---setting scales it).
+---
+---Example: `Camera.kick(-6, 0) -- the gun's recoil when firing right`
+---@overload fun(v: Vec2)
+---@param dx number Pixels (the bigger, the farther it goes)
+---@param dy number Pixels
+function CameraModule.kick(dx, dy) end
 
 ---The advanced camera the scene's camera shows (nil if there are none).
 ---

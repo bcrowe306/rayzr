@@ -296,6 +296,7 @@ Node_SetGlobalPositions :: proc(manager: ^NodeManager, node: ^Node, positionOffs
 	} else {
 		node.globalPosition = positionOffset + rotate_vec(node.position * scaleOffset, rotationOffset)
 		node.globalScale = node.scale * scaleOffset
+		if len(nodeFx) > 0 do node.globalScale *= Fx_ScaleOf(node) // (node:squash)
 		node.globalRotation = node.rotation + rotationOffset
 	}
 	for child in GetChildrenView(manager, node) {

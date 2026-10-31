@@ -500,4 +500,5 @@ Script_RegisterAdvCamNodeBindings :: proc(L: ^lua.State) {
 Script_RegisterAdvCamCameraBindings :: proc(L: ^lua.State) {
 	lua.pushcfunction(L, lua_camera_add_trauma); lua.setfield(L, -2, "add_trauma")
 	lua.pushcfunction(L, lua_camera_get_active); lua.setfield(L, -2, "get_active")
+	Script_RegisterFeelCameraBindings(L) // Camera.kick (game_feel.odin)
 }
