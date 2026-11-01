@@ -42,6 +42,6 @@ return Coin
 
 - A tween starts from the property's value when its delay ends, not when you call `Tween.to`. Two tweens on the same property both run and fight - cancel the old one first (`Tween.cancel_all(node, "position")`).
 - Tweens pause with their node (pausing the game, `paused`) and end when the node is destroyed; a pooled node's tweens are cancelled when it goes back to its pool.
-- `Tween.to` returns 0 (and logs a warning) when the node or the property doesn't exist - check the name. An unknown ease name falls back to `"out_quad"` with a warning.
+- `Tween.to` returns 0 (and logs a warning) when the node or the property doesn't exist - check the name. An unknown ease name starts no tween either (0, with a warning); `Tween.ease` returns nil for one.
 - `rotation` is in degrees, positions in px local to the parent. Pass targets as plain lists (`{x, y}`, `{r, g, b, a}`).
 - `Tween.cancel` and `cancel_all` don't call `on_complete`. To animate many keys over time, use an [Animation Player](../nodes/AnimationPlayerNode.md) - its keys use the same eases.

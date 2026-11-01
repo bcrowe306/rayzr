@@ -52,6 +52,8 @@ clean up.
   `Events.emit("enemy_killed", { kind = "slime", points = 50 })`. Lua
   handlers get the value itself (the same table). Engine (Odin) listeners
   get numbers, strings, booleans and nodes; a table arrives there as nil.
+  The same goes for `node:emit`: Lua handlers and `on_<event>` methods get
+  the table itself.
 - **source** is the node of the script that called `emit` (nil from global
   code), or the node you pass. Handlers can use it to know who is talking:
   `function(value, source) if source == self.target then ... end end`.

@@ -650,6 +650,7 @@ Game_LoadProjectConfig :: proc(game: ^Game, cfg: ^ProjectConfig, activate := tru
 	if activate do Input_LoadUserBindings(&game.input) // the player's own (the game, not the editor)
 	Access_SetDefaults(ProjectConfig_Accessibility(cfg))
 	if activate do Access_Load() // the player's accessibility settings (the game, not the editor)
+	if activate do Locale_LoadChoice(game) // the language the player picked (Locale.set)
 	Texture_ImportsSet(cfg.textureImport[:])
 	Asset_ImportsReset() // per-asset settings are read again as assets load
 	// Global scripts exist before any scene; the game starts them (ready)

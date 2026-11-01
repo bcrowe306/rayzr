@@ -550,7 +550,7 @@ function Node:disconnect(id) end
 ---
 ---Example: `self.node:emit("health_changed", self.health)`
 ---@param event ProjectEvent|string The event name: calls this node's script on_<event> method, its Inspector Signals, then every connect handler (the project's custom events complete)
----@param value? any Passed to the handlers: a boolean, number, string or node (a table arrives as nil); nil for none
+---@param value? any Passed to the handlers: a boolean, number, string, node or table (the same table, not a copy); nil for none
 function Node:emit(event, value) end
 
 -- node events begin (generated from the engine: lua_events_definitions_test.odin)
@@ -8620,7 +8620,8 @@ function StateMachineNode:sm_time() end
 ---Starts the machine in a state, or in its initial state. A running machine leaves its current state first (its `on_exit_` runs); pending triggers are cleared. A machine with Autostart starts by itself on its first update; a child machine starts when its parent's state is entered.
 ---
 ---Example: `self.node:get_node("StateMachine"):sm_start("idle")`
----@param state? StateMachineState|string The state to start in; nil starts in the initial state. An unknown name logs a warning and starts in the initial state
+---@param state? StateMachineState|string The state to start in; nil starts in the initial state. An unknown name logs a warning and starts nothing
+---@return boolean started true when it started in a state; false for an unknown state (nothing changes) or a machine with no states
 function StateMachineNode:sm_start(state) end
 
 ---Stops the machine: the current state's child machine stops, then its `on_exit_<state>("")` runs. The state stays current (`sm_state` still returns it); nothing changes state until `sm_start`.
@@ -9834,47 +9835,48 @@ function LdtkLevelNode:ldtk_get_entity_defs() end
 ---@return LdtkLink[] Each resolved EntityRef (source node, target node when spawned, field, iids, index: 1-based array element or 0)
 function LdtkLevelNode:ldtk_get_links() end
 
--- On any node spawned from an LDtk entity:
+-- On any node spawned from an LDtk entity (declared on Node: entity nodes are
+-- any type - a sprite, a body - spawned by an LdtkLevelNode):
 
 ---The LDtk entity this node was spawned from (nil otherwise).
 ---
 ---Example: `local e = self.node:ldtk_entity(); if e then Log.info(e.identifier) end`
 ---@return LdtkEntity? The entity this node was spawned from; nil for a node not spawned by an LdtkLevelNode
-function LdtkLevelNode:ldtk_entity() end
+function Node:ldtk_entity() end
 
 ---The LdtkLevelNode that spawned this node.
 ---
 ---Example: `local level = self.node:ldtk_level_node()`
 ---@return Node? The LdtkLevelNode that spawned this node; nil when none did
-function LdtkLevelNode:ldtk_level_node() end
+function Node:ldtk_level_node() end
 
 ---A field of this node's entity.
 ---
 ---Example: `self.health = self.node:ldtk_field("health") or 3`
 ---@param name string Field identifier on this node's entity
 ---@return any The field's value (same conversions as entity fields); nil when absent, null, or the node is not an entity
-function LdtkLevelNode:ldtk_field(name) end
+function Node:ldtk_field(name) end
 
 ---The node an EntityRef field points to (the first one for arrays).
 ---
 ---Example: `local door = self.node:ldtk_ref("target_door"); if door then door:set_visible(false) end`
 ---@param field string EntityRef field identifier on this node's entity
 ---@return Node? The spawned node it points to (the first for an array field); nil when unset, not spawned or not an entity
-function LdtkLevelNode:ldtk_ref(field) end
+function Node:ldtk_ref(field) end
 
 ---Nodes referenced by a field, or every reference ({field, iid, node}) without one.
 ---
 ---Example: `for _, n in ipairs(self.node:ldtk_refs("lights")) do n:set_visible(true) end`
 ---@param field? string EntityRef field identifier (default: every reference of every field)
 ---@return Node[]|{field: string, iid: string, node: Node?}[] With a field: the spawned nodes it references, in order. Without: one {field, iid, node} per reference, node nil when not spawned
-function LdtkLevelNode:ldtk_refs(field) end
+function Node:ldtk_refs(field) end
 
 ---Entities whose EntityRef fields point at this one.
 ---
 ---Example: `for _, r in ipairs(self.node:ldtk_referenced_by("target")) do Log.info(r.field) end`
 ---@param field? string Only references made through this field identifier (default: any field)
 ---@return {node: Node, field: string}[] One {node, field} per spawned entity whose EntityRef points at this node; empty when none
-function LdtkLevelNode:ldtk_referenced_by(field) end
+function Node:ldtk_referenced_by(field) end
 
 
 -- ============================================================================
@@ -9901,9 +9903,9 @@ local TweenModule = {}
 ---@param property string "position", "scale", "rotation", any numeric or colour property by name ("tint"), or "shader:<param>" for a material parameter
 ---@param value number|number[] The target: a number, or a list such as {x, y} or {r, g, b[, a]} (colours 0..1, alpha default 1)
 ---@param duration number Seconds to reach the value; 0 jumps there on the next frame
----@param ease? EaseName Easing curve name, default "out_quad" (an unknown name also gives out_quad)
+---@param ease? EaseName Easing curve name, default "out_quad"; an unknown name starts no tween (returns 0, logs a warning)
 ---@param options? TweenOptions delay (seconds), loops (extra runs, -1 = forever), yoyo and on_complete(node); nil for none
----@return integer id The tween's id for Tween.cancel and Tween.is_running; 0 when the node or property wasn't found
+---@return integer id The tween's id for Tween.cancel and Tween.is_running; 0 when the node, property or ease wasn't found
 function TweenModule.to(node, property, value, duration, ease, options) end
 
 ---Stops a tween (it stays where it is).
@@ -9931,9 +9933,9 @@ function TweenModule.is_running(id) end
 ---Maps progress 0..1 through an easing curve (for your own animation).
 ---
 ---Example: `local k = Tween.ease("in_out_sine", self.elapsed / self.duration)`
----@param ease EaseName Easing curve name; an unknown name is linear (and logs a warning)
+---@param ease EaseName Easing curve name; an unknown name returns nil (and logs a warning)
 ---@param t number Progress, clamped to 0..1
----@return number The eased progress: 0 at t = 0, 1 at t = 1 (back and elastic curves overshoot in between)
+---@return number? The eased progress: 0 at t = 0, 1 at t = 1 (back and elastic curves overshoot in between); nil for an unknown ease
 function TweenModule.ease(ease, t) end
 
 -- ============================================================================
@@ -10292,7 +10294,7 @@ local CrashModule = {}
 ---The reports from earlier runs not yet dismissed (oldest first).
 ---
 ---Example: `for _, r in ipairs(Crash.pending()) do show_report_dialog(r.text); Crash.dismiss(r.path) end`
----@return CrashReport[] Reports not yet dismissed, oldest first, each with path and text (empty when there are none or no crash folder)
+---@return CrashReport[] Reports not yet dismissed, oldest first, each with path and text (empty when there are none or no crash folder, e.g. in Simulate)
 function CrashModule.pending() end
 
 ---Stops offering a report (it stays in the folder as .seen).
@@ -10312,7 +10314,7 @@ function CrashModule.note(text) end
 ---The crash folder.
 ---
 ---Example: `print("crash reports in " .. Crash.dir())`
----@return string The crash folder's path ("" when there is none, e.g. on the web)
+---@return string The crash folder's path ("" when there is none: on the web, or in the editor's Simulate)
 function CrashModule.dir() end
 
 -- ============================================================================
@@ -10406,7 +10408,7 @@ function EngineModule.is_paused() end
 ---game is scaled to it) or goes back to the project's window size.
 ---
 ---Example: `if Input.is_key_pressed("F11") then Engine.set_fullscreen(not Engine.is_fullscreen()) end`
----@param on boolean true covers the screen (borderless), false goes back to the project's window size; takes effect on the next frame
+---@param on boolean true covers the screen (borderless), false goes back to the project's window size; takes effect on the next frame. In the editor's Simulate it does nothing (warns once): try it with Play
 function EngineModule.set_fullscreen(on) end
 
 ---Whether the game is fullscreen.
@@ -11438,10 +11440,10 @@ function SceneModule.get_nodes() end
 ---Dynamically instantiates a new scene node and adds it to the active scene graph.
 ---
 ---Example: `local timer = Scene.create_node("TimerNode", "Cooldown", self.node)`
----@param nodeType string A node type or Add Node search name ("TimerNode", "timer", "sprite"); default "Node"; an unknown type makes a plain Node and logs a warning
+---@param nodeType string A node type or Add Node search name ("TimerNode", "timer", "sprite"); default "Node"; an unknown type makes nothing (returns nil, logs a warning)
 ---@param name? string The new node's name; nil leaves the default
 ---@param parent? Node The node to add it under; nil adds it under the scene's root
----@return Node? node The new node, or nil when there is no active scene
+---@return Node? node The new node, or nil when there is no active scene or the type is unknown
 function SceneModule.create_node(nodeType, name, parent) end
 
 ---Instances a component at runtime - `Scene.instantiate("components/Bullet.component.json", self.node:get_parent(), self.node.position, { speed = 300 })`.
@@ -11838,8 +11840,9 @@ local LocaleModule = {}
 ---
 ---Example: `Locale.set("fr")`
 ---@param language Language|string A language column of the locale tables, e.g. "fr"; one the tables lack changes nothing (and logs a warning)
+---@param remember? boolean Start in it next time too (saved next to the save files); default true - false for a preview
 ---@return boolean ok true when switched; false for a language the tables lack
-function LocaleModule.set(language) end
+function LocaleModule.set(language, remember) end
 
 ---Returns the current language.
 ---
@@ -11958,6 +11961,14 @@ function ProjectModule.serialize_scene() end
 ---@param relPath string Project-relative path, e.g. "data/items.json" (the package first, then the project folder)
 ---@return string? content The file's text, or nil when it isn't found
 function ProjectModule.read_file(relPath) end
+
+---Reads a project JSON file as a Lua value: objects become tables with
+---string keys, arrays become lists (1-based), null becomes nil.
+---
+---Example: `local items = Project.read_json("data/items.json"); for _, it in ipairs(items or {}) do Log.info(it.name) end`
+---@param relPath string Project-relative path, e.g. "data/items.json" (the package first, then the project folder)
+---@return any? value The decoded value, or nil when the file is missing or isn't JSON (a warning says which)
+function ProjectModule.read_json(relPath) end
 
 ---Checks if a file exists in the active project (.rayzr archive or disk).
 ---

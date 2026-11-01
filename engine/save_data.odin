@@ -105,6 +105,12 @@ Save_FilePath :: proc(allocator := context.temp_allocator) -> string {
 
 // --- JSON <-> Lua ------------------------------------------------------------------
 
+// JSON_Problem: why a text isn't JSON ("" when it is).
+JSON_Problem :: proc(text: string) -> string {
+	_, err := json.parse(transmute([]u8)text, allocator = context.temp_allocator)
+	return "" if err == .None else fmt.tprintf("%v", err)
+}
+
 // Lua_PushJSONText pushes a JSON text as a Lua value (nil if it doesn't parse).
 Lua_PushJSONText :: proc(L: ^lua.State, text: string) {
 	v, err := json.parse(transmute([]u8)text, allocator = context.temp_allocator)

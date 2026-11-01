@@ -359,10 +359,18 @@ url_encode :: proc(sb: ^strings.Builder, s: string) {
 // --- Lua: the Crash module ------------------------------------------------------
 
 // Crash.pending() -> {{path =, text =}, ...}: reports from earlier runs.
+// crash_script_dir: the game's crash folder as scripts see it - none in
+// the editor (Simulate), whose crash folder is the editor's own.
+@(private = "file")
+crash_script_dir :: proc(L: ^lua.State) -> string {
+	if sm := get_script_manager(L); sm != nil && sm.game != nil && sm.game.inEditor do return ""
+	return crash.dir
+}
+
 @(private = "file")
 lua_crash_pending :: proc "c" (L: ^lua.State) -> c.int {
 	context = Script_Context(L)
-	reports := Crash_Pending(crash.dir)
+	reports := Crash_Pending(crash_script_dir(L)) if crash_script_dir(L) != "" else nil
 	lua.createtable(L, c.int(len(reports)), 0)
 	for r, i in reports {
 		lua.createtable(L, 0, 2)
@@ -381,8 +389,8 @@ lua_crash_dismiss :: proc "c" (L: ^lua.State) -> c.int {
 	context = Script_Context(L)
 	p := string(lua.L_checkstring(L, 1))
 	// (Only reports in the crash folder.)
-	dir, _ := filepath.clean(crash.dir, context.temp_allocator)
-	ok := crash.dir != "" && filepath.dir(p, context.temp_allocator) == dir && Crash_MarkSeen(p)
+	dir, _ := filepath.clean(crash_script_dir(L), context.temp_allocator)
+	ok := crash_script_dir(L) != "" && filepath.dir(p, context.temp_allocator) == dir && Crash_MarkSeen(p)
 	lua.pushboolean(L, b32(ok))
 	return 1
 }
@@ -399,7 +407,7 @@ lua_crash_note :: proc "c" (L: ^lua.State) -> c.int {
 @(private = "file")
 lua_crash_dir :: proc "c" (L: ^lua.State) -> c.int {
 	context = Script_Context(L)
-	lua.pushstring(L, strings.clone_to_cstring(crash.dir, context.temp_allocator))
+	lua.pushstring(L, strings.clone_to_cstring(crash_script_dir(L), context.temp_allocator))
 	return 1
 }
 

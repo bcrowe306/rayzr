@@ -3377,13 +3377,19 @@ lua_sm_time :: proc "c" (L: ^lua.State) -> c.int {
 lua_sm_start :: proc "c" (L: ^lua.State) -> c.int {
 	context = Script_Context(L)
 	sm := sm_arg(L)
-	if sm == nil do return 0
-	name := lua.tostring(L, 2) if lua.gettop(L) >= 2 else nil
+	if sm == nil {
+		lua.pushboolean(L, false)
+		return 1
+	}
+	name := lua.tostring(L, 2) if lua.type(L, 2) == .STRING else nil
 	if name != nil && StateMachine_FindState(sm, string(name)) < 0 {
-		log.warnf("sm_start: no state '%s' on %s (starting in the initial state)", string(name), sm.name)
+		Script_Problem(.Warning, "sm_start: no state '%s' on %s (not started)", string(name), sm.name)
+		lua.pushboolean(L, false)
+		return 1
 	}
 	StateMachine_Start(sm, string(name) if name != nil else "", sm_ctx(L))
-	return 0
+	lua.pushboolean(L, b32(sm.running && sm.current >= 0))
+	return 1
 }
 
 @(private="file")
@@ -3941,6 +3947,8 @@ lua_locale_set :: proc "c" (L: ^lua.State) -> c.int {
 		}
 	}
 	Locale_SetLanguage(string(s))
+	// Remembered for next time unless asked not to: Locale.set(lang, false).
+	if lua.isnoneornil(L, 2) || bool(lua.toboolean(L, 2)) do Locale_SaveChoice(string(s))
 	lua.pushboolean(L, true)
 	return 1
 }
@@ -4249,7 +4257,13 @@ lua_scene_is_transitioning :: proc "c" (L: ^lua.State) -> c.int {
 lua_engine_set_fullscreen :: proc "c" (L: ^lua.State) -> c.int {
 	context = Script_Context(L)
 	sm := get_script_manager(L)
-	if sm != nil && sm.game != nil do sm.game.fullscreenRequest = bool(lua.toboolean(L, 1))
+	if sm == nil || sm.game == nil do return 0
+	if sm.game.inEditor {
+		// (Simulate runs inside the editor's window: Play to try fullscreen.)
+		script_warn_once(L, "set_fullscreen", "Engine.set_fullscreen works in the running game (Play), not in Simulate")
+		return 0
+	}
+	sm.game.fullscreenRequest = bool(lua.toboolean(L, 1))
 	return 0
 }
 
@@ -4620,7 +4634,9 @@ lua_scene_create_node :: proc "c" (L: ^lua.State) -> c.int {
 			return 1
 		}
 		if !strings.equal_fold(typeStr, "node") {
-			log.warnf("Scene.create_node: unknown node type '%s' (made a plain Node)", typeStr)
+			Script_Problem(.Warning, "Scene.create_node: unknown node type '%s' (nothing made)", typeStr)
+			lua.pushnil(L)
+			return 1
 		}
 		nd := CreateNode(scene.manager, Node)
 		if nodeName != "" do nd.name = strings.clone(nodeName, nd.allocator)
@@ -4818,6 +4834,32 @@ lua_project_read_file :: proc "c" (L: ^lua.State) -> c.int {
 	}
 	txtC := strings.clone_to_cstring(txt, context.temp_allocator)
 	lua.pushstring(L, txtC)
+	return 1
+}
+
+// Project.read_json(path): a project file's JSON as a Lua value (nil if
+// missing or not JSON; a warning says which).
+@(private="file")
+lua_project_read_json :: proc "c" (L: ^lua.State) -> c.int {
+	context = Script_Context(L)
+	pathC := lua.tostring(L, 1)
+	sm := get_script_manager(L)
+	if pathC == nil || sm == nil || sm.game == nil {
+		lua.pushnil(L)
+		return 1
+	}
+	txt, ok := AssetManager_ReadFileString(&sm.game.assetManager, string(pathC), context.temp_allocator)
+	if !ok {
+		Script_Problem(.Warning, "Project.read_json: no file '%s'", string(pathC))
+		lua.pushnil(L)
+		return 1
+	}
+	if why := JSON_Problem(txt); why != "" {
+		Script_Problem(.Warning, "Project.read_json: '%s' isn't JSON (%s)", string(pathC), why)
+		lua.pushnil(L)
+		return 1
+	}
+	Lua_PushJSONText(L, txt)
 	return 1
 }
 
@@ -5554,6 +5596,8 @@ RegisterEngineLuaBindings :: proc(L: ^lua.State, sm: ^ScriptManager) {
 	lua.setfield(L, -2, "serialize_scene")
 	lua.pushcfunction(L, lua_project_read_file)
 	lua.setfield(L, -2, "read_file")
+	lua.pushcfunction(L, lua_project_read_json)
+	lua.setfield(L, -2, "read_json")
 	lua.pushcfunction(L, lua_project_has_file)
 	lua.setfield(L, -2, "has_file")
 	lua.setglobal(L, "Project")
