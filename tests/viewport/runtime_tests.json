@@ -1,0 +1,26 @@
+[
+ {
+  "name": "viewport: a minimap (World, rendered 160x90, shown 320x180, pixelated) over the main view",
+  "project": "tests/viewport/project",
+  "scene": "scenes/minimap.scene.json",
+  "frames": 30,
+  "expect": [["Minimap", "exists", "==", true]],
+  "golden": {"image": "tests/viewport/expected/minimap.png", "max_pixels": 0.01, "threshold": 48}
+ },
+ {
+  "name": "viewport: an in-world screen (Children) shown by itself and by a rotated Sprite (viewport:TV)",
+  "project": "tests/viewport/project",
+  "scene": "scenes/screen.scene.json",
+  "frames": 30,
+  "expect": [["TV", "exists", "==", true]],
+  "golden": {"image": "tests/viewport/expected/screen.png", "max_pixels": 0.01, "threshold": 48}
+ },
+ {
+  "name": "viewport: split-screen - two World viewports covering the screen, each following a player",
+  "project": "tests/viewport/project",
+  "scene": "scenes/split.scene.json",
+  "frames": 30,
+  "expect": [["Left", "exists", "==", true], ["Right", "exists", "==", true]],
+  "golden": {"image": "tests/viewport/expected/split.png", "max_pixels": 0.01, "threshold": 48}
+ }
+]

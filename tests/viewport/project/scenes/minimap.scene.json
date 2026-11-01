@@ -1,0 +1,1063 @@
+{
+ "name": "minimap",
+ "draw_bounds": false,
+ "background": [
+  20,
+  24,
+  36,
+  255
+ ],
+ "root": {
+  "type": "Node",
+  "name": "root",
+  "position": [
+   0,
+   0
+  ],
+  "scale": [
+   1,
+   1
+  ],
+  "rotation": 0,
+  "enabled": true,
+  "visible": true,
+  "layer": 0,
+  "children": [
+   {
+    "type": "VectorShapeNode",
+    "name": "Star",
+    "position": [
+     -600,
+     -200
+    ],
+    "scale": [
+     1.5,
+     1.5
+    ],
+    "rotation": 0,
+    "enabled": true,
+    "visible": true,
+    "layer": 0,
+    "properties": {
+     "file": "",
+     "group": "",
+     "frame": -1,
+     "preset": "Star",
+     "fillColor": "#ef4444ff",
+     "strokeColor": "#281808ff",
+     "strokeWidth": 4,
+     "tint": "#ffffffff",
+     "brightness": 0,
+     "colorAdd": "#00000000",
+     "trimStart": 0,
+     "trimEnd": 1,
+     "trimOffset": 0,
+     "trimEach": false,
+     "morphTo": "",
+     "morph": 0,
+     "lineScale": "Scale",
+     "shadowColor": "#00000000",
+     "shadowOffset": [
+      6,
+      6
+     ],
+     "shadowBlur": 6,
+     "glowColor": "#00000000",
+     "glowSize": 8,
+     "glowStrength": 1.5,
+     "outlineColor": "#00000000",
+     "outlineWidth": 3,
+     "blur": 0,
+     "saturation": 1,
+     "contrast": 1,
+     "hue": 0,
+     "skinBones": "",
+     "skinSmooth": 24,
+     "warpTopLeft": [
+      0,
+      0
+     ],
+     "warpTopRight": [
+      0,
+      0
+     ],
+     "warpBottomLeft": [
+      0,
+      0
+     ],
+     "warpBottomRight": [
+      0,
+      0
+     ],
+     "collider": "None",
+     "colliderDetail": 1,
+     "colliderFriction": 0.6,
+     "colliderBounce": 0.1,
+     "colliderDensity": 1
+    }
+   },
+   {
+    "type": "VectorShapeNode",
+    "name": "Star",
+    "position": [
+     0,
+     -200
+    ],
+    "scale": [
+     1.5,
+     1.5
+    ],
+    "rotation": 0,
+    "enabled": true,
+    "visible": true,
+    "layer": 0,
+    "properties": {
+     "file": "",
+     "group": "",
+     "frame": -1,
+     "preset": "Star",
+     "fillColor": "#3b82f6ff",
+     "strokeColor": "#281808ff",
+     "strokeWidth": 4,
+     "tint": "#ffffffff",
+     "brightness": 0,
+     "colorAdd": "#00000000",
+     "trimStart": 0,
+     "trimEnd": 1,
+     "trimOffset": 0,
+     "trimEach": false,
+     "morphTo": "",
+     "morph": 0,
+     "lineScale": "Scale",
+     "shadowColor": "#00000000",
+     "shadowOffset": [
+      6,
+      6
+     ],
+     "shadowBlur": 6,
+     "glowColor": "#00000000",
+     "glowSize": 8,
+     "glowStrength": 1.5,
+     "outlineColor": "#00000000",
+     "outlineWidth": 3,
+     "blur": 0,
+     "saturation": 1,
+     "contrast": 1,
+     "hue": 0,
+     "skinBones": "",
+     "skinSmooth": 24,
+     "warpTopLeft": [
+      0,
+      0
+     ],
+     "warpTopRight": [
+      0,
+      0
+     ],
+     "warpBottomLeft": [
+      0,
+      0
+     ],
+     "warpBottomRight": [
+      0,
+      0
+     ],
+     "collider": "None",
+     "colliderDetail": 1,
+     "colliderFriction": 0.6,
+     "colliderBounce": 0.1,
+     "colliderDensity": 1
+    }
+   },
+   {
+    "type": "VectorShapeNode",
+    "name": "Star",
+    "position": [
+     600,
+     -200
+    ],
+    "scale": [
+     1.5,
+     1.5
+    ],
+    "rotation": 0,
+    "enabled": true,
+    "visible": true,
+    "layer": 0,
+    "properties": {
+     "file": "",
+     "group": "",
+     "frame": -1,
+     "preset": "Star",
+     "fillColor": "#22c55eff",
+     "strokeColor": "#281808ff",
+     "strokeWidth": 4,
+     "tint": "#ffffffff",
+     "brightness": 0,
+     "colorAdd": "#00000000",
+     "trimStart": 0,
+     "trimEnd": 1,
+     "trimOffset": 0,
+     "trimEach": false,
+     "morphTo": "",
+     "morph": 0,
+     "lineScale": "Scale",
+     "shadowColor": "#00000000",
+     "shadowOffset": [
+      6,
+      6
+     ],
+     "shadowBlur": 6,
+     "glowColor": "#00000000",
+     "glowSize": 8,
+     "glowStrength": 1.5,
+     "outlineColor": "#00000000",
+     "outlineWidth": 3,
+     "blur": 0,
+     "saturation": 1,
+     "contrast": 1,
+     "hue": 0,
+     "skinBones": "",
+     "skinSmooth": 24,
+     "warpTopLeft": [
+      0,
+      0
+     ],
+     "warpTopRight": [
+      0,
+      0
+     ],
+     "warpBottomLeft": [
+      0,
+      0
+     ],
+     "warpBottomRight": [
+      0,
+      0
+     ],
+     "collider": "None",
+     "colliderDetail": 1,
+     "colliderFriction": 0.6,
+     "colliderBounce": 0.1,
+     "colliderDensity": 1
+    }
+   },
+   {
+    "type": "VectorShapeNode",
+    "name": "Star",
+    "position": [
+     1200,
+     -200
+    ],
+    "scale": [
+     1.5,
+     1.5
+    ],
+    "rotation": 0,
+    "enabled": true,
+    "visible": true,
+    "layer": 0,
+    "properties": {
+     "file": "",
+     "group": "",
+     "frame": -1,
+     "preset": "Star",
+     "fillColor": "#eab308ff",
+     "strokeColor": "#281808ff",
+     "strokeWidth": 4,
+     "tint": "#ffffffff",
+     "brightness": 0,
+     "colorAdd": "#00000000",
+     "trimStart": 0,
+     "trimEnd": 1,
+     "trimOffset": 0,
+     "trimEach": false,
+     "morphTo": "",
+     "morph": 0,
+     "lineScale": "Scale",
+     "shadowColor": "#00000000",
+     "shadowOffset": [
+      6,
+      6
+     ],
+     "shadowBlur": 6,
+     "glowColor": "#00000000",
+     "glowSize": 8,
+     "glowStrength": 1.5,
+     "outlineColor": "#00000000",
+     "outlineWidth": 3,
+     "blur": 0,
+     "saturation": 1,
+     "contrast": 1,
+     "hue": 0,
+     "skinBones": "",
+     "skinSmooth": 24,
+     "warpTopLeft": [
+      0,
+      0
+     ],
+     "warpTopRight": [
+      0,
+      0
+     ],
+     "warpBottomLeft": [
+      0,
+      0
+     ],
+     "warpBottomRight": [
+      0,
+      0
+     ],
+     "collider": "None",
+     "colliderDetail": 1,
+     "colliderFriction": 0.6,
+     "colliderBounce": 0.1,
+     "colliderDensity": 1
+    }
+   },
+   {
+    "type": "VectorShapeNode",
+    "name": "Star",
+    "position": [
+     1800,
+     -200
+    ],
+    "scale": [
+     1.5,
+     1.5
+    ],
+    "rotation": 0,
+    "enabled": true,
+    "visible": true,
+    "layer": 0,
+    "properties": {
+     "file": "",
+     "group": "",
+     "frame": -1,
+     "preset": "Star",
+     "fillColor": "#a855f7ff",
+     "strokeColor": "#281808ff",
+     "strokeWidth": 4,
+     "tint": "#ffffffff",
+     "brightness": 0,
+     "colorAdd": "#00000000",
+     "trimStart": 0,
+     "trimEnd": 1,
+     "trimOffset": 0,
+     "trimEach": false,
+     "morphTo": "",
+     "morph": 0,
+     "lineScale": "Scale",
+     "shadowColor": "#00000000",
+     "shadowOffset": [
+      6,
+      6
+     ],
+     "shadowBlur": 6,
+     "glowColor": "#00000000",
+     "glowSize": 8,
+     "glowStrength": 1.5,
+     "outlineColor": "#00000000",
+     "outlineWidth": 3,
+     "blur": 0,
+     "saturation": 1,
+     "contrast": 1,
+     "hue": 0,
+     "skinBones": "",
+     "skinSmooth": 24,
+     "warpTopLeft": [
+      0,
+      0
+     ],
+     "warpTopRight": [
+      0,
+      0
+     ],
+     "warpBottomLeft": [
+      0,
+      0
+     ],
+     "warpBottomRight": [
+      0,
+      0
+     ],
+     "collider": "None",
+     "colliderDetail": 1,
+     "colliderFriction": 0.6,
+     "colliderBounce": 0.1,
+     "colliderDensity": 1
+    }
+   },
+   {
+    "type": "VectorShapeNode",
+    "name": "Star",
+    "position": [
+     -600,
+     500
+    ],
+    "scale": [
+     1.5,
+     1.5
+    ],
+    "rotation": 0,
+    "enabled": true,
+    "visible": true,
+    "layer": 0,
+    "properties": {
+     "file": "",
+     "group": "",
+     "frame": -1,
+     "preset": "Star",
+     "fillColor": "#ef4444ff",
+     "strokeColor": "#281808ff",
+     "strokeWidth": 4,
+     "tint": "#ffffffff",
+     "brightness": 0,
+     "colorAdd": "#00000000",
+     "trimStart": 0,
+     "trimEnd": 1,
+     "trimOffset": 0,
+     "trimEach": false,
+     "morphTo": "",
+     "morph": 0,
+     "lineScale": "Scale",
+     "shadowColor": "#00000000",
+     "shadowOffset": [
+      6,
+      6
+     ],
+     "shadowBlur": 6,
+     "glowColor": "#00000000",
+     "glowSize": 8,
+     "glowStrength": 1.5,
+     "outlineColor": "#00000000",
+     "outlineWidth": 3,
+     "blur": 0,
+     "saturation": 1,
+     "contrast": 1,
+     "hue": 0,
+     "skinBones": "",
+     "skinSmooth": 24,
+     "warpTopLeft": [
+      0,
+      0
+     ],
+     "warpTopRight": [
+      0,
+      0
+     ],
+     "warpBottomLeft": [
+      0,
+      0
+     ],
+     "warpBottomRight": [
+      0,
+      0
+     ],
+     "collider": "None",
+     "colliderDetail": 1,
+     "colliderFriction": 0.6,
+     "colliderBounce": 0.1,
+     "colliderDensity": 1
+    }
+   },
+   {
+    "type": "VectorShapeNode",
+    "name": "Star",
+    "position": [
+     0,
+     500
+    ],
+    "scale": [
+     1.5,
+     1.5
+    ],
+    "rotation": 0,
+    "enabled": true,
+    "visible": true,
+    "layer": 0,
+    "properties": {
+     "file": "",
+     "group": "",
+     "frame": -1,
+     "preset": "Star",
+     "fillColor": "#3b82f6ff",
+     "strokeColor": "#281808ff",
+     "strokeWidth": 4,
+     "tint": "#ffffffff",
+     "brightness": 0,
+     "colorAdd": "#00000000",
+     "trimStart": 0,
+     "trimEnd": 1,
+     "trimOffset": 0,
+     "trimEach": false,
+     "morphTo": "",
+     "morph": 0,
+     "lineScale": "Scale",
+     "shadowColor": "#00000000",
+     "shadowOffset": [
+      6,
+      6
+     ],
+     "shadowBlur": 6,
+     "glowColor": "#00000000",
+     "glowSize": 8,
+     "glowStrength": 1.5,
+     "outlineColor": "#00000000",
+     "outlineWidth": 3,
+     "blur": 0,
+     "saturation": 1,
+     "contrast": 1,
+     "hue": 0,
+     "skinBones": "",
+     "skinSmooth": 24,
+     "warpTopLeft": [
+      0,
+      0
+     ],
+     "warpTopRight": [
+      0,
+      0
+     ],
+     "warpBottomLeft": [
+      0,
+      0
+     ],
+     "warpBottomRight": [
+      0,
+      0
+     ],
+     "collider": "None",
+     "colliderDetail": 1,
+     "colliderFriction": 0.6,
+     "colliderBounce": 0.1,
+     "colliderDensity": 1
+    }
+   },
+   {
+    "type": "VectorShapeNode",
+    "name": "Star",
+    "position": [
+     600,
+     500
+    ],
+    "scale": [
+     1.5,
+     1.5
+    ],
+    "rotation": 0,
+    "enabled": true,
+    "visible": true,
+    "layer": 0,
+    "properties": {
+     "file": "",
+     "group": "",
+     "frame": -1,
+     "preset": "Star",
+     "fillColor": "#22c55eff",
+     "strokeColor": "#281808ff",
+     "strokeWidth": 4,
+     "tint": "#ffffffff",
+     "brightness": 0,
+     "colorAdd": "#00000000",
+     "trimStart": 0,
+     "trimEnd": 1,
+     "trimOffset": 0,
+     "trimEach": false,
+     "morphTo": "",
+     "morph": 0,
+     "lineScale": "Scale",
+     "shadowColor": "#00000000",
+     "shadowOffset": [
+      6,
+      6
+     ],
+     "shadowBlur": 6,
+     "glowColor": "#00000000",
+     "glowSize": 8,
+     "glowStrength": 1.5,
+     "outlineColor": "#00000000",
+     "outlineWidth": 3,
+     "blur": 0,
+     "saturation": 1,
+     "contrast": 1,
+     "hue": 0,
+     "skinBones": "",
+     "skinSmooth": 24,
+     "warpTopLeft": [
+      0,
+      0
+     ],
+     "warpTopRight": [
+      0,
+      0
+     ],
+     "warpBottomLeft": [
+      0,
+      0
+     ],
+     "warpBottomRight": [
+      0,
+      0
+     ],
+     "collider": "None",
+     "colliderDetail": 1,
+     "colliderFriction": 0.6,
+     "colliderBounce": 0.1,
+     "colliderDensity": 1
+    }
+   },
+   {
+    "type": "VectorShapeNode",
+    "name": "Star",
+    "position": [
+     1200,
+     500
+    ],
+    "scale": [
+     1.5,
+     1.5
+    ],
+    "rotation": 0,
+    "enabled": true,
+    "visible": true,
+    "layer": 0,
+    "properties": {
+     "file": "",
+     "group": "",
+     "frame": -1,
+     "preset": "Star",
+     "fillColor": "#eab308ff",
+     "strokeColor": "#281808ff",
+     "strokeWidth": 4,
+     "tint": "#ffffffff",
+     "brightness": 0,
+     "colorAdd": "#00000000",
+     "trimStart": 0,
+     "trimEnd": 1,
+     "trimOffset": 0,
+     "trimEach": false,
+     "morphTo": "",
+     "morph": 0,
+     "lineScale": "Scale",
+     "shadowColor": "#00000000",
+     "shadowOffset": [
+      6,
+      6
+     ],
+     "shadowBlur": 6,
+     "glowColor": "#00000000",
+     "glowSize": 8,
+     "glowStrength": 1.5,
+     "outlineColor": "#00000000",
+     "outlineWidth": 3,
+     "blur": 0,
+     "saturation": 1,
+     "contrast": 1,
+     "hue": 0,
+     "skinBones": "",
+     "skinSmooth": 24,
+     "warpTopLeft": [
+      0,
+      0
+     ],
+     "warpTopRight": [
+      0,
+      0
+     ],
+     "warpBottomLeft": [
+      0,
+      0
+     ],
+     "warpBottomRight": [
+      0,
+      0
+     ],
+     "collider": "None",
+     "colliderDetail": 1,
+     "colliderFriction": 0.6,
+     "colliderBounce": 0.1,
+     "colliderDensity": 1
+    }
+   },
+   {
+    "type": "VectorShapeNode",
+    "name": "Star",
+    "position": [
+     1800,
+     500
+    ],
+    "scale": [
+     1.5,
+     1.5
+    ],
+    "rotation": 0,
+    "enabled": true,
+    "visible": true,
+    "layer": 0,
+    "properties": {
+     "file": "",
+     "group": "",
+     "frame": -1,
+     "preset": "Star",
+     "fillColor": "#a855f7ff",
+     "strokeColor": "#281808ff",
+     "strokeWidth": 4,
+     "tint": "#ffffffff",
+     "brightness": 0,
+     "colorAdd": "#00000000",
+     "trimStart": 0,
+     "trimEnd": 1,
+     "trimOffset": 0,
+     "trimEach": false,
+     "morphTo": "",
+     "morph": 0,
+     "lineScale": "Scale",
+     "shadowColor": "#00000000",
+     "shadowOffset": [
+      6,
+      6
+     ],
+     "shadowBlur": 6,
+     "glowColor": "#00000000",
+     "glowSize": 8,
+     "glowStrength": 1.5,
+     "outlineColor": "#00000000",
+     "outlineWidth": 3,
+     "blur": 0,
+     "saturation": 1,
+     "contrast": 1,
+     "hue": 0,
+     "skinBones": "",
+     "skinSmooth": 24,
+     "warpTopLeft": [
+      0,
+      0
+     ],
+     "warpTopRight": [
+      0,
+      0
+     ],
+     "warpBottomLeft": [
+      0,
+      0
+     ],
+     "warpBottomRight": [
+      0,
+      0
+     ],
+     "collider": "None",
+     "colliderDetail": 1,
+     "colliderFriction": 0.6,
+     "colliderBounce": 0.1,
+     "colliderDensity": 1
+    }
+   },
+   {
+    "type": "VectorShapeNode",
+    "name": "P1",
+    "position": [
+     200,
+     100
+    ],
+    "scale": [
+     0.8,
+     0.8
+    ],
+    "rotation": 0,
+    "enabled": true,
+    "visible": true,
+    "layer": 0,
+    "properties": {
+     "file": "",
+     "group": "",
+     "frame": -1,
+     "preset": "Star",
+     "fillColor": "#ffffffff",
+     "strokeColor": "#281808ff",
+     "strokeWidth": 4,
+     "tint": "#ffffffff",
+     "brightness": 0,
+     "colorAdd": "#00000000",
+     "trimStart": 0,
+     "trimEnd": 1,
+     "trimOffset": 0,
+     "trimEach": false,
+     "morphTo": "",
+     "morph": 0,
+     "lineScale": "Scale",
+     "shadowColor": "#00000000",
+     "shadowOffset": [
+      6,
+      6
+     ],
+     "shadowBlur": 6,
+     "glowColor": "#00000000",
+     "glowSize": 8,
+     "glowStrength": 1.5,
+     "outlineColor": "#00000000",
+     "outlineWidth": 3,
+     "blur": 0,
+     "saturation": 1,
+     "contrast": 1,
+     "hue": 0,
+     "skinBones": "",
+     "skinSmooth": 24,
+     "warpTopLeft": [
+      0,
+      0
+     ],
+     "warpTopRight": [
+      0,
+      0
+     ],
+     "warpBottomLeft": [
+      0,
+      0
+     ],
+     "warpBottomRight": [
+      0,
+      0
+     ],
+     "collider": "None",
+     "colliderDetail": 1,
+     "colliderFriction": 0.6,
+     "colliderBounce": 0.1,
+     "colliderDensity": 1
+    }
+   },
+   {
+    "type": "CameraNode",
+    "name": "Camera",
+    "position": [
+     200,
+     100
+    ],
+    "scale": [
+     1,
+     1
+    ],
+    "rotation": 0,
+    "enabled": true,
+    "visible": true,
+    "layer": 0,
+    "properties": {
+     "isCurrent": true,
+     "followMode": "SingleTarget",
+     "dragType": "SmoothDamp",
+     "targetPosition": [
+      0,
+      0
+     ],
+     "smoothDrag": true,
+     "smoothDragSpeed": [
+      0.2,
+      0.2
+     ],
+     "springConstant": 15,
+     "dampingRatio": 1,
+     "predictionTime": [
+      0.5,
+      0.5
+     ],
+     "maxDistance": [
+      100000,
+      100000
+     ],
+     "offset": [
+      0,
+      0
+     ],
+     "smoothOffset": true,
+     "smoothOffsetSpeed": 0.2,
+     "screenOffset": [
+      640,
+      360
+     ],
+     "customScreenOffset": false,
+     "targetRotation": 0,
+     "allowRotation": true,
+     "smoothRotation": true,
+     "smoothRotationSpeed": 0.2,
+     "targetZoom": 1,
+     "smoothZoom": true,
+     "smoothZoomSpeed": 0.2,
+     "minZoom": 0.1,
+     "maxZoom": 10,
+     "autoZoom": true,
+     "zoomMargin": 0.1,
+     "hasLimits": false,
+     "smoothLimit": true,
+     "leftLimit": -1000000,
+     "rightLimit": 1000000,
+     "topLimit": -1000000,
+     "bottomLimit": 1000000,
+     "useHMargins": false,
+     "useVMargins": false,
+     "leftMargin": 0.25,
+     "rightMargin": 0.25,
+     "topMargin": 0.25,
+     "bottomMargin": 0.25,
+     "enableMouseFollow": false,
+     "mouseInfluence": [
+      0.2,
+      0.2
+     ],
+     "shakePreset": "Custom",
+     "shakeTypes": [
+      "Vertical",
+      "Horizontal",
+      "Random"
+     ],
+     "shakeSpeed": 15,
+     "shakeIntensity": 10,
+     "shakeTrauma": 1
+    }
+   },
+   {
+    "type": "ScreenLayerNode",
+    "name": "HUD",
+    "position": [
+     0,
+     0
+    ],
+    "scale": [
+     1,
+     1
+    ],
+    "rotation": 0,
+    "enabled": true,
+    "visible": true,
+    "layer": 7,
+    "properties": {
+     "anchor": "TopLeft"
+    },
+    "children": [
+     {
+      "type": "ViewportNode",
+      "name": "Minimap",
+      "position": [
+       940,
+       20
+      ],
+      "scale": [
+       1,
+       1
+      ],
+      "rotation": 0,
+      "enabled": true,
+      "visible": true,
+      "layer": 0,
+      "properties": {
+       "mode": "World",
+       "size": [
+        320,
+        180
+       ],
+       "renderSize": [
+        160,
+        90
+       ],
+       "updateMode": "Every_Frame",
+       "display": true,
+       "coversScreen": false,
+       "pixelated": true,
+       "background": "#0a0a0aff"
+      },
+      "children": [
+       {
+        "type": "CameraNode",
+        "name": "MiniCam",
+        "position": [
+         600,
+         300
+        ],
+        "scale": [
+         1,
+         1
+        ],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
+        "properties": {
+         "isCurrent": false,
+         "followMode": "SingleTarget",
+         "dragType": "SmoothDamp",
+         "targetPosition": [
+          0,
+          0
+         ],
+         "smoothDrag": true,
+         "smoothDragSpeed": [
+          0.2,
+          0.2
+         ],
+         "springConstant": 15,
+         "dampingRatio": 1,
+         "predictionTime": [
+          0.5,
+          0.5
+         ],
+         "maxDistance": [
+          100000,
+          100000
+         ],
+         "offset": [
+          0,
+          0
+         ],
+         "smoothOffset": true,
+         "smoothOffsetSpeed": 0.2,
+         "screenOffset": [
+          640,
+          360
+         ],
+         "customScreenOffset": false,
+         "targetRotation": 0,
+         "allowRotation": true,
+         "smoothRotation": true,
+         "smoothRotationSpeed": 0.2,
+         "targetZoom": 0.12,
+         "smoothZoom": true,
+         "smoothZoomSpeed": 0.2,
+         "minZoom": 0.1,
+         "maxZoom": 10,
+         "autoZoom": true,
+         "zoomMargin": 0.1,
+         "hasLimits": false,
+         "smoothLimit": true,
+         "leftLimit": -1000000,
+         "rightLimit": 1000000,
+         "topLimit": -1000000,
+         "bottomLimit": 1000000,
+         "useHMargins": false,
+         "useVMargins": false,
+         "leftMargin": 0.25,
+         "rightMargin": 0.25,
+         "topMargin": 0.25,
+         "bottomMargin": 0.25,
+         "enableMouseFollow": false,
+         "mouseInfluence": [
+          0.2,
+          0.2
+         ],
+         "shakePreset": "Custom",
+         "shakeTypes": [
+          "Vertical",
+          "Horizontal",
+          "Random"
+         ],
+         "shakeSpeed": 15,
+         "shakeIntensity": 10,
+         "shakeTrauma": 1
+        },
+        "follow": "../../../P1"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

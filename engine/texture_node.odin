@@ -52,6 +52,16 @@ TextureNode_Create :: proc(scene: ^Scene, resource_manager: ^ResourceManager, fi
 TextureNode_Render :: proc(node: ^Node, gameContext: ^GameContext, deltaTime: f32) {
 	if !rl.IsWindowReady() do return
 	textureNode := cast(^TextureNode)node
+	if textureNode.texture == nil && Viewport_IsPath(textureNode.filePath) {
+		// A Viewport's picture (viewport_node.odin).
+		tex, v := Viewport_TextureByPath(gameContext, textureNode.filePath)
+		if tex.id == 0 do return
+		size := textureNode.size if textureNode.size != {} else v.size
+		tint := textureNode.tint if textureNode.tint != {} else rl.WHITE
+		rl.SetTextureFilter(tex, .POINT if v.pixelated else .BILINEAR)
+		Texture_DrawScaled(tex, {0, 0, f32(tex.width), f32(tex.height)}, textureNode.globalPosition, size, textureNode.globalScale, Node_OriginPx(textureNode, size), textureNode.globalRotation, tint)
+		return
+	}
 	if textureNode.texture == nil || textureNode.texture.texture.id == 0 do return
 
 	source := Texture_Full(textureNode.texture) // (its rectangle on an atlas page)

@@ -316,6 +316,15 @@ RunScene :: proc(scene: ^Scene, gameContext: ^GameContext, deltaTime: f32) {
 		Prof_Scope("vector.filters")
 		Vector_FiltersPrepare(scene, zoom)
 	}
+	// Viewports (viewport_node.odin): their pictures, before the frame draws
+	// them (and before the frame's own tile chunks).
+	mainView: Maybe(rl.Rectangle)
+	if scene.camera != nil && scene.camera.enabled && scene.camera.isCurrent do mainView = Camera2D_ViewRect(CameraNode_GetCamera2D(scene.camera, lightVW, lightVH), lightVW, lightVH)
+	if rl.IsWindowReady() {
+		Prof_Scope("viewports")
+		Viewports_Render(scene, gameContext, mainView, &buckets)
+	}
+	covered := Viewports_CoverScreen(scene) // (split-screen: the main view's world isn't seen)
 	if scene.camera != nil && scene.camera.enabled && scene.camera.isCurrent && rl.IsWindowReady() {
 		// Cached tile chunks in view (built before any layer draws).
 		Prof_Begin("tilecache.prepare")
@@ -364,7 +373,7 @@ RunScene :: proc(scene: ^Scene, gameContext: ^GameContext, deltaTime: f32) {
 			Render_SetView(Camera2D_ViewRect(CameraNode_GetCamera2D(scene.camera, vw, vh), vw, vh))
 		}
 
-		if len(buckets[layer]) > 0 {
+		if len(buckets[layer]) > 0 && !(covered && isWorldLayer) {
 			Prof_Scope("render.layer")
 			// Smooth camera: the layers over the world go into a transparent
 			// frame, composited later. Plain alpha blending would square the
@@ -588,6 +597,23 @@ Scene_CollectRenderables :: proc(scene: ^Scene, screen: ^[RenderLayer][dynamic]^
 	return
 }
 
+// Scene_CollectSubtree: the drawables of a node's subtree (not the node),
+// as Scene_CollectRenderables (a Children viewport's picture).
+Scene_CollectSubtree :: proc(scene: ^Scene, root: ^Node) -> (buckets: [RenderLayer][dynamic]^Node) {
+	collect: Render_Collect
+	for &l in collect.items do l = make([dynamic]Render_Item, context.temp_allocator)
+	if scene != nil && scene.manager != nil && root != nil {
+		for child in GetChildrenView(scene.manager, root) do render_walk(&collect, scene.manager, child, 0, 0)
+	}
+	return render_buckets(&collect)
+}
+
+// Scene_RenderLayers draws buckets' layers (those in `layers`) with the
+// current camera and view (a viewport's pass).
+Scene_RenderLayers :: proc(scene: ^Scene, buckets: [RenderLayer][dynamic]^Node, gameContext: ^GameContext, layers: bit_set[RenderLayer]) {
+	for layer in RenderLayer do if layer in layers && len(buckets[layer]) > 0 do render_bucket(scene, buckets[layer][:], gameContext, 0)
+}
+
 @(private = "file")
 render_buckets :: proc(collect: ^Render_Collect) -> (buckets: [RenderLayer][dynamic]^Node) {
 	for &l, layer in collect.items {
@@ -629,6 +655,12 @@ node_as_tilemap :: #force_inline proc(n: ^Node) -> (^TileMapNode, bool) {
 render_walk :: proc(c: ^Render_Collect, m: ^NodeManager, node: ^Node, z: i32, key: f32) {
 	if node == nil || !node.enabled do return
 	if Render_HideEditorHidden && node.editorHidden do return
+	if node.typeId == ViewportNode && (cast(^ViewportNode)node).mode == .Children {
+		// Its children draw into its texture only (viewport_node.odin).
+		if node.renderable do append(&c.items[node.layer], Render_Item{node, z + node.zIndex, key})
+		if node.zIndex != 0 do c.anyZ = true
+		return
+	}
 	if node.typeId == ScreenLayerNode && c.screen != nil {
 		render_walk(c.screen, m, node, 0, 0) // (its own order: screen space)
 		return

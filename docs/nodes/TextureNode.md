@@ -10,6 +10,8 @@ size, around its origin.
   background picture.
 - **Swapping the whole image** from a script (a damaged ship, a lit lamp):
   `set_texture`.
+- **Showing a [Viewport](ViewportNode.md)'s picture** (an in-world screen,
+  a security monitor): pick `viewport:<name>` in **Texture**.
 - **Not** for one cell of a sprite sheet or atlas: use an
   [Atlas Sprite](AtlasSpriteNode.md).
 - **Not** for animation: use an [Animation Player](AnimationPlayerNode.md),

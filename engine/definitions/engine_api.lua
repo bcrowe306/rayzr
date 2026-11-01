@@ -186,6 +186,9 @@ local TouchJoystickNode = {}
 ---@class TouchButtonNode : Node
 local TouchButtonNode = {}
 
+---@class ViewportNode : Node
+local ViewportNode = {}
+
 ---@class UIContainerNode : Node
 
 ---@class UILabelNode : Node, TextHolder
@@ -3204,6 +3207,97 @@ function TouchButtonNode:get_property(path) end
 ---@overload fun(self: TouchButtonNode, path: "textColor", value: number[])
 ---@overload fun(self: TouchButtonNode, path: "alwaysShow", value: boolean)
 function TouchButtonNode:set_property(path, value, y) end
+
+---@class ViewportNode
+---@field position Vec2 Position relative to the parent, in pixels (+y is down).
+---@field scale Vec2 Size multiplier relative to the parent (1, 1 = as is; negative flips).
+---@field rotation number Rotation relative to the parent, in degrees (clockwise).
+---@field layer "Layer1"|"Layer2"|"Layer3"|"Layer4"|"Layer5"|"Layer6"|"Layer7"|"Layer8" Drawing layer: higher layers draw over lower ones (Layer8 is for UI).
+---@field zIndex integer Draw order within the layer, added to the parent's: higher draws on top (-10, 0, 10...)...
+---@field ySort boolean Draw the children by their Y position (lower on screen = in front), each with its child...
+---@field ySortOffset number Added to this node's Y when its parent Y-sorts: move the sorting line to the feet (e.g....
+---@field pauseMode "Inherit"|"Pausable"|"Always" Inherit the parent's pausing, Pausable (stops when paused) or Always (keeps running, e....
+---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
+---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
+---@field mode "World"|"Children" World: the running scene through the viewport's Camera child (add one: its follow targe...
+---@field size Vec2 The size it's drawn at (Display), in px.
+---@field renderSize Vec2 How many pixels it renders (0, 0: Size). Smaller is cheaper and pixelated - a 160x90 mi...
+---@field updateMode "Every_Frame"|"When_Visible"|"Once" Every Frame; When Visible (skipped while hidden or off screen); Once (a snapshot: node:...
+---@field display boolean Draws its picture where it stands, at Size. Off: only used elsewhere (a Sprite's textur...
+---@field coversScreen boolean World: it covers the screen (split-screen), so the main view's world isn't drawn undern...
+---@field pixelated boolean Scaled nearest-neighbour (crisp pixels) instead of smoothly.
+---@field background number[] What's behind its picture. None: the scene's background colour (World) or transparent (...
+
+---@alias ViewportNodeProperty
+---| "position" # Vec2 - Position relative to the parent, in pixels (+y is down).
+---| "scale" # Vec2 - Size multiplier relative to the parent (1, 1 = as is; negative flips).
+---| "rotation" # number - Rotation relative to the parent, in degrees (clockwise).
+---| "layer" # "Layer1"|"Layer2"|"Layer3"|"Layer4"|"Layer5"|"Layer6"|"Layer7"|"Layer8" - Drawing layer: higher layers draw over lower ones (Layer8 is for UI).
+---| "zIndex" # integer - Draw order within the layer, added to the parent's: higher draws on top (-10, 0, 10...)...
+---| "ySort" # boolean - Draw the children by their Y position (lower on screen = in front), each with its child...
+---| "ySortOffset" # number - Added to this node's Y when its parent Y-sorts: move the sorting line to the feet (e.g....
+---| "pauseMode" # "Inherit"|"Pausable"|"Always" - Inherit the parent's pausing, Pausable (stops when paused) or Always (keeps running, e....
+---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
+---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
+---| "mode" # "World"|"Children" - World: the running scene through the viewport's Camera child (add one: its follow targe...
+---| "size" # Vec2 - The size it's drawn at (Display), in px.
+---| "renderSize" # Vec2 - How many pixels it renders (0, 0: Size). Smaller is cheaper and pixelated - a 160x90 mi...
+---| "updateMode" # "Every_Frame"|"When_Visible"|"Once" - Every Frame; When Visible (skipped while hidden or off screen); Once (a snapshot: node:...
+---| "display" # boolean - Draws its picture where it stands, at Size. Off: only used elsewhere (a Sprite's textur...
+---| "coversScreen" # boolean - World: it covers the screen (split-screen), so the main view's world isn't drawn undern...
+---| "pixelated" # boolean - Scaled nearest-neighbour (crisp pixels) instead of smoothly.
+---| "background" # number[] - What's behind its picture. None: the scene's background colour (World) or transparent (...
+
+---Reads an Inspector property by its path (vectors and colours as tables); "script.<name>" reads a field of the node's script.
+---
+---Example: `local value = self.node:get_property("mode")`
+---@param path ViewportNodeProperty|string The property's path, as the Inspector names it ("position", "emitter.amount") or "script.<field>"
+---@return any value Its value: a number, boolean, string or enum name; vectors and colours as tables (nil when there's no such property)
+---@overload fun(self: ViewportNode, path: "position"): Vec2
+---@overload fun(self: ViewportNode, path: "scale"): Vec2
+---@overload fun(self: ViewportNode, path: "rotation"): number
+---@overload fun(self: ViewportNode, path: "layer"): "Layer1"|"Layer2"|"Layer3"|"Layer4"|"Layer5"|"Layer6"|"Layer7"|"Layer8"
+---@overload fun(self: ViewportNode, path: "zIndex"): integer
+---@overload fun(self: ViewportNode, path: "ySort"): boolean
+---@overload fun(self: ViewportNode, path: "ySortOffset"): number
+---@overload fun(self: ViewportNode, path: "pauseMode"): "Inherit"|"Pausable"|"Always"
+---@overload fun(self: ViewportNode, path: "paused"): boolean
+---@overload fun(self: ViewportNode, path: "enabled"): boolean
+---@overload fun(self: ViewportNode, path: "mode"): "World"|"Children"
+---@overload fun(self: ViewportNode, path: "size"): Vec2
+---@overload fun(self: ViewportNode, path: "renderSize"): Vec2
+---@overload fun(self: ViewportNode, path: "updateMode"): "Every_Frame"|"When_Visible"|"Once"
+---@overload fun(self: ViewportNode, path: "display"): boolean
+---@overload fun(self: ViewportNode, path: "coversScreen"): boolean
+---@overload fun(self: ViewportNode, path: "pixelated"): boolean
+---@overload fun(self: ViewportNode, path: "background"): number[]
+function ViewportNode:get_property(path) end
+
+---Sets an Inspector property by its path: vectors as {x, y} or x, y; colours as {r, g, b[, a]} 0..1 or "#rrggbb[aa]"; enums by name; "script.<name>" a field of the node's script.
+---
+---Example: `self.node:set_property("mode", "Children")`
+---@param path ViewportNodeProperty|string The property's path, as the Inspector names it, or "script.<field>"
+---@param value any The new value: a number, boolean, string or enum name; a vector as {x, y} (or x here and y next); a colour as {r, g, b[, a]} 0..1 or "#rrggbb[aa]"
+---@param y? number A vector's y when value is its x
+---@overload fun(self: ViewportNode, path: "position", x: number|Vec2|number[], y?: number)
+---@overload fun(self: ViewportNode, path: "scale", x: number|Vec2|number[], y?: number)
+---@overload fun(self: ViewportNode, path: "rotation", value: number)
+---@overload fun(self: ViewportNode, path: "layer", value: "Layer1"|"Layer2"|"Layer3"|"Layer4"|"Layer5"|"Layer6"|"Layer7"|"Layer8")
+---@overload fun(self: ViewportNode, path: "zIndex", value: integer)
+---@overload fun(self: ViewportNode, path: "ySort", value: boolean)
+---@overload fun(self: ViewportNode, path: "ySortOffset", value: number)
+---@overload fun(self: ViewportNode, path: "pauseMode", value: "Inherit"|"Pausable"|"Always")
+---@overload fun(self: ViewportNode, path: "paused", value: boolean)
+---@overload fun(self: ViewportNode, path: "enabled", value: boolean)
+---@overload fun(self: ViewportNode, path: "mode", value: "World"|"Children")
+---@overload fun(self: ViewportNode, path: "size", x: number|Vec2|number[], y?: number)
+---@overload fun(self: ViewportNode, path: "renderSize", x: number|Vec2|number[], y?: number)
+---@overload fun(self: ViewportNode, path: "updateMode", value: "Every_Frame"|"When_Visible"|"Once")
+---@overload fun(self: ViewportNode, path: "display", value: boolean)
+---@overload fun(self: ViewportNode, path: "coversScreen", value: boolean)
+---@overload fun(self: ViewportNode, path: "pixelated", value: boolean)
+---@overload fun(self: ViewportNode, path: "background", value: number[])
+function ViewportNode:set_property(path, value, y) end
 
 ---@class SkeletonNode
 ---@field position Vec2 Position relative to the parent, in pixels (+y is down).
@@ -9067,6 +9161,26 @@ function TouchJoystickNode:touch_get_vector() end
 ---Example: `if Scene.find_node("Boost"):touch_is_down() then speed = speed * 2 end`
 ---@return boolean down
 function TouchButtonNode:touch_is_down() end
+
+---A Viewport's picture as a texture path, "viewport:<name>": give it to a
+---Sprite (sprite:set_texture) or a material's texture parameter.
+---
+---Example: `Scene.find_node("Monitor"):set_texture(Scene.find_node("SecurityCam"):get_texture())`
+---@return string path
+function ViewportNode:get_texture() end
+
+---Renders a viewport set to Update Mode "Once" again (a snapshot), next frame.
+---
+---Example: `Scene.find_node("Photo"):refresh()`
+function ViewportNode:refresh() end
+
+---Saves the viewport's picture as a PNG: a relative path goes in the game's
+---save-data folder (screenshots, photo mode). False when it has no picture yet.
+---
+---Example: `Scene.find_node("Photo"):save_png("photos/shot_1.png")`
+---@param path string A .png path (relative: in the save-data folder)
+---@return boolean saved
+function ViewportNode:save_png(path) end
 
 ---Carves a circle out of the art (world position and radius): every shape keeps its paint, and a collider follows - destructible terrain, bites, bullet holes. The node draws its own carved copy until `vector_reset`.
 ---

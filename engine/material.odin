@@ -550,7 +550,9 @@ Material_Begin :: proc(node: ^Node, ctx: ^GameContext) -> bool {
 					iv := i32(v.x)
 					rl.SetShaderValue(en.shader, loc, &iv, .INT)
 				case .Texture:
-					if t := material_texture(tex, ctx); t != nil do rl.SetShaderValueTexture(en.shader, loc, t.texture)
+					if Viewport_IsPath(tex) {
+						if vt, _ := Viewport_TextureByPath(ctx, tex); vt.id != 0 do rl.SetShaderValueTexture(en.shader, loc, vt) // (a Viewport's picture)
+					} else if t := material_texture(tex, ctx); t != nil do rl.SetShaderValueTexture(en.shader, loc, t.texture)
 				}
 			}
 			active = true

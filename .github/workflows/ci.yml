@@ -137,6 +137,8 @@ jobs:
           xvfb-run -a python3 scripts/templates/test_templates.py --runner bin/runners/linux/runner --suite tests/tile_anims/runtime_tests.json
           # The developer console (#285): open, help, a Lua result, debug drawing.
           xvfb-run -a python3 scripts/templates/test_templates.py --runner bin/runners/linux/runner --suite tests/console/runtime_tests.json
+          # Viewports (#279): a minimap, an in-world screen through a Sprite, split-screen.
+          xvfb-run -a python3 scripts/templates/test_templates.py --runner bin/runners/linux/runner --suite tests/viewport/runtime_tests.json
 
       - name: Crash reports (the runner and the editor crash for real)
         if: matrix.smoke

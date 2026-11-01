@@ -428,8 +428,8 @@ CameraNode_Create :: proc(
 	cameraNode := CreateNode(scene.manager, CameraNode)
 	CameraNode_Init(cameraNode)
 	cameraNode.name = strings.clone(name, cameraNode.allocator) // owned: callers pass temp strings too
-	cameraNode.isCurrent = isCurrent
-	if isCurrent && scene != nil {
+	cameraNode.isCurrent = isCurrent && !(parent != nil && parent.typeId == ViewportNode) // (a viewport's camera isn't the scene's)
+	if cameraNode.isCurrent && scene != nil {
 		scene.camera = cameraNode
 	}
 	scene->addNode(cameraNode, parent)
@@ -440,6 +440,7 @@ CameraNode_Ready :: proc(node: ^Node, gameContext: ^GameContext) {
 	cameraNode := cast(^CameraNode)node
 	if cameraNode == nil do return
 
+	if cameraNode.parent != nil && cameraNode.parent.typeId == ViewportNode do cameraNode.isCurrent = false // (the viewport's view)
 	if cameraNode.isCurrent && gameContext != nil && gameContext.scene != nil {
 		gameContext.scene.camera = cameraNode
 	}
@@ -875,8 +876,11 @@ CameraNode_Update :: proc(node: ^Node, gameContext: ^GameContext, deltaTime: f32
 		if n := camera.targets[i].node; n != nil && !Node_IsAlive(n) do ordered_remove(&camera.targets, i)
 	}
 
-	// Cache viewport size
-	if gameContext != nil && gameContext.game != nil && gameContext.game.virtualSize.x > 0 {
+	// Cache viewport size (a Viewport's camera: its picture's)
+	if camera.parent != nil && camera.parent.typeId == ViewportNode {
+		rs := ViewportNode_RenderSize(cast(^ViewportNode)camera.parent)
+		camera.viewportSize = {f32(rs.x), f32(rs.y)}
+	} else if gameContext != nil && gameContext.game != nil && gameContext.game.virtualSize.x > 0 {
 		camera.viewportSize = gameContext.game.virtualSize
 	} else if rl.IsWindowReady() {
 		camera.viewportSize = {f32(rl.GetRenderWidth()), f32(rl.GetRenderHeight())}
