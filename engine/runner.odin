@@ -33,6 +33,7 @@ Run_Options :: struct {
 	crashTest:      string, // --crash-test panic | segv | abort: crash once loaded (crash report tests)
 	inputScript:    string, // --input-script <file>: keys pressed on given frames (Runner_LoadInputScript; game tests)
 	trace:          string, // --trace <node name>: print "@trace <frame> <scene> <x> <y>" every frame (game tests, bots)
+	test:           string, // --test [filter]: play the project's tests/*_test.lua (game_tests.odin); "*" all
 	console:        string, // --console "perf; outlines; open": the developer console on, these lines run once loaded (tests; dev_console.odin)
 }
 
@@ -267,6 +268,9 @@ Engine_ParseRunArgs :: proc(args: []string) -> (opts: Run_Options) {
 			opts.inputScript = next; i += 1
 		case arg == "--crash-test" && next != "":
 			opts.crashTest = next; i += 1
+		case arg == "--test":
+			opts.test = "*"
+			if next != "" && !strings.has_prefix(next, "-") && !strings.has_suffix(next, ".rayzr") && !strings.has_suffix(next, "project.json") && opts.projectPath != "" {opts.test = next; i += 1}
 		case arg == "--console" && next != "":
 			opts.console = next; i += 1
 		case arg == "--editor-link":
@@ -371,8 +375,9 @@ Engine_RunProject :: proc(opts: Run_Options) -> int {
 	if !ok do return 1
 	if opts.crashTest != "" do Crash_TestCrash(opts.crashTest)
 	for Runner_Frame(rs) {}
+	code := Tests_ExitCode() if opts.test != "" else 0
 	Runner_Stop(rs)
-	return 0
+	return code
 }
 
 // Runner_Start creates the game and its window and loads the project
@@ -522,7 +527,7 @@ Runner_Start :: proc(opts: Run_Options) -> (^Runner_State, bool) {
 
 	rs.targetCaptureFrame = max(25, opts.maxFrames) if opts.maxFrames > 0 else 30
 	// Captures for tests step a fixed 1/60 s, so runs are comparable.
-	rs.fixedStep = opts.screenshotPath != "" || opts.dumpScenePath != "" || opts.inputScript != ""
+	rs.fixedStep = opts.screenshotPath != "" || opts.dumpScenePath != "" || opts.inputScript != "" || opts.test != ""
 	if opts.inputScript != "" {
 		text, rerr := os.read_entire_file(opts.inputScript, context.temp_allocator)
 		if rerr != nil {
@@ -533,6 +538,11 @@ Runner_Start :: proc(opts: Run_Options) -> (^Runner_State, bool) {
 			game.input.useSimulatedInput = len(events) > 0
 			if why != "" do log.errorf("--input-script %s: %s", opts.inputScript, why)
 		}
+	}
+	// --test: the project's tests, as fast as they go (game_tests.odin).
+	if opts.test != "" {
+		rl.SetTargetFPS(0)
+		Tests_Start(game, opts.test)
 	}
 	return rs, true
 }
@@ -560,6 +570,8 @@ Runner_Frame :: proc(rs: ^Runner_State) -> bool {
 		EditorLink_BeginFrame(game)
 		if game.linkPaused && !game.frozen do dt = 1.0 / 60 // a step
 		if Console_Frame(game, rl.GetFrameTime()) do dt = 1.0 / 60 // (the console's step)
+		Tests_BeforeFrame(game) // (a test's input this frame)
+		Recorder_Frame(game)    // (the editor's Record)
 
 		if on, asked := game.fullscreenRequest.?; asked && rs.frameCount >= 2 {
 			Runner_ApplyFullscreen(game, on)
@@ -586,6 +598,7 @@ Runner_Frame :: proc(rs: ^Runner_State) -> bool {
 			Prof_Scope("game.run")
 			game->run(dt)
 		}
+		if !Tests_AfterFrame(game) do return false // (every test ran)
 		// (Drawn over the black letterbox below: soft edges would darken.)
 		if !renderPixel.smooth && Game_ClearColor(game).a == 255 do Render_MakeOpaque(vw, vh)
 		rl.EndTextureMode()
@@ -696,6 +709,8 @@ Runner_Stop :: proc(rs: ^Runner_State) {
 	}
 	if rs.windowOpen do rl.CloseWindow()
 	Console_Shutdown() // (before the game: its Lua commands)
+	if Tests_Active() do Tests_Shutdown(rs.game)
+	Recorder_Discard()
 	rs.game->terminate()
 	free(rs)
 }

@@ -140,7 +140,7 @@ Toolbar_PlayControls :: proc(state: ^EditorState, width: f32) {
 	// 3. Play controls, centred (but never over the tools on the left):
 	// Play / Play Scene; while the game runs Pause (Resume), Step, Restart
 	// and Stop; while building, Stop cancels the build.
-	playW: f32 = 5 * 32 + 110
+	playW: f32 = 6 * 32 + 110
 	imgui.SameLine()
 	imgui.SetCursorPosX(max(imgui.GetCursorPosX() + UI_SPACE * 3, (width - playW) * 0.5))
 	switch {
@@ -162,6 +162,8 @@ Toolbar_PlayControls :: proc(state: ^EditorState, width: f32) {
 		if UI_IconButton(ICON_FA_ROTATE_RIGHT, "toolbar.restart", "Restart (Cmd+Shift+F5) - saves, rebuilds if needed, plays the same again") do Editor_RestartGame(state)
 		imgui.SameLine()
 		if UI_IconButton(ICON_FA_STOP, "toolbar.stop", "Stop (Shift+F5)", tint = UI_DANGER) do Editor_StopGameProcess(state)
+		imgui.SameLine()
+		Toolbar_RecordButton(state) // input for a test to replay (tests_panel.odin)
 	case:
 		if UI_IconButton(ICON_FA_PLAY, "toolbar.play", "Play project (F5) - saves changes, rebuilds if code changed", tint = UI_SUCCESS) {
 			Editor_PlayGameProcess(state, .Project)

@@ -45,7 +45,7 @@ BottomTab :: enum {
 	StateGraph, // state machine graph (state_machine_graph.odin)
 	Mixer,      // audio mixer console (mixer_panel.odin)
 	TileMap,    // tile map painting: settings, tools, tiles (tilemap_editor.odin)
-	Files,      // the File Browser: the computer's files, previewed and loaded (file_browser.odin)
+	Files, Tests,      // the File Browser: the computer's files, previewed and loaded (file_browser.odin)
 }
 
 ViewportTab :: enum {
@@ -334,6 +334,7 @@ Editor_Shutdown :: proc(state: ^EditorState) {
 	LevelGenEditor_Shutdown()
 	TerrainEditor_Shutdown()
 	TileAnimEditor_Shutdown()
+	TestsPanel_Shutdown()
 	NormalGen_Close()
 	LevelRules_Shutdown()
 	LevelLayers_Shutdown()

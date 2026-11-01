@@ -180,6 +180,8 @@ RemoteGame_HandleLine :: proc(state: ^EditorState, line: string) -> bool {
 	case "sm-break":
 		remote.paused = true
 		Editor_Log(state, .Info, "Game paused: a state machine entered a break-on-enter state %s", rest)
+	case "recorded": TestsPanel_Recorded(state, rest) // (the Record button: tests_panel.odin)
+	case "recording":
 	case "set":
 	}
 	return true

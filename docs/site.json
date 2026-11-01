@@ -32,6 +32,7 @@
         { "file": "docs/editor/tab-mixer.md", "slug": "editor/tab-mixer" },
         { "file": "docs/editor/tab-search.md", "slug": "editor/tab-search" },
         { "file": "docs/editor/tab-files.md", "slug": "editor/tab-files" },
+        { "file": "docs/editor/tab-tests.md", "slug": "editor/tab-tests" },
         { "file": "editor/README.md", "slug": "editor/manual", "label": "Editor manual" },
         { "file": "editor/CODE_EDITOR.md", "slug": "editor/code", "label": "Code tab" },
         { "file": "engine/docs/level_editor.md", "slug": "editor/level-editor" },

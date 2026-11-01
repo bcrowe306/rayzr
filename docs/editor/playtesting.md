@@ -109,6 +109,13 @@ Once the game is linked:
 **Local** goes back to the edited scene; stopping the game does too. The
 [Game tab](tab-game.md) shows the same tree and properties side by side.
 
+### Recording input for a test
+
+While the game runs, the red **Record** button next to Stop records your
+keys, mouse, gamepads and touches; press it again to save them to
+`tests/recordings/recording_N.txt`. A test plays them back with
+`Test.replay("recording_N")` - see the [Tests tab](tab-tests.md).
+
 ### The developer console
 
 Press ` in the running game for the developer console. A line is a
