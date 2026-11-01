@@ -1,0 +1,10 @@
+function test_replay_two_jumps_and_a_dash()
+    Test.load_scene("other") -- (the recording starts in its own scene)
+    Test.replay("jump_twice")
+    local p = Scene.find_node("Player")
+    Test.require(p ~= nil, "the recording's scene")
+    Test.expect_eq(p:get_script().jumps, 2, "two jumps")
+    local x, y = p:get_position()
+    Test.expect_near(x, 120, 0.01, "dashed 10 frames")
+    Test.expect_near(y, 180, 0.01, "20 px up")
+end

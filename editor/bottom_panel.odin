@@ -75,6 +75,7 @@ BOTTOM_TABS := [?]struct {
 	{.Mixer, ICON_FA_SLIDERS, "Mixer", "mixer"},
 	{.Search, ICON_FA_MAGNIFYING_GLASS, "Search", "search"},
 	{.Files, ICON_FA_FOLDER_OPEN, "Files", "files"},
+	{.Tests, ICON_FA_CIRCLE_CHECK, "Tests", "tests"},
 }
 
 // BottomPanel_SetTabShown shows or hides a tab (View > Bottom Panel; saved
@@ -161,6 +162,7 @@ BottomPanel_Render :: proc(state: ^EditorState) {
 				case .Mixer:      MixerPanel_Render(state)
 				case .Search:     Code_SearchPanel(state)
 				case .Files:      FileBrowser_RenderTab(state)
+				case .Tests:      TestsPanel_Render(state)
 				}
 				imgui.EndTabItem()
 			}

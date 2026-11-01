@@ -5583,6 +5583,7 @@ RegisterEngineLuaBindings :: proc(L: ^lua.State, sm: ^ScriptManager) {
 	lua.setfield(L, -2, "error")
 	lua.setglobal(L, "Log")
 	Script_RegisterConsole(L) // Console (dev_console.odin)
+	Script_RegisterTestModule(L) // Test (game_tests.odin)
 
 	// 9. Global "Project" table
 	lua.newtable(L)

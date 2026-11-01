@@ -39,6 +39,10 @@ if [ "${1:-}" = --one ]; then
 		cfg.setdefault("physics", {})["debug_draw"] = True
 		json.dump(cfg, open(p, "w"), indent=2)
 	EOF
+	# "# drive: copy <src> <dst>": fixture files into the scratch project.
+	grep '^# drive: copy ' "$d" | while read -r _ _ _ src dst; do
+		mkdir -p "$tmp/project/$dst" && cp -R "$src/." "$tmp/project/$dst/"
+	done
 	shots="editor_screenshots/drive/$name"
 	rm -rf "$shots"
 	hidden=--hidden

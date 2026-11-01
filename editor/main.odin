@@ -136,6 +136,7 @@ editor_main :: proc() -> int {
 		if rl.WindowShouldClose() do Editor_RequestQuit(&GlobalEditor)
 		// Poll build / game processes, stream their output to the console
 		Editor_UpdatePlaytest(&GlobalEditor)
+		TestsPanel_Update(&GlobalEditor) // (a test run's results)
 		NativeDialog_Poll(&GlobalEditor)
 		Lua_UpdateProjectTypes(&GlobalEditor)
 		Code_ApplyPendingNodeProp(&GlobalEditor) // a node property dropped into a properties table

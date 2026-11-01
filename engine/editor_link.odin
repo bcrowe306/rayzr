@@ -255,6 +255,22 @@ EditorLink_Command :: proc(game: ^Game, line: string) {
 		strings.write_string(&sb, ", \"text\": ")
 		link_str(&sb, text)
 		fmt.printfln("@rayzr:eval %s}", strings.to_string(sb))
+	case "record-start":
+		// The editor's Record button (input_recorder.odin).
+		Recorder_Start(game)
+		fmt.printfln("@rayzr:recording true")
+	case "record-stop":
+		// rest: where to write it (project-relative); "" discards it.
+		if rest == "" {
+			Recorder_Discard()
+			fmt.printfln("@rayzr:recording false")
+		} else {
+			path, ok := Recorder_Stop(game, rest)
+			sb := strings.builder_make(context.temp_allocator)
+			fmt.sbprintf(&sb, "{{\"ok\": %t, \"path\": ", ok)
+			link_str(&sb, path)
+			fmt.printfln("@rayzr:recorded %s}", strings.to_string(sb))
+		}
 	case "debug-draw":
 		// Colliders, joints and areas drawn (the toolbar's Show Colliders).
 		game.physicsWorld.drawPhysicsDebug = rest == "true"
