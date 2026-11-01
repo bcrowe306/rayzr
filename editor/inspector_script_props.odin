@@ -29,6 +29,8 @@ Script_PropsTarget :: struct {
 	set:         proc(state: ^EditorState, t: ^Script_PropsTarget, name: string, val: e.ScriptValue),
 	// record_undo snapshots before a change.
 	record_undo: proc(state: ^EditorState, t: ^Script_PropsTarget, label: string),
+	depth:       int,                        // nested under a resource field (indented; #266)
+	baseline:    ^map[string]e.ScriptValue, // reset goes back to these (a file's values) instead of the defaults; a differing value is marked
 }
 
 // Script_ModProp: a property's declaration in a module (nil when unknown).
@@ -77,6 +79,9 @@ script_prop_row :: proc(state: ^EditorState, t: ^Script_PropsTarget, name: strin
 	info := Script_ModProp(t.mod, name)
 	propLabel := info.label if info != nil && info.label != "" else pretty_name(name)
 	if labelOverride != "" do propLabel = labelOverride
+	// Nested under a resource field: indented; an own value (not the file's) marked.
+	if t.baseline != nil && name in t.baseline^ && !script_value_equal(val, t.baseline[name]) do propLabel = fmt.tprintf("%s *", propLabel)
+	if t.depth > 0 do propLabel = fmt.tprintf("%s%s", strings.repeat("    ", t.depth, context.temp_allocator), propLabel)
 	prop_label(propLabel, t.owner, fmt.tprintf("script.%s", name), script_lua_value(val))
 	TIP :: imgui.HoveredFlags_DelayNormal | imgui.HoveredFlags_Stationary
 	if imgui.IsItemHovered() {
@@ -86,12 +91,19 @@ script_prop_row :: proc(state: ^EditorState, t: ^Script_PropsTarget, name: strin
 			path := code_abs_path(state, asset_rel_editor(state, t.modulePath))
 			if data, err := os.read_entire_file(path, context.temp_allocator); err == nil do help = Script_PropComment(string(data), name)
 		}
+		if info != nil && info.assetKind == "resource" {
+			// (#266) How the field works.
+			class := fmt.tprintf(" of %s", info.resourceClass) if info.resourceClass != "" else ""
+			help = fmt.tprintf("%s%sA resource%s. Pick a file or drop a .resource.json from Assets. + makes a new file, gives this node its own values over a file (the rest follow the file; marked * and reset to the file's), or embeds one in the scene (no file; Save as File later). Open shows the file in the Inspector.", help, "\n\n" if help != "" else "", class)
+		}
+		if t.baseline != nil && name in t.baseline^ && !script_value_equal(val, t.baseline[name]) do help = fmt.tprintf("%s%sThis node's own value (*): the file has another. Reset goes back to the file's.", help, "\n\n" if help != "" else "")
 		script_prop_help(t.owner, t.modulePath, name, propLabel, val, imgui.IsItemHovered(TIP), help)
 	}
 	id := fmt.tprintf("%s:%s", t.idPrefix, name)
 	label := fmt.ctprintf("##%s", id)
 	changed := false
 	defVal, hasDef := info.defaultVal if info != nil else e.ScriptValue{}, info != nil
+	if t.baseline != nil && name in t.baseline^ do defVal, hasDef = t.baseline[name], true
 	edit := fmt.tprintf("Edit %s", name)
 	reset :: proc(state: ^EditorState, t: ^Script_PropsTarget, name: string, val: e.ScriptValue) {
 		t.record_undo(state, t, fmt.tprintf("Reset %s", name))
@@ -165,8 +177,13 @@ script_prop_row :: proc(state: ^EditorState, t: ^Script_PropsTarget, name: strin
 			}
 			if field_reset(id, val.valString != "") do reset(state, t, name, {type = .String})
 			return
+		} else if kind == "resource" {
+			// A file, this node's own values over one, or an embedded one (#266).
+			resource_field(state, t, name, info, val, id)
+			if field_reset(id, hasDef && !script_value_equal(val, defVal)) do reset(state, t, name, defVal)
+			return
 		} else if kind != "" {
-			// Resources: only files of the property's `class`.
+			// Assets: only files of the property's kind.
 			files := Resource_FilesOfClass(state, info.resourceClass) if kind == "resource" else Script_AssetFiles(state, kind)
 			if path, ok := asset_picker(id, val.valString, files, allowNone = true); ok && path != val.valString {
 				t.record_undo(state, t, edit)

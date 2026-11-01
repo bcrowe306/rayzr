@@ -43,6 +43,8 @@ ResourceInstance :: struct {
 	registryRef: c.int,                  // the Lua table
 	diskPath:    string,                 // for hot reload ("" = embedded / packaged)
 	modTime:     time.Time,
+	overrides:   map[string]ScriptValue, // per-instance values over the file's (kept on hot reload; #266)
+	embedded:    bool,                   // its values are in a scene / another resource, not a file
 }
 
 // Resource_File: a .resource.json as read (temp allocated). values are the
@@ -155,16 +157,132 @@ script_parse_resource_marker :: proc(L: ^lua.State, idx: c.int, modPath: string)
 	return false, false
 }
 
-// script_warn_resource_props: node properties mean nothing on a resource,
-// and resources inside resources aren't supported yet.
+// script_warn_resource_props: node properties mean nothing on a resource.
+// (Resources inside resources work: resource_resolve_nested, #266.)
 script_warn_resource_props :: proc(mod: ^ScriptModule) {
 	for p in mod.properties {
 		if p.assetKind == "node" || (p.assetKind == "array" && p.elem == "node") {
 			Script_Problem(.Warning, "[Resource] %s: property %s is a node reference; a resource has no node (ignored)", mod.path, p.name)
-		} else if Script_IsResourceProp(p) {
-			Script_Problem(.Warning, "[Resource] %s: property %s is a resource; resources inside resources aren't supported yet (it stays nil - use Resource.load in on_load)", mod.path, p.name)
 		}
 	}
+}
+
+// --- a resource property's value (#266) --------------------------------------------
+//
+//   "resources/sword.resource.json"                         the file
+//   {"path": "resources/sword.resource.json", "properties": {"damage": 40}}
+//                                 a copy of the file with these values on top
+//                                 (the file's other values still hot-reload)
+//   {"class": "scripts/weapon.lua", "properties": {...}}    embedded: no file
+
+Resource_Value_Kind :: enum u8 {None, Path, Override, Embedded}
+
+// Resource_IsObjectValue: an embedded / per-instance value (JSON object text).
+Resource_IsObjectValue :: proc(value: string) -> bool {
+	return strings.has_prefix(strings.trim_left_space(value), "{")
+}
+
+// Resource_CanonicalValue: an object value's JSON in a fixed order - "path"
+// / "class" first, then "properties", keys sorted at every level - so
+// saved scenes don't change from run to run.
+Resource_CanonicalValue :: proc(v: json.Value, allocator := context.allocator) -> string {
+	sb := strings.builder_make(context.temp_allocator)
+	json_sorted(&sb, v, true)
+	return strings.clone(strings.to_string(sb), allocator)
+}
+
+@(private = "file")
+json_sorted :: proc(sb: ^strings.Builder, v: json.Value, top := false) {
+	#partial switch x in v {
+	case json.Object:
+		keys := make([dynamic]string, context.temp_allocator)
+		for k in x do append(&keys, k)
+		rank :: proc(k: string) -> int {return 0 if k == "path" || k == "class" else 1 if k == "properties" else 2}
+		if top do slice.sort_by(keys[:], proc(a, b: string) -> bool {
+			ra, rb := rank(a), rank(b)
+			return ra < rb if ra != rb else a < b
+		})
+		else do slice.sort(keys[:])
+		strings.write_byte(sb, '{')
+		for k, i in keys {
+			if i > 0 do strings.write_string(sb, ", ")
+			fmt.sbprintf(sb, "%q: ", k)
+			child := x[k]
+			// (an embedded resource inside: its own fixed order)
+			_, isObj := child.(json.Object)
+			json_sorted(sb, child, isObj && k != "properties")
+		}
+		strings.write_byte(sb, '}')
+	case json.Array:
+		strings.write_byte(sb, '[')
+		for item, i in x {
+			if i > 0 do strings.write_string(sb, ", ")
+			json_sorted(sb, item)
+		}
+		strings.write_byte(sb, ']')
+	case:
+		strings.write_string(sb, string(Json_Compact(v)))
+	}
+}
+
+// Resource_ParseValue reads a resource property's value (temp allocated).
+Resource_ParseValue :: proc(value: string) -> (kind: Resource_Value_Kind, path, class: string, values: map[string]ScriptValue) {
+	v := strings.trim_space(value)
+	if v == "" do return .None, "", "", nil
+	if !Resource_IsObjectValue(v) do return .Path, v, "", nil
+	parsed, err := json.parse(transmute([]u8)v, allocator = context.temp_allocator)
+	obj, ok := parsed.(json.Object)
+	if err != .None || !ok do return .None, "", "", nil
+	if props, has := obj["properties"].(json.Object); has do values = parse_script_overrides(props, context.temp_allocator)
+	else do values = make(map[string]ScriptValue, allocator = context.temp_allocator)
+	if p, has := obj["path"].(json.String); has && p != "" do return .Override, string(p), "", values
+	if c, has := obj["class"].(json.String); has && c != "" do return .Embedded, "", string(c), values
+	return .None, "", "", nil
+}
+
+// Resource_ValueText: a resource property's value for an override / an
+// embedded resource (values: what's set; for an override only the changed ones).
+Resource_ValueText :: proc(kind: Resource_Value_Kind, pathOrClass: string, values: map[string]ScriptValue, mod: ^ScriptModule, allocator := context.allocator) -> string {
+	switch kind {
+	case .None, .Path: return strings.clone(pathOrClass, allocator)
+	case .Override: return strings.clone(fmt.tprintf(`{{"path": %q, "properties": %s}}`, pathOrClass, resource_override_text(values, mod)), allocator)
+	case .Embedded: return strings.clone(fmt.tprintf(`{{"class": %q, "properties": %s}}`, pathOrClass, resource_override_text(values, mod)), allocator)
+	}
+	return ""
+}
+
+@(private = "file")
+resource_override_text :: proc(values: map[string]ScriptValue, mod: ^ScriptModule) -> string {
+	// Every given value (they're the overrides), as the file writer writes them.
+	keys := make([dynamic]string, context.temp_allocator)
+	for k in values do append(&keys, k)
+	slice.sort(keys[:])
+	sb := strings.builder_make(context.temp_allocator)
+	strings.write_byte(&sb, '{')
+	for k, i in keys {
+		if i > 0 do strings.write_string(&sb, ", ")
+		fmt.sbprintf(&sb, "%q: ", k)
+		kind := ""
+		if mod != nil do for p in mod.properties do if p.name == k do kind = p.assetKind
+		strings.write_string(&sb, script_value_json_text(values[k], kind))
+	}
+	strings.write_byte(&sb, '}')
+	return strings.to_string(sb)
+}
+
+// script_value_json_text: one value as JSON (lists and resource objects raw).
+script_value_json_text :: proc(v: ScriptValue, kind: string) -> string {
+	switch v.type {
+	case .Float:   return fmt.tprintf("%g", v.valFloat)
+	case .Int:     return fmt.tprintf("%d", v.valInt)
+	case .Boolean: return "true" if v.valBool else "false"
+	case .Vector2: return fmt.tprintf("[%g, %g]", v.valVec2.x, v.valVec2.y)
+	case .Color:   return fmt.tprintf("[%g, %g, %g, %g]", v.valColor[0], v.valColor[1], v.valColor[2], v.valColor[3])
+	case .String:
+		if (Script_IsJsonKind(kind) || Resource_IsObjectValue(v.valString)) && v.valString != "" do return v.valString
+		return fmt.tprintf("%q", v.valString)
+	}
+	return "null"
 }
 
 // --- resource properties of node scripts ------------------------------------------
@@ -174,20 +292,53 @@ script_warn_resource_props :: proc(mod: ^ScriptModule) {
 // (or else the class) says local_copy. nil for "", a problem (reported) or
 // a file of another class than the property's `class`.
 Script_ResolveResource :: proc(mgr: ^ScriptManager, inst: ^ScriptInstance, prop: ScriptProperty, path: string) -> ^ResourceInstance {
-	if path == "" do return nil
-	file, ok := Resource_ReadFile(mgr, path)
-	if !ok {
-		Script_Problem(.Warning, "%s: property %s: can't load %s", inst.modulePath, prop.name, path)
+	scope: rawptr = Resource_ScopeOf(inst.node) if inst.node != nil else nil
+	return Resource_Resolve(mgr, inst.modulePath, prop, path, scope, inst.node)
+}
+
+// Resource_Resolve: the table a resource property's value gets (`owner`
+// names the script for problems; `scope`: where copies belong). A file is
+// shared unless local_copy says a copy (one per scope); per-instance values
+// and embedded resources are always the property's own copy (owned by
+// `node`'s scope, else `scope`).
+Resource_Resolve :: proc(mgr: ^ScriptManager, owner: string, prop: ScriptProperty, value: string, scope: rawptr, node: ^Node = nil) -> ^ResourceInstance {
+	kind, path, class, values := Resource_ParseValue(value)
+	switch kind {
+	case .None:
+		if strings.trim_space(value) != "" do Script_Problem(.Warning, "%s: property %s: not a resource value: %s", owner, prop.name, value)
 		return nil
+	case .Path, .Override:
+		file, ok := Resource_ReadFile(mgr, path)
+		if !ok {
+			Script_Problem(.Warning, "%s: property %s: can't load %s", owner, prop.name, path)
+			return nil
+		}
+		if prop.resourceClass != "" && !Resource_ClassMatches(prop.resourceClass, file.script) {
+			Script_Problem(.Warning, "%s: property %s takes %s resources; %s is a %s", owner, prop.name, prop.resourceClass, path, file.script)
+			return nil
+		}
+		mod, _ := ScriptManager_LoadModule(file.script, mgr)
+		if kind == .Override {
+			merged := make(map[string]ScriptValue, allocator = context.temp_allocator)
+			for k, v in file.values do merged[k] = v
+			for k, v in values do merged[k] = v
+			return resource_create(mgr, mod, ScriptVFS_NormalizePath(path), merged, scope, false, values, false)
+		}
+		localCopy := prop.resourceLocal == .Local || (prop.resourceLocal == .Default && mod != nil && mod.resourceLocalCopy)
+		return Resource_Load(mgr, path, scope if localCopy else nil, true)
+	case .Embedded:
+		if prop.resourceClass != "" && !Resource_ClassMatches(prop.resourceClass, class) {
+			Script_Problem(.Warning, "%s: property %s takes %s resources; its embedded one is a %s", owner, prop.name, prop.resourceClass, class)
+			return nil
+		}
+		mod, ok := ScriptManager_LoadModule(class, mgr)
+		if !ok {
+			Script_Problem(.Warning, "%s: property %s: its embedded resource's class %s could not be loaded", owner, prop.name, class)
+			return nil
+		}
+		return resource_create(mgr, mod, "", values, scope, false, nil, true)
 	}
-	if prop.resourceClass != "" && !Resource_ClassMatches(prop.resourceClass, file.script) {
-		Script_Problem(.Warning, "%s: property %s takes %s resources; %s is a %s", inst.modulePath, prop.name, prop.resourceClass, path, file.script)
-		return nil
-	}
-	mod, _ := ScriptManager_LoadModule(file.script, mgr)
-	localCopy := prop.resourceLocal == .Local || (prop.resourceLocal == .Default && mod != nil && mod.resourceLocalCopy)
-	scope: rawptr = Resource_ScopeOf(inst.node) if localCopy && inst.node != nil else nil
-	return Resource_Load(mgr, path, scope, true)
+	return nil
 }
 
 // script_push_resource_prop pushes a resource property's Lua value: the
@@ -333,7 +484,7 @@ Resource_FileText :: proc(script: string, values: map[string]ScriptValue, mod: ^
 		case .Vector2: Json_Vec2(&w, v.valVec2)
 		case .String:
 			// Lists (array / curve / gradient) are JSON, not a string.
-			if Script_IsJsonKind(e.kind) && v.valString != "" do strings.write_string(&w.sb, v.valString)
+			if (Script_IsJsonKind(e.kind) || Resource_IsObjectValue(v.valString)) && v.valString != "" do strings.write_string(&w.sb, v.valString)
 			else do Json_String(&w, v.valString)
 		case .Color:
 			strings.write_byte(&w.sb, '[')
@@ -383,9 +534,38 @@ Resource_Load :: proc(mgr: ^ScriptManager, path: string, scope: rawptr, cached :
 		Script_Problem(.Warning, "[Resource] %s: its class %s could not be loaded", norm, file.script)
 		return nil
 	}
+	return resource_create(mgr, mod, norm, file.values, scope, cached, nil, false)
+}
+
+// The resources being made (the cycle check of resources inside resources).
+@(private = "file")
+resourcesLoading: [dynamic]string
+
+// resource_create makes a resource's table from values (a file's, merged
+// overrides, or embedded ones), resolves its own resource properties and
+// runs on_load. path "" for an embedded one.
+@(private = "file")
+resource_create :: proc(mgr: ^ScriptManager, mod: ^ScriptModule, path: string, values: map[string]ScriptValue, scope: rawptr, cached: bool, overrides: map[string]ScriptValue, embedded: bool) -> ^ResourceInstance {
+	label := path if path != "" else fmt.tprintf("an embedded %s", mod.path if mod != nil else "resource")
+	if mod == nil do return nil
 	if !mod.isResourceClass {
-		Script_Problem(.Warning, "[Resource] %s: %s is not a resource class (it needs `resource = {{}}` on its table)", norm, mod.path)
+		Script_Problem(.Warning, "[Resource] %s: %s is not a resource class (it needs `resource = {{}}` on its table)", label, mod.path)
 		return nil
+	}
+	// A resource inside itself (directly or further down): stopped.
+	if path != "" {
+		for p in resourcesLoading do if p == path {
+			Script_Problem(.Warning, "[Resource] %s contains itself (through its resource properties): left nil there", path)
+			return nil
+		}
+		append(&resourcesLoading, strings.clone(path, Engine_HeapAllocator()))
+	}
+	defer if path != "" {
+		delete(pop(&resourcesLoading), Engine_HeapAllocator())
+		if len(resourcesLoading) == 0 {
+			delete(resourcesLoading)
+			resourcesLoading = nil
+		}
 	}
 	L := mgr.L
 	lua.newtable(L)
@@ -393,13 +573,44 @@ Resource_Load :: proc(mgr: ^ScriptManager, path: string, scope: rawptr, cached :
 	resource_push_meta(L, mod.path)
 	lua.setmetatable(L, idx)
 	props := make(map[string]ScriptValue)
-	script_apply_properties(L, idx, mod, file.values, &props)
-	lua.pushstring(L, strings.clone_to_cstring(norm, context.temp_allocator))
-	lua.setfield(L, idx, "resource_path")
-	res := resource_adopt(mgr, norm, mod.path, scope, cached) // (pops the table)
+	script_apply_properties(L, idx, mod, values, &props)
+	if path != "" {
+		lua.pushstring(L, strings.clone_to_cstring(path, context.temp_allocator))
+		lua.setfield(L, idx, "resource_path")
+	}
+	resource_resolve_nested(L, idx, mgr, mod, props, label, scope)
+	res := resource_adopt(mgr, path, mod.path, scope, cached) // (pops the table)
 	res.properties = props
+	res.embedded = embedded
+	if embedded {
+		delete(res.diskPath)
+		res.diskPath = ""
+	}
+	if len(overrides) > 0 {
+		res.overrides = make(map[string]ScriptValue)
+		for k, v in overrides {
+			ov := v
+			if ov.type == .String || ov.type == .Color || ov.type == .Vector2 do ov.valString = strings.clone(v.valString)
+			res.overrides[strings.clone(k)] = ov
+		}
+	}
 	resource_call_on_load(mgr, res)
 	return res
+}
+
+// resource_resolve_nested sets a resource's own resource properties (the
+// table at idx) to their tables: a file shared unless local_copy (then the
+// parent's scope), per-instance values and embedded ones its own copies.
+@(private = "file")
+resource_resolve_nested :: proc(L: ^lua.State, idx: c.int, mgr: ^ScriptManager, mod: ^ScriptModule, props: map[string]ScriptValue, label: string, scope: rawptr) {
+	for p in mod.properties {
+		if p.assetKind != "resource" do continue // (lists of resources: paths, Resource.load)
+		value := (props[p.name] or_else {}).valString
+		if value == "" do continue
+		res := Resource_Resolve(mgr, label, p, value, scope)
+		Resource_Push(L, res)
+		lua.setfield(L, idx, strings.clone_to_cstring(p.name, context.temp_allocator))
+	}
 }
 
 // Resource_Push pushes a resource's table (nil for none).
@@ -533,6 +744,7 @@ resource_refresh :: proc(mgr: ^ScriptManager, r: ^ResourceInstance, values: map[
 	Resource_Push(L, r)
 	defer lua.pop(L, 1)
 	for prop in mod.properties {
+		if prop.name in r.overrides do continue // (this copy's own value)
 		val := script_property_value(prop, values)
 		if old, has := r.properties[prop.name]; has && ScriptValue_Equal(old, val) {
 			if val.type == .String do delete(val.valString)
@@ -592,6 +804,11 @@ resource_release :: proc(mgr: ^ScriptManager, r: ^ResourceInstance) {
 		if v.type == .String do delete(v.valString)
 	}
 	delete(r.properties)
+	for k, v in r.overrides {
+		delete(k)
+		if v.valString != "" do delete(v.valString)
+	}
+	delete(r.overrides)
 	free(r)
 }
 
