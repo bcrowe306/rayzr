@@ -43,6 +43,8 @@ Event_Describe :: proc(name: string) -> (param: string, doc: string) {
 	case "child_removed":      return "child", "A child node was removed"
 	case "parent_added":       return "parent", "The node got a parent"
 	case "parent_removed":     return "parent", "The node lost its parent"
+	case "tree_enabled":       return "", "The behavior tree was turned on (Active)"
+	case "tree_disabled":      return "", "The behavior tree was turned off (Active) and interrupted"
 	case "cycle":              return "cycles", "The oscillator finished a cycle (cycles so far)"
 	case "timeout":            return "", "The timer's duration elapsed"
 	case "tick":               return "elapsed", "Every frame while the timer runs"

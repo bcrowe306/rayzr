@@ -1,0 +1,9 @@
+[
+ {
+  "name": "behavior tree: a goblin walks to the flag (Move To), a Lua leaf shouts once (its property), a blackboard guard stops it repeating",
+  "project": "tests/behavior_tree/project",
+  "scene": "scenes/patrol.scene.json",
+  "frames": 180,
+  "expect": [["Goblin", "x", ">=", 698], ["Goblin", "x", "<=", 702], ["Log", "text", "==", "arrived:Goblin "]]
+ }
+]

@@ -877,6 +877,7 @@ Drive_Query :: proc(state: ^EditorState, q: string) -> (string, bool) {
 		return fmt.tprintf("%d/%d", len(seen), len(NODE_CATALOG)), true
 	case "search-total", "search-files": return Code_SearchQuery(q)
 	case "smg-selected", "smg-zoom", "smg-pan", "smg-ways": return StateGraph_Query(q)
+	case "bt-tree", "bt-live", "bt-view": return BehaviorTree_Query(state, q)
 	case "mixer-buses", "mixer-voices": return MixerPanel_Query(q)
 	case "remote-debug-draw", "remote-connected", "remote-paused", "remote-frame", "remote-steps", "remote-reloads", "remote-nodes", "remote-names", "remote-view", "remote-selected": return RemoteGame_Query(q)
 	case "guides":

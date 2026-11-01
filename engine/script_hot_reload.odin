@@ -129,6 +129,7 @@ ScriptManager_ReloadModule :: proc(mgr: ^ScriptManager, path: string, quiet := f
 	script_extends_apply(mgr, mod, oldIdx, true)
 	newProps := Script_ParseProperties(L, oldIdx)
 	isClass, localCopy := script_parse_resource_marker(L, oldIdx, mod.path)
+	Script_ParseBehaviorMarker(L, oldIdx, mod)
 	lua.pop(L, 2) // old (now updated) table, new table
 	mod.isResourceClass, mod.resourceLocalCopy = isClass, localCopy
 	script_module_set_properties(mgr, mod, newProps)

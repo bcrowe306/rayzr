@@ -89,6 +89,7 @@ to_event_value :: proc(L: ^lua.State, idx: c.int) -> EventValue {
 // method, then every connected handler.
 Script_DispatchEvent :: proc(owner: ^Node, name: string, value: EventValue, ctx: ^GameContext) {
 	if owner == nil do return
+	if len(btWatchers) > 0 do BT_SignalSeen(owner, name) // (Behavior Trees' Wait For Signal)
 	mgr := manager_for(owner, ctx)
 	if mgr == nil || !mgr.isReady || mgr.L == nil || mgr.suspended do return
 	L := mgr.L

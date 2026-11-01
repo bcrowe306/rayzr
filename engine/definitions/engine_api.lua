@@ -192,6 +192,9 @@ local ViewportNode = {}
 ---@class OscillatorNode : Node
 local OscillatorNode = {}
 
+---@class BehaviorTreeNode : Node
+local BehaviorTreeNode = {}
+
 ---@class UIContainerNode : Node
 
 ---@class UILabelNode : Node, TextHolder
@@ -611,6 +614,15 @@ function AnimationPlayerNode:connect(event, handler) end
 ---@param handler fun(value: any, source: AsepriteNode) Called with the event's value and the node that raised it
 ---@return integer id Connection id for `disconnect`
 function AsepriteNode:connect(event, handler) end
+
+---@alias BehaviorTreeNodeEvent NodeTreeEvent|"tree_enabled"|"tree_disabled"|ProjectEvent
+---Connects a handler to one of this node's events: tree_enabled (The behavior tree was turned on (Active)), tree_disabled (The behavior tree was turned off (Active) and interrupted); the tree events; custom ones.
+---
+---Example: `self.node:connect("tree_enabled", function(value, source) Log.info("tree_enabled") end)`
+---@param event BehaviorTreeNodeEvent|string The event's name (the Signals tab lists them)
+---@param handler fun(value: any, source: BehaviorTreeNode) Called with the event's value and the node that raised it
+---@return integer id Connection id for `disconnect`
+function BehaviorTreeNode:connect(event, handler) end
 
 ---@alias StateMachineNodeEvent NodeTreeEvent|"state_changed"|ProjectEvent
 ---Connects a handler to one of this node's events: state_changed (The state machine entered a state); the tree events; custom ones.
@@ -1881,6 +1893,85 @@ function AsepriteNode:get_property(path) end
 ---@overload fun(self: AsepriteNode, path: "pivotSlice", value: string)
 ---@overload fun(self: AsepriteNode, path: "tint", value: number[])
 function AsepriteNode:set_property(path, value, y) end
+
+---@class BehaviorTreeNode
+---@field position Vec2 Position relative to the parent, in pixels (+y is down).
+---@field scale Vec2 Size multiplier relative to the parent (1, 1 = as is; negative flips).
+---@field rotation number Rotation relative to the parent, in degrees (clockwise).
+---@field layer "Layer1"|"Layer2"|"Layer3"|"Layer4"|"Layer5"|"Layer6"|"Layer7"|"Layer8" Drawing layer: higher layers draw over lower ones (Layer8 is for UI).
+---@field zIndex integer Draw order within the layer, added to the parent's: higher draws on top (-10, 0, 10...)...
+---@field ySort boolean Draw the children by their Y position (lower on screen = in front), each with its child...
+---@field ySortOffset number Added to this node's Y when its parent Y-sorts: move the sorting line to the feet (e.g....
+---@field pauseMode "Inherit"|"Pausable"|"Always" Inherit the parent's pausing, Pausable (stops when paused) or Always (keeps running, e....
+---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
+---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
+---@field active boolean Ticks the tree. Turning it off interrupts the running branch (tree_disabled); on again ...
+---@field processMode "Every_Frame"|"Manual" Every Frame: ticks in its update (every Tick Rate frames). Manual: only when a script c...
+---@field tickRate integer Ticks every this many frames (1: every frame). Higher is cheaper for many actors; timer...
+---@field actor string The node the tree acts for (a path; empty: its parent). Leaves with an empty node act o...
+---@field blackboardFrom string Another Behavior Tree whose blackboard this one uses (a path), so several trees share v...
+
+---@alias BehaviorTreeNodeProperty
+---| "position" # Vec2 - Position relative to the parent, in pixels (+y is down).
+---| "scale" # Vec2 - Size multiplier relative to the parent (1, 1 = as is; negative flips).
+---| "rotation" # number - Rotation relative to the parent, in degrees (clockwise).
+---| "layer" # "Layer1"|"Layer2"|"Layer3"|"Layer4"|"Layer5"|"Layer6"|"Layer7"|"Layer8" - Drawing layer: higher layers draw over lower ones (Layer8 is for UI).
+---| "zIndex" # integer - Draw order within the layer, added to the parent's: higher draws on top (-10, 0, 10...)...
+---| "ySort" # boolean - Draw the children by their Y position (lower on screen = in front), each with its child...
+---| "ySortOffset" # number - Added to this node's Y when its parent Y-sorts: move the sorting line to the feet (e.g....
+---| "pauseMode" # "Inherit"|"Pausable"|"Always" - Inherit the parent's pausing, Pausable (stops when paused) or Always (keeps running, e....
+---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
+---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
+---| "active" # boolean - Ticks the tree. Turning it off interrupts the running branch (tree_disabled); on again ...
+---| "processMode" # "Every_Frame"|"Manual" - Every Frame: ticks in its update (every Tick Rate frames). Manual: only when a script c...
+---| "tickRate" # integer - Ticks every this many frames (1: every frame). Higher is cheaper for many actors; timer...
+---| "actor" # string - The node the tree acts for (a path; empty: its parent). Leaves with an empty node act o...
+---| "blackboardFrom" # string - Another Behavior Tree whose blackboard this one uses (a path), so several trees share v...
+
+---Reads an Inspector property by its path (vectors and colours as tables); "script.<name>" reads a field of the node's script.
+---
+---Example: `local value = self.node:get_property("active")`
+---@param path BehaviorTreeNodeProperty|string The property's path, as the Inspector names it ("position", "emitter.amount") or "script.<field>"
+---@return any value Its value: a number, boolean, string or enum name; vectors and colours as tables (nil when there's no such property)
+---@overload fun(self: BehaviorTreeNode, path: "position"): Vec2
+---@overload fun(self: BehaviorTreeNode, path: "scale"): Vec2
+---@overload fun(self: BehaviorTreeNode, path: "rotation"): number
+---@overload fun(self: BehaviorTreeNode, path: "layer"): "Layer1"|"Layer2"|"Layer3"|"Layer4"|"Layer5"|"Layer6"|"Layer7"|"Layer8"
+---@overload fun(self: BehaviorTreeNode, path: "zIndex"): integer
+---@overload fun(self: BehaviorTreeNode, path: "ySort"): boolean
+---@overload fun(self: BehaviorTreeNode, path: "ySortOffset"): number
+---@overload fun(self: BehaviorTreeNode, path: "pauseMode"): "Inherit"|"Pausable"|"Always"
+---@overload fun(self: BehaviorTreeNode, path: "paused"): boolean
+---@overload fun(self: BehaviorTreeNode, path: "enabled"): boolean
+---@overload fun(self: BehaviorTreeNode, path: "active"): boolean
+---@overload fun(self: BehaviorTreeNode, path: "processMode"): "Every_Frame"|"Manual"
+---@overload fun(self: BehaviorTreeNode, path: "tickRate"): integer
+---@overload fun(self: BehaviorTreeNode, path: "actor"): string
+---@overload fun(self: BehaviorTreeNode, path: "blackboardFrom"): string
+function BehaviorTreeNode:get_property(path) end
+
+---Sets an Inspector property by its path: vectors as {x, y} or x, y; colours as {r, g, b[, a]} 0..1 or "#rrggbb[aa]"; enums by name; "script.<name>" a field of the node's script.
+---
+---Example: `self.node:set_property("active", true)`
+---@param path BehaviorTreeNodeProperty|string The property's path, as the Inspector names it, or "script.<field>"
+---@param value any The new value: a number, boolean, string or enum name; a vector as {x, y} (or x here and y next); a colour as {r, g, b[, a]} 0..1 or "#rrggbb[aa]"
+---@param y? number A vector's y when value is its x
+---@overload fun(self: BehaviorTreeNode, path: "position", x: number|Vec2|number[], y?: number)
+---@overload fun(self: BehaviorTreeNode, path: "scale", x: number|Vec2|number[], y?: number)
+---@overload fun(self: BehaviorTreeNode, path: "rotation", value: number)
+---@overload fun(self: BehaviorTreeNode, path: "layer", value: "Layer1"|"Layer2"|"Layer3"|"Layer4"|"Layer5"|"Layer6"|"Layer7"|"Layer8")
+---@overload fun(self: BehaviorTreeNode, path: "zIndex", value: integer)
+---@overload fun(self: BehaviorTreeNode, path: "ySort", value: boolean)
+---@overload fun(self: BehaviorTreeNode, path: "ySortOffset", value: number)
+---@overload fun(self: BehaviorTreeNode, path: "pauseMode", value: "Inherit"|"Pausable"|"Always")
+---@overload fun(self: BehaviorTreeNode, path: "paused", value: boolean)
+---@overload fun(self: BehaviorTreeNode, path: "enabled", value: boolean)
+---@overload fun(self: BehaviorTreeNode, path: "active", value: boolean)
+---@overload fun(self: BehaviorTreeNode, path: "processMode", value: "Every_Frame"|"Manual")
+---@overload fun(self: BehaviorTreeNode, path: "tickRate", value: integer)
+---@overload fun(self: BehaviorTreeNode, path: "actor", value: string)
+---@overload fun(self: BehaviorTreeNode, path: "blackboardFrom", value: string)
+function BehaviorTreeNode:set_property(path, value, y) end
 
 ---@class ParticleEmitterNode
 ---@field position Vec2 Position relative to the parent, in pixels (+y is down).
@@ -9385,6 +9476,74 @@ function OscillatorNode:oscillator_add_mapping(target, property, min, max, absol
 ---Example: `osc:oscillator_clear_mappings()`
 function OscillatorNode:oscillator_clear_mappings() end
 
+---Runs the tree once (a tree set to Manual; also works on others) and returns its answer: "success", "failure" or "running". `dt` is the time since its last tick (default 1/60 s).
+---
+---Example: `local result = self.node:get_node("Brain"):bt_tick(dt)`
+---@param dt? number Seconds since the last tick
+---@return string status
+function BehaviorTreeNode:bt_tick(dt) end
+
+---Interrupts the running branch (each running node's interrupt) so the tree starts again from its root.
+---
+---Example: `Scene.find_node("Brain"):bt_interrupt()`
+function BehaviorTreeNode:bt_interrupt() end
+
+---The tree's last answer: "success", "failure", "running" or "none" (not run yet).
+---
+---Example: `if brain:bt_status() == "running" then ... end`
+---@return string status
+function BehaviorTreeNode:bt_status() end
+
+---A value from the tree's blackboard (or the global one when `global` is true).
+---
+---Example: `local target = brain:bt_get("target")`
+---@param key string The value's name
+---@param global? boolean The global blackboard
+---@return any value
+function BehaviorTreeNode:bt_get(key, global) end
+
+---Sets a blackboard value (nil erases it). A node is kept as its path from the tree.
+---
+---Example: `brain:bt_set("target", player)`
+---@param key string The value's name
+---@param value any A boolean, number, string, vector or node
+---@param global? boolean The global blackboard
+function BehaviorTreeNode:bt_set(key, value, global) end
+
+---Whether the blackboard has a value for the key.
+---
+---Example: `if brain:bt_has("target") then ... end`
+---@param key string The value's name
+---@param global? boolean The global blackboard
+---@return boolean set
+function BehaviorTreeNode:bt_has(key, global) end
+
+---Removes a blackboard value.
+---
+---Example: `brain:bt_erase("target")`
+---@param key string The value's name
+---@param global? boolean The global blackboard
+function BehaviorTreeNode:bt_erase(key, global) end
+
+---The tree's blackboard as an object (the one leaf scripts get).
+---
+---Example: `local bb = brain:bt_blackboard(); bb:set("hp", 10)`
+---@return BTBlackboard blackboard
+function BehaviorTreeNode:bt_blackboard() end
+
+---The name of the leaf (action) that's running, or nil.
+---
+---Example: `Log.info(brain:bt_running_action() or "idle")`
+---@return string? name
+function BehaviorTreeNode:bt_running_action() end
+
+---The last condition checked and its answer ("success" / "failure"), or nil.
+---
+---Example: `local cond, result = brain:bt_last_condition()`
+---@return string? name
+---@return string? status
+function BehaviorTreeNode:bt_last_condition() end
+
 ---Carves a circle out of the art (world position and radius): every shape keeps its paint, and a collider follows - destructible terrain, bites, bullet holes. The node draws its own carved copy until `vector_reset`.
 ---
 ---Example: `ground:vector_cut(bomb.position, 48)`
@@ -11717,7 +11876,47 @@ function LogModule.warn(...) end
 function LogModule.error(...) end
 
 
+---A blackboard: a Behavior Tree's (leaf scripts get it as `blackboard`; `tree:bt_blackboard()`) or the global one (`Blackboard`). Values are booleans, numbers, strings and vectors (a node is kept as its path).
+---@class BTBlackboard
+local BTBlackboard = {}
+
+---A value (nil, or `default`, when it isn't set).
+---
+---Example: `local hp = blackboard:get("hp", 100)`
+---@param key string The value's name
+---@param default? any What to return when the key isn't set
+---@return any value
+function BTBlackboard:get(key, default) end
+
+---Sets a value (nil erases it).
+---
+---Example: `blackboard:set("target", enemy.position)`
+---@param key string The value's name
+---@param value any A boolean, number, string, vector or node (kept as its path)
+function BTBlackboard:set(key, value) end
+
+---Whether the key is set.
+---
+---Example: `if Blackboard:has("alarm") then flee() end`
+---@param key string The value's name
+---@return boolean set
+function BTBlackboard:has(key) end
+
+---Removes a value.
+---
+---Example: `blackboard:erase("target")`
+---@param key string The value's name
+function BTBlackboard:erase(key) end
+
+---Every key that's set.
+---
+---Example: `for _, k in ipairs(blackboard:keys()) do Log.info(k) end`
+---@return string[] keys
+function BTBlackboard:keys() end
+
 -- Global Instances available in every script
+---@type BTBlackboard
+Blackboard = BTBlackboard
 ---@type EngineModule
 Engine = EngineModule
 

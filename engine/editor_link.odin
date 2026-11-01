@@ -192,6 +192,18 @@ EditorLink_Command :: proc(game: ^Game, line: string) {
 			sm.explain = true // the editor shows its ways out (from the next update)
 			fmt.printfln("@rayzr:sm %s", StateMachine_StatusJSON(sm, rest))
 		}
+	case "bt":
+		// -> @rayzr:bt {"path", "ticks", "status", "micros", "running", "nodes": [[status, ticks ago]], "blackboard": {}}
+		n := link_find(game, rest)
+		if n == nil || n.typeId != BehaviorTreeNode {
+			sb := strings.builder_make(context.temp_allocator)
+			strings.write_string(&sb, "{\"path\": ")
+			link_str(&sb, rest)
+			strings.write_string(&sb, ", \"missing\": true}")
+			fmt.printfln("@rayzr:bt %s", strings.to_string(sb))
+		} else {
+			fmt.printfln("@rayzr:bt %s", BehaviorTree_StatusJSON(cast(^BehaviorTreeNode)n, rest))
+		}
 	case "mixer-peaks":
 		// -> @rayzr:mixer-peaks [[index, left, right, clip], ...] (the meters while the game plays)
 		sb := strings.builder_make(context.temp_allocator)

@@ -394,6 +394,7 @@ Code_Shutdown :: proc() {
 	Code_HistoryShutdown()
 	Code_InlayShutdown()
 	StateGraph_Shutdown()
+	BehaviorTree_Shutdown()
 	code_find_destroy()
 	code_lsp_shutdown()
 }

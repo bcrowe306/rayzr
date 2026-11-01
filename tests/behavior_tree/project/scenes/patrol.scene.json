@@ -1,0 +1,15 @@
+{"name": "patrol", "background": [24, 28, 38, 255], "root": {"type": "Node", "name": "root", "children": [
+ {"type": "TextNode", "name": "Log", "position": [10, 10], "properties": {"text": "", "fontSize": 16}},
+ {"type": "TextNode", "name": "Flag", "position": [700, 270], "properties": {"text": "flag", "fontSize": 24}},
+ {"type": "TextNode", "name": "Goblin", "position": [100, 270], "properties": {"text": "goblin", "fontSize": 24}, "children": [
+  {"type": "BehaviorTreeNode", "name": "Brain",
+   "behavior_tree": {"root": {"kind": "Sequence", "children": [
+     {"kind": "Blackboard_Compare", "key": "shouted", "op": "<", "value": "1"},
+     {"kind": "Move_To", "target": "../../Flag", "number": 2, "number2": 300},
+     {"kind": "Script", "script": "scripts/shout.lua", "properties": {"message": "arrived"}},
+     {"kind": "Wait", "number": 0.2},
+     {"kind": "Inverter", "children": [{"kind": "Blackboard_Has", "key": "never"}]},
+     {"kind": "Emit_Signal", "key": "patrol_done"}
+   ]}, "blackboard": [{"key": "shouted", "value": "0"}]}}
+ ]}
+]}}

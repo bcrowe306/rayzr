@@ -47,6 +47,7 @@ BottomTab :: enum {
 	TileMap,    // tile map painting: settings, tools, tiles (tilemap_editor.odin)
 	Files,      // the File Browser: the computer's files, previewed and loaded (file_browser.odin)
 	Tests,      // the project's tests: run, results, failures (tests_panel.odin)
+	BehaviorTree, // a Behavior Tree node's tree (behavior_tree_editor.odin)
 }
 
 ViewportTab :: enum {
