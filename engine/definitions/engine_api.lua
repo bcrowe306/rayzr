@@ -195,6 +195,9 @@ local OscillatorNode = {}
 ---@class BehaviorTreeNode : Node
 local BehaviorTreeNode = {}
 
+---@class GoapNode : Node
+local GoapNode = {}
+
 ---@class UIContainerNode : Node
 
 ---@class UILabelNode : Node, TextHolder
@@ -623,6 +626,15 @@ function AsepriteNode:connect(event, handler) end
 ---@param handler fun(value: any, source: BehaviorTreeNode) Called with the event's value and the node that raised it
 ---@return integer id Connection id for `disconnect`
 function BehaviorTreeNode:connect(event, handler) end
+
+---@alias GoapNodeEvent NodeTreeEvent|"goal_started"|"goal_completed"|"action_started"|"action_completed"|"action_stopped"|"no_action_found"|ProjectEvent
+---Connects a handler to one of this node's events: goal_started (The GOAP agent picked a new goal (its name)), goal_completed (The GOAP agent's goal is met (its name)), action_started (A GOAP action began (its name)), action_completed (A GOAP action completed (its name)), action_stopped (A GOAP action stopped before completing (its name)), no_action_found (Nothing the GOAP agent can do reaches a requested goal); the tree events; custom ones.
+---
+---Example: `self.node:connect("goal_started", function(value, source) Log.info("goal_started") end)`
+---@param event GoapNodeEvent|string The event's name (the Signals tab lists them)
+---@param handler fun(value: any, source: GoapNode) Called with the event's value and the node that raised it
+---@return integer id Connection id for `disconnect`
+function GoapNode:connect(event, handler) end
 
 ---@alias StateMachineNodeEvent NodeTreeEvent|"state_changed"|ProjectEvent
 ---Connects a handler to one of this node's events: state_changed (The state machine entered a state); the tree events; custom ones.
@@ -1972,6 +1984,89 @@ function BehaviorTreeNode:get_property(path) end
 ---@overload fun(self: BehaviorTreeNode, path: "actor", value: string)
 ---@overload fun(self: BehaviorTreeNode, path: "blackboardFrom", value: string)
 function BehaviorTreeNode:set_property(path, value, y) end
+
+---@class GoapNode
+---@field position Vec2 Position relative to the parent, in pixels (+y is down).
+---@field scale Vec2 Size multiplier relative to the parent (1, 1 = as is; negative flips).
+---@field rotation number Rotation relative to the parent, in degrees (clockwise).
+---@field layer "Layer1"|"Layer2"|"Layer3"|"Layer4"|"Layer5"|"Layer6"|"Layer7"|"Layer8" Drawing layer: higher layers draw over lower ones (Layer8 is for UI).
+---@field zIndex integer Draw order within the layer, added to the parent's: higher draws on top (-10, 0, 10...)...
+---@field ySort boolean Draw the children by their Y position (lower on screen = in front), each with its child...
+---@field ySortOffset number Added to this node's Y when its parent Y-sorts: move the sorting line to the feet (e.g....
+---@field pauseMode "Inherit"|"Pausable"|"Always" Inherit the parent's pausing, Pausable (stops when paused) or Always (keeps running, e....
+---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
+---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
+---@field active boolean Senses, plans and acts. Off stops the running action and forgets the plan.
+---@field actor string The node it acts for (a path; empty: its parent): the one that moves to targets and who...
+---@field requestAll boolean Every goal is requested at the start (the cheapest reachable wins). Off: a script picks...
+---@field resolveInterval number Plans again this often (seconds) while the action allows it (continue_or_resolve), so a...
+---@field distanceMultiplier number How much distance adds to an action's cost (per pixel between targets): 0 ignores dista...
+---@field moveSpeed number Pixels a second when it goes to a target without a Navigation Agent (with one, the agen...
+
+---@alias GoapNodeProperty
+---| "position" # Vec2 - Position relative to the parent, in pixels (+y is down).
+---| "scale" # Vec2 - Size multiplier relative to the parent (1, 1 = as is; negative flips).
+---| "rotation" # number - Rotation relative to the parent, in degrees (clockwise).
+---| "layer" # "Layer1"|"Layer2"|"Layer3"|"Layer4"|"Layer5"|"Layer6"|"Layer7"|"Layer8" - Drawing layer: higher layers draw over lower ones (Layer8 is for UI).
+---| "zIndex" # integer - Draw order within the layer, added to the parent's: higher draws on top (-10, 0, 10...)...
+---| "ySort" # boolean - Draw the children by their Y position (lower on screen = in front), each with its child...
+---| "ySortOffset" # number - Added to this node's Y when its parent Y-sorts: move the sorting line to the feet (e.g....
+---| "pauseMode" # "Inherit"|"Pausable"|"Always" - Inherit the parent's pausing, Pausable (stops when paused) or Always (keeps running, e....
+---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
+---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
+---| "active" # boolean - Senses, plans and acts. Off stops the running action and forgets the plan.
+---| "actor" # string - The node it acts for (a path; empty: its parent): the one that moves to targets and who...
+---| "requestAll" # boolean - Every goal is requested at the start (the cheapest reachable wins). Off: a script picks...
+---| "resolveInterval" # number - Plans again this often (seconds) while the action allows it (continue_or_resolve), so a...
+---| "distanceMultiplier" # number - How much distance adds to an action's cost (per pixel between targets): 0 ignores dista...
+---| "moveSpeed" # number - Pixels a second when it goes to a target without a Navigation Agent (with one, the agen...
+
+---Reads an Inspector property by its path (vectors and colours as tables); "script.<name>" reads a field of the node's script.
+---
+---Example: `local value = self.node:get_property("active")`
+---@param path GoapNodeProperty|string The property's path, as the Inspector names it ("position", "emitter.amount") or "script.<field>"
+---@return any value Its value: a number, boolean, string or enum name; vectors and colours as tables (nil when there's no such property)
+---@overload fun(self: GoapNode, path: "position"): Vec2
+---@overload fun(self: GoapNode, path: "scale"): Vec2
+---@overload fun(self: GoapNode, path: "rotation"): number
+---@overload fun(self: GoapNode, path: "layer"): "Layer1"|"Layer2"|"Layer3"|"Layer4"|"Layer5"|"Layer6"|"Layer7"|"Layer8"
+---@overload fun(self: GoapNode, path: "zIndex"): integer
+---@overload fun(self: GoapNode, path: "ySort"): boolean
+---@overload fun(self: GoapNode, path: "ySortOffset"): number
+---@overload fun(self: GoapNode, path: "pauseMode"): "Inherit"|"Pausable"|"Always"
+---@overload fun(self: GoapNode, path: "paused"): boolean
+---@overload fun(self: GoapNode, path: "enabled"): boolean
+---@overload fun(self: GoapNode, path: "active"): boolean
+---@overload fun(self: GoapNode, path: "actor"): string
+---@overload fun(self: GoapNode, path: "requestAll"): boolean
+---@overload fun(self: GoapNode, path: "resolveInterval"): number
+---@overload fun(self: GoapNode, path: "distanceMultiplier"): number
+---@overload fun(self: GoapNode, path: "moveSpeed"): number
+function GoapNode:get_property(path) end
+
+---Sets an Inspector property by its path: vectors as {x, y} or x, y; colours as {r, g, b[, a]} 0..1 or "#rrggbb[aa]"; enums by name; "script.<name>" a field of the node's script.
+---
+---Example: `self.node:set_property("active", true)`
+---@param path GoapNodeProperty|string The property's path, as the Inspector names it, or "script.<field>"
+---@param value any The new value: a number, boolean, string or enum name; a vector as {x, y} (or x here and y next); a colour as {r, g, b[, a]} 0..1 or "#rrggbb[aa]"
+---@param y? number A vector's y when value is its x
+---@overload fun(self: GoapNode, path: "position", x: number|Vec2|number[], y?: number)
+---@overload fun(self: GoapNode, path: "scale", x: number|Vec2|number[], y?: number)
+---@overload fun(self: GoapNode, path: "rotation", value: number)
+---@overload fun(self: GoapNode, path: "layer", value: "Layer1"|"Layer2"|"Layer3"|"Layer4"|"Layer5"|"Layer6"|"Layer7"|"Layer8")
+---@overload fun(self: GoapNode, path: "zIndex", value: integer)
+---@overload fun(self: GoapNode, path: "ySort", value: boolean)
+---@overload fun(self: GoapNode, path: "ySortOffset", value: number)
+---@overload fun(self: GoapNode, path: "pauseMode", value: "Inherit"|"Pausable"|"Always")
+---@overload fun(self: GoapNode, path: "paused", value: boolean)
+---@overload fun(self: GoapNode, path: "enabled", value: boolean)
+---@overload fun(self: GoapNode, path: "active", value: boolean)
+---@overload fun(self: GoapNode, path: "actor", value: string)
+---@overload fun(self: GoapNode, path: "requestAll", value: boolean)
+---@overload fun(self: GoapNode, path: "resolveInterval", value: number)
+---@overload fun(self: GoapNode, path: "distanceMultiplier", value: number)
+---@overload fun(self: GoapNode, path: "moveSpeed", value: number)
+function GoapNode:set_property(path, value, y) end
 
 ---@class ParticleEmitterNode
 ---@field position Vec2 Position relative to the parent, in pixels (+y is down).
@@ -9543,6 +9638,82 @@ function BehaviorTreeNode:bt_running_action() end
 ---@return string? name
 ---@return string? status
 function BehaviorTreeNode:bt_last_condition() end
+
+---Sets the goals the GOAP agent may pick from (the cheapest it can reach wins), by name: several names, or a table of names and whether to plan now (default true). It replaces Request All.
+---
+---Example: `agent:goap_request_goal("Eat", "Wander")`
+---@param ... string|string[] Goal names (or one table of them, then a boolean: plan now)
+function GoapNode:goap_request_goal(...) end
+
+---Sets a world key (a whole number; true / false are 1 / 0). Global keys are shared by every agent.
+---
+---Example: `agent:goap_set_key("HasAxe", 1)`
+---@param key string The world key's name
+---@param value integer|boolean Its value
+function GoapNode:goap_set_key(key, value) end
+
+---A world key's value (its starting value until it's sensed or set).
+---
+---Example: `if agent:goap_get_key("Wood") >= 3 then ... end`
+---@param key string The world key's name
+---@return integer value
+function GoapNode:goap_get_key(key) end
+
+---Sets a target key: a node (followed as it moves), a position, or nil (no target).
+---
+---Example: `agent:goap_set_target("Enemy", player)`
+---@param key string The target key's name
+---@param target Node|Vec2|nil A node (followed), a position, or nil for none
+function GoapNode:goap_set_target(key, target) end
+
+---A target key's position, or nil when there's none.
+---
+---Example: `local spot = agent:goap_get_target("Tree")`
+---@param key string The target key's name
+---@return Vec2? position
+function GoapNode:goap_get_target(key) end
+
+---Plans now (the goal and the action to do first).
+---
+---Example: `agent:goap_resolve()`
+function GoapNode:goap_resolve() end
+
+---The current goal's name, or nil.
+---
+---Example: `Log.info(agent:goap_goal() or "nothing to do")`
+---@return string? goal
+function GoapNode:goap_goal() end
+
+---The running action's name, or nil.
+---
+---Example: `if agent:goap_action() == "Flee" then ... end`
+---@return string? action
+function GoapNode:goap_action() end
+
+---The plan: the actions' names, from the running one to the goal.
+---
+---Example: `for _, name in ipairs(agent:goap_plan()) do Log.info(name) end`
+---@return string[] actions
+function GoapNode:goap_plan() end
+
+---What the agent is doing: "no_action", "moving" (to its target), "performing" or "moving_and_performing".
+---
+---Example: `local busy = agent:goap_state() ~= "no_action"`
+---@return string state
+function GoapNode:goap_state() end
+
+---Lets the planner use an action again.
+---
+---Example: `agent:goap_enable_action("Shoot")`
+---@param action string The action's name
+function GoapNode:goap_enable_action(action) end
+
+---Stops the planner using an action: for good, or for `seconds` (a cooldown).
+---
+---Example: `agent:goap_disable_action("Shoot", 2)`
+---@param action string The action's name
+---@param seconds? number How long (default: until goap_enable_action)
+function GoapNode:goap_disable_action(action, seconds) end
 
 ---Carves a circle out of the art (world position and radius): every shape keeps its paint, and a collider follows - destructible terrain, bites, bullet holes. The node draws its own carved copy until `vector_reset`.
 ---

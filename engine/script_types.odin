@@ -111,6 +111,8 @@ ScriptModule :: struct {
 	// A Behavior Tree leaf (`Class.behavior = "action" / "condition"`;
 	// "" = not one): behavior_tree_node.odin.
 	behavior: string,
+	// A GOAP script (`Class.goap = "action" / "sensor" / "goal"`): goap_node.odin.
+	goap: string,
 }
 
 // Forward declaration of ScriptManager

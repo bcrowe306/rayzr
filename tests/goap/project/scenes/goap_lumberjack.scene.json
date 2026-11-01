@@ -1,0 +1,18 @@
+{"name": "lumberjack", "background": [24, 28, 38, 255], "root": {"type": "Node", "name": "root", "children": [
+ {"type": "TextNode", "name": "Log", "position": [10, 10], "properties": {"text": "", "fontSize": 16}},
+ {"type": "TextNode", "name": "Axe", "position": [300, 160], "properties": {"text": "axe", "fontSize": 24, "color": [250, 204, 21, 255]}},
+ {"type": "TextNode", "name": "Tree", "position": [700, 300], "properties": {"text": "tree", "fontSize": 32, "color": [74, 222, 128, 255]}},
+ {"type": "TextNode", "name": "Jack", "position": [100, 300], "properties": {"text": "jack", "fontSize": 24}, "script": {"path": "scripts/goap_lumberjack.lua"}, "children": [
+  {"type": "GoapNode", "name": "GOAP", "properties": {"moveSpeed": 240},
+   "goap": {
+    "keys": [{"name": "HasAxe"}, {"name": "Wood"}, {"name": "AxeSpot", "target": true}, {"name": "TreeSpot", "target": true}],
+    "goals": [{"name": "GatherWood", "cost": 1, "conditions": [{"key": "Wood", "cmp": ">=", "amount": 3}]}],
+    "actions": [
+     {"name": "PickUpAxe", "kind": "Wait", "cost": 1, "seconds": 0.3, "target": "AxeSpot", "stopping_distance": 8, "requires_target": true, "conditions": [], "effects": [{"key": "HasAxe", "increase": true}]},
+     {"name": "ChopWood", "kind": "Wait", "cost": 1, "seconds": 0.4, "target": "TreeSpot", "stopping_distance": 8, "requires_target": true, "conditions": [{"key": "HasAxe", "cmp": ">=", "amount": 1}], "effects": [{"key": "Wood", "increase": true}]},
+     {"name": "PunchTree", "kind": "Wait", "cost": 20, "seconds": 1, "target": "TreeSpot", "stopping_distance": 8, "conditions": [], "effects": [{"key": "Wood", "increase": true}]}
+    ],
+    "sensors": [{"key": "AxeSpot", "kind": "Node", "timer": "Always", "node": "../../Axe"}, {"key": "TreeSpot", "kind": "Node", "timer": "Always", "node": "../../Tree"}]
+   }}
+ ]}
+]}}

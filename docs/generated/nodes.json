@@ -234,6 +234,22 @@
       ]
     },
     {
+      "type": "GoapNode",
+      "name": "GOAP Agent",
+      "category": "Animation & Effects",
+      "description": "Goal-oriented action planning: give its parent goals (conditions on world keys) and actions (conditions, effects, costs, targets); it senses the world, picks the cheapest goal it can reach and plans the actions there. Edit it in the GOAP tab.",
+      "aliases": ["goap", "goal oriented action planning", "planner", "planning", "ai planner"],
+      "hasOrigin": false,
+      "properties": [
+        {"name": "active", "kind": "boolean", "owner": "GoapNode", "default": true, "doc": "Senses, plans and acts. Off stops the running action and forgets the plan."},
+        {"name": "actor", "kind": "string", "owner": "GoapNode", "default": "", "doc": "The node it acts for (a path; empty: its parent): the one that moves to targets and whose script Call Method uses."},
+        {"name": "requestAll", "kind": "boolean", "owner": "GoapNode", "default": true, "doc": "Every goal is requested at the start (the cheapest reachable wins). Off: a script picks them with goap_request_goal."},
+        {"name": "resolveInterval", "kind": "number", "owner": "GoapNode", "default": 1, "min": 0, "max": 60, "doc": "Plans again this often (seconds) while the action allows it (continue_or_resolve), so a cheaper goal can take over. 0: only when an action ends or the goals change."},
+        {"name": "distanceMultiplier", "kind": "number", "owner": "GoapNode", "default": 0.01, "min": 0, "max": 10, "doc": "How much distance adds to an action's cost (per pixel between targets): 0 ignores distance; 1 / speed counts it in seconds."},
+        {"name": "moveSpeed", "kind": "number", "owner": "GoapNode", "default": 120, "min": 0, "max": 5000, "doc": "Pixels a second when it goes to a target without a Navigation Agent (with one, the agent moves it)."}
+      ]
+    },
+    {
       "type": "StateMachineNode",
       "name": "State Machine",
       "category": "Animation & Effects",

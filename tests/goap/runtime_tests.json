@@ -1,0 +1,9 @@
+[
+ {
+  "name": "GOAP: a lumberjack fetches the axe, then chops three times (cheaper than punching), and the goal completes",
+  "project": "tests/goap/project",
+  "scene": "scenes/goap_lumberjack.scene.json",
+  "frames": 360,
+  "expect": [["Log", "text", "==", "PickUpAxe ChopWood ChopWood ChopWood done:GatherWood"], ["Jack", "x", ">=", 690], ["Jack", "x", "<=", 710]]
+ }
+]

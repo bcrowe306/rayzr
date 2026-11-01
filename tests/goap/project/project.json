@@ -1,0 +1,1 @@
+{"name": "GOAP", "initial_scene": "scenes/goap_lumberjack.scene.json", "window": {"title": "t", "width": 960, "height": 540, "virtual_width": 960, "virtual_height": 540}, "physics": {"gravity": [0, 0], "debug_draw": false}, "scenes": ["scenes/goap_lumberjack.scene.json"]}

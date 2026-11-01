@@ -48,6 +48,7 @@ BottomTab :: enum {
 	Files,      // the File Browser: the computer's files, previewed and loaded (file_browser.odin)
 	Tests,      // the project's tests: run, results, failures (tests_panel.odin)
 	BehaviorTree, // a Behavior Tree node's tree (behavior_tree_editor.odin)
+	Goap,         // a GOAP node's goals, actions, keys and sensors (goap_editor.odin)
 }
 
 ViewportTab :: enum {

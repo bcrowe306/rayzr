@@ -1,0 +1,56 @@
+# GOAP: a lumberjack's agent (copied in), its graph in the GOAP tab, adding
+# a goal, then the live plan - in Simulate and in the running game (Play).
+exec cp tests/goap/project/scenes/goap_lumberjack.scene.json $PROJECT/scenes/
+exec cp tests/goap/project/scripts/goap_lumberjack.lua $PROJECT/scripts/
+wait 90
+click @menu:View
+click @menu:View/Workspaces
+click @menu:Workspaces/Animation
+wait 5
+dblclick @asset:scenes/goap_lumberjack.scene.json
+wait 10
+click @hier:Jack/GOAP
+wait 3
+expect selected == GOAP
+click @bottom:goap
+wait 3
+expect goap-graph == GatherWood|PickUpAxe,ChopWood,PunchTree
+click @gg.canvas
+key f
+wait 2
+expect item:gg.action:ChopWood == visible
+screenshot graph
+click @gg.add-goal
+expect goap-graph == GatherWood,Goal2|PickUpAxe,ChopWood,PunchTree
+key cmd+z
+wait 2
+expect goap-graph == GatherWood|PickUpAxe,ChopWood,PunchTree
+click @gg.page:keys
+wait 2
+screenshot keys
+click @gg.page:graph
+# Simulate: it goes for the axe first.
+click @menu:Game
+click @menu:Game/Simulate in Editor
+wait 20
+expect goap-live == GatherWood / PickUpAxe
+screenshot simulate_live
+click @menu:Game
+click @menu:Game/Simulate in Editor
+wait 5
+# Play: the running game's agent, through the link.
+click @toolbar.play-scene
+wait-until game == running timeout=600
+wait-until remote-connected == true timeout=600
+click @hier:Jack/GOAP
+wait 3
+# (the tree may have folded Jack: the first click opens it)
+click @hier:Jack/GOAP
+wait 2
+expect selected == GOAP
+click @bottom:goap
+wait-until goap-live contains ChopWood timeout=600
+click @gg.canvas
+key f
+wait 2
+screenshot play_live

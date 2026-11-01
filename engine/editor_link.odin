@@ -204,6 +204,18 @@ EditorLink_Command :: proc(game: ^Game, line: string) {
 		} else {
 			fmt.printfln("@rayzr:bt %s", BehaviorTree_StatusJSON(cast(^BehaviorTreeNode)n, rest))
 		}
+	case "goap":
+		// -> @rayzr:goap {"path", "goal", "action", "state", "plan", "action_costs", "goal_costs", "keys"}
+		n := link_find(game, rest)
+		if n == nil || n.typeId != GoapNode {
+			sb := strings.builder_make(context.temp_allocator)
+			strings.write_string(&sb, "{\"path\": ")
+			link_str(&sb, rest)
+			strings.write_string(&sb, ", \"missing\": true}")
+			fmt.printfln("@rayzr:goap %s", strings.to_string(sb))
+		} else {
+			fmt.printfln("@rayzr:goap %s", Goap_StatusJSON(cast(^GoapNode)n, rest))
+		}
 	case "mixer-peaks":
 		// -> @rayzr:mixer-peaks [[index, left, right, clip], ...] (the meters while the game plays)
 		sb := strings.builder_make(context.temp_allocator)

@@ -38,6 +38,7 @@ Ref_Scene_Kind :: enum {
 	TextPath,        // a Text node's Path (#270)
 	OscTarget,       // an Oscillator mapping's node
 	BTPath,          // a Behavior Tree's Actor (-1), Blackboard From (-2) or a node's Target (its index)
+	GoapPath,        // a GOAP agent's Actor (-1), an action's node (its index) or a sensor's (-100 - its index)
 	LipSyncMouth,
 	ScriptProp,
 }
@@ -291,6 +292,18 @@ NodeRefs_Capture :: proc(state: ^EditorState) -> (snap: Ref_Snapshot) {
 			bt_ref(&snap, mgr, n, bt.actor, -1, "Behavior Tree Actor")
 			bt_ref(&snap, mgr, n, bt.blackboardFrom, -2, "Behavior Tree Blackboard From")
 			for &bn, bi in bt.nodes do bt_ref(&snap, mgr, n, bn.target, bi, fmt.tprintf("Behavior Tree node '%s'", e.BT_NodeName(&bn)))
+
+		case e.GoapNode:
+			gn := cast(^e.GoapNode)n
+			goap_ref :: proc(snap: ^Ref_Snapshot, mgr: ^e.NodeManager, owner: ^e.Node, path: string, idx: int, label: string) {
+				if path == "" || path == "." do return
+				if target := e.Node_ResolvePath(mgr, owner, path); target != nil {
+					append(&snap.sceneItems, Ref_Scene_Item{kind = .GoapPath, owner = owner, target = target, oldPath = strings.clone(path, context.temp_allocator), extraIdx = idx, label = strings.clone(label, context.temp_allocator)})
+				}
+			}
+			goap_ref(&snap, mgr, n, gn.actor, -1, "GOAP Actor")
+			for &a, ai in gn.actions do goap_ref(&snap, mgr, n, a.node, ai, fmt.tprintf("GOAP action '%s'", a.name))
+			for &se, si in gn.sensors do goap_ref(&snap, mgr, n, se.node, -100 - si, fmt.tprintf("GOAP sensor for '%s'", se.key))
 
 		case e.OscillatorNode:
 			o := cast(^e.OscillatorNode)n
@@ -670,6 +683,14 @@ apply_scene_edits :: proc(state: ^EditorState) -> int {
 			case s.extraIdx == -1: e.BT_SetString(bt, &bt.actor, s.newPath)
 			case s.extraIdx == -2: e.BT_SetString(bt, &bt.blackboardFrom, s.newPath)
 			case s.extraIdx >= 0 && s.extraIdx < len(bt.nodes): e.BT_SetString(bt, &bt.nodes[s.extraIdx].target, s.newPath)
+			}
+			count += 1
+		case .GoapPath:
+			gn := cast(^e.GoapNode)s.owner
+			switch {
+			case s.extraIdx == -1: e.Goap_SetString(gn, &gn.actor, s.newPath)
+			case s.extraIdx >= 0 && s.extraIdx < len(gn.actions): e.Goap_SetString(gn, &gn.actions[s.extraIdx].node, s.newPath)
+			case s.extraIdx <= -100 && -100 - s.extraIdx < len(gn.sensors): e.Goap_SetString(gn, &gn.sensors[-100 - s.extraIdx].node, s.newPath)
 			}
 			count += 1
 		case .OscTarget:

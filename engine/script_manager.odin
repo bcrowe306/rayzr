@@ -106,6 +106,7 @@ ScriptManager_Destroy :: proc(sm: ^ScriptManager = nil) {
 		delete(mod.diskPath)
 		if mod.extends != "" do delete(mod.extends)
 		if mod.behavior != "" do delete(mod.behavior)
+		if mod.goap != "" do delete(mod.goap)
 		for &p in mod.properties do ScriptProperty_Destroy(&p)
 		delete(mod.properties)
 		free(mod)
@@ -201,6 +202,7 @@ ScriptManager_LoadModule :: proc(path: string, sm: ^ScriptManager = nil) -> (^Sc
 	mod.isResourceClass, mod.resourceLocalCopy = script_parse_resource_marker(L, lua.gettop(L), mod.path)
 	if mod.isResourceClass do script_warn_resource_props(mod)
 	Script_ParseBehaviorMarker(L, lua.gettop(L), mod)
+	Script_ParseGoapMarker(L, lua.gettop(L), mod)
 	lua.pop(L, 1) // module table
 	ScriptModule_TrackFile(mgr, mod)
 
