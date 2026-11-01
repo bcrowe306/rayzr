@@ -37,6 +37,7 @@ Ref_Scene_Kind :: enum {
 	DialogueLipSync,
 	TextPath,        // a Text node's Path (#270)
 	OscTarget,       // an Oscillator mapping's node
+	BTPath,          // a Behavior Tree's Actor (-1), Blackboard From (-2) or a node's Target (its index)
 	LipSyncMouth,
 	ScriptProp,
 }
@@ -271,6 +272,25 @@ NodeRefs_Capture :: proc(state: ^EditorState) -> (snap: Ref_Snapshot) {
 					})
 				}
 			}
+
+		case e.BehaviorTreeNode:
+			bt := cast(^e.BehaviorTreeNode)n
+			bt_ref :: proc(snap: ^Ref_Snapshot, mgr: ^e.NodeManager, owner: ^e.Node, path: string, idx: int, label: string) {
+				if path == "" || path == "." do return
+				if target := e.Node_ResolvePath(mgr, owner, path); target != nil {
+					append(&snap.sceneItems, Ref_Scene_Item{
+						kind = .BTPath,
+						owner = owner,
+						target = target,
+						oldPath = strings.clone(path, context.temp_allocator),
+						extraIdx = idx,
+						label = strings.clone(label, context.temp_allocator),
+					})
+				}
+			}
+			bt_ref(&snap, mgr, n, bt.actor, -1, "Behavior Tree Actor")
+			bt_ref(&snap, mgr, n, bt.blackboardFrom, -2, "Behavior Tree Blackboard From")
+			for &bn, bi in bt.nodes do bt_ref(&snap, mgr, n, bn.target, bi, fmt.tprintf("Behavior Tree node '%s'", e.BT_NodeName(&bn)))
 
 		case e.OscillatorNode:
 			o := cast(^e.OscillatorNode)n
@@ -643,6 +663,14 @@ apply_scene_edits :: proc(state: ^EditorState) -> int {
 		case .DialogueLipSync:
 			d := cast(^e.DialogueNode)s.owner
 			d.lipSync = strings.clone(s.newPath, d.allocator)
+			count += 1
+		case .BTPath:
+			bt := cast(^e.BehaviorTreeNode)s.owner
+			switch {
+			case s.extraIdx == -1: e.BT_SetString(bt, &bt.actor, s.newPath)
+			case s.extraIdx == -2: e.BT_SetString(bt, &bt.blackboardFrom, s.newPath)
+			case s.extraIdx >= 0 && s.extraIdx < len(bt.nodes): e.BT_SetString(bt, &bt.nodes[s.extraIdx].target, s.newPath)
+			}
 			count += 1
 		case .OscTarget:
 			o := cast(^e.OscillatorNode)s.owner

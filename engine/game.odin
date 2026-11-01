@@ -255,6 +255,7 @@ GameRun :: proc(game: ^Game, deltaTime: f32) {
 GameTerminate :: proc(game: ^Game) {
 	if game == nil do return
 	GameFeel_Destroy(game)
+	BB_Clear(&btGlobal) // (the global blackboard: per run)
 	Tween_Destroy(&game.tweens, game.scriptManager.L) // releases Lua callbacks: before the Lua state goes
 	EventBus_Destroy(&game.events, game.scriptManager.L) // (likewise: queued Lua values)
 	Scene_FlowShutdown(game)

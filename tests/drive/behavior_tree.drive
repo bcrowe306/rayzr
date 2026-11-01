@@ -1,0 +1,65 @@
+# Behavior Tree: add one to the ship, build its tree in the tab (a root,
+# children from the menu, wrap a node in a decorator, a node's settings),
+# save, then watch it run - in Simulate and in the running game (Play).
+wait 5
+click @menu:View
+click @menu:View/Workspaces
+click @menu:Workspaces/Animation
+wait 5
+click @hier:PlayerShip
+key ctrl+a
+type behavior tree
+key enter
+wait 3
+expect selected == BehaviorTree
+click @bottom:behaviortree
+wait 2
+click @btg.add-root
+expect bt-tree == Selector
+rclick @btg.node:0
+click @btg.ctx.add
+click @btg.cat:Action
+click @pick:Wait
+expect bt-tree == Selector(Wait)
+rclick @btg.node:0
+click @btg.ctx.add
+click @btg.cat:Action
+click @pick:Blackboard Set
+click @btg.key
+key cmd+a
+type seen
+key enter
+rclick @btg.node:1
+click @btg.ctx.wrap
+click @btg.cat:Decorator
+click @pick:Inverter
+expect bt-tree == Selector(Inverter(Wait),Blackboard Set)
+wait 2
+screenshot tree
+key cmd+s
+wait 3
+expect file:scenes/main.scene.json contains "behavior_tree"
+expect file:scenes/main.scene.json contains "kind": "Inverter"
+# Simulate: the Wait is running (the tab lights it).
+click @menu:Game
+click @menu:Game/Simulate in Editor
+wait 20
+expect bt-live contains running
+screenshot simulate_live
+click @menu:Game
+click @menu:Game/Simulate in Editor
+wait 5
+# Play: the running game's tree, through the link.
+click @toolbar.play-scene
+wait-until game == running timeout=600
+wait-until remote-connected == true timeout=600
+wait 20
+click @hier:PlayerShip/BehaviorTree
+click @bottom:behaviortree
+wait-until bt-live contains success timeout=300
+# (F frames the tree: the canvas is hovered)
+click @btg.canvas
+key f
+wait 2
+expect bt-view contains pan=
+screenshot play_live

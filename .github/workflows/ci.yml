@@ -145,6 +145,8 @@ jobs:
           xvfb-run -a python3 scripts/templates/test_templates.py --runner bin/runners/linux/runner --suite tests/text_msdf/runtime_tests.json
           # Oscillators: waves on properties; pause / resume / signals / Stop restoring.
           xvfb-run -a python3 scripts/templates/test_templates.py --runner bin/runners/linux/runner --suite tests/oscillator/runtime_tests.json
+          # Behavior Trees: Move To, a Lua leaf, a blackboard guard.
+          xvfb-run -a python3 scripts/templates/test_templates.py --runner bin/runners/linux/runner --suite tests/behavior_tree/runtime_tests.json
 
       - name: Crash reports (the runner and the editor crash for real)
         if: matrix.smoke

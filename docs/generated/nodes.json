@@ -219,6 +219,21 @@
       ]
     },
     {
+      "type": "BehaviorTreeNode",
+      "name": "Behavior Tree",
+      "category": "Animation & Effects",
+      "description": "Game AI as a tree of composites (Sequence, Selector...), decorators and leaves (actions, conditions, Lua scripts), ticked every frame for its parent. Edit it in the Behavior Tree tab; watch it run live.",
+      "aliases": ["behavior tree", "behaviortree", "behaviour tree", "bt", "ai", "beehave"],
+      "hasOrigin": false,
+      "properties": [
+        {"name": "active", "kind": "boolean", "owner": "BehaviorTreeNode", "default": true, "doc": "Ticks the tree. Turning it off interrupts the running branch (tree_disabled); on again starts from the root (tree_enabled)."},
+        {"name": "processMode", "kind": "enum", "owner": "BehaviorTreeNode", "default": "Every_Frame", "values": ["Every_Frame", "Manual"], "doc": "Every Frame: ticks in its update (every Tick Rate frames). Manual: only when a script calls bt_tick(), or a Subtree leaf runs it."},
+        {"name": "tickRate", "kind": "integer", "owner": "BehaviorTreeNode", "default": 1, "min": 1, "max": 600, "doc": "Ticks every this many frames (1: every frame). Higher is cheaper for many actors; timers still see the whole time."},
+        {"name": "actor", "kind": "string", "owner": "BehaviorTreeNode", "default": "", "doc": "The node the tree acts for (a path; empty: its parent). Leaves with an empty node act on it; scripts get it as actor."},
+        {"name": "blackboardFrom", "kind": "string", "owner": "BehaviorTreeNode", "default": "", "doc": "Another Behavior Tree whose blackboard this one uses (a path), so several trees share values. Empty: its own."}
+      ]
+    },
+    {
       "type": "StateMachineNode",
       "name": "State Machine",
       "category": "Animation & Effects",

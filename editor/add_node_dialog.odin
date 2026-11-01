@@ -41,6 +41,13 @@ NODE_CATALOG := [?]NodeCatalogEntry{
 		typeName    = "CameraNode",
 	},
 	{
+		name        = "Behavior Tree",
+		category    = "Animation & Effects",
+		icon        = ICON_FA_SITEMAP,
+		description = "Game AI as a tree of composites (Sequence, Selector...), decorators and leaves (actions, conditions, Lua scripts), ticked every frame for its parent. Edit it in the Behavior Tree tab; watch it run live.",
+		typeName    = "BehaviorTreeNode",
+	},
+	{
 		name        = "Oscillator",
 		category    = "Animation & Effects",
 		icon        = ICON_FA_RIGHT_LEFT,

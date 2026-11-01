@@ -108,6 +108,9 @@ ScriptModule :: struct {
 	// The script it builds on (`Class.extends`, normalized path; "" = none):
 	// script_extends.odin.
 	extends: string,
+	// A Behavior Tree leaf (`Class.behavior = "action" / "condition"`;
+	// "" = not one): behavior_tree_node.odin.
+	behavior: string,
 }
 
 // Forward declaration of ScriptManager

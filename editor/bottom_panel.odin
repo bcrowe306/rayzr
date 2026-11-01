@@ -35,6 +35,7 @@ bottom_tab_for :: proc(node: ^e.Node) -> (BottomTab, bool) {
 	case e.ParticleEmitterNode: return .Particles, true
 	case e.LdtkLevelNode:       return .Ldtk, true
 	case e.StateMachineNode:    return .StateGraph, true
+	case e.BehaviorTreeNode:    return .BehaviorTree, true
 	case e.TileMapNode:         return .TileMap, true
 	}
 	return {}, false
@@ -72,6 +73,7 @@ BOTTOM_TABS := [?]struct {
 	{.Ldtk, ICON_FA_TABLE_CELLS, "LDtk", "ldtk"},
 	{.TileMap, ICON_FA_TABLE_CELLS_LARGE, "Tile Map", "tilemap"},
 	{.StateGraph, ICON_FA_DIAGRAM_PROJECT, "State Machine", "stategraph"},
+	{.BehaviorTree, ICON_FA_SITEMAP, "Behavior Tree", "behaviortree"},
 	{.Mixer, ICON_FA_SLIDERS, "Mixer", "mixer"},
 	{.Search, ICON_FA_MAGNIFYING_GLASS, "Search", "search"},
 	{.Files, ICON_FA_FOLDER_OPEN, "Files", "files"},
@@ -115,6 +117,7 @@ consoleShow: [LogLevel]bool = {.Info = true, .Warn = true, .Error = true}
 BottomPanel_Render :: proc(state: ^EditorState) {
 	animTimelineFocused = false // set again by the Animation tab when it has focus
 	stateGraphFocused = false   // ... and the State Machine tab
+	behaviorTreeFocused = false // ... and the Behavior Tree tab
 	defer imgui.End()
 	bottomOpen := imgui.Begin("Console###BottomPanelWindow")
 	Drive_Window("console") // (annotated docs screenshots)
@@ -159,6 +162,7 @@ BottomPanel_Render :: proc(state: ^EditorState) {
 				case .Ldtk:       LdtkPanel_Render(state)
 				case .TileMap:    TileMapPanel_Render(state)
 				case .StateGraph: StateGraph_Render(state)
+				case .BehaviorTree: BehaviorTree_Render(state)
 				case .Mixer:      MixerPanel_Render(state)
 				case .Search:     Code_SearchPanel(state)
 				case .Files:      FileBrowser_RenderTab(state)
