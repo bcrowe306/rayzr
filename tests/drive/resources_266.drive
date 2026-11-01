@@ -1,0 +1,39 @@
+# Resource properties (#266): a .resource.json dropped from Assets onto the
+# field; + > Own Values gives the node its own copy (a changed value saved
+# with the scene, marked); + > Embed a Copy keeps it in the scene (no file).
+wait 5
+exec mkdir -p $PROJECT/resources
+exec cp tests/drive/fixtures/weapon_zz.lua $PROJECT/scripts/weapon_zz.lua
+exec cp tests/drive/fixtures/archer_zz.lua $PROJECT/scripts/archer_zz.lua
+exec cp tests/drive/fixtures/bow_zz.resource.json $PROJECT/resources/bow_zz.resource.json
+wait-until item:asset:resources/bow_zz.resource.json == visible timeout=300
+click @hier:PatrolDroneAlpha
+click @insp.script-attach
+click @pick:scripts/archer_zz.lua
+wait 5
+click @insp.tab:properties
+wait 3
+expect item:insp.script:weapon == visible
+drag @asset:resources/bow_zz.resource.json @insp.script:weapon
+wait 3
+expect node:PatrolDroneAlpha.script.weapon == resources/bow_zz.resource.json
+click @insp.script:weapon.new
+click @insp.script:weapon.own
+wait 3
+expect node:PatrolDroneAlpha.script.weapon contains "path"
+expect item:insp.script/weapon:damage == visible
+dblclick @insp.script/weapon:damage
+key ctrl+a
+type 40
+key enter
+wait 3
+expect node:PatrolDroneAlpha.script.weapon contains "damage"
+screenshot own_values
+click @insp.script:weapon.new
+click @insp.script:weapon.embed
+wait 3
+expect node:PatrolDroneAlpha.script.weapon contains "class"
+screenshot embedded
+click @toolbar.save
+wait 2
+expect file:scenes/main.scene.json contains "weapon": {"class": "scripts/weapon_zz.lua"

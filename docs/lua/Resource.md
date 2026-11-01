@@ -3,6 +3,7 @@
 - **Shared tuning data**: weapon stats, enemy types, items, dialogue lines as `.resource.json` files of a Lua class. `Resource.load(path)` returns the shared table - the same one for every script that loads it.
 - **A copy of its own**: `Resource.new(path)` loads a fresh table from the file for this component instance - a health pool or an inventory each enemy changes without touching the others.
 - **A copy as it is now**: `res:duplicate()` copies a resource with its current values (an upgraded weapon kept per turret).
+- **One node's own variant, or one with no file**: a `type = "resource"` property can hold a file with this node's own values on top, or a resource embedded in the scene - set up in the Inspector (the field's **+**). Scripts get a table either way. See [Resources](../../engine/docs/resources.md).
 - **Picking one by path at runtime**: a loot table naming files, a level choosing its enemy set - when a `type = "resource"` property (picked in the Inspector) doesn't fit.
 
 ## Example

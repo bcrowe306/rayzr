@@ -121,7 +121,9 @@ and Find Usages lists them.
   same history as scene edits. Edits during Simulate are undoable too: they
   are saved to the file, not rolled back when the simulation stops.
 - A script's **resource property** shows a picker of the resource files of
-  its `class`. Right-click a resource > **Edit Class Script** /
+  its `class`; a resource dropped from Assets onto it is assigned, **Open**
+  shows it, and **+** makes a new one, gives the node its own values or
+  embeds one (see "A node's own values, or a resource with no file"). Right-click a resource > **Edit Class Script** /
   **New Resource of This Class...**.
 - **In the Code tab:** Alt+drop a resource for `Resource.load("...")`;
   Cmd/Ctrl+drop it into a `properties` table to add a resource property.
@@ -183,13 +185,59 @@ makes a fresh table owned by the calling script's instance, and
 `res:duplicate()` copies a table's current state (its tables too; other
 resources it holds stay shared) without calling `on_load`.
 
+### A node's own values, or a resource with no file
+
+A resource property doesn't have to name a file as it is. In the
+Inspector, the field's **+** offers:
+
+- **Own Values for This Node**: the node gets its own copy of the file,
+  and the values you change in the foldout under the field are this
+  node's. They're marked `*` and **Reset** returns one to the file's
+  value. The other values keep following the file, so a balance pass on
+  `bow.resource.json` still reaches this node's bow, except for the
+  damage you gave it. The scene stores only the changes:
+  `"weapon": {"path": "resources/bow.resource.json", "properties": {"damage": 40}}`.
+- **New Embedded &lt;Class&gt;** / **Embed a Copy (no file)**: the
+  resource lives in the scene (or component) with its values, edited in
+  the foldout: `"weapon": {"class": "scripts/weapon.lua", "properties": {...}}`.
+  It's always this node's own. **Save as File...** turns it into a
+  `.resource.json` later.
+- **New &lt;Class&gt; File...**: a new file of the property's class,
+  assigned at once.
+
+The field also takes a `.resource.json` **dropped from Assets**: one of
+another class is outlined in red with the reason. **Open** (the arrow)
+shows the file in the Inspector, or an embedded resource's class script.
+
+Scripts see the same thing either way: a table with the values, the
+class's methods, `on_load` run once. An embedded one has no
+`resource_path`.
+
+### Resources inside resources
+
+A resource class can have resource properties of its own:
+
+```lua
+Weapon.properties = {
+    damage = { type = "int", default = 10 },
+    ammo   = { type = "resource", class = "scripts/ammo.lua" },
+}
+```
+
+The nested one loads like a node's: shared unless its class (or the
+property) says `local_copy`, then a copy owned with the outer resource. It
+can be embedded or have its own values too, edited in the outer
+resource's Inspector the same way. A resource that contains itself,
+directly or further down, is stopped there: that property stays `nil`,
+with a warning. (Lists of resources, `of = "resource"`, take files only.)
+
 ### Hot reload
 
 While the game or Simulate runs:
 - **Saving a resource file** (an Inspector edit, or an edit outside the
   editor) re-applies its changed values to every live table of it. Values
   your scripts set at runtime on other fields stay, and `on_load` doesn't
-  run again.
+  run again. A node's own values (above) stay its own.
 - **Saving the class** gives every live table the new methods, and new
   properties appear with their values.
 
@@ -274,8 +322,5 @@ For engine and editor contributors.
 
 ## Not yet
 
-- Resources inside resources (a `resource` property on a class).
-- Resources embedded in a scene or component, without a file.
-- Per-instance values without a second file (`{"path": ..., "properties": {...}}` on a property).
-- Dropping a resource from Assets onto a property field; an **Open** button on resource properties; help-pane text for resource rows (tooltips work).
 - Loading resource files from outside the project / `.rayzr` package.
+- Lists of resources (`of = "resource"`) with embedded items or own values.

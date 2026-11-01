@@ -756,7 +756,7 @@ write_script_props :: proc(w: ^Json_Writer, inst: ^ScriptInstance) {
 		case .String:
 			// Lists (array / curve / gradient) are saved as JSON, not as a string.
 			mgr := inst.scriptManager if inst.scriptManager != nil else &scriptManager
-			if Script_IsJsonKind(script_prop_kind(inst, k, mgr)) && v.valString != "" do strings.write_string(&w.sb, v.valString)
+			if (Script_IsJsonKind(script_prop_kind(inst, k, mgr)) || Resource_IsObjectValue(v.valString)) && v.valString != "" do strings.write_string(&w.sb, v.valString) // (an embedded / per-instance resource: script_resources.odin)
 			else do Json_String(w, v.valString)
 		case .Boolean: write_bool(w, v.valBool)
 		case .Vector2: Json_Vec2(w, v.valVec2)
@@ -1643,6 +1643,9 @@ parse_script_overrides :: proc(propsObj: json.Object, allocator := context.temp_
 			overrides[key] = ScriptValue{type = .String, valString = strings.clone(v, allocator)}
 		case json.Boolean:
 			overrides[key] = ScriptValue{type = .Boolean, valBool = bool(v)}
+		case json.Object:
+			// An embedded resource or a file's per-instance values (script_resources.odin).
+			overrides[key] = ScriptValue{type = .String, valString = Resource_CanonicalValue(val, allocator)}
 		case json.Array:
 			// Also the array's JSON text: list properties (array / curve /
 			// gradient) use it whatever its length.
