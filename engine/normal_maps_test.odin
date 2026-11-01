@@ -1,6 +1,7 @@
 package engine
 
 import os "osx"
+import "core:strings"
 import "core:testing"
 import rl "vendor:raylib"
 
@@ -33,7 +34,8 @@ test_normal_maps :: proc(t: ^testing.T) {
 	Asset_ImportsReset()
 	gd: bool
 	p, gd = Lit_NormalPathFor(&rm, dir + "/textures/plain.png")
-	testing.expect(t, p == dir + "/textures/other_normals.png" && gd, "the import setting's file, green down")
+	// (joined with the project folder: "\" on Windows)
+	testing.expectf(t, strings.has_suffix(p, "other_normals.png") && gd, "the import setting's file, green down: %q", p)
 	p, _ = Lit_NormalPathFor(&rm, dir + "/textures/hero.png")
 	testing.expect_value(t, p, "")
 	testing.expect(t, Lit_SpecularPathFor(&rm, dir + "/textures/hero.png") == "", "no _s")
