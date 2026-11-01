@@ -81,11 +81,13 @@ Toolbar_Render :: proc(state: ^EditorState, width, height, posY: f32) {
 	if !canRedo do imgui.EndDisabled()
 
 	Toolbar_PlayControls(state, width)
+	rightW := TOOLBAR_RIGHT_W
 
 	// 4. View toggles and file actions, right-aligned.
-	rightW: f32 = 7 * 32 + 64 + 3 * 18 + 32 + 80
 	imgui.SameLine()
-	imgui.SetCursorPosX(max(imgui.GetCursorPosX() + UI_SPACE * 3, width - rightW - 10))
+	// (At a fixed place - it doesn't move with the Play group's width; only
+	// a window too narrow for both pushes it.)
+	imgui.SetCursorPosX(max(imgui.GetCursorPosX() + UI_SPACE, width - rightW - 10))
 	toggle :: proc(v: ^bool, icon, id, tip: string) {
 		if UI_IconButton(icon, id, tip, v^) do v^ = !v^
 		imgui.SameLine()
@@ -136,13 +138,25 @@ Toolbar_Render :: proc(state: ^EditorState, width, height, posY: f32) {
 
 // Toolbar_PlayControls: Play / Play Scene, or Pause / Step / Restart / Stop
 // while the game runs (shared by the Game and Level toolbars).
+// The right-aligned group's width (the Play group never reaches into it).
+TOOLBAR_RIGHT_W :: f32(7 * 32 + 64 + 3 * 18 + 32 + 80)
+
 Toolbar_PlayControls :: proc(state: ^EditorState, width: f32) {
+	rightLimit := width - TOOLBAR_RIGHT_W - 10 - UI_SPACE * 3
 	// 3. Play controls, centred (but never over the tools on the left):
 	// Play / Play Scene; while the game runs Pause (Resume), Step, Restart
 	// and Stop; while building, Stop cancels the build.
-	playW: f32 = 6 * 32 + 110
+	// (Centred on its width last frame, ending before the right-aligned
+	// group, which stays put when the game starts and stops.)
+	@(static) playW: f32 = 6 * 32 + 110
 	imgui.SameLine()
-	imgui.SetCursorPosX(max(imgui.GetCursorPosX() + UI_SPACE * 3, (width - playW) * 0.5))
+	x := min((width - playW) * 0.5, rightLimit - playW)
+	imgui.SetCursorPosX(max(imgui.GetCursorPosX() + UI_SPACE * 3, x))
+	startX := imgui.GetCursorPosX()
+	defer {
+		imgui.SameLine(0, 0)
+		playW = imgui.GetCursorPosX() - startX
+	}
 	switch {
 	case state.buildRunning:
 		if UI_IconButton(ICON_FA_STOP, "toolbar.stop", "Cancel the build", tint = UI_DANGER) do _ = os.process_kill(state.buildProcess)
@@ -189,18 +203,23 @@ Toolbar_PlayControls :: proc(state: ^EditorState, width: f32) {
 		imgui.PushStyleColorImVec4(.Text, UI_WARNING)
 		imgui.TextUnformatted(fmt.ctprintf("%s  Building...", ICON_FA_HAMMER))
 		imgui.PopStyleColor()
+	// (While the game runs: an icon, its word in the tooltip - the controls
+	// with Record leave no room for words before the right-aligned group.)
 	case state.gameProcessRunning && Debug_IsStopped():
 		imgui.PushStyleColorImVec4(.Text, UI_WARNING)
-		imgui.TextUnformatted(fmt.ctprintf("%s  Breakpoint", ICON_FA_PAUSE))
+		imgui.TextUnformatted(ICON_FA_PAUSE)
 		imgui.PopStyleColor()
+		UI_Tooltip("Stopped at a breakpoint")
 	case state.gameProcessRunning && RemoteGame_Paused():
 		imgui.PushStyleColorImVec4(.Text, UI_WARNING)
-		imgui.TextUnformatted(fmt.ctprintf("%s  Paused", ICON_FA_PAUSE))
+		imgui.TextUnformatted(ICON_FA_PAUSE)
 		imgui.PopStyleColor()
+		UI_Tooltip("Paused")
 	case state.gameProcessRunning:
 		imgui.PushStyleColorImVec4(.Text, UI_SUCCESS)
-		imgui.TextUnformatted(fmt.ctprintf("%s  Running", ICON_FA_CIRCLE))
+		imgui.TextUnformatted(ICON_FA_CIRCLE)
 		imgui.PopStyleColor()
+		UI_Tooltip("Running")
 	}
 	Drive_Item("toolbar.status")
 

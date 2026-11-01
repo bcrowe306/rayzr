@@ -45,7 +45,8 @@ BottomTab :: enum {
 	StateGraph, // state machine graph (state_machine_graph.odin)
 	Mixer,      // audio mixer console (mixer_panel.odin)
 	TileMap,    // tile map painting: settings, tools, tiles (tilemap_editor.odin)
-	Files, Tests,      // the File Browser: the computer's files, previewed and loaded (file_browser.odin)
+	Files,      // the File Browser: the computer's files, previewed and loaded (file_browser.odin)
+	Tests,      // the project's tests: run, results, failures (tests_panel.odin)
 }
 
 ViewportTab :: enum {
