@@ -436,6 +436,12 @@ prop_relevant :: proc(node: ^e.Node, name: string) -> bool {
 		}
 	}
 	// A Sound Effect: `single` only for the Single mode (#204).
+	// An oscillator: Pulse Width for Square, Seed for the noises.
+	if node.typeId == e.OscillatorNode {
+		o := cast(^e.OscillatorNode)node
+		if name == "pulseWidth" do return o.wave == .Square
+		if name == "seed" do return o.wave == .Random || o.wave == .Smooth_Noise
+	}
 	if node.typeId == e.SoundNode && name == "single" && (cast(^e.SoundNode)node).playMode != .Single do return false
 	// (The Aseprite section edits these.)
 	if node.typeId == e.AsepriteNode {
@@ -974,6 +980,8 @@ inspector_resources :: proc(state: ^EditorState, node: ^e.Node) {
 		inspector_path(state, cast(^e.PathNode)node)
 	case e.SpawnerNode:
 		inspector_spawner(state, cast(^e.SpawnerNode)node)
+	case e.OscillatorNode:
+		inspector_oscillator(state, cast(^e.OscillatorNode)node) // (oscillator_editor.odin)
 	case e.LevelGeneratorNode:
 		inspector_level_generator(state, cast(^e.LevelGeneratorNode)node) // (level_gen_editor.odin)
 	case e.SkeletonNode:

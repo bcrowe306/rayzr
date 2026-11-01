@@ -41,6 +41,13 @@ NODE_CATALOG := [?]NodeCatalogEntry{
 		typeName    = "CameraNode",
 	},
 	{
+		name        = "Oscillator",
+		category    = "Animation & Effects",
+		icon        = ICON_FA_RIGHT_LEFT,
+		description = "A wave (sine, triangle, square, saw, noise or a curve) that drives numeric properties of other nodes: moving platforms, bobbing pickups, flickering lights, pulsing effects. Start, Stop, Pause and Resume from scripts.",
+		typeName    = "OscillatorNode",
+	},
+	{
 		name        = "Skeleton",
 		category    = "Animation & Effects",
 		icon        = ICON_FA_BONE,

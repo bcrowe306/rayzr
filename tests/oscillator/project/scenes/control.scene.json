@@ -1,0 +1,7 @@
+{"name": "control", "background": [24, 28, 38, 255], "root": {"type": "Node", "name": "root", "children": [
+ {"type": "TextNode", "name": "Log", "position": [10, 10], "properties": {"text": "", "fontSize": 16}},
+ {"type": "TextNode", "name": "Box", "position": [300, 200], "properties": {"text": "box", "fontSize": 24}},
+ {"type": "OscillatorNode", "name": "Osc", "properties": {"wave": "Saw", "rate": 1},
+  "oscillator": {"curve": [], "mappings": [{"target": "../Box", "property": "position.x", "min": 0, "max": 100, "mode": "Relative", "phase": 0, "offset": 0}]}},
+ {"type": "Node", "name": "Ctl", "script": {"path": "scripts/control.lua"}}
+]}}

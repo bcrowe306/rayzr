@@ -544,6 +544,23 @@
       ]
     },
     {
+      "type": "OscillatorNode",
+      "name": "Oscillator",
+      "category": "Animation & Effects",
+      "description": "A wave (sine, triangle, square, saw, noise or a curve) that drives numeric properties of other nodes: moving platforms, bobbing pickups, flickering lights, pulsing effects. Start, Stop, Pause and Resume from scripts.",
+      "aliases": ["oscillator", "lfo", "wave", "sine", "bob", "pulse", "automation"],
+      "hasOrigin": false,
+      "properties": [
+        {"name": "wave", "kind": "enum", "owner": "OscillatorNode", "default": "Sine", "values": ["Sine", "Triangle", "Square", "Saw", "Reverse_Saw", "Random", "Smooth_Noise", "Curve"], "doc": "The wave's shape: Sine, Triangle, Square (high for Pulse Width), Saw, Reverse Saw, Random (a new value each cycle), Smooth Noise (glides between random values) or Curve (drawn below)."},
+        {"name": "rateUnit", "kind": "enum", "owner": "OscillatorNode", "default": "Hertz", "values": ["Hertz", "Seconds"], "doc": "How Rate is read: Hertz (cycles a second) or Seconds (how long one cycle takes)."},
+        {"name": "rate", "kind": "number", "owner": "OscillatorNode", "default": 1, "min": 0, "max": 1000, "doc": "How fast it runs: cycles a second (Hertz) or seconds a cycle (Seconds). 0 holds it still."},
+        {"name": "pulseWidth", "kind": "number", "owner": "OscillatorNode", "default": 0.5, "min": 0.01, "max": 0.99, "doc": "Square: how much of each cycle is high (0.5: half; 0.2: a short blip)."},
+        {"name": "seed", "kind": "integer", "owner": "OscillatorNode", "default": 0, "min": 0, "max": 999999, "doc": "Random and Smooth Noise: the same seed gives the same values every run; 0 is different each run."},
+        {"name": "autostart", "kind": "boolean", "owner": "OscillatorNode", "default": true, "doc": "Starts when the scene starts. Off: call oscillator_start() from a script."},
+        {"name": "loops", "kind": "integer", "owner": "OscillatorNode", "default": 0, "min": 0, "max": 100000, "doc": "Cycles before it stops and emits finished (the targets keep their last values); 0 runs forever."}
+      ]
+    },
+    {
       "type": "SkeletonNode",
       "name": "Skeleton",
       "category": "Animation & Effects",

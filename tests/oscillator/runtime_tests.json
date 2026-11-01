@@ -1,0 +1,17 @@
+[
+ {
+  "name": "oscillators: a swaying platform (Sine, Relative), spin + grow (Triangle on scale and rotation, Phase, Value Offset), a flicker (Smooth Noise on color.a), a square pulse",
+  "project": "tests/oscillator/project",
+  "scene": "scenes/waves.scene.json",
+  "frames": 50,
+  "expect": [["Sway", "exists", "==", true]],
+  "golden": {"image": "tests/oscillator/expected/waves.png", "max_pixels": 0.01, "threshold": 40}
+ },
+ {
+  "name": "oscillators: pause holds, resume keeps the phase, the cycle signal, Stop restores",
+  "project": "tests/oscillator/project",
+  "scene": "scenes/control.scene.json",
+  "frames": 130,
+  "expect": [["Log", "text", "==", "paused running3 cycle1 stopped "], ["Box", "x", "==", 300]]
+ }
+]

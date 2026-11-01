@@ -40,6 +40,9 @@ import rl "vendor:raylib"
 
 Scene_SerializeToJSON :: proc(scene: ^Scene, allocator := context.allocator) -> string {
 	if scene == nil do return strings.clone("{}", allocator)
+	// An editor preview's oscillated values aren't saved (oscillator_node.odin).
+	held := Oscillator_PreviewsHold(scene, true)
+	defer if held do Oscillator_PreviewsHold(scene, false)
 	w := Json_Writer{sb = strings.builder_make(allocator)}
 	strings.write_byte(&w.sb, '{')
 	w.indent = 1
@@ -316,6 +319,8 @@ write_node :: proc(w: ^Json_Writer, node: ^Node, manager: ^NodeManager) {
 			strings.write_byte(&w.sb, '}')
 		}
 		strings.write_string(&w.sb, "]}")
+	case OscillatorNode:
+		Oscillator_WriteJSON(w, cast(^OscillatorNode)node, &first)
 	case SpawnerNode:
 		// {"entries": [{"component", "weight", "count", "offset"}]}
 		sp := cast(^SpawnerNode)node
@@ -1119,6 +1124,8 @@ read_node :: proc(scene: ^Scene, obj: json.Object, parent: ^Node, ctx: ^GameCont
 				}
 			}
 		}
+	case OscillatorNode:
+		if oscObj, ok := sj_obj(obj, "oscillator"); ok do Oscillator_ReadJSON(cast(^OscillatorNode)node, oscObj)
 	case SpawnerNode:
 		sp := cast(^SpawnerNode)node
 		if spObj, ok := sj_obj(obj, "spawner"); ok {

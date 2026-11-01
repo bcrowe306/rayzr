@@ -1,0 +1,1 @@
+{"name": "Oscillators", "initial_scene": "scenes/waves.scene.json", "window": {"title": "t", "width": 960, "height": 540, "virtual_width": 960, "virtual_height": 540}, "physics": {"gravity": [0, 0], "debug_draw": false}, "scenes": ["scenes/waves.scene.json", "scenes/control.scene.json"]}
