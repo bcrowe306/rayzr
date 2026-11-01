@@ -444,7 +444,9 @@ lua_ldtk_set_world :: proc "c" (L: ^lua.State) -> c.int {
 	ln := ldtk_node_arg(L)
 	id, ok := str_arg(L, 2)
 	level, _ := str_arg(L, 3)
-	lua.pushboolean(L, b32(ln != nil && ok && LdtkLevelNode_SetWorld(ln, id, level)))
+	done := ln != nil && ok && LdtkLevelNode_SetWorld(ln, id, level)
+	if ln != nil && ok && !done do Script_Problem(.Warning, "ldtk_set_world: no world '%s'%s%s (nothing changed)", id, " with level " if level != "" else "", level)
+	lua.pushboolean(L, b32(done))
 	return 1
 }
 

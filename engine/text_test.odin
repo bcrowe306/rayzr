@@ -68,6 +68,9 @@ test_localization_and_text_nodes :: proc(t: ^testing.T) {
 	write(locDir, "ui.csv", "\xef\xbb\xbfkey,en,fr\ngreeting,\"Hello, {name}!\",\"Bonjour, {name} !\"\nonly_en,Just English,\n# a comment,x,y\n")
 	write(locDir, "more.csv", "key,de\ngreeting,\"Hallo, {name}!\"\n")
 
+	saveDir, _ := filepath.join({dir, "save"}, context.temp_allocator)
+	Save_SetDirectory(saveDir) // (Locale.set remembers the language: not in the real save folder)
+	defer Save_SetDirectory("")
 	game := new(Game)
 	InitializeGame(game)
 	defer game->terminate()

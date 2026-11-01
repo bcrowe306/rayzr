@@ -3,6 +3,8 @@
 - **Reading your own data files**: `Project.read_file` returns a text file
   from the project - credits, a word list, dialogue lines - whether the
   game runs from the project folder or from an exported `.rayzr` package.
+  `Project.read_json` reads a JSON file as Lua tables: item lists, enemy
+  stats, level settings.
 - **Optional content**: `Project.has_file` checks a file is there before
   you load it (a bonus level, a translated text file).
 - **Debugging a scene**: `Project.serialize_scene` returns the running
@@ -51,8 +53,9 @@ return Credits
 - `read_file` and `has_file` take project-relative paths. In an exported
   game they read from the `.rayzr` package, so files in the project ship
   with the game.
-- `read_file` returns nil when the file isn't found; there's no JSON
-  parser in the API, so data files are best kept as simple text.
+- `read_file` returns nil when the file isn't found. `read_json` returns
+  nil (with a warning) when it's missing or isn't JSON; JSON numbers come
+  back as floats (`5.0`, equal to `5`), `null` as nil.
 - `load` and `export_rayzr` take paths on disk (relative to the working
   directory, or absolute), not project-relative ones. Loading a project
   from a running game replaces its assets and settings.

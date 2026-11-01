@@ -1,7 +1,7 @@
 ## Use it for
 
 - **Pausing**: `set_paused(true)` stops nodes with pause mode "pausable" (the default) and physics; nodes set to "always" keep running, so a pause menu still works. `is_paused` tells you where you are.
-- **Fullscreen**: `set_fullscreen` / `is_fullscreen` for an options menu or a hotkey.
+- **Fullscreen**: `set_fullscreen` / `is_fullscreen` for an options menu or a hotkey. It works in the running game (Play); in the editor's Simulate it does nothing.
 - **Timing**: `get_time` for effects that follow the clock (a bob, a blink), `get_fps` for a debug readout. In `update(dt)` use the `dt` you are given; `get_delta_time` is for code outside `update`.
 - **Screen sizes**: `get_virtual_size` is the size the game draws at (Project Settings > Video) - use it to place things on screen. `get_window_size` is the real window in screen pixels.
 - **Game feel**: `set_time_scale(0.5)` runs the whole game at half speed; `set_time_scale(0.3, "enemy")` slows only the nodes tagged *enemy* (and their children). `hit_stop(0.08)` freezes the game - or only some tags - for a moment of real time on a heavy hit, and `slow_motion(0.25, 1.2)` eases down to a quarter speed and back. UI nodes, cameras and nodes set to "always" keep real time.
