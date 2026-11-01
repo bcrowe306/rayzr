@@ -64,6 +64,8 @@ push_event_value :: proc(L: ^lua.State, value: EventValue) {
 	case ^Node:
 		if Node_IsAlive(v) do push_node_userdata(L, v)
 		else do lua.pushnil(L)
+	case Lua_Value_Ref:
+		lua.rawgeti(L, lua.REGISTRYINDEX, lua.Integer(v))
 	case:
 		lua.pushnil(L)
 	}
@@ -240,7 +242,15 @@ lua_node_emit :: proc "c" (L: ^lua.State) -> c.int {
 	if !ok || lua.type(L, 2) != .STRING do return 0
 	name := strings.clone(string(lua.tostring(L, 2)), context.temp_allocator)
 	value := to_event_value(L, 3)
+	// A table (or function) arrives as itself - the same table, by reference.
+	ref: c.int
+	if t := lua.type(L, 3); t == .TABLE || t == .FUNCTION {
+		lua.pushvalue(L, 3)
+		ref = lua.L_ref(L, lua.REGISTRYINDEX)
+		value = Lua_Value_Ref(ref)
+	}
 	Script_DispatchEvent(node, name, value, node.gameContext)
+	if ref != 0 do lua.L_unref(L, lua.REGISTRYINDEX, ref)
 	return 0
 }
 

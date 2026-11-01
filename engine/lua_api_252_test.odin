@@ -161,7 +161,7 @@ hit_l2n = Physics.raycast(0, 0, 600, 0, {2, 3}) and "hit" or "none"`)
 	testing.expect_value(t, gs(L, "hit_l2"), "none")
 	testing.expect_value(t, gs(L, "hit_l2n"), "none")
 
-	// sm_start with an unknown state: the initial one, not the first.
+	// sm_start with an unknown state: false, nothing started (#252: fail + warn); none: the initial one.
 	sm := cast(^StateMachineNode)Node_CreateByTypeName(scene, "StateMachineNode")
 	sm.name = strings.clone("SM", sm.allocator)
 	sm.gameContext = ctx
@@ -169,8 +169,11 @@ hit_l2n = Physics.raycast(0, 0, 600, 0, {2, 3}) and "hit" or "none"`)
 	StateMachine_AddState(sm, "run")
 	sm.initial = strings.clone("run", sm.allocator)
 	ProcessNodeQueues(scene.manager, ctx)
-	run(t, L, `Scene.find_node("SM"):sm_start("nope"); st = Scene.find_node("SM"):sm_state()`)
-	testing.expect_value(t, gs(L, "st"), "run")
+	run(t, L, `local m = Scene.find_node("SM"); ok = tostring(m:sm_start("nope"))
+		ok2 = tostring(m:sm_start()); st2 = m:sm_state()`)
+	testing.expect_value(t, gs(L, "ok"), "false")
+	testing.expect_value(t, gs(L, "ok2"), "true") // (after the unknown one: nothing had started)
+	testing.expect_value(t, gs(L, "st2"), "run")
 
 	// Nav: a script block stays where it was when the region grows.
 	region := NavigationRegionNode_Create(scene, "Nav")

@@ -66,4 +66,4 @@ return Patrol
 - `ready()` runs once, after every node of the scene exists, parents before children - `get_node` finds the children, but their own `ready()` hasn't run yet. A node added later gets its `ready()` before the next update; a disabled one waits until it is enabled.
 - `queue_free()` and `destroy()` are the same: the node stays until the end of the frame, so it is safe to call from its own `update`. A pooled node goes back to its pool instead. A reference to a removed node stays safe - its getters return defaults and `get_name()` returns nil.
 - `set_visible(false)` hides only the node's own drawing - its children still draw, and it keeps updating. To hide a whole branch, use `set_enabled(false)`.
-- An `emit` value can be a boolean, number, string or node; a table arrives as nil. A handler added with `connect` gets `(value, source)`.
+- An `emit` value can be a boolean, number, string, node or table - a table arrives as the same table, not a copy. A handler added with `connect` gets `(value, source)`.

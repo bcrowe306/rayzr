@@ -27,7 +27,11 @@ EventValue :: union {
 	u64,
 	string,
 	^Node, // the other node of a collision / overlap / child event
+	Lua_Value_Ref, // a Lua table or function (node:emit; the registry ref lives while it's delivered)
 }
+
+// Lua_Value_Ref: a Lua value held in the registry (script_events.odin).
+Lua_Value_Ref :: distinct i32
 
 EventSubscription :: struct {
 	id: uuid.Identifier,

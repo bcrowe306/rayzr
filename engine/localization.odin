@@ -243,3 +243,31 @@ Locale_Get :: proc(game: ^Game, key: string, args: map[string]string = nil, allo
 	}
 	return strings.to_string(sb)
 }
+
+// --- The player's language, remembered (Locale.set) ------------------------------------
+
+// Locale_ChoicePath: language.txt next to the save files.
+Locale_ChoicePath :: proc(allocator := context.temp_allocator) -> string {
+	p, _ := filepath.join({filepath.dir(Save_FilePath(), context.temp_allocator), "language.txt"}, allocator)
+	return p
+}
+
+// Locale_SaveChoice remembers the language the player picked (Locale.set),
+// so the game starts in it next time.
+Locale_SaveChoice :: proc(lang: string) -> bool {
+	path := Locale_ChoicePath()
+	_ = os.make_directory_all(filepath.dir(path, context.temp_allocator))
+	return os.write_entire_file(path, transmute([]u8)lang) == nil
+}
+
+// Locale_LoadChoice: the remembered language over the project's starting
+// one (the game, not the editor); one the project no longer has is ignored.
+Locale_LoadChoice :: proc(game: ^Game) -> bool {
+	data, err := os.read_entire_file(Locale_ChoicePath(), context.temp_allocator)
+	if err != nil do return false
+	lang := strings.trim_space(string(data))
+	if lang == "" do return false
+	if langs := Locale_Languages(game); len(langs) > 0 && !slice.contains(langs, lang) do return false
+	Locale_SetLanguage(lang)
+	return true
+}
