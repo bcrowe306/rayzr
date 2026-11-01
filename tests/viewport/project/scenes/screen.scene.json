@@ -1,0 +1,280 @@
+{
+ "name": "screen",
+ "draw_bounds": false,
+ "background": [
+  30,
+  41,
+  59,
+  255
+ ],
+ "root": {
+  "type": "Node",
+  "name": "root",
+  "position": [
+   0,
+   0
+  ],
+  "scale": [
+   1,
+   1
+  ],
+  "rotation": 0,
+  "enabled": true,
+  "visible": true,
+  "layer": 0,
+  "children": [
+   {
+    "type": "CameraNode",
+    "name": "Camera",
+    "position": [
+     640,
+     360
+    ],
+    "scale": [
+     1,
+     1
+    ],
+    "rotation": 0,
+    "enabled": true,
+    "visible": true,
+    "layer": 0,
+    "properties": {
+     "isCurrent": true,
+     "followMode": "SingleTarget",
+     "dragType": "SmoothDamp",
+     "targetPosition": [
+      0,
+      0
+     ],
+     "smoothDrag": true,
+     "smoothDragSpeed": [
+      0.2,
+      0.2
+     ],
+     "springConstant": 15,
+     "dampingRatio": 1,
+     "predictionTime": [
+      0.5,
+      0.5
+     ],
+     "maxDistance": [
+      100000,
+      100000
+     ],
+     "offset": [
+      0,
+      0
+     ],
+     "smoothOffset": true,
+     "smoothOffsetSpeed": 0.2,
+     "screenOffset": [
+      640,
+      360
+     ],
+     "customScreenOffset": false,
+     "targetRotation": 0,
+     "allowRotation": true,
+     "smoothRotation": true,
+     "smoothRotationSpeed": 0.2,
+     "targetZoom": 1,
+     "smoothZoom": true,
+     "smoothZoomSpeed": 0.2,
+     "minZoom": 0.1,
+     "maxZoom": 10,
+     "autoZoom": true,
+     "zoomMargin": 0.1,
+     "hasLimits": false,
+     "smoothLimit": true,
+     "leftLimit": -1000000,
+     "rightLimit": 1000000,
+     "topLimit": -1000000,
+     "bottomLimit": 1000000,
+     "useHMargins": false,
+     "useVMargins": false,
+     "leftMargin": 0.25,
+     "rightMargin": 0.25,
+     "topMargin": 0.25,
+     "bottomMargin": 0.25,
+     "enableMouseFollow": false,
+     "mouseInfluence": [
+      0.2,
+      0.2
+     ],
+     "shakePreset": "Custom",
+     "shakeTypes": [
+      "Vertical",
+      "Horizontal",
+      "Random"
+     ],
+     "shakeSpeed": 15,
+     "shakeIntensity": 10,
+     "shakeTrauma": 1
+    }
+   },
+   {
+    "type": "ViewportNode",
+    "name": "TV",
+    "position": [
+     80,
+     80
+    ],
+    "scale": [
+     1,
+     1
+    ],
+    "rotation": 0,
+    "enabled": true,
+    "visible": true,
+    "layer": 0,
+    "properties": {
+     "mode": "Children",
+     "size": [
+      400,
+      240
+     ],
+     "renderSize": [
+      0,
+      0
+     ],
+     "updateMode": "Every_Frame",
+     "display": true,
+     "coversScreen": false,
+     "pixelated": false,
+     "background": "#0f172aff"
+    },
+    "children": [
+     {
+      "type": "TextNode",
+      "name": "Title",
+      "position": [
+       110,
+       50
+      ],
+      "scale": [
+       1,
+       1
+      ],
+      "rotation": 0,
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "enabled": true,
+      "visible": true,
+      "layer": 3,
+      "properties": {
+       "text": "ON AIR",
+       "font": "",
+       "fontSize": 48,
+       "color": "#facc15ff",
+       "align": "Left",
+       "maxWidth": 0,
+       "lineSpacing": 1.2,
+       "richText": true,
+       "localized": false,
+       "sdf": false,
+       "revealSpeed": 0
+      }
+     },
+     {
+      "type": "VectorShapeNode",
+      "name": "Logo",
+      "position": [
+       300,
+       150
+      ],
+      "scale": [
+       1.2,
+       1.2
+      ],
+      "rotation": 0,
+      "enabled": true,
+      "visible": true,
+      "layer": 0,
+      "properties": {
+       "file": "",
+       "group": "",
+       "frame": -1,
+       "preset": "Star",
+       "fillColor": "#ef4444ff",
+       "strokeColor": "#281808ff",
+       "strokeWidth": 4,
+       "tint": "#ffffffff",
+       "brightness": 0,
+       "colorAdd": "#00000000",
+       "trimStart": 0,
+       "trimEnd": 1,
+       "trimOffset": 0,
+       "trimEach": false,
+       "morphTo": "",
+       "morph": 0,
+       "lineScale": "Scale",
+       "shadowColor": "#00000000",
+       "shadowOffset": [
+        6,
+        6
+       ],
+       "shadowBlur": 6,
+       "glowColor": "#00000000",
+       "glowSize": 8,
+       "glowStrength": 1.5,
+       "outlineColor": "#00000000",
+       "outlineWidth": 3,
+       "blur": 0,
+       "saturation": 1,
+       "contrast": 1,
+       "hue": 0,
+       "skinBones": "",
+       "skinSmooth": 24,
+       "warpTopLeft": [
+        0,
+        0
+       ],
+       "warpTopRight": [
+        0,
+        0
+       ],
+       "warpBottomLeft": [
+        0,
+        0
+       ],
+       "warpBottomRight": [
+        0,
+        0
+       ],
+       "collider": "None",
+       "colliderDetail": 1,
+       "colliderFriction": 0.6,
+       "colliderBounce": 0.1,
+       "colliderDensity": 1
+      }
+     }
+    ]
+   },
+   {
+    "type": "TextureNode",
+    "name": "Mirror",
+    "position": [
+     900,
+     450
+    ],
+    "scale": [
+     1,
+     1
+    ],
+    "rotation": 12,
+    "pivot": [
+     0.5,
+     0.5
+    ],
+    "enabled": true,
+    "visible": true,
+    "layer": 0,
+    "texture": "viewport:TV",
+    "properties": {
+     "tint": "#ffffffff"
+    }
+   }
+  ]
+ }
+}

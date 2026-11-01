@@ -946,6 +946,7 @@ sj_rect :: proc(obj: json.Object, key: string) -> rl.Rectangle {
 @(private)
 load_texture_into :: proc(tn: ^TextureNode, path: string, ctx: ^GameContext) {
 	tn.filePath = strings.clone(path, tn.allocator)
+	if Viewport_IsPath(path) do return // (a Viewport's picture, found when drawn)
 	rm := resource_manager(ctx)
 	if rm == nil || !rl.IsWindowReady() do return
 	tex, ok := rm.loadTexture(rm, Project_ResolveAssetPath(ctx, path))

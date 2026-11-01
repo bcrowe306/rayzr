@@ -282,6 +282,14 @@ lua_node_set_texture :: proc "c" (L: ^lua.State) -> c.int {
 		}
 	}
 	path := string(lua.tostring(L, 2))
+	if Viewport_IsPath(path) && node.typeId == TextureNode {
+		// A Viewport's picture ("viewport:<name>"; viewport_node.odin).
+		TextureNode_SetTexture(tn, nil)
+		tn.filePath = strings.clone(path, tn.allocator)
+		if _, v := Viewport_TextureByPath(ctx, path); v != nil do tn.size = v.size
+		lua.pushboolean(L, true)
+		return 1
+	}
 	if rm == nil {
 		lua.pushboolean(L, false)
 		return 1
@@ -5066,6 +5074,7 @@ RegisterEngineLuaBindings :: proc(L: ^lua.State, sm: ^ScriptManager) {
 		Script_RegisterTileMapComponentBindings(L) // tilemap_component_at / ... (tilemap_components.odin)
 		Script_RegisterTouchControlBindings(L) // touch_get_vector / touch_is_down (touch_controls.odin)
 		Script_RegisterFeelNodeBindings(L) // flash / blink / squash (game_feel.odin)
+		Script_RegisterViewportBindings(L) // get_texture / refresh / save_png (viewport_node.odin)
 		Script_RegisterUIListBindings(L) // ui_set_items / ui_get_items (ui_list_props.odin)
 
 		// DynamicBodyNode Physics

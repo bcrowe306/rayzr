@@ -99,6 +99,13 @@ NODE_CATALOG := [?]NodeCatalogEntry{
 		typeName    = "TextureNode",
 	},
 	{
+		name        = "Viewport",
+		category    = "Graphics & Rendering",
+		icon        = ICON_FA_WINDOW_MAXIMIZE,
+		description = "Draws a view into a texture: the scene through its own Camera child (minimap, split-screen, security camera) or only its children (an in-world screen). Shows itself at its size; Sprites and materials use it as \"viewport:<name>\".",
+		typeName    = "ViewportNode",
+	},
+	{
 		name        = "Atlas Sprite",
 		category    = "Graphics & Rendering",
 		icon        = ICON_FA_CROP,

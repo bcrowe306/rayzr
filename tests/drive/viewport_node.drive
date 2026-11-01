@@ -1,0 +1,31 @@
+# The Viewport node (#279): in Add Node; a Camera added under it isn't the
+# scene's camera (its frame is the picture's size); the viewport shows a
+# live preview of the scene in the editor; saved with the scene.
+wait 5
+click @hier.add
+wait 3
+click @addnode.search
+type viewport
+wait 2
+expect item:addnode:Viewport == visible
+click @addnode.create
+wait 5
+expect node:Viewport.type == ViewportNode
+expect node:Viewport.prop.mode == World
+click @hier.add
+wait 3
+click @addnode.search
+type camera 2d
+wait 2
+click @addnode.create
+wait 5
+expect node:Camera2D.type == CameraNode
+expect node:Camera2D.parent == Viewport
+expect node:Camera2D.prop.isCurrent == false
+click @hier:Viewport
+wait 3
+key home
+wait 5
+screenshot viewport_live_preview
+click @toolbar.save
+expect file:scenes/main.scene.json contains "type": "ViewportNode"

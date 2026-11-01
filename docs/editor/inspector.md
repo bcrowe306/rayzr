@@ -128,7 +128,9 @@ while running. They are read-only and not saved.
 - **Tags**: type a tag and press Enter, or pick one used in the scene from
   the list. Click a tag to remove it. Scripts use `has_tag` and
   `Scene.find_by_tag`; the Scene panel filters with `#tag`.
-- **Material**: the node's **Shader** and **Blend** mode.
+- **Material**: the node's **Shader** and **Blend** mode. A shader's texture
+  parameter takes a project image, or `viewport:<name>` for a
+  [Viewport](../nodes/ViewportNode.md)'s picture.
 - **Script**: without one, pick a script from `scripts/` or **New
   Script...**. With one: the **Module** picker, **Edit** (open it),
   **Extend** (a new script built on this one, attached instead, the node's
