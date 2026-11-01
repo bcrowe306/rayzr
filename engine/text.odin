@@ -8,14 +8,17 @@ import "core:path/filepath"
 import "core:strconv"
 import "core:strings"
 import "core:unicode/utf8"
+import os "osx"
 import rl "vendor:raylib"
+import rlgl "vendor:raylib/rlgl"
 
 // ============================================================================
 // Text: fonts, rich text and TextNode.
 //
 // Fonts: "" is the engine font; a project .ttf / .otf is rasterised at the
-// size asked (or once as a signed distance field with `sdf`, sharp at any
-// scale); a .fnt (BMFont) or font image is used as drawn (disk only).
+// size asked; a .fnt (BMFont) or font image is used as drawn (disk only).
+// Scaled, rotated or zoomed text draws from the font's multi-channel
+// distance field instead (msdf.odin; Text_Rendering), sharp at any scale.
 // Latin-1 and common typographic punctuation are included (localized text).
 //
 // Rich text markup:  [color=#ff8800]...[/color]  [color=red]  [size=32]
@@ -25,11 +28,52 @@ import rl "vendor:raylib"
 // --- fonts ----------------------------------------------------------------------
 
 Text_Font :: struct {
-	font:   rl.Font,
-	size:   f32,  // the size it was rasterised at
-	sdf:    bool,
-	engine: bool, // the engine's font (sized per draw)
+	font:      rl.Font,
+	size:      f32,  // the size it was rasterised at
+	sdf:       bool, // (a single-channel field: CFF .otf fonts, which have no MSDF)
+	engine:    bool, // the engine's font (sized per draw)
+	path:      string,       // (heap) the font file, for its MSDF
+	msdf:      ^Msdf_Font,   // made the first time it's drawn sharp (nil: none)
+	msdfTried: bool,
 }
+
+// Text_Rendering: how text is drawn (TextNode's Rendering, #270).
+Text_Rendering :: enum u8 {
+	Auto,   // sharp (MSDF) when scaled, rotated or zoomed; the crisp bitmap at 1:1
+	Sharp,  // always from the distance field
+	Bitmap, // always the bitmap font (pixel-perfect, blurs when scaled)
+}
+
+// The engine font's file (InitEngineFonts), for its MSDF.
+engineFontFile: string
+
+@(private = "file")
+msdfShader: struct {
+	shader: rl.Shader,
+	ok:     bool,
+	locRange, locSize: i32,
+}
+
+@(private = "file")
+MSDF_FRAGMENT :: `#version 330
+in vec2 fragTexCoord;
+in vec4 fragColor;
+uniform sampler2D texture0;
+uniform vec4 colDiffuse;
+uniform float pxRange;
+uniform vec2 texSize;
+out vec4 finalColor;
+float median(float r, float g, float b) { return max(min(r, g), min(max(r, g), b)); }
+void main() {
+    vec3 s = texture(texture0, fragTexCoord).rgb;
+    float sd = median(s.r, s.g, s.b) - 0.5;
+    vec2 unitRange = vec2(pxRange) / texSize;
+    vec2 screenTexSize = vec2(1.0) / fwidth(fragTexCoord);
+    float spr = max(0.5 * dot(unitRange, screenTexSize), 1.0);
+    float a = clamp(sd * spr + 0.5, 0.0, 1.0);
+    finalColor = vec4(fragColor.rgb, fragColor.a * a) * colDiffuse;
+}
+`
 
 @(private = "file")
 fontCache: map[string]^Text_Font
@@ -81,6 +125,7 @@ Text_GetFont :: proc(path: string, size: f32, sdf := false, ctx: ^GameContext = 
 	if f, ok := fontCache[key]; ok do return f
 	f := new(Text_Font, Engine_HeapAllocator())
 	defer fontCache[strings.clone(key, Engine_HeapAllocator())] = f
+	if vector do f.path = strings.clone(path, Engine_HeapAllocator())
 	if path == "" || !rl.IsWindowReady() {
 		f.engine = true
 		return f
@@ -125,9 +170,13 @@ Text_GetFont :: proc(path: string, size: f32, sdf := false, ctx: ^GameContext = 
 Text_UnloadFonts :: proc() {
 	for k, f in fontCache {
 		if !f.engine && rl.IsWindowReady() do rl.UnloadFont(f.font)
+		Msdf_FontFree(f.msdf)
+		delete(f.path, Engine_HeapAllocator())
 		delete(k, Engine_HeapAllocator())
 		free(f, Engine_HeapAllocator())
 	}
+	if msdfShader.ok && rl.IsWindowReady() do rl.UnloadShader(msdfShader.shader)
+	msdfShader = {}
 	delete(fontCache)
 	fontCache = nil
 	if sdfShader.ok && rl.IsWindowReady() do rl.UnloadShader(sdfShader.shader)
@@ -310,13 +359,23 @@ Text_PlainLength :: proc(text: string, rich: bool) -> int {
 
 // Text_DrawGlyphs draws laid-out glyphs at `origin` (the first `reveal`
 // of them; < 0 = all), rotated about the origin, with effects at `time`.
-Text_DrawGlyphs :: proc(f: ^Text_Font, glyphs: []Text_Glyph, origin: [2]f32, rotation: f32, scale: f32, reveal: int, time: f32, tint: rl.Color = rl.WHITE) {
+// (rendering: Auto / Sharp draw from the font's distance field when
+// Text_DrawsSharp says so; Bitmap never.)
+Text_DrawGlyphs :: proc(f: ^Text_Font, glyphs: []Text_Glyph, origin: [2]f32, rotation: f32, scale: f32, reveal: int, time: f32, tint: rl.Color = rl.WHITE, rendering := Text_Rendering.Auto, ctx: ^GameContext = nil) {
 	if f == nil do return
 	n := len(glyphs) if reveal < 0 else min(reveal, len(glyphs))
+	// Sharp: from the font's distance field, glyph by glyph as each is ready;
+	// the others from the bitmap below.
+	drawn: []bool
+	if !f.sdf && Text_DrawsSharp(rendering, scale, rotation) {
+		if mf := text_msdf_of(f, ctx); mf != nil {
+			drawn = text_draw_msdf(mf, glyphs[:n], origin, rotation, scale, time, tint)
+		}
+	}
 	if f.sdf && sdfShader.ok do rl.BeginShaderMode(sdfShader.shader)
 	defer if f.sdf && sdfShader.ok do rl.EndShaderMode()
 	for g, i in glyphs[:n] {
-		if g.r == ' ' do continue
+		if g.r == ' ' || (drawn != nil && drawn[i]) do continue
 		p := g.pos
 		if .Wave in g.effects do p.y += math.sin(time * 6 + f32(i) * 0.6) * g.size * 0.12
 		if .Shake in g.effects {
@@ -346,6 +405,110 @@ Text_DrawGlyphs :: proc(f: ^Text_Font, glyphs: []Text_Glyph, origin: [2]f32, rot
 	}
 }
 
+// text_msdf_of: a font's MSDF (made the first time; nil when it can't be:
+// a BMFont, a CFF .otf, no file).
+@(private = "file")
+text_msdf_of :: proc(f: ^Text_Font, ctx: ^GameContext) -> ^Msdf_Font {
+	if f.msdfTried do return f.msdf
+	f.msdfTried = true
+	data: []u8
+	if f.engine {
+		if engineFontFile != "" do data, _ = os.read_entire_file(engineFontFile, context.temp_allocator)
+	} else if f.path != "" && ctx != nil && ctx.game != nil {
+		data, _ = AssetManager_ReadFileBytes(&ctx.game.assetManager, f.path, context.temp_allocator)
+	}
+	if data == nil do return nil
+	f.msdf = Msdf_FontNew(data, font_codepoints())
+	return f.msdf
+}
+
+// Text_DrawsSharp: text drawn now at `scale` (and rotation) comes from the
+// distance field - Sharp always, Bitmap never, Auto when it isn't drawn
+// 1:1: scaled, rotated, or under a zoomed camera / scaled UI (the current
+// transform).
+Text_DrawsSharp :: proc(mode: Text_Rendering, scale, rotation: f32) -> bool {
+	switch mode {
+	case .Sharp: return true
+	case .Bitmap: return false
+	case .Auto:
+	}
+	if rotation != 0 do return true
+	k := scale
+	if rl.IsWindowReady() {
+		m := rlgl.GetMatrixModelview()
+		k *= math.sqrt(m[0, 0] * m[0, 0] + m[1, 0] * m[1, 0])
+	}
+	return abs(k - 1) > 0.01
+}
+
+// glyph_pos: a glyph's position with its effects (wave / shake).
+@(private = "file")
+glyph_pos :: proc(g: Text_Glyph, i: int, time: f32) -> [2]f32 {
+	p := g.pos
+	if .Wave in g.effects do p.y += math.sin(time * 6 + f32(i) * 0.6) * g.size * 0.12
+	if .Shake in g.effects {
+		seed := f32(int(time * 30)) * 13.7 + f32(i) * 7.1
+		p += {math.sin(seed) * g.size * 0.06, math.cos(seed * 1.3) * g.size * 0.06}
+	}
+	return p
+}
+
+// text_draw_msdf draws the glyphs whose field is ready (true in the result).
+@(private = "file")
+text_draw_msdf :: proc(mf: ^Msdf_Font, glyphs: []Text_Glyph, origin: [2]f32, rotation, scale, time: f32, tint: rl.Color) -> []bool {
+	if !msdfShader.ok {
+		msdfShader.shader = rl.LoadShaderFromMemory(nil, Shader_Port(MSDF_FRAGMENT))
+		msdfShader.ok = rl.IsShaderValid(msdfShader.shader)
+		if msdfShader.ok {
+			msdfShader.locRange = rl.GetShaderLocation(msdfShader.shader, "pxRange")
+			msdfShader.locSize = rl.GetShaderLocation(msdfShader.shader, "texSize")
+		}
+	}
+	if !msdfShader.ok do return nil
+	drawn := make([]bool, len(glyphs), context.temp_allocator)
+	rl.BeginShaderMode(msdfShader.shader)
+	defer rl.EndShaderMode()
+	pr: f32 = 2 * MSDF_RANGE
+	ts := [2]f32{f32(mf.font.texture.width), f32(mf.font.texture.height)}
+	rl.SetShaderValue(msdfShader.shader, msdfShader.locRange, &pr, .FLOAT)
+	rl.SetShaderValue(msdfShader.shader, msdfShader.locSize, &ts, .VEC2)
+	pad := f32(mf.font.glyphPadding)
+	for g, i in glyphs {
+		if g.r == ' ' {
+			drawn[i] = true
+			continue
+		}
+		idx := int(rl.GetGlyphIndex(mf.font, g.r))
+		if !Msdf_EnsureGlyph(mf, idx) do continue
+		drawn[i] = true
+		rec := mf.font.recs[idx]
+		gi := mf.font.glyphs[idx]
+		if rec.width <= 0 do continue
+		col := g.color
+		if tint != rl.WHITE {
+			col = {u8(u32(col.r) * u32(tint.r) / 255), u8(u32(col.g) * u32(tint.g) / 255), u8(u32(col.b) * u32(tint.b) / 255), u8(u32(col.a) * u32(tint.a) / 255)}
+		}
+		world := origin + rotate_vec(glyph_pos(g, i, time) * scale, rotation)
+		k := g.size * scale / f32(MSDF_EM)
+		off := rotate_vec({(f32(gi.offsetX) - pad) * k, (f32(gi.offsetY) - pad) * k}, rotation)
+		src := rl.Rectangle{rec.x - pad, rec.y - pad, rec.width + 2 * pad, rec.height + 2 * pad}
+		rl.DrawTexturePro(mf.font.texture, src, {world.x + off.x, world.y + off.y, src.width * k, src.height * k}, {0, 0}, rotation, col)
+	}
+	return drawn
+}
+
+// Text_UIOverride (the ui library's TextDrawOverride): UI text drawn under
+// a scaled transform (the accessibility UI scale, a scaled Screen Layer)
+// comes from the engine font's distance field; 1:1 it's left to the ui
+// library's own crisp text.
+Text_UIOverride :: proc(text: string, x, y, size: f32, color: rl.Color) -> bool {
+	if !Text_DrawsSharp(.Auto, 1, 0) do return false
+	f := Text_GetFont("", size)
+	glyphs, _ := Text_Layout(text, {color, size, {}}, 0, 0, 1.2, false, measure_with, f)
+	Text_DrawGlyphs(f, glyphs, {x, y}, 0, 1, -1, 0, rendering = .Sharp)
+	return true
+}
+
 // --- TextNode ----------------------------------------------------------------------
 
 Text_Align :: enum {
@@ -368,7 +531,11 @@ TextNode :: struct {
 	lineSpacing: f32 `gui:"true" min:"0.5" max:"3"`,
 	richText:    bool `gui:"true"`, // [color=..] [size=..] [wave] [shake]
 	localized:   bool `gui:"true"`, // `text` is a key in the locale tables
-	sdf:         bool `gui:"true"`, // sharp at any scale (vector fonts)
+	rendering:   Text_Rendering `gui:"true"`, // Auto: sharp when scaled / rotated / zoomed (#270)
+	path:        string `gui:"true"`,         // a PathNode the text runs along ("../Path"; "" = a straight line)
+	pathOffset:  f32 `gui:"true" min:"-10000" max:"10000"`, // px along the path (animate it: a marquee)
+	pathAlign:   Text_Align `gui:"true"`,     // Left: from the path's start; Center; Right: to its end
+	pathUpright: bool `gui:"true"`,           // letters turned no more than 90 degrees (never upside down)
 	revealSpeed: f32 `gui:"true" min:"0" max:"500"`, // characters per second (0 = all at once)
 	revealed:    f32, // characters shown (typewriter)
 	time:        f32,
@@ -423,7 +590,7 @@ measure_with :: proc(r: rune, size: f32, data: rawptr) -> f32 {
 
 // TextNode_Layout: the glyphs and block size as drawn (unscaled).
 TextNode_Layout :: proc(t: ^TextNode, ctx: ^GameContext) -> ([]Text_Glyph, [2]f32, ^Text_Font) {
-	f := Text_GetFont(t.font, t.fontSize, t.sdf, ctx if ctx != nil else t.gameContext)
+	f := Text_GetFont(t.font, t.fontSize, false, ctx if ctx != nil else t.gameContext)
 	glyphs, size := Text_Layout(TextNode_DisplayText(t, ctx), {t.color, t.fontSize, {}}, t.maxWidth, int(t.align), t.lineSpacing, t.richText, measure_with, f)
 	return glyphs, size, f
 }
@@ -450,7 +617,61 @@ TextNode_Render :: proc(node: ^Node, ctx: ^GameContext, dt: f32) {
 	origin -= rotate_vec(size * t.pivot * scale, t.globalRotation) // the origin (node_origin.odin)
 	reveal := -1
 	if t.revealSpeed > 0 && !t.revealDone do reveal = int(t.revealed)
-	Text_DrawGlyphs(f, glyphs, origin, t.globalRotation, scale, reveal, t.time)
+	gc := ctx if ctx != nil else t.gameContext
+	if t.path != "" {
+		if p := textnode_path(t); p != nil {
+			text_draw_on_path(t, p, f, glyphs, size, scale, reveal, gc)
+			return
+		}
+	}
+	Text_DrawGlyphs(f, glyphs, origin, t.globalRotation, scale, reveal, t.time, rendering = t.rendering, ctx = gc)
+}
+
+// textnode_path: the PathNode the text runs along (nil: none / not a path).
+@(private = "file")
+textnode_path :: proc(t: ^TextNode) -> ^PathNode {
+	gc := t.gameContext
+	if gc == nil || gc.scene == nil || gc.scene.manager == nil do return nil
+	n := Node_ResolvePath(gc.scene.manager, t, t.path)
+	if n == nil || n.typeId != PathNode do return nil
+	return cast(^PathNode)n
+}
+
+// text_draw_on_path: each letter on the path at its distance along it
+// (Path Offset + where the line puts it), turned to follow it, its baseline
+// on the path; Upright flips the ones that would be upside down.
+@(private = "file")
+text_draw_on_path :: proc(t: ^TextNode, p: ^PathNode, f: ^Text_Font, glyphs: []Text_Glyph, size: [2]f32, scale: f32, reveal: int, ctx: ^GameContext) {
+	n := len(glyphs) if reveal < 0 else min(reveal, len(glyphs))
+	length := PathNode_Length(p)
+	if length <= 0 do return
+	pathScale := max(abs(p.globalScale.x), abs(p.globalScale.y), 0.0001)
+	width := size.x * scale / pathScale // (in the path's own px)
+	start := t.pathOffset
+	switch t.pathAlign {
+	case .Left:
+	case .Center: start += (length - width) * 0.5
+	case .Right: start += length - width
+	}
+	baseline := t.fontSize * 0.78 // (the line's top to its baseline, roughly)
+	for g, i in glyphs[:n] {
+		if g.r == ' ' || g.r == '\n' do continue
+		w := g.width if g.width > 0 else Text_MeasureRune(f, g.r, g.size)
+		mid := start + (g.pos.x + w * 0.5) * scale / pathScale
+		if !p.closed && (mid < 0 || mid > length) do continue // (off the ends)
+		if p.closed do mid = mid - math.floor(mid / length) * length
+		lp, ld := PathNode_SampleLocal(p, mid)
+		wp := PathNode_ToWorld(p, lp)
+		wd := rotate_vec(ld * p.globalScale, p.globalRotation)
+		angle := math.to_degrees(math.atan2(wd.y, wd.x))
+		up := !(t.pathUpright && (angle > 90 || angle < -90))
+		if !up do angle += 180
+		// The glyph's top-left, its baseline's middle on the path.
+		origin := wp + rotate_vec([2]f32{-w * 0.5, -baseline} * scale, angle)
+		one := g
+		one.pos = {0, 0}
+		Text_DrawGlyphs(f, []Text_Glyph{one}, origin, angle, scale, -1, t.time, rendering = t.rendering, ctx = ctx)
+	}
 }
 
 // TextNode_Bounds: the text's world rectangle (unrotated), for culling.

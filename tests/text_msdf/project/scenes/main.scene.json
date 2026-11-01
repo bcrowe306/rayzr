@@ -1,0 +1,8 @@
+{"name": "main", "background": [24, 26, 34, 255], "root": {"type": "Node", "name": "root", "children": [
+ {"type": "CameraNode", "name": "Camera", "position": [480, 270], "properties": {"isCurrent": true}},
+ {"type": "TextNode", "name": "OneToOne", "position": [20, 20], "scale": [1, 1], "rotation": 0, "properties": {"text": "1:1 bitmap - Auto", "fontSize": 20, "color": "#f0f0f0ff", "pivot": [0, 0], "rendering": "Auto", "font": ""}},
+ {"type": "TextNode", "name": "AutoBig", "position": [20, 60], "scale": [5, 5], "rotation": 0, "properties": {"text": "Ag&8", "fontSize": 20, "color": "#f0f0f0ff", "pivot": [0, 0], "rendering": "Auto", "font": ""}},
+ {"type": "TextNode", "name": "BitmapBig", "position": [500, 60], "scale": [5, 5], "rotation": 0, "properties": {"text": "Ag&8", "fontSize": 20, "color": "#f0f0f0ff", "pivot": [0, 0], "rendering": "Bitmap", "font": ""}},
+ {"type": "TextNode", "name": "Rotated", "position": [120, 380], "scale": [2, 2], "rotation": -15, "properties": {"text": "Rotated sharp", "fontSize": 20, "color": "#f0f0f0ff", "pivot": [0, 0], "rendering": "Auto", "font": ""}},
+ {"type": "TextNode", "name": "ProjectFont", "position": [520, 330], "scale": [3, 3], "rotation": 0, "properties": {"text": "Body.ttf", "fontSize": 20, "color": "#f0f0f0ff", "pivot": [0, 0], "rendering": "Auto", "font": "fonts/Body.ttf"}}
+]}}

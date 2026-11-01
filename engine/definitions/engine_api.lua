@@ -4590,7 +4590,11 @@ function JointNode:set_property(path, value, y) end
 ---@field lineSpacing number Line height as a multiple of the font size.
 ---@field richText boolean Interpret [color=..] [size=..] [wave] [shake] tags.
 ---@field localized boolean The text is a key in the locale tables; shows the current language's translation.
----@field sdf boolean Signed-distance-field rendering: stays sharp when scaled or zoomed (vector fonts).
+---@field rendering "Auto"|"Sharp"|"Bitmap" Auto: crisp bitmap text at 1:1, and sharp at any size from the font's distance field wh...
+---@field path string A Path node the text runs along, as a path from this node (".." when the text is the pa...
+---@field pathOffset number How far along the path the text starts (px), from where Path Align puts it. Animate it ...
+---@field pathAlign "Left"|"Center"|"Right" Left: from the path's start; Center: in its middle; Right: ending at its end (then move...
+---@field pathUpright boolean Letters never turn more than 90 degrees, so they stay readable where the path runs righ...
 ---@field revealSpeed number Typewriter: characters per second (0 = all at once); emits "revealed" when done.
 
 ---@alias TextNodeProperty
@@ -4614,7 +4618,11 @@ function JointNode:set_property(path, value, y) end
 ---| "lineSpacing" # number - Line height as a multiple of the font size.
 ---| "richText" # boolean - Interpret [color=..] [size=..] [wave] [shake] tags.
 ---| "localized" # boolean - The text is a key in the locale tables; shows the current language's translation.
----| "sdf" # boolean - Signed-distance-field rendering: stays sharp when scaled or zoomed (vector fonts).
+---| "rendering" # "Auto"|"Sharp"|"Bitmap" - Auto: crisp bitmap text at 1:1, and sharp at any size from the font's distance field wh...
+---| "path" # string - A Path node the text runs along, as a path from this node (".." when the text is the pa...
+---| "pathOffset" # number - How far along the path the text starts (px), from where Path Align puts it. Animate it ...
+---| "pathAlign" # "Left"|"Center"|"Right" - Left: from the path's start; Center: in its middle; Right: ending at its end (then move...
+---| "pathUpright" # boolean - Letters never turn more than 90 degrees, so they stay readable where the path runs righ...
 ---| "revealSpeed" # number - Typewriter: characters per second (0 = all at once); emits "revealed" when done.
 
 ---Reads an Inspector property by its path (vectors and colours as tables); "script.<name>" reads a field of the node's script.
@@ -4642,7 +4650,11 @@ function JointNode:set_property(path, value, y) end
 ---@overload fun(self: TextNode, path: "lineSpacing"): number
 ---@overload fun(self: TextNode, path: "richText"): boolean
 ---@overload fun(self: TextNode, path: "localized"): boolean
----@overload fun(self: TextNode, path: "sdf"): boolean
+---@overload fun(self: TextNode, path: "rendering"): "Auto"|"Sharp"|"Bitmap"
+---@overload fun(self: TextNode, path: "path"): string
+---@overload fun(self: TextNode, path: "pathOffset"): number
+---@overload fun(self: TextNode, path: "pathAlign"): "Left"|"Center"|"Right"
+---@overload fun(self: TextNode, path: "pathUpright"): boolean
 ---@overload fun(self: TextNode, path: "revealSpeed"): number
 function TextNode:get_property(path) end
 
@@ -4672,7 +4684,11 @@ function TextNode:get_property(path) end
 ---@overload fun(self: TextNode, path: "lineSpacing", value: number)
 ---@overload fun(self: TextNode, path: "richText", value: boolean)
 ---@overload fun(self: TextNode, path: "localized", value: boolean)
----@overload fun(self: TextNode, path: "sdf", value: boolean)
+---@overload fun(self: TextNode, path: "rendering", value: "Auto"|"Sharp"|"Bitmap")
+---@overload fun(self: TextNode, path: "path", value: string)
+---@overload fun(self: TextNode, path: "pathOffset", value: number)
+---@overload fun(self: TextNode, path: "pathAlign", value: "Left"|"Center"|"Right")
+---@overload fun(self: TextNode, path: "pathUpright", value: boolean)
 ---@overload fun(self: TextNode, path: "revealSpeed", value: number)
 function TextNode:set_property(path, value, y) end
 

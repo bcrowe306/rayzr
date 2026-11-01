@@ -1,5 +1,6 @@
 package engine
 
+import "core:strings"
 import rl "vendor:raylib"
 import ui "../ui"
 
@@ -18,6 +19,9 @@ EndEngineViewportMode :: proc() {
 
 InitEngineFonts :: proc(fontPath: cstring = "engine/Open_Sans/static/OpenSans-Regular.ttf") -> rl.Font {
 	engineGuiFont = ui.InitFonts(fontPath)
+	delete(engineFontFile, Engine_HeapAllocator())
+	engineFontFile = strings.clone(string(fontPath), Engine_HeapAllocator()) // (its MSDF: text.odin)
+	ui.TextDrawOverride = Text_UIOverride // scaled UI text: sharp (text.odin)
 	return engineGuiFont
 }
 

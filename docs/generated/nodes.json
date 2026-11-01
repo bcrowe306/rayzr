@@ -839,7 +839,11 @@
         {"name": "lineSpacing", "kind": "number", "owner": "TextNode", "default": 1.2, "min": 0.5, "max": 3, "doc": "Line height as a multiple of the font size."},
         {"name": "richText", "kind": "boolean", "owner": "TextNode", "default": true, "doc": "Interpret [color=..] [size=..] [wave] [shake] tags."},
         {"name": "localized", "kind": "boolean", "owner": "TextNode", "default": false, "doc": "The text is a key in the locale tables; shows the current language's translation."},
-        {"name": "sdf", "kind": "boolean", "owner": "TextNode", "default": false, "doc": "Signed-distance-field rendering: stays sharp when scaled or zoomed (vector fonts)."},
+        {"name": "rendering", "kind": "enum", "owner": "TextNode", "default": "Auto", "values": ["Auto", "Sharp", "Bitmap"], "doc": "Auto: crisp bitmap text at 1:1, and sharp at any size from the font's distance field when scaled, rotated or zoomed (a camera, the UI scale). Sharp: always from the distance field. Bitmap: always the bitmap (pixel-perfect; blurs when scaled)."},
+        {"name": "path", "kind": "string", "owner": "TextNode", "default": "", "doc": "A Path node the text runs along, as a path from this node (\"..\" when the text is the path's child, \"../Road\"); empty: a straight line. Each letter follows the curve; the text's own rotation is ignored."},
+        {"name": "pathOffset", "kind": "number", "owner": "TextNode", "default": 0, "min": -10000, "max": 10000, "doc": "How far along the path the text starts (px), from where Path Align puts it. Animate it for a marquee; a closed path wraps around."},
+        {"name": "pathAlign", "kind": "enum", "owner": "TextNode", "default": "Left", "values": ["Left", "Center", "Right"], "doc": "Left: from the path's start; Center: in its middle; Right: ending at its end (then moved by Path Offset)."},
+        {"name": "pathUpright", "kind": "boolean", "owner": "TextNode", "default": false, "doc": "Letters never turn more than 90 degrees, so they stay readable where the path runs right to left or loops."},
         {"name": "revealSpeed", "kind": "number", "owner": "TextNode", "default": 0, "min": 0, "max": 500, "doc": "Typewriter: characters per second (0 = all at once); emits \"revealed\" when done."}
       ]
     },

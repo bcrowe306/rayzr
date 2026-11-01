@@ -111,7 +111,7 @@ Subtitles_Render :: proc(ctx: ^GameContext) {
 		glyphs, ts := Text_Layout(text, {s.color, size, {}}, maxW, 1, 1.2, true, measure, f) // (lines centred)
 		box := rl.Rectangle{(vw - ts.x) / 2 - pad, y - ts.y - pad, ts.x + pad * 2, ts.y + pad * 2}
 		if access.subtitleBackground > 0 do rl.DrawRectangleRounded(box, 0.25, 6, rl.ColorAlpha(rl.BLACK, access.subtitleBackground))
-		Text_DrawGlyphs(f, glyphs, {(vw - ts.x) / 2, y - ts.y}, 0, 1, -1, 0)
+		Text_DrawGlyphs(f, glyphs, {(vw - ts.x) / 2, y - ts.y}, 0, 1, -1, 0, ctx = ctx)
 		y = box.y - size * 0.3
 	}
 }

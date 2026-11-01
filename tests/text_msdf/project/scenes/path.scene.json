@@ -1,0 +1,282 @@
+{
+ "name": "path",
+ "draw_bounds": false,
+ "background": [
+  24,
+  26,
+  34,
+  255
+ ],
+ "root": {
+  "type": "Node",
+  "name": "root",
+  "position": [
+   0,
+   0
+  ],
+  "scale": [
+   1,
+   1
+  ],
+  "rotation": 0,
+  "enabled": true,
+  "visible": true,
+  "layer": 0,
+  "children": [
+   {
+    "type": "CameraNode",
+    "name": "Camera",
+    "position": [
+     480,
+     270
+    ],
+    "scale": [
+     1,
+     1
+    ],
+    "rotation": 0,
+    "enabled": true,
+    "visible": true,
+    "layer": 0,
+    "properties": {
+     "isCurrent": true,
+     "followMode": "SingleTarget",
+     "dragType": "SmoothDamp",
+     "targetPosition": [
+      0,
+      0
+     ],
+     "smoothDrag": true,
+     "smoothDragSpeed": [
+      0.2,
+      0.2
+     ],
+     "springConstant": 15,
+     "dampingRatio": 1,
+     "predictionTime": [
+      0.5,
+      0.5
+     ],
+     "maxDistance": [
+      100000,
+      100000
+     ],
+     "offset": [
+      0,
+      0
+     ],
+     "smoothOffset": true,
+     "smoothOffsetSpeed": 0.2,
+     "screenOffset": [
+      640,
+      360
+     ],
+     "customScreenOffset": false,
+     "targetRotation": 0,
+     "allowRotation": true,
+     "smoothRotation": true,
+     "smoothRotationSpeed": 0.2,
+     "targetZoom": 1,
+     "smoothZoom": true,
+     "smoothZoomSpeed": 0.2,
+     "minZoom": 0.1,
+     "maxZoom": 10,
+     "autoZoom": true,
+     "zoomMargin": 0.1,
+     "hasLimits": false,
+     "smoothLimit": true,
+     "leftLimit": -1000000,
+     "rightLimit": 1000000,
+     "topLimit": -1000000,
+     "bottomLimit": 1000000,
+     "useHMargins": false,
+     "useVMargins": false,
+     "leftMargin": 0.25,
+     "rightMargin": 0.25,
+     "topMargin": 0.25,
+     "bottomMargin": 0.25,
+     "enableMouseFollow": false,
+     "mouseInfluence": [
+      0.2,
+      0.2
+     ],
+     "shakePreset": "Custom",
+     "shakeTypes": [
+      "Vertical",
+      "Horizontal",
+      "Random"
+     ],
+     "shakeSpeed": 15,
+     "shakeIntensity": 10,
+     "shakeTrauma": 1
+    }
+   },
+   {
+    "type": "PathNode",
+    "name": "Arc",
+    "position": [
+     480,
+     330
+    ],
+    "scale": [
+     1,
+     1
+    ],
+    "rotation": 0,
+    "enabled": true,
+    "visible": true,
+    "layer": 0,
+    "points": [
+     [
+      -360,
+      60,
+      0,
+      0,
+      120,
+      -260
+     ],
+     [
+      360,
+      60,
+      -120,
+      -260,
+      0,
+      0
+     ]
+    ],
+    "properties": {
+     "closed": false,
+     "bakeInterval": 6,
+     "lineWidth": 2,
+     "color": "#5a6482ff"
+    },
+    "children": [
+     {
+      "type": "TextNode",
+      "name": "Curved",
+      "position": [
+       0,
+       0
+      ],
+      "scale": [
+       1,
+       1
+      ],
+      "rotation": 0,
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "enabled": true,
+      "visible": true,
+      "layer": 3,
+      "properties": {
+       "text": "Text along a curved path, sharp",
+       "font": "",
+       "fontSize": 28,
+       "color": "#ffffffff",
+       "align": "Left",
+       "maxWidth": 0,
+       "lineSpacing": 1.2,
+       "richText": true,
+       "localized": false,
+       "rendering": "Auto",
+       "path": "..",
+       "pathOffset": 0,
+       "pathAlign": "Center",
+       "pathUpright": false,
+       "revealSpeed": 0
+      }
+     }
+    ]
+   },
+   {
+    "type": "PathNode",
+    "name": "Wave",
+    "position": [
+     480,
+     470
+    ],
+    "scale": [
+     1,
+     1
+    ],
+    "rotation": 0,
+    "enabled": true,
+    "visible": true,
+    "layer": 0,
+    "points": [
+     [
+      -380,
+      0,
+      0,
+      0,
+      120,
+      80
+     ],
+     [
+      0,
+      0,
+      -120,
+      -80,
+      120,
+      80
+     ],
+     [
+      380,
+      0,
+      -120,
+      -80,
+      0,
+      0
+     ]
+    ],
+    "properties": {
+     "closed": false,
+     "bakeInterval": 6,
+     "lineWidth": 2,
+     "color": "#5a6482ff"
+    },
+    "children": [
+     {
+      "type": "TextNode",
+      "name": "Marquee",
+      "position": [
+       0,
+       0
+      ],
+      "scale": [
+       1,
+       1
+      ],
+      "rotation": 0,
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "enabled": true,
+      "visible": true,
+      "layer": 3,
+      "properties": {
+       "text": "a marquee: Path Offset moves it",
+       "font": "",
+       "fontSize": 22,
+       "color": "#ffffffff",
+       "align": "Left",
+       "maxWidth": 0,
+       "lineSpacing": 1.2,
+       "richText": true,
+       "localized": false,
+       "rendering": "Auto",
+       "path": "..",
+       "pathOffset": 40,
+       "pathAlign": "Left",
+       "pathUpright": false,
+       "revealSpeed": 0
+      }
+     }
+    ]
+   }
+  ]
+ }
+}

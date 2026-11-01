@@ -1,0 +1,18 @@
+[
+ {
+  "name": "MSDF text (#270): 1:1 text (the bitmap font), scaled Auto text (sharp), scaled Bitmap text (blurry), rotated text, a project font",
+  "project": "tests/text_msdf/project",
+  "scene": "scenes/main.scene.json",
+  "frames": 90,
+  "expect": [["AutoBig", "exists", "==", true]],
+  "golden": {"image": "tests/text_msdf/expected/main.png", "max_pixels": 0.01, "threshold": 40}
+ },
+ {
+  "name": "MSDF text (#270): text along a path - centred on an arc, and offset along a wave",
+  "project": "tests/text_msdf/project",
+  "scene": "scenes/path.scene.json",
+  "frames": 90,
+  "expect": [["Curved", "exists", "==", true]],
+  "golden": {"image": "tests/text_msdf/expected/path.png", "max_pixels": 0.01, "threshold": 40}
+ }
+]
