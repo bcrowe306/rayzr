@@ -206,7 +206,7 @@ NODE_CATALOG := [?]NodeCatalogEntry{
 	{
 		name        = "Touch Button",
 		category    = "UI & Interface",
-		icon        = ICON_FA_CIRCLE_DOT,
+		icon        = ICON_FA_HAND,
 		description = "An on-screen button for touch screens: presses an input action (jump, fire...) while a finger is on it. Put it under a Screen Layer; it shows once the device is touched.",
 		typeName    = "TouchButtonNode",
 	},
@@ -361,7 +361,7 @@ NODE_CATALOG := [?]NodeCatalogEntry{
 	{
 		name        = "UI Container",
 		category    = "UI & Interface",
-		icon        = ICON_FA_WINDOW_MAXIMIZE,
+		icon        = ICON_FA_OBJECT_GROUP,
 		description = "Flexbox-style responsive layout container with horizontal/vertical flow, padding, and alignment.",
 		typeName    = "UIContainerNode",
 	},
