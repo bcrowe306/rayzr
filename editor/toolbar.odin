@@ -232,6 +232,7 @@ Toolbar_StartSimulation :: proc(state: ^EditorState) {
 	if state.snapshotJson != "" {
 		delete(state.snapshotJson)
 	}
+	OscPreview_Stop() // (its targets back first)
 	state.snapshotJson = e.Scene_SerializeToJSON(state.activeScene)
 	// Scripts run in the editor's Lua state: remember its globals so Stop
 	// can put them back (and reset module-level locals).

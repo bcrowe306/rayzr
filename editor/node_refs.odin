@@ -36,6 +36,7 @@ Ref_Scene_Kind :: enum {
 	NavMap,
 	DialogueLipSync,
 	TextPath,        // a Text node's Path (#270)
+	OscTarget,       // an Oscillator mapping's node
 	LipSyncMouth,
 	ScriptProp,
 }
@@ -267,6 +268,22 @@ NodeRefs_Capture :: proc(state: ^EditorState) -> (snap: Ref_Snapshot) {
 						target = target,
 						oldPath = strings.clone(nav.navMap, context.temp_allocator),
 						label = "Navigation Map",
+					})
+				}
+			}
+
+		case e.OscillatorNode:
+			o := cast(^e.OscillatorNode)n
+			for &m, mi in o.mappings {
+				if m.target == "" || m.target == "." do continue
+				if target := e.Node_ResolvePath(mgr, o, m.target); target != nil {
+					append(&snap.sceneItems, Ref_Scene_Item{
+						kind = .OscTarget,
+						owner = n,
+						target = target,
+						oldPath = strings.clone(m.target, context.temp_allocator),
+						extraIdx = mi,
+						label = strings.clone(fmt.tprintf("Oscillator mapping %d (%s)", mi + 1, m.property), context.temp_allocator),
 					})
 				}
 			}
@@ -627,6 +644,12 @@ apply_scene_edits :: proc(state: ^EditorState) -> int {
 			d := cast(^e.DialogueNode)s.owner
 			d.lipSync = strings.clone(s.newPath, d.allocator)
 			count += 1
+		case .OscTarget:
+			o := cast(^e.OscillatorNode)s.owner
+			if s.extraIdx >= 0 && s.extraIdx < len(o.mappings) {
+				o.mappings[s.extraIdx].target = strings.clone(s.newPath, o.allocator)
+				count += 1
+			}
 		case .TextPath:
 			tn := cast(^e.TextNode)s.owner
 			tn.path = strings.clone(s.newPath, tn.allocator)

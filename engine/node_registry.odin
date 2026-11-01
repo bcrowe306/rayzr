@@ -49,6 +49,7 @@ NODE_TYPES := [?]Node_Type_Info{
 	{"TouchJoystickNode", TouchJoystickNode, factory_touch_joystick, {"touch joystick", "touchjoystick", "virtual joystick", "joystick", "thumbstick"}},
 	{"TouchButtonNode", TouchButtonNode, factory_touch_button, {"touch button", "touchbutton", "virtual button", "on-screen button"}},
 	{"ViewportNode", ViewportNode, factory_viewport, {"viewport", "render texture", "render target", "subviewport", "minimap", "split screen", "picture in picture"}},
+	{"OscillatorNode", OscillatorNode, factory_oscillator, {"oscillator", "lfo", "wave", "sine", "bob", "pulse", "automation"}},
 	{"SkeletonNode", SkeletonNode, factory_skeleton, {"skeleton", "spine", "dragonbones", "bones", "rig", "cutout"}},
 	{"BoneAttachmentNode", BoneAttachmentNode, factory_bone_attachment, {"bone attachment", "attach to bone"}},
 	{"AdvancedCameraNode", AdvancedCameraNode, factory_adv_camera, {"advanced camera", "virtual camera", "phantom", "cinemachine"}},
@@ -295,6 +296,11 @@ factory_touch_joystick :: proc(scene: ^Scene, parent: ^Node) -> ^Node {
 @(private = "file")
 factory_touch_button :: proc(scene: ^Scene, parent: ^Node) -> ^Node {
 	return TouchButtonNode_Create(scene, "TouchButton", parent)
+}
+
+@(private = "file")
+factory_oscillator :: proc(scene: ^Scene, parent: ^Node) -> ^Node {
+	return OscillatorNode_Create(scene, "Oscillator", parent)
 }
 
 @(private = "file")

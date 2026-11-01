@@ -1,0 +1,18 @@
+{"name": "waves", "background": [24, 28, 38, 255], "root": {"type": "Node", "name": "root", "children": [
+ {"type": "CameraNode", "name": "Camera", "position": [480, 270], "properties": {"isCurrent": true}},
+ {"type": "TextNode", "name": "Platform", "position": [480, 110], "properties": {"text": "[ platform ]", "fontSize": 40, "color": [250, 204, 21, 255]}, "children": [
+  {"type": "OscillatorNode", "name": "Sway", "properties": {"wave": "Sine", "rate": 0.5},
+   "oscillator": {"curve": [], "mappings": [{"target": "..", "property": "position.x", "min": -200, "max": 200, "mode": "Relative", "phase": 0, "offset": 0}]}}
+ ]},
+ {"type": "TextNode", "name": "Spinner", "position": [240, 330], "properties": {"text": "spin + grow", "fontSize": 36, "color": [96, 165, 250, 255]}},
+ {"type": "OscillatorNode", "name": "SpinGrow", "properties": {"wave": "Triangle", "rateUnit": "Seconds", "rate": 2},
+  "oscillator": {"curve": [], "mappings": [
+   {"target": "../Spinner", "property": "scale", "min": [0.5, 0.5], "max": [1.5, 1], "mode": "Absolute", "phase": 0, "offset": 0},
+   {"target": "../Spinner", "property": "rotation", "min": 0, "max": 90, "mode": "Absolute", "phase": 90, "offset": -45}]}},
+ {"type": "TextNode", "name": "Flicker", "position": [720, 330], "properties": {"text": "flicker", "fontSize": 48, "color": [251, 146, 60, 255]}},
+ {"type": "OscillatorNode", "name": "Noise", "properties": {"wave": "Smooth_Noise", "rate": 3, "seed": 3},
+  "oscillator": {"curve": [], "mappings": [{"target": "../Flicker", "property": "color.a", "min": 40, "max": 255, "mode": "Absolute", "phase": 0, "offset": 0}]}},
+ {"type": "TextNode", "name": "Step", "position": [480, 460], "properties": {"text": "square pulse", "fontSize": 32, "color": [74, 222, 128, 255]}},
+ {"type": "OscillatorNode", "name": "Pulse", "properties": {"wave": "Square", "rate": 1, "pulseWidth": 0.3},
+  "oscillator": {"curve": [], "mappings": [{"target": "../Step", "property": "position.y", "min": 0, "max": -40, "mode": "Relative", "phase": 0, "offset": 0}]}}
+]}}

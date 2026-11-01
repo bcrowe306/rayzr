@@ -143,6 +143,8 @@ jobs:
           xvfb-run -a python3 scripts/templates/test_templates.py --runner bin/runners/linux/runner --suite tests/normal_maps/runtime_tests.json
           # Crisp text (#270): MSDF for scaled and rotated text, text along a path.
           xvfb-run -a python3 scripts/templates/test_templates.py --runner bin/runners/linux/runner --suite tests/text_msdf/runtime_tests.json
+          # Oscillators: waves on properties; pause / resume / signals / Stop restoring.
+          xvfb-run -a python3 scripts/templates/test_templates.py --runner bin/runners/linux/runner --suite tests/oscillator/runtime_tests.json
 
       - name: Crash reports (the runner and the editor crash for real)
         if: matrix.smoke

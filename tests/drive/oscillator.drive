@@ -1,0 +1,35 @@
+# Oscillator: a child Oscillator drives its parent's position.x; Preview
+# runs it in the editor and Stop puts the parent back; the mapping saves.
+wait 5
+key escape
+key ctrl+a
+type text
+click @addnode:Text
+click @addnode.create
+expect node:Text.type == TextNode
+dblclick @insp.position.x
+key ctrl+a
+type 200
+key enter
+dblclick @insp.position.y
+key ctrl+a
+type 300
+key enter
+expect node:Text.position ~= 200,300
+key ctrl+a
+type oscillator
+click @addnode:Oscillator
+click @addnode.create
+expect node:Oscillator.type == OscillatorNode
+click @insp.osc.add
+click @insp.osc.property:0
+click @pick:position.x
+click @insp.osc.preview
+wait 20
+expect node:Text.position !contains 200.0,300.0
+screenshot preview
+click @insp.osc.preview
+expect node:Text.position ~= 200,300
+click @toolbar.save
+expect file:scenes/main.scene.json contains "type": "OscillatorNode"
+expect file:scenes/main.scene.json contains "property": "position.x"

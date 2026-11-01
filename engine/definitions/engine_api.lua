@@ -189,6 +189,9 @@ local TouchButtonNode = {}
 ---@class ViewportNode : Node
 local ViewportNode = {}
 
+---@class OscillatorNode : Node
+local OscillatorNode = {}
+
 ---@class UIContainerNode : Node
 
 ---@class UILabelNode : Node, TextHolder
@@ -619,7 +622,7 @@ function AsepriteNode:connect(event, handler) end
 function StateMachineNode:connect(event, handler) end
 
 ---@alias ParticleEmitterNodeEvent NodeTreeEvent|"particle_hit"|"finished"|ProjectEvent
----Connects a handler to one of this node's events: particle_hit (A particle hit a body (collision on; particle_get_last_hit: where)), finished (Playback (or the dialogue) ended); the tree events; custom ones.
+---Connects a handler to one of this node's events: particle_hit (A particle hit a body (collision on; particle_get_last_hit: where)), finished (Playback, the dialogue or the oscillator's Loops ended); the tree events; custom ones.
 ---
 ---Example: `self.node:connect("particle_hit", function(value, source) Log.info("particle_hit") end)`
 ---@param event ParticleEmitterNodeEvent|string The event's name (the Signals tab lists them)
@@ -628,7 +631,7 @@ function StateMachineNode:connect(event, handler) end
 function ParticleEmitterNode:connect(event, handler) end
 
 ---@alias SoundNodeEvent NodeTreeEvent|"finished"|ProjectEvent
----Connects a handler to one of this node's events: finished (Playback (or the dialogue) ended); the tree events; custom ones.
+---Connects a handler to one of this node's events: finished (Playback, the dialogue or the oscillator's Loops ended); the tree events; custom ones.
 ---
 ---Example: `self.node:connect("finished", function(value, source) Log.info("finished") end)`
 ---@param event SoundNodeEvent|string The event's name (the Signals tab lists them)
@@ -637,7 +640,7 @@ function ParticleEmitterNode:connect(event, handler) end
 function SoundNode:connect(event, handler) end
 
 ---@alias MusicNodeEvent NodeTreeEvent|"finished"|ProjectEvent
----Connects a handler to one of this node's events: finished (Playback (or the dialogue) ended); the tree events; custom ones.
+---Connects a handler to one of this node's events: finished (Playback, the dialogue or the oscillator's Loops ended); the tree events; custom ones.
 ---
 ---Example: `self.node:connect("finished", function(value, source) Log.info("finished") end)`
 ---@param event MusicNodeEvent|string The event's name (the Signals tab lists them)
@@ -708,6 +711,15 @@ function RaycastNode:connect(event, handler) end
 ---@return integer id Connection id for `disconnect`
 function VisibilityNotifierNode:connect(event, handler) end
 
+---@alias OscillatorNodeEvent NodeTreeEvent|"cycle"|"finished"|ProjectEvent
+---Connects a handler to one of this node's events: cycle (The oscillator finished a cycle (cycles so far)), finished (Playback, the dialogue or the oscillator's Loops ended); the tree events; custom ones.
+---
+---Example: `self.node:connect("cycle", function(value, source) Log.info("cycle") end)`
+---@param event OscillatorNodeEvent|string The event's name (the Signals tab lists them)
+---@param handler fun(value: any, source: OscillatorNode) Called with the event's value and the node that raised it
+---@return integer id Connection id for `disconnect`
+function OscillatorNode:connect(event, handler) end
+
 ---@alias SkeletonNodeEvent NodeTreeEvent|"animation_finished"|"skeleton_event"|ProjectEvent
 ---Connects a handler to one of this node's events: animation_finished (A non-looping animation ended (Aseprite: a tag's repeats are done)), skeleton_event (An event key of the skeleton's animation fired (its name)); the tree events; custom ones.
 ---
@@ -763,7 +775,7 @@ function LdtkLevelNode:connect(event, handler) end
 function TextNode:connect(event, handler) end
 
 ---@alias DialogueNodeEvent NodeTreeEvent|"line_shown"|"finished"|"chosen"|ProjectEvent
----Connects a handler to one of this node's events: line_shown (A dialogue line was fully shown (1-based)), finished (Playback (or the dialogue) ended), chosen (A dialogue choice was taken (1-based)); the tree events; custom ones.
+---Connects a handler to one of this node's events: line_shown (A dialogue line was fully shown (1-based)), finished (Playback, the dialogue or the oscillator's Loops ended), chosen (A dialogue choice was taken (1-based)); the tree events; custom ones.
 ---
 ---Example: `self.node:connect("line_shown", function(value, source) Log.info("line_shown") end)`
 ---@param event DialogueNodeEvent|string The event's name (the Signals tab lists them)
@@ -772,7 +784,7 @@ function TextNode:connect(event, handler) end
 function DialogueNode:connect(event, handler) end
 
 ---@alias LipSyncNodeEvent NodeTreeEvent|"finished"|ProjectEvent
----Connects a handler to one of this node's events: finished (Playback (or the dialogue) ended); the tree events; custom ones.
+---Connects a handler to one of this node's events: finished (Playback, the dialogue or the oscillator's Loops ended); the tree events; custom ones.
 ---
 ---Example: `self.node:connect("finished", function(value, source) Log.info("finished") end)`
 ---@param event LipSyncNodeEvent|string The event's name (the Signals tab lists them)
@@ -3318,6 +3330,93 @@ function ViewportNode:get_property(path) end
 ---@overload fun(self: ViewportNode, path: "pixelated", value: boolean)
 ---@overload fun(self: ViewportNode, path: "background", value: number[])
 function ViewportNode:set_property(path, value, y) end
+
+---@class OscillatorNode
+---@field position Vec2 Position relative to the parent, in pixels (+y is down).
+---@field scale Vec2 Size multiplier relative to the parent (1, 1 = as is; negative flips).
+---@field rotation number Rotation relative to the parent, in degrees (clockwise).
+---@field layer "Layer1"|"Layer2"|"Layer3"|"Layer4"|"Layer5"|"Layer6"|"Layer7"|"Layer8" Drawing layer: higher layers draw over lower ones (Layer8 is for UI).
+---@field zIndex integer Draw order within the layer, added to the parent's: higher draws on top (-10, 0, 10...)...
+---@field ySort boolean Draw the children by their Y position (lower on screen = in front), each with its child...
+---@field ySortOffset number Added to this node's Y when its parent Y-sorts: move the sorting line to the feet (e.g....
+---@field pauseMode "Inherit"|"Pausable"|"Always" Inherit the parent's pausing, Pausable (stops when paused) or Always (keeps running, e....
+---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
+---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
+---@field wave "Sine"|"Triangle"|"Square"|"Saw"|"Reverse_Saw"|"Random"|"Smooth_Noise"|"Curve" The wave's shape: Sine, Triangle, Square (high for Pulse Width), Saw, Reverse Saw, Rand...
+---@field rateUnit "Hertz"|"Seconds" How Rate is read: Hertz (cycles a second) or Seconds (how long one cycle takes).
+---@field rate number How fast it runs: cycles a second (Hertz) or seconds a cycle (Seconds). 0 holds it still.
+---@field pulseWidth number Square: how much of each cycle is high (0.5: half; 0.2: a short blip).
+---@field seed integer Random and Smooth Noise: the same seed gives the same values every run; 0 is different ...
+---@field autostart boolean Starts when the scene starts. Off: call oscillator_start() from a script.
+---@field loops integer Cycles before it stops and emits finished (the targets keep their last values); 0 runs ...
+
+---@alias OscillatorNodeProperty
+---| "position" # Vec2 - Position relative to the parent, in pixels (+y is down).
+---| "scale" # Vec2 - Size multiplier relative to the parent (1, 1 = as is; negative flips).
+---| "rotation" # number - Rotation relative to the parent, in degrees (clockwise).
+---| "layer" # "Layer1"|"Layer2"|"Layer3"|"Layer4"|"Layer5"|"Layer6"|"Layer7"|"Layer8" - Drawing layer: higher layers draw over lower ones (Layer8 is for UI).
+---| "zIndex" # integer - Draw order within the layer, added to the parent's: higher draws on top (-10, 0, 10...)...
+---| "ySort" # boolean - Draw the children by their Y position (lower on screen = in front), each with its child...
+---| "ySortOffset" # number - Added to this node's Y when its parent Y-sorts: move the sorting line to the feet (e.g....
+---| "pauseMode" # "Inherit"|"Pausable"|"Always" - Inherit the parent's pausing, Pausable (stops when paused) or Always (keeps running, e....
+---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
+---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
+---| "wave" # "Sine"|"Triangle"|"Square"|"Saw"|"Reverse_Saw"|"Random"|"Smooth_Noise"|"Curve" - The wave's shape: Sine, Triangle, Square (high for Pulse Width), Saw, Reverse Saw, Rand...
+---| "rateUnit" # "Hertz"|"Seconds" - How Rate is read: Hertz (cycles a second) or Seconds (how long one cycle takes).
+---| "rate" # number - How fast it runs: cycles a second (Hertz) or seconds a cycle (Seconds). 0 holds it still.
+---| "pulseWidth" # number - Square: how much of each cycle is high (0.5: half; 0.2: a short blip).
+---| "seed" # integer - Random and Smooth Noise: the same seed gives the same values every run; 0 is different ...
+---| "autostart" # boolean - Starts when the scene starts. Off: call oscillator_start() from a script.
+---| "loops" # integer - Cycles before it stops and emits finished (the targets keep their last values); 0 runs ...
+
+---Reads an Inspector property by its path (vectors and colours as tables); "script.<name>" reads a field of the node's script.
+---
+---Example: `local value = self.node:get_property("wave")`
+---@param path OscillatorNodeProperty|string The property's path, as the Inspector names it ("position", "emitter.amount") or "script.<field>"
+---@return any value Its value: a number, boolean, string or enum name; vectors and colours as tables (nil when there's no such property)
+---@overload fun(self: OscillatorNode, path: "position"): Vec2
+---@overload fun(self: OscillatorNode, path: "scale"): Vec2
+---@overload fun(self: OscillatorNode, path: "rotation"): number
+---@overload fun(self: OscillatorNode, path: "layer"): "Layer1"|"Layer2"|"Layer3"|"Layer4"|"Layer5"|"Layer6"|"Layer7"|"Layer8"
+---@overload fun(self: OscillatorNode, path: "zIndex"): integer
+---@overload fun(self: OscillatorNode, path: "ySort"): boolean
+---@overload fun(self: OscillatorNode, path: "ySortOffset"): number
+---@overload fun(self: OscillatorNode, path: "pauseMode"): "Inherit"|"Pausable"|"Always"
+---@overload fun(self: OscillatorNode, path: "paused"): boolean
+---@overload fun(self: OscillatorNode, path: "enabled"): boolean
+---@overload fun(self: OscillatorNode, path: "wave"): "Sine"|"Triangle"|"Square"|"Saw"|"Reverse_Saw"|"Random"|"Smooth_Noise"|"Curve"
+---@overload fun(self: OscillatorNode, path: "rateUnit"): "Hertz"|"Seconds"
+---@overload fun(self: OscillatorNode, path: "rate"): number
+---@overload fun(self: OscillatorNode, path: "pulseWidth"): number
+---@overload fun(self: OscillatorNode, path: "seed"): integer
+---@overload fun(self: OscillatorNode, path: "autostart"): boolean
+---@overload fun(self: OscillatorNode, path: "loops"): integer
+function OscillatorNode:get_property(path) end
+
+---Sets an Inspector property by its path: vectors as {x, y} or x, y; colours as {r, g, b[, a]} 0..1 or "#rrggbb[aa]"; enums by name; "script.<name>" a field of the node's script.
+---
+---Example: `self.node:set_property("wave", "Triangle")`
+---@param path OscillatorNodeProperty|string The property's path, as the Inspector names it, or "script.<field>"
+---@param value any The new value: a number, boolean, string or enum name; a vector as {x, y} (or x here and y next); a colour as {r, g, b[, a]} 0..1 or "#rrggbb[aa]"
+---@param y? number A vector's y when value is its x
+---@overload fun(self: OscillatorNode, path: "position", x: number|Vec2|number[], y?: number)
+---@overload fun(self: OscillatorNode, path: "scale", x: number|Vec2|number[], y?: number)
+---@overload fun(self: OscillatorNode, path: "rotation", value: number)
+---@overload fun(self: OscillatorNode, path: "layer", value: "Layer1"|"Layer2"|"Layer3"|"Layer4"|"Layer5"|"Layer6"|"Layer7"|"Layer8")
+---@overload fun(self: OscillatorNode, path: "zIndex", value: integer)
+---@overload fun(self: OscillatorNode, path: "ySort", value: boolean)
+---@overload fun(self: OscillatorNode, path: "ySortOffset", value: number)
+---@overload fun(self: OscillatorNode, path: "pauseMode", value: "Inherit"|"Pausable"|"Always")
+---@overload fun(self: OscillatorNode, path: "paused", value: boolean)
+---@overload fun(self: OscillatorNode, path: "enabled", value: boolean)
+---@overload fun(self: OscillatorNode, path: "wave", value: "Sine"|"Triangle"|"Square"|"Saw"|"Reverse_Saw"|"Random"|"Smooth_Noise"|"Curve")
+---@overload fun(self: OscillatorNode, path: "rateUnit", value: "Hertz"|"Seconds")
+---@overload fun(self: OscillatorNode, path: "rate", value: number)
+---@overload fun(self: OscillatorNode, path: "pulseWidth", value: number)
+---@overload fun(self: OscillatorNode, path: "seed", value: integer)
+---@overload fun(self: OscillatorNode, path: "autostart", value: boolean)
+---@overload fun(self: OscillatorNode, path: "loops", value: integer)
+function OscillatorNode:set_property(path, value, y) end
 
 ---@class SkeletonNode
 ---@field position Vec2 Position relative to the parent, in pixels (+y is down).
@@ -9242,6 +9341,49 @@ function ViewportNode:refresh() end
 ---@param path string A .png path (relative: in the save-data folder)
 ---@return boolean saved
 function ViewportNode:save_png(path) end
+
+---Starts the oscillator from the start of its cycle (again, when it's running). It remembers the targets' values first, so `oscillator_stop` can put them back.
+---
+---Example: `self.node:get_node("Bob"):oscillator_start()`
+function OscillatorNode:oscillator_start() end
+
+---Stops the oscillator: its targets go back to the values they had at Start and the phase rewinds.
+---
+---Example: `Scene.find_node("PlatformWave"):oscillator_stop()`
+function OscillatorNode:oscillator_stop() end
+
+---Pauses the oscillator: its targets stay where they are and the phase is kept for `oscillator_resume`.
+---
+---Example: `Scene.find_node("PlatformWave"):oscillator_pause()`
+function OscillatorNode:oscillator_pause() end
+
+---Carries a paused oscillator on from the phase it paused at.
+---
+---Example: `Scene.find_node("PlatformWave"):oscillator_resume()`
+function OscillatorNode:oscillator_resume() end
+
+---Whether the oscillator is "stopped", "running" or "paused", and how many cycles it has run since Start (the phase: 2.25 is a quarter into the third cycle).
+---
+---Example: `local state, cycles = osc:oscillator_state()`
+---@return string state
+---@return number cycles
+function OscillatorNode:oscillator_state() end
+
+---Adds a mapping: the oscillator drives `property` of the node at `target` (a path from the oscillator) between `min` and `max`. A property can be a number ("rotation"), a component ("position.x", "color.a") or a whole vector or colour ("scale", "color": give `min` and `max` as tables). Relative (added to the value at Start) unless `absolute` is true. Returns the mapping's number.
+---
+---Example: `osc:oscillator_add_mapping("../Platform", "position.y", -40, 40)`
+---@param target string A node path from the oscillator ("..": its parent)
+---@param property string A property, component ("position.x") or "shader:<param>"
+---@param min number|number[] The value at the wave's bottom
+---@param max number|number[] The value at the wave's top
+---@param absolute? boolean Set the property to the value (default: add it to the value at Start)
+---@return integer index
+function OscillatorNode:oscillator_add_mapping(target, property, min, max, absolute) end
+
+---Removes every mapping, putting their targets back as they were.
+---
+---Example: `osc:oscillator_clear_mappings()`
+function OscillatorNode:oscillator_clear_mappings() end
 
 ---Carves a circle out of the art (world position and radius): every shape keeps its paint, and a collider follows - destructible terrain, bites, bullet holes. The node draws its own carved copy until `vector_reset`.
 ---

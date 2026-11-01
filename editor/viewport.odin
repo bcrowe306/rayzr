@@ -188,6 +188,7 @@ Viewport_RenderOffscreen :: proc(state: ^EditorState) {
 			e.EventBus_Flush(&state.game.events) // Events.emit_deferred
 		} else if !state.isSimulating {
 			ParticlePreview_Tick(state, rl.GetFrameTime()) // emitters animate while editing
+			OscPreview_Tick(state, rl.GetFrameTime()) // an oscillator's Preview (oscillator_editor.odin)
 		}
 		if viewportLighting do lit = e.Lighting_Prepare(state.activeScene, cam, i32(state.viewportSize.x), i32(state.viewportSize.y))
 		e.TileCache_Prepare(state.activeScene, e.Camera2D_ViewRect(cam, state.viewportSize.x, state.viewportSize.y), ctx)
