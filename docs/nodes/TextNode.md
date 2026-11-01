@@ -28,10 +28,19 @@ show a translation, and can type itself out letter by letter.
 4. Set **Font Size** (pixels), **Color**, **Align** (Left, Center, Right),
    **Max Width** (wrap at this width; 0 wraps only at line breaks) and
    **Line Spacing** (times the font size).
-5. For text that scales or zooms, tick **Sdf** (with a `.ttf` / `.otf`
-   font): it stays sharp at any size.
-6. For a typewriter, set **Reveal Speed** (characters per second).
-7. For a translated text, tick **Localized** and type a key of the locale
+5. **Rendering** picks how the letters are drawn. *Auto* (the default)
+   keeps text sharp when it is scaled, rotated or zoomed and uses the
+   ordinary font at 1:1. *Sharp* always draws from the distance field;
+   *Bitmap* always uses the ordinary font (blurry or blocky when scaled, the
+   old look).
+6. To bend the text along a curve, add a [Path](PathNode.md) and set
+   **Path** to it (drag the Path node onto the field, or type `..` when the
+   text is the path's child). **Path Align** puts the text at the start,
+   middle or end of the path, **Path Offset** moves it along (animate it for
+   a marquee) and **Path Upright** turns letters over where the path runs
+   right to left so they don't read upside down.
+7. For a typewriter, set **Reveal Speed** (characters per second).
+8. For a translated text, tick **Localized** and type a key of the locale
    tables in **Text**.
 
 ## How it works
@@ -42,9 +51,20 @@ show a translation, and can type itself out letter by letter.
   same fraction when the text changes.
 - **Align** lines up the lines inside the block; it doesn't move the block.
 - Scale: the text scales by the node's X scale on both axes.
-- Fonts: a `.ttf` / `.otf` is drawn at the size asked; with **Sdf** it is
-  drawn from a distance field and stays sharp when scaled or zoomed. A `.fnt`
-  (BMFont) is used as drawn. Characters are basic Latin, Latin-1 and common
+- Fonts: a `.ttf` / `.otf` is drawn at the size asked. Sharp text is drawn
+  from a multi-channel signed distance field (MSDF) of the same font, so
+  corners stay crisp at any scale. Its letters are made the first time they
+  are drawn, a few per frame. A CFF-flavoured `.otf` (no `glyf` table)
+  falls back to a single-channel distance field, with slightly rounder
+  corners. A `.fnt` (BMFont) is always used as drawn.
+- Where sharp text is used: Text nodes, Dialogue Boxes, subtitles, the touch
+  controls' labels and UI widgets drawn at a UI scale other than 1. Lua has
+  no call that draws text directly; use a Text node.
+- Text on a path: each letter sits on the path at its distance along it,
+  turned to the path's direction; the text's own position, rotation and
+  **Align** don't apply, its scale and **Font Size** do. A closed path wraps
+  the text around. Renaming or moving the Path node in the editor keeps the
+  link. Characters are basic Latin, Latin-1 and common
   punctuation (quotes, dashes, the euro sign).
 - Rich text tags: `[color=...]` takes a name (white, black, red, green,
   blue, yellow, orange, purple, gray) or `#rrggbb` / `#rrggbbaa`;

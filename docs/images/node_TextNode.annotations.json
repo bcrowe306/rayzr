@@ -3,6 +3,6 @@
   "height": 720,
   "callouts": [
     {"label": "Rich text: [color=..] and [wave] tags", "x": 596, "y": 248, "w": 56, "h": 56},
-    {"label": "Text, font size, colour, alignment, wrapping, rich text, SDF, typewriter", "x": 1044, "y": 399, "w": 236, "h": 293}
+    {"label": "Text, font size, colour, alignment, wrapping, rich text, rendering, text on a path, typewriter", "x": 1044, "y": 399, "w": 236, "h": 293}
   ]
 }

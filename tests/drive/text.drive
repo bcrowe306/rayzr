@@ -22,6 +22,33 @@ key ctrl+a
 type 48
 key enter
 screenshot text_node
+# #270: Rendering (Auto / Sharp / Bitmap), and text along a Path that's
+# renamed (the link follows).
+click @insp.prop:rendering
+click @pick:Sharp
+expect node:Text.prop.rendering == Sharp
+key escape
+key ctrl+a
+type path
+click @addnode:Path
+click @addnode.create
+expect node:Path.type == PathNode
+click @hier:Text
+click @insp.prop:path
+key cmd+a
+type ../Path
+key enter
+expect node:Text.prop.path == ../Path
+screenshot text_on_path
+click @hier:Path
+dblclick @insp.name
+key ctrl+a
+type Curve
+key enter
+wait 3
+expect refs-pending == 1
+click @refs.update
+expect node:Text.prop.path == ../Curve
 key escape
 key ctrl+a
 key ctrl+a
@@ -32,3 +59,5 @@ click @toolbar.save
 expect file:scenes/main.scene.json contains "type": "TextNode"
 expect file:scenes/main.scene.json contains "font": "fonts/OpenSans-Regular.ttf"
 expect file:scenes/main.scene.json contains "type": "DialogueNode"
+expect file:scenes/main.scene.json contains "rendering": "Sharp"
+expect file:scenes/main.scene.json contains "path": "../Curve"

@@ -212,7 +212,7 @@ TouchButtonNode_Render :: proc(node: ^Node, ctx: ^GameContext, dt: f32) {
 		f := Text_GetFont("", b.fontSize * s, false, ctx)
 		measure :: proc(r: rune, size: f32, data: rawptr) -> f32 {return Text_MeasureRune(cast(^Text_Font)data, r, size)}
 		g, size := Text_Layout(b.label, {b.textColor, b.fontSize * s, {}}, 0, 0, 1, false, measure, f)
-		Text_DrawGlyphs(f, g, b.globalPosition - size * 0.5, 0, 1, -1, 0)
+		Text_DrawGlyphs(f, g, b.globalPosition - size * 0.5, 0, 1, -1, 0, ctx = ctx)
 	}
 }
 

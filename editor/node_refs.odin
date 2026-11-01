@@ -35,6 +35,7 @@ Ref_Scene_Kind :: enum {
 	StateMachineChild,
 	NavMap,
 	DialogueLipSync,
+	TextPath,        // a Text node's Path (#270)
 	LipSyncMouth,
 	ScriptProp,
 }
@@ -266,6 +267,20 @@ NodeRefs_Capture :: proc(state: ^EditorState) -> (snap: Ref_Snapshot) {
 						target = target,
 						oldPath = strings.clone(nav.navMap, context.temp_allocator),
 						label = "Navigation Map",
+					})
+				}
+			}
+
+		case e.TextNode:
+			tn := cast(^e.TextNode)n
+			if tn.path != "" {
+				if target := e.Node_ResolvePath(mgr, tn, tn.path); target != nil {
+					append(&snap.sceneItems, Ref_Scene_Item{
+						kind = .TextPath,
+						owner = n,
+						target = target,
+						oldPath = strings.clone(tn.path, context.temp_allocator),
+						label = "Text Path",
 					})
 				}
 			}
@@ -611,6 +626,10 @@ apply_scene_edits :: proc(state: ^EditorState) -> int {
 		case .DialogueLipSync:
 			d := cast(^e.DialogueNode)s.owner
 			d.lipSync = strings.clone(s.newPath, d.allocator)
+			count += 1
+		case .TextPath:
+			tn := cast(^e.TextNode)s.owner
+			tn.path = strings.clone(s.newPath, tn.allocator)
 			count += 1
 		case .LipSyncMouth:
 			l := cast(^e.LipSyncNode)s.owner

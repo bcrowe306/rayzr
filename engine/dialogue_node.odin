@@ -331,12 +331,12 @@ DialogueNode_Render :: proc(node: ^Node, ctx: ^GameContext, dt: f32) {
 	y := rect.y + d.padding
 	if speaker != "" {
 		sg, ss := Text_Layout(speaker, {d.speakerColor, d.fontSize * 0.9, {}}, 0, 0, 1, false, measure, f)
-		Text_DrawGlyphs(f, sg, {rect.x + d.padding, y}, 0, 1, -1, d.time)
+		Text_DrawGlyphs(f, sg, {rect.x + d.padding, y}, 0, 1, -1, d.time, ctx = ctx)
 		y += ss.y + d.fontSize * 0.35
 	}
 	glyphs, _ := Text_Layout(text, {d.textColor, d.fontSize, {}}, rect.width - 2 * d.padding, 0, 1.25, true, measure, f)
 	reveal := -1 if d.lineDone else int(d.revealed)
-	Text_DrawGlyphs(f, glyphs, {rect.x + d.padding, y}, 0, 1, reveal, d.time)
+	Text_DrawGlyphs(f, glyphs, {rect.x + d.padding, y}, 0, 1, reveal, d.time, ctx = ctx)
 	if d.lineDone && DialogueNode_HasChoices(d) {
 		for c, i in d.lines[d.current].choices {
 			r := DialogueNode_ChoiceRect(d, i)
@@ -345,7 +345,7 @@ DialogueNode_Render :: proc(node: ^Node, ctx: ^GameContext, dt: f32) {
 			rl.DrawRectangleRoundedLinesEx(r, 0.25, 8, 2, d.borderColor)
 			label := Locale_Get(ctx.game, c) if d.localized && ctx != nil && ctx.game != nil else c
 			cg, cs := Text_Layout(label, {d.textColor, d.fontSize, {}}, r.width - d.padding, 0, 1, false, measure, f)
-			Text_DrawGlyphs(f, cg, {r.x + (r.width - cs.x) / 2, r.y + (r.height - cs.y) / 2}, 0, 1, -1, d.time)
+			Text_DrawGlyphs(f, cg, {r.x + (r.width - cs.x) / 2, r.y + (r.height - cs.y) / 2}, 0, 1, -1, d.time, ctx = ctx)
 		}
 	} else if d.lineDone {
 		// "More" marker, bobbing.

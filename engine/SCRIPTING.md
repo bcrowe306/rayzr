@@ -831,8 +831,9 @@ Inspector too.
 #### Text, dialogue and localization
 
 **TextNode** draws text in the world: a project font (`.ttf` / `.otf` at
-any size, **SDF** to stay sharp when scaled, or a `.fnt` BMFont), wrapping
-(**Max Width**), alignment, **Rich Text** markup, a **Localized** key and a
+any size, or a `.fnt` BMFont), **Rendering** (Auto stays sharp when scaled,
+rotated or zoomed), text along a **Path** node, wrapping (**Max Width**),
+alignment, **Rich Text** markup, a **Localized** key and a
 typewriter (**Reveal Speed** characters per second; event `revealed`).
 
 ```text

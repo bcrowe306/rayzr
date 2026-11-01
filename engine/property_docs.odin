@@ -168,7 +168,11 @@ PROPERTY_DOCS := [?]Property_Doc_Entry {
 	{"TextNode.lineSpacing", "Line height as a multiple of the font size."},
 	{"TextNode.richText", "Interpret [color=..] [size=..] [wave] [shake] tags."},
 	{"TextNode.localized", "The text is a key in the locale tables; shows the current language's translation."},
-	{"TextNode.sdf", "Signed-distance-field rendering: stays sharp when scaled or zoomed (vector fonts)."},
+	{"TextNode.path", "A Path node the text runs along, as a path from this node (\"..\" when the text is the path's child, \"../Road\"); empty: a straight line. Each letter follows the curve; the text's own rotation is ignored."},
+	{"TextNode.pathOffset", "How far along the path the text starts (px), from where Path Align puts it. Animate it for a marquee; a closed path wraps around."},
+	{"TextNode.pathAlign", "Left: from the path's start; Center: in its middle; Right: ending at its end (then moved by Path Offset)."},
+	{"TextNode.pathUpright", "Letters never turn more than 90 degrees, so they stay readable where the path runs right to left or loops."},
+	{"TextNode.rendering", "Auto: crisp bitmap text at 1:1, and sharp at any size from the font's distance field when scaled, rotated or zoomed (a camera, the UI scale). Sharp: always from the distance field. Bitmap: always the bitmap (pixel-perfect; blurs when scaled)."},
 	{"TextNode.revealSpeed", "Typewriter: characters per second (0 = all at once); emits \"revealed\" when done."},
 
 	// --- Game / input (project settings) ---

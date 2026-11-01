@@ -1,0 +1,1 @@
+{"name": "Text MSDF", "initial_scene": "scenes/main.scene.json", "window": {"title": "t", "width": 960, "height": 540, "virtual_width": 960, "virtual_height": 540}, "physics": {"gravity": [0, 0], "debug_draw": false}, "scenes": ["scenes/main.scene.json", "scenes/path.scene.json"]}
