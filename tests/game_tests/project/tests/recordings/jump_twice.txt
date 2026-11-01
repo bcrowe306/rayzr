@@ -1,0 +1,8 @@
+# Recorded in Play (Test.replay plays it back)
+# scene scenes/main.scene.json
+5 SPACE down
+7 SPACE up
+20 SPACE down
+21 SPACE up
+25 D down
+35 D up

@@ -1,0 +1,31 @@
+# Tests for game code (#284): the Tests tab lists tests/*_test.lua's
+# test_ functions, Run All plays them in the runner, results and failures
+# show (a failure's line opens in the Code tab).
+# drive: copy tests/drive/fixtures/game_tests/tests tests
+wait 5
+click @bottom:tests
+wait 3
+# (a taller bottom panel: the splitter above its tabs, dragged up)
+drag 640,592 640,330
+wait 3
+expect item:tests.row:test_ship_is_there == visible
+expect item:tests.row:test_fails_on_purpose == visible
+click @tests.run-all
+wait-until log contains Tests: 1 passed, 1 failed timeout=1800
+wait 3
+expect item:tests.failure:test_fails_on_purpose:0 == visible
+screenshot tests_panel_results
+dblclick @tests.failure:test_fails_on_purpose:0
+wait 5
+expect code.file == tests/demo_test.lua
+# Record in Play: the input saved to tests/recordings/ (Test.replay).
+click @toolbar.play
+wait-until game == running timeout=600
+wait-until remote-connected == true timeout=600
+click @toolbar.record
+wait 30
+click @toolbar.record
+wait-until log contains Recorded timeout=300
+expect file:tests/recordings/recording_1.txt contains # scene scenes/main.scene.json
+click @toolbar.stop
+wait 10

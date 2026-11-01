@@ -11918,6 +11918,165 @@ function ConsoleModule.execute(line) end
 Console = ConsoleModule
 
 
+---@class TestModule
+---Tests for your game (tests/*_test.lua, run from the editor's Tests tab).
+---Each `function test_<name>()` runs on its own, from the project's first
+---scene, with simulated input, a fixed 1/60 s step and the same random
+---seed; waiting is a call (`Test.step(30)`). Outside a test only
+---`is_running` and `frame` work.
+local TestModule = {}
+
+---Runs the game for some frames.
+---
+---Example: `Test.press("jump"); Test.step(20)`
+---@param frames? integer How many (default 1)
+function TestModule.step(frames) end
+
+---Runs the game until `condition()` is true, or `frames` have passed.
+---
+---Example: `Test.expect(Test.wait_until(function() return GameState.score > 0 end, 300), "scored")`
+---@param condition fun(): boolean Checked after every frame
+---@param frames? integer The most to wait (default 600)
+---@return boolean ok True when the condition came true in time
+function TestModule.wait_until(condition, frames) end
+
+---Goes to a scene; returns once it's up (its nodes ready).
+---
+---Example: `Test.load_scene("level2")`
+---@param scene string A scene name or file ("level2", "scenes/level2.scene.json")
+function TestModule.load_scene(scene) end
+
+---Presses an input action for a few frames, the way a player would (its
+---first key, mouse button or pad button). Doesn't wait: Test.step after.
+---
+---Example: `Test.press("jump"); Test.step(10)`
+---@param action InputAction|string An action name ("jump", a project action)
+---@param frames? integer How long it stays down (default 2)
+function TestModule.press(action, frames) end
+
+---Holds an action down until Test.release.
+---
+---Example: `Test.hold("move_right"); Test.step(60); Test.release("move_right")`
+---@param action InputAction|string An action name
+function TestModule.hold(action) end
+
+---Releases an action held with Test.hold.
+---
+---Example: `Test.release("move_right")`
+---@param action InputAction|string An action name
+function TestModule.release(action) end
+
+---Presses a key itself for a few frames (Input.is_key_pressed reads it).
+---
+---Example: `Test.press_key("ESCAPE"); Test.step(2)`
+---@param key KeyName|string A key name ("SPACE", "A", "F5")
+---@param frames? integer How long it stays down (default 2)
+function TestModule.press_key(key, frames) end
+
+---Holds a key down until Test.release_key.
+---
+---Example: `Test.hold_key("LEFT_SHIFT")`
+---@param key KeyName|string A key name
+function TestModule.hold_key(key) end
+
+---Releases a key held with Test.hold_key.
+---
+---Example: `Test.release_key("LEFT_SHIFT")`
+---@param key KeyName|string A key name
+function TestModule.release_key(key) end
+
+---Clicks the left mouse button at a point, in game units (UI buttons,
+---Input's mouse). Doesn't wait: Test.step after.
+---
+---Example: `Test.click(640, 360); Test.step(2)`
+---@param x number|Vec2 X, or a point
+---@param y? number Y
+function TestModule.click(x, y) end
+
+---Moves the mouse to a point, in game units.
+---
+---Example: `Test.move_mouse(100, 200)`
+---@param x number|Vec2 X, or a point
+---@param y? number Y
+function TestModule.move_mouse(x, y) end
+
+---Plays back a recording made in Play with the toolbar's Record button
+---(tests/recordings/<name>.txt): its scene loads first, then its input,
+---frame by frame. Returns once it has played.
+---
+---Example: `Test.replay("recording_1"); Test.expect_eq(GameState.coins, 3, "coins picked up")`
+---@param name string A recording's name (or a project-relative .txt path)
+function TestModule.replay(name) end
+
+---Checks a condition: a failure (with this line) if false; the test goes on.
+---
+---Example: `Test.expect(player:get_global_position().y < 300, "the player jumped")`
+---@param condition any False / nil fails
+---@param message? string What was expected
+---@return boolean ok
+function TestModule.expect(condition, message) end
+
+---Checks two values are equal (==); the failure shows both.
+---
+---Example: `Test.expect_eq(GameState.lives, 3, "lives at the start")`
+---@param actual any The value the game has
+---@param expected any The value it should be
+---@param message? string What was expected
+---@return boolean ok
+function TestModule.expect_eq(actual, expected, message) end
+
+---Checks two numbers are close (positions, timers).
+---
+---Example: `Test.expect_near(x, 120, 0.5, "moved 120 px")`
+---@param actual number The number the game has
+---@param expected number The number it should be near
+---@param tolerance? number Default 0.001
+---@param message? string What was expected
+---@return boolean ok
+function TestModule.expect_near(actual, expected, tolerance, message) end
+
+---Like expect, but a failure stops the test (nothing after it makes sense).
+---
+---Example: `local p = Scene.find_node("Player"); Test.require(p ~= nil, "a player")`
+---@param condition any False / nil fails and stops
+---@param message? string What was required
+function TestModule.require(condition, message) end
+
+---Fails and stops the test.
+---
+---Example: `if not door then Test.fail("no door in the level") end`
+---@param message? string Why
+function TestModule.fail(message) end
+
+---Stops the test, counted as skipped (not failed).
+---
+---Example: `if not Project.has_file("levels/bonus.ldtk") then Test.skip("no bonus level") end`
+---@param reason? string Why
+function TestModule.skip(reason) end
+
+---Frames since this test started.
+---
+---Example: `Test.expect(Test.frame() < 120, "done within 2 seconds")`
+---@return integer frames
+function TestModule.frame() end
+
+---Changes this test's time limit (default 3600 frames: a minute of game time).
+---
+---Example: `Test.timeout(60 * 300) -- a long level`
+---@param frames integer Frames from now
+function TestModule.timeout(frames) end
+
+---Whether a test is running: game scripts can skip intros, splash screens
+---or music while tested.
+---
+---Example: `if Test.is_running() then self:skip_intro() end`
+---@return boolean running
+function TestModule.is_running() end
+
+---@type TestModule
+Test = TestModule
+
+
 ---@class ProjectModule
 ---Engine project management, data-driven scene serialization, and .rayzr package access.
 local ProjectModule = {}
