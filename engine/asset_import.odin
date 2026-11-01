@@ -53,6 +53,8 @@ Asset_Import :: struct {
 	slice:    Asset_Slice,
 	atlas:    bool,
 	compress: Texture_Compress,
+	normalMap: string, // its normal map (#274): "" = <image>_n.png if there is one, "none" = off, else a project path
+	normalGreenDown: bool, // the normal map's green points down (DirectX style)
 	// Audio.
 	gainDb:   f32,
 	bus:      string,
@@ -178,6 +180,8 @@ Asset_ImportParse :: proc(text: string, e: ^Asset_Import, allocator := context.a
 	}
 	if b, isBool := o["atlas"].(json.Boolean); isBool do e.atlas = bool(b)
 	if c, isStr := o["compress"].(json.String); isStr do e.compress = .QOI if c == "qoi" else .Keep
+	if nm, isStr := o["normal_map"].(json.String); isStr do e.normalMap = strings.clone(nm, allocator)
+	if gd, isBool := o["normal_green_down"].(json.Boolean); isBool do e.normalGreenDown = bool(gd)
 	if g, ok := num(o, "gain_db"); ok do e.gainDb = clamp(f32(g), -60, 24)
 	if b, isStr := o["bus"].(json.String); isStr do e.bus = strings.clone(b, allocator)
 	if s, ok := num(o, "vector_scale"); ok && s > 0 do e.vectorScale = clamp(f32(s), 0.001, 1000)
@@ -194,7 +198,7 @@ Asset_ImportParse :: proc(text: string, e: ^Asset_Import, allocator := context.a
 
 // Asset_ImportIsDefault: nothing worth a file.
 Asset_ImportIsDefault :: proc(e: Asset_Import) -> bool {
-	return e.filter == .Point && e.wrap == .Repeat && !e.mipmaps && e.slice == {} && !e.atlas && e.compress == .Keep && e.gainDb == 0 && e.bus == "" && (e.vectorScale == 0 || e.vectorScale == 1) && !e.hasOrigin
+	return e.filter == .Point && e.wrap == .Repeat && !e.mipmaps && e.slice == {} && !e.atlas && e.compress == .Keep && e.gainDb == 0 && e.bus == "" && (e.vectorScale == 0 || e.vectorScale == 1) && !e.hasOrigin && e.normalMap == "" && !e.normalGreenDown
 }
 
 // Asset_ImportToJSON: a settings file's text (only what differs from the
@@ -223,6 +227,8 @@ Asset_ImportToJSON :: proc(e: Asset_Import, allocator := context.allocator) -> s
 	if e.bus != "" {sep(&sb, &n); fmt.sbprintf(&sb, "\"bus\": %q", e.bus)}
 	if e.vectorScale != 0 && e.vectorScale != 1 {sep(&sb, &n); fmt.sbprintf(&sb, "\"vector_scale\": %g", e.vectorScale)}
 	if e.hasOrigin {sep(&sb, &n); fmt.sbprintf(&sb, "\"origin\": [%g, %g]", e.origin.x, e.origin.y)}
+	if e.normalMap != "" {sep(&sb, &n); fmt.sbprintf(&sb, "\"normal_map\": %q", e.normalMap)}
+	if e.normalGreenDown {sep(&sb, &n); strings.write_string(&sb, "\"normal_green_down\": true")}
 	strings.write_string(&sb, "\n}\n" if n > 0 else "}\n")
 	return strings.to_string(sb)
 }

@@ -262,13 +262,25 @@ PROPERTY_DOCS := [?]Property_Doc_Entry {
 	{"TileMapNode.cellSize", "The grid's cell in pixels (0 = the tile size). Tiles taller than their cell - walls, blocks - stand on it: bottom-aligned, centred across."},
 
 	// --- Lighting ---
-	{"LightNode.kind", "Point: shines all round. Spot: a cone along the node's rotation."},
+	{"LightNode.kind", "Point: shines all round. Spot: a cone along the node's rotation. Directional: the sun - one direction (the node's rotation) over everything, no radius."},
 	{"LightNode.color", "Colour of the light."},
 	{"LightNode.energy", "Brightness multiplier."},
 	{"LightNode.radius", "Reach of the light (px)."},
 	{"LightNode.falloff", "Fade towards the edge: 1 linear, 2 smooth, higher = tighter."},
 	{"LightNode.spread", "Spot: half-angle of the cone (degrees)."},
 	{"LightNode.shadows", "Cast shadows from the scene's physics shapes (bodies, LDtk and tile map colliders; not sensors)."},
+	{"LightNode.height", "How high above the ground it is (px). On normal-mapped art a low light rakes across the bumps, a high one lights them evenly. No effect on art without normal maps."},
+	{"LightNode.shadowLength", "Directional: how far shadows reach from what casts them (px); 0: to the edge of the view."},
+	{"LightNode.elevation", "Directional: the sun's angle above the ground (degrees) - low for long, raking light, 90 for straight down."},
+	{"TextureNode.shininess", "Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image>_s.png specular map gives the glint per pixel too."},
+	{"AtlasSpriteNode.shininess", "Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image>_s.png specular map gives the glint per pixel too."},
+	{"AsepriteNode.shininess", "Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image>_s.png specular map gives the glint per pixel too."},
+	{"AnimationPlayerNode.shininess", "Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image>_s.png specular map gives the glint per pixel too."},
+	{"FrameAnimationNode.shininess", "Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image>_s.png specular map gives the glint per pixel too."},
+	{"NineSliceNode.shininess", "Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image>_s.png specular map gives the glint per pixel too."},
+	{"TileMapNode.shininess", "Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image>_s.png specular map gives the glint per pixel too."},
+	{"LdtkLevelNode.shininess", "Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image>_s.png specular map gives the glint per pixel too."},
+
 
 	// --- Audio ---
 	{"MusicNode.volume", "Volume (0-1), before the bus and master volumes."},

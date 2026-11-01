@@ -1,0 +1,5 @@
+{"name": "sun", "background": [40, 40, 50, 255], "ambient": [30, 30, 40, 255], "root": {"type": "Node", "name": "root", "children": [
+ {"type": "CameraNode", "name": "Camera", "position": [320, 180], "properties": {"isCurrent": true}},
+ {"type": "TextureNode", "name": "Ball", "position": [200, 180], "scale": [2, 2], "texture": "textures/ball.png"}, {"type": "TextureNode", "name": "Plain", "position": [440, 180], "scale": [2, 2], "texture": "textures/plain.png", "properties": {"shininess": 0.8}},
+ {"type": "LightNode", "name": "Sun", "position": [0, 0], "rotation": 0, "properties": {"kind": "Directional", "color": "#fff2d0ff", "energy": 1, "elevation": 30, "shadows": false}}
+]}}

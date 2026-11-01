@@ -5,6 +5,7 @@ import "core:log"
 
 FrameAnimationNode :: struct {
 	using node: Node,
+	shininess: f32 `gui:"true" min:"0" max:"1"`, // lit: a glint from lights (#274; its image's _s.png too)
 	ticker: Ticker,
 	start: u32,
 	end: u32,

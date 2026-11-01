@@ -1,0 +1,5 @@
+{"name": "point", "background": [40, 40, 50, 255], "ambient": [40, 40, 50, 255], "root": {"type": "Node", "name": "root", "children": [
+ {"type": "CameraNode", "name": "Camera", "position": [320, 180], "properties": {"isCurrent": true}},
+ {"type": "TextureNode", "name": "Ball", "position": [160, 180], "scale": [2, 2], "texture": "textures/ball.png"}, {"type": "TextureNode", "name": "Plain", "position": [320, 180], "scale": [2, 2], "texture": "textures/plain.png"}, {"type": "TextureNode", "name": "Shiny", "position": [480, 180], "scale": [2, 2], "texture": "textures/shiny.png", "properties": {"shininess": 0}},
+ {"type": "LightNode", "name": "Light", "position": [320, 60], "properties": {"kind": "Point", "color": "#ffffffff", "energy": 1.4, "radius": 420, "falloff": 1, "height": 40, "shadows": false}}
+]}}

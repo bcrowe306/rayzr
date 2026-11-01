@@ -98,6 +98,7 @@ Ldtk_Link :: struct {
 
 LdtkLevelNode :: struct {
 	using node:          Node,
+	shininess: f32 `gui:"true" min:"0" max:"1"`, // lit: a glint from lights (#274; its image's _s.png too)
 	scene:               ^Scene,
 	project:             ^LdtkProject,
 	level:               ^LdtkLevel,  // current level (the focus in world mode)
@@ -994,7 +995,7 @@ ldtk_draw_tiles :: proc(tiles: []LdtkTileInstance, ts: ^LdtkTilesetDef, origin, 
 		}
 		if t.flipX do src.width = -src.width
 		if t.flipY do src.height = -src.height
-		rl.DrawTexturePro(tex, src, dest, {0, 0}, 0, rl.ColorAlpha(tint, opacity * t.alpha))
+		Lit_Draw(tex, src, dest, {0, 0}, 0, rl.ColorAlpha(tint, opacity * t.alpha))
 	}
 }
 
@@ -1043,7 +1044,7 @@ ldtk_build_chunk :: proc(data: rawptr, key: Tile_Chunk_Key) {
 			src := rl.Rectangle{t.src.x, t.src.y, t.size.x, t.size.y}
 			if t.flipX do src.width = -src.width
 			if t.flipY do src.height = -src.height
-			rl.DrawTexturePro(b.ts.texture, src, {r.x - area.x, r.y - area.y, r.width, r.height}, {0, 0}, 0, rl.ColorAlpha(rl.WHITE, t.alpha))
+			Lit_Draw(b.ts.texture, src, {r.x - area.x, r.y - area.y, r.width, r.height}, {0, 0}, 0, rl.ColorAlpha(rl.WHITE, t.alpha))
 		}
 	}
 }
@@ -1131,7 +1132,7 @@ LdtkLevelNode_Render :: proc(node: ^Node, ctx: ^GameContext, dt: f32) {
 		if ln.drawBackground && lvl.bgLoaded && lvl.bgPos.has {
 			bp := lvl.bgPos
 			dest := rl.Rectangle{base.x + bp.topLeft.x * scale.x, base.y + bp.topLeft.y * scale.y, bp.crop.width * bp.scale.x * scale.x, bp.crop.height * bp.scale.y * scale.y}
-			rl.DrawTexturePro(lvl.bgTexture, bp.crop, dest, {0, 0}, 0, ln.tintColor)
+			Lit_Draw(lvl.bgTexture, bp.crop, dest, {0, 0}, 0, ln.tintColor)
 		}
 		camLevel := (cam - base) / [2]f32{scale.x if scale.x != 0 else 1, scale.y if scale.y != 0 else 1}
 
@@ -1142,7 +1143,7 @@ LdtkLevelNode_Render :: proc(node: ^Node, ctx: ^GameContext, dt: f32) {
 			origin, layerScale := ldtk_layer_place(base, scale, layer, camLevel, hasCam)
 
 			if ts := ldtk_layer_tileset(ln, layer); ts != nil && ts.textureLoaded {
-				if ln.material == nil && TileCache_Enabled() && len(layer.autoLayerTiles) + len(layer.gridTiles) >= TILE_CACHE_MIN_TILES {
+				if ln.material == nil && TileCache_Enabled() && !renderNormalPass && len(layer.autoLayerTiles) + len(layer.gridTiles) >= TILE_CACHE_MIN_TILES {
 					ldtk_draw_layer_cached(ln, layer, ts, origin, layerScale)
 				} else {
 					ldtk_draw_tiles(layer.autoLayerTiles[:], ts, origin, layerScale, layer.opacity, ln.tintColor)
@@ -1181,7 +1182,7 @@ LdtkLevelNode_Render :: proc(node: ^Node, ctx: ^GameContext, dt: f32) {
 						src := ent.tile.rect
 						k := min(r.width / max(src.width, 1), r.height / max(src.height, 1))
 						w, h := src.width * k, src.height * k
-						rl.DrawTexturePro(ts.texture, src, {r.x + (r.width - w) * 0.5, r.y + (r.height - h) * 0.5, w, h}, {0, 0}, 0, ln.tintColor)
+						Lit_Draw(ts.texture, src, {r.x + (r.width - w) * 0.5, r.y + (r.height - h) * 0.5, w, h}, {0, 0}, 0, ln.tintColor)
 						drawn = true
 					}
 				}

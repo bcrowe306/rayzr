@@ -1483,6 +1483,7 @@ function LevelGeneratorNode:set_property(path, value, y) end
 ---@field pauseMode "Inherit"|"Pausable"|"Always" Inherit the parent's pausing, Pausable (stops when paused) or Always (keeps running, e....
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
+---@field shininess number Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---@field tint number[] Multiplies the texture's colours (white = unchanged; alpha fades it).
 
 ---@alias TextureNodeProperty
@@ -1497,11 +1498,12 @@ function LevelGeneratorNode:set_property(path, value, y) end
 ---| "pauseMode" # "Inherit"|"Pausable"|"Always" - Inherit the parent's pausing, Pausable (stops when paused) or Always (keeps running, e....
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
+---| "shininess" # number - Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---| "tint" # number[] - Multiplies the texture's colours (white = unchanged; alpha fades it).
 
 ---Reads an Inspector property by its path (vectors and colours as tables); "script.<name>" reads a field of the node's script.
 ---
----Example: `local value = self.node:get_property("tint")`
+---Example: `local value = self.node:get_property("shininess")`
 ---@param path TextureNodeProperty|string The property's path, as the Inspector names it ("position", "emitter.amount") or "script.<field>"
 ---@return any value Its value: a number, boolean, string or enum name; vectors and colours as tables (nil when there's no such property)
 ---@overload fun(self: TextureNode, path: "position"): Vec2
@@ -1515,12 +1517,13 @@ function LevelGeneratorNode:set_property(path, value, y) end
 ---@overload fun(self: TextureNode, path: "pauseMode"): "Inherit"|"Pausable"|"Always"
 ---@overload fun(self: TextureNode, path: "paused"): boolean
 ---@overload fun(self: TextureNode, path: "enabled"): boolean
+---@overload fun(self: TextureNode, path: "shininess"): number
 ---@overload fun(self: TextureNode, path: "tint"): number[]
 function TextureNode:get_property(path) end
 
 ---Sets an Inspector property by its path: vectors as {x, y} or x, y; colours as {r, g, b[, a]} 0..1 or "#rrggbb[aa]"; enums by name; "script.<name>" a field of the node's script.
 ---
----Example: `self.node:set_property("tint", "#ff8800")`
+---Example: `self.node:set_property("shininess", 1.5)`
 ---@param path TextureNodeProperty|string The property's path, as the Inspector names it, or "script.<field>"
 ---@param value any The new value: a number, boolean, string or enum name; a vector as {x, y} (or x here and y next); a colour as {r, g, b[, a]} 0..1 or "#rrggbb[aa]"
 ---@param y? number A vector's y when value is its x
@@ -1535,6 +1538,7 @@ function TextureNode:get_property(path) end
 ---@overload fun(self: TextureNode, path: "pauseMode", value: "Inherit"|"Pausable"|"Always")
 ---@overload fun(self: TextureNode, path: "paused", value: boolean)
 ---@overload fun(self: TextureNode, path: "enabled", value: boolean)
+---@overload fun(self: TextureNode, path: "shininess", value: number)
 ---@overload fun(self: TextureNode, path: "tint", value: number[])
 function TextureNode:set_property(path, value, y) end
 
@@ -1550,6 +1554,7 @@ function TextureNode:set_property(path, value, y) end
 ---@field pauseMode "Inherit"|"Pausable"|"Always" Inherit the parent's pausing, Pausable (stops when paused) or Always (keeps running, e....
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
+---@field shininess number Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---@field tint number[] Multiplies the texture's colours (white = unchanged; alpha fades it).
 
 ---@alias AtlasSpriteNodeProperty
@@ -1564,11 +1569,12 @@ function TextureNode:set_property(path, value, y) end
 ---| "pauseMode" # "Inherit"|"Pausable"|"Always" - Inherit the parent's pausing, Pausable (stops when paused) or Always (keeps running, e....
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
+---| "shininess" # number - Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---| "tint" # number[] - Multiplies the texture's colours (white = unchanged; alpha fades it).
 
 ---Reads an Inspector property by its path (vectors and colours as tables); "script.<name>" reads a field of the node's script.
 ---
----Example: `local value = self.node:get_property("tint")`
+---Example: `local value = self.node:get_property("shininess")`
 ---@param path AtlasSpriteNodeProperty|string The property's path, as the Inspector names it ("position", "emitter.amount") or "script.<field>"
 ---@return any value Its value: a number, boolean, string or enum name; vectors and colours as tables (nil when there's no such property)
 ---@overload fun(self: AtlasSpriteNode, path: "position"): Vec2
@@ -1582,12 +1588,13 @@ function TextureNode:set_property(path, value, y) end
 ---@overload fun(self: AtlasSpriteNode, path: "pauseMode"): "Inherit"|"Pausable"|"Always"
 ---@overload fun(self: AtlasSpriteNode, path: "paused"): boolean
 ---@overload fun(self: AtlasSpriteNode, path: "enabled"): boolean
+---@overload fun(self: AtlasSpriteNode, path: "shininess"): number
 ---@overload fun(self: AtlasSpriteNode, path: "tint"): number[]
 function AtlasSpriteNode:get_property(path) end
 
 ---Sets an Inspector property by its path: vectors as {x, y} or x, y; colours as {r, g, b[, a]} 0..1 or "#rrggbb[aa]"; enums by name; "script.<name>" a field of the node's script.
 ---
----Example: `self.node:set_property("tint", "#ff8800")`
+---Example: `self.node:set_property("shininess", 1.5)`
 ---@param path AtlasSpriteNodeProperty|string The property's path, as the Inspector names it, or "script.<field>"
 ---@param value any The new value: a number, boolean, string or enum name; a vector as {x, y} (or x here and y next); a colour as {r, g, b[, a]} 0..1 or "#rrggbb[aa]"
 ---@param y? number A vector's y when value is its x
@@ -1602,6 +1609,7 @@ function AtlasSpriteNode:get_property(path) end
 ---@overload fun(self: AtlasSpriteNode, path: "pauseMode", value: "Inherit"|"Pausable"|"Always")
 ---@overload fun(self: AtlasSpriteNode, path: "paused", value: boolean)
 ---@overload fun(self: AtlasSpriteNode, path: "enabled", value: boolean)
+---@overload fun(self: AtlasSpriteNode, path: "shininess", value: number)
 ---@overload fun(self: AtlasSpriteNode, path: "tint", value: number[])
 function AtlasSpriteNode:set_property(path, value, y) end
 
@@ -1617,6 +1625,7 @@ function AtlasSpriteNode:set_property(path, value, y) end
 ---@field pauseMode "Inherit"|"Pausable"|"Always" Inherit the parent's pausing, Pausable (stops when paused) or Always (keeps running, e....
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
+---@field shininess number Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 
 ---@alias FrameAnimationNodeProperty
 ---| "position" # Vec2 - Position relative to the parent, in pixels (+y is down).
@@ -1630,10 +1639,11 @@ function AtlasSpriteNode:set_property(path, value, y) end
 ---| "pauseMode" # "Inherit"|"Pausable"|"Always" - Inherit the parent's pausing, Pausable (stops when paused) or Always (keeps running, e....
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
+---| "shininess" # number - Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 
 ---Reads an Inspector property by its path (vectors and colours as tables); "script.<name>" reads a field of the node's script.
 ---
----Example: `local value = self.node:get_property("position")`
+---Example: `local value = self.node:get_property("shininess")`
 ---@param path FrameAnimationNodeProperty|string The property's path, as the Inspector names it ("position", "emitter.amount") or "script.<field>"
 ---@return any value Its value: a number, boolean, string or enum name; vectors and colours as tables (nil when there's no such property)
 ---@overload fun(self: FrameAnimationNode, path: "position"): Vec2
@@ -1647,11 +1657,12 @@ function AtlasSpriteNode:set_property(path, value, y) end
 ---@overload fun(self: FrameAnimationNode, path: "pauseMode"): "Inherit"|"Pausable"|"Always"
 ---@overload fun(self: FrameAnimationNode, path: "paused"): boolean
 ---@overload fun(self: FrameAnimationNode, path: "enabled"): boolean
+---@overload fun(self: FrameAnimationNode, path: "shininess"): number
 function FrameAnimationNode:get_property(path) end
 
 ---Sets an Inspector property by its path: vectors as {x, y} or x, y; colours as {r, g, b[, a]} 0..1 or "#rrggbb[aa]"; enums by name; "script.<name>" a field of the node's script.
 ---
----Example: `self.node:set_property("position", 100, 50)`
+---Example: `self.node:set_property("shininess", 1.5)`
 ---@param path FrameAnimationNodeProperty|string The property's path, as the Inspector names it, or "script.<field>"
 ---@param value any The new value: a number, boolean, string or enum name; a vector as {x, y} (or x here and y next); a colour as {r, g, b[, a]} 0..1 or "#rrggbb[aa]"
 ---@param y? number A vector's y when value is its x
@@ -1666,6 +1677,7 @@ function FrameAnimationNode:get_property(path) end
 ---@overload fun(self: FrameAnimationNode, path: "pauseMode", value: "Inherit"|"Pausable"|"Always")
 ---@overload fun(self: FrameAnimationNode, path: "paused", value: boolean)
 ---@overload fun(self: FrameAnimationNode, path: "enabled", value: boolean)
+---@overload fun(self: FrameAnimationNode, path: "shininess", value: number)
 function FrameAnimationNode:set_property(path, value, y) end
 
 ---@class AnimationPlayerNode
@@ -1680,6 +1692,7 @@ function FrameAnimationNode:set_property(path, value, y) end
 ---@field pauseMode "Inherit"|"Pausable"|"Always" Inherit the parent's pausing, Pausable (stops when paused) or Always (keeps running, e....
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
+---@field shininess number Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---@field reverse boolean Play the animation backwards.
 ---@field autoplay boolean Start playing the current animation when the node becomes ready.
 ---@field fps number Frames per second of the animations that don't set their own (the Animation tab's FPS b...
@@ -1697,6 +1710,7 @@ function FrameAnimationNode:set_property(path, value, y) end
 ---| "pauseMode" # "Inherit"|"Pausable"|"Always" - Inherit the parent's pausing, Pausable (stops when paused) or Always (keeps running, e....
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
+---| "shininess" # number - Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---| "reverse" # boolean - Play the animation backwards.
 ---| "autoplay" # boolean - Start playing the current animation when the node becomes ready.
 ---| "fps" # number - Frames per second of the animations that don't set their own (the Animation tab's FPS b...
@@ -1704,7 +1718,7 @@ function FrameAnimationNode:set_property(path, value, y) end
 
 ---Reads an Inspector property by its path (vectors and colours as tables); "script.<name>" reads a field of the node's script.
 ---
----Example: `local value = self.node:get_property("reverse")`
+---Example: `local value = self.node:get_property("shininess")`
 ---@param path AnimationPlayerNodeProperty|string The property's path, as the Inspector names it ("position", "emitter.amount") or "script.<field>"
 ---@return any value Its value: a number, boolean, string or enum name; vectors and colours as tables (nil when there's no such property)
 ---@overload fun(self: AnimationPlayerNode, path: "position"): Vec2
@@ -1718,6 +1732,7 @@ function FrameAnimationNode:set_property(path, value, y) end
 ---@overload fun(self: AnimationPlayerNode, path: "pauseMode"): "Inherit"|"Pausable"|"Always"
 ---@overload fun(self: AnimationPlayerNode, path: "paused"): boolean
 ---@overload fun(self: AnimationPlayerNode, path: "enabled"): boolean
+---@overload fun(self: AnimationPlayerNode, path: "shininess"): number
 ---@overload fun(self: AnimationPlayerNode, path: "reverse"): boolean
 ---@overload fun(self: AnimationPlayerNode, path: "autoplay"): boolean
 ---@overload fun(self: AnimationPlayerNode, path: "fps"): number
@@ -1726,7 +1741,7 @@ function AnimationPlayerNode:get_property(path) end
 
 ---Sets an Inspector property by its path: vectors as {x, y} or x, y; colours as {r, g, b[, a]} 0..1 or "#rrggbb[aa]"; enums by name; "script.<name>" a field of the node's script.
 ---
----Example: `self.node:set_property("reverse", true)`
+---Example: `self.node:set_property("shininess", 1.5)`
 ---@param path AnimationPlayerNodeProperty|string The property's path, as the Inspector names it, or "script.<field>"
 ---@param value any The new value: a number, boolean, string or enum name; a vector as {x, y} (or x here and y next); a colour as {r, g, b[, a]} 0..1 or "#rrggbb[aa]"
 ---@param y? number A vector's y when value is its x
@@ -1741,6 +1756,7 @@ function AnimationPlayerNode:get_property(path) end
 ---@overload fun(self: AnimationPlayerNode, path: "pauseMode", value: "Inherit"|"Pausable"|"Always")
 ---@overload fun(self: AnimationPlayerNode, path: "paused", value: boolean)
 ---@overload fun(self: AnimationPlayerNode, path: "enabled", value: boolean)
+---@overload fun(self: AnimationPlayerNode, path: "shininess", value: number)
 ---@overload fun(self: AnimationPlayerNode, path: "reverse", value: boolean)
 ---@overload fun(self: AnimationPlayerNode, path: "autoplay", value: boolean)
 ---@overload fun(self: AnimationPlayerNode, path: "fps", value: number)
@@ -1759,6 +1775,7 @@ function AnimationPlayerNode:set_property(path, value, y) end
 ---@field pauseMode "Inherit"|"Pausable"|"Always" Inherit the parent's pausing, Pausable (stops when paused) or Always (keeps running, e....
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
+---@field shininess number Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---@field file string The Aseprite file (.aseprite / .ase, project-relative). Saving it in Aseprite updates t...
 ---@field animation string The tag played (its direction and repeat count as set in Aseprite); empty = every frame...
 ---@field autoplay boolean Start the animation when the node becomes ready.
@@ -1782,6 +1799,7 @@ function AnimationPlayerNode:set_property(path, value, y) end
 ---| "pauseMode" # "Inherit"|"Pausable"|"Always" - Inherit the parent's pausing, Pausable (stops when paused) or Always (keeps running, e....
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
+---| "shininess" # number - Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---| "file" # string - The Aseprite file (.aseprite / .ase, project-relative). Saving it in Aseprite updates t...
 ---| "animation" # string - The tag played (its direction and repeat count as set in Aseprite); empty = every frame...
 ---| "autoplay" # boolean - Start the animation when the node becomes ready.
@@ -1795,7 +1813,7 @@ function AnimationPlayerNode:set_property(path, value, y) end
 
 ---Reads an Inspector property by its path (vectors and colours as tables); "script.<name>" reads a field of the node's script.
 ---
----Example: `local value = self.node:get_property("file")`
+---Example: `local value = self.node:get_property("shininess")`
 ---@param path AsepriteNodeProperty|string The property's path, as the Inspector names it ("position", "emitter.amount") or "script.<field>"
 ---@return any value Its value: a number, boolean, string or enum name; vectors and colours as tables (nil when there's no such property)
 ---@overload fun(self: AsepriteNode, path: "position"): Vec2
@@ -1809,6 +1827,7 @@ function AnimationPlayerNode:set_property(path, value, y) end
 ---@overload fun(self: AsepriteNode, path: "pauseMode"): "Inherit"|"Pausable"|"Always"
 ---@overload fun(self: AsepriteNode, path: "paused"): boolean
 ---@overload fun(self: AsepriteNode, path: "enabled"): boolean
+---@overload fun(self: AsepriteNode, path: "shininess"): number
 ---@overload fun(self: AsepriteNode, path: "file"): string
 ---@overload fun(self: AsepriteNode, path: "animation"): string
 ---@overload fun(self: AsepriteNode, path: "autoplay"): boolean
@@ -1823,7 +1842,7 @@ function AsepriteNode:get_property(path) end
 
 ---Sets an Inspector property by its path: vectors as {x, y} or x, y; colours as {r, g, b[, a]} 0..1 or "#rrggbb[aa]"; enums by name; "script.<name>" a field of the node's script.
 ---
----Example: `self.node:set_property("file", "text")`
+---Example: `self.node:set_property("shininess", 1.5)`
 ---@param path AsepriteNodeProperty|string The property's path, as the Inspector names it, or "script.<field>"
 ---@param value any The new value: a number, boolean, string or enum name; a vector as {x, y} (or x here and y next); a colour as {r, g, b[, a]} 0..1 or "#rrggbb[aa]"
 ---@param y? number A vector's y when value is its x
@@ -1838,6 +1857,7 @@ function AsepriteNode:get_property(path) end
 ---@overload fun(self: AsepriteNode, path: "pauseMode", value: "Inherit"|"Pausable"|"Always")
 ---@overload fun(self: AsepriteNode, path: "paused", value: boolean)
 ---@overload fun(self: AsepriteNode, path: "enabled", value: boolean)
+---@overload fun(self: AsepriteNode, path: "shininess", value: number)
 ---@overload fun(self: AsepriteNode, path: "file", value: string)
 ---@overload fun(self: AsepriteNode, path: "animation", value: string)
 ---@overload fun(self: AsepriteNode, path: "autoplay", value: boolean)
@@ -3983,6 +4003,7 @@ function PathFollowNode:set_property(path, value, y) end
 ---@field pauseMode "Inherit"|"Pausable"|"Always" Inherit the parent's pausing, Pausable (stops when paused) or Always (keeps running, e....
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
+---@field shininess number Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---@field enablePhysics boolean Build colliders from IntGrid cells whose collision rule is Solid / One Way.
 ---@field spawnEntities boolean Spawn the level's entities (mapped to components) when ready.
 ---@field parallax boolean Apply the LDtk layers' parallax factors.
@@ -4004,6 +4025,7 @@ function PathFollowNode:set_property(path, value, y) end
 ---| "pauseMode" # "Inherit"|"Pausable"|"Always" - Inherit the parent's pausing, Pausable (stops when paused) or Always (keeps running, e....
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
+---| "shininess" # number - Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---| "enablePhysics" # boolean - Build colliders from IntGrid cells whose collision rule is Solid / One Way.
 ---| "spawnEntities" # boolean - Spawn the level's entities (mapped to components) when ready.
 ---| "parallax" # boolean - Apply the LDtk layers' parallax factors.
@@ -4016,7 +4038,7 @@ function PathFollowNode:set_property(path, value, y) end
 
 ---Reads an Inspector property by its path (vectors and colours as tables); "script.<name>" reads a field of the node's script.
 ---
----Example: `local value = self.node:get_property("enablePhysics")`
+---Example: `local value = self.node:get_property("shininess")`
 ---@param path LdtkLevelNodeProperty|string The property's path, as the Inspector names it ("position", "emitter.amount") or "script.<field>"
 ---@return any value Its value: a number, boolean, string or enum name; vectors and colours as tables (nil when there's no such property)
 ---@overload fun(self: LdtkLevelNode, path: "position"): Vec2
@@ -4029,6 +4051,7 @@ function PathFollowNode:set_property(path, value, y) end
 ---@overload fun(self: LdtkLevelNode, path: "pauseMode"): "Inherit"|"Pausable"|"Always"
 ---@overload fun(self: LdtkLevelNode, path: "paused"): boolean
 ---@overload fun(self: LdtkLevelNode, path: "enabled"): boolean
+---@overload fun(self: LdtkLevelNode, path: "shininess"): number
 ---@overload fun(self: LdtkLevelNode, path: "enablePhysics"): boolean
 ---@overload fun(self: LdtkLevelNode, path: "spawnEntities"): boolean
 ---@overload fun(self: LdtkLevelNode, path: "parallax"): boolean
@@ -4042,7 +4065,7 @@ function LdtkLevelNode:get_property(path) end
 
 ---Sets an Inspector property by its path: vectors as {x, y} or x, y; colours as {r, g, b[, a]} 0..1 or "#rrggbb[aa]"; enums by name; "script.<name>" a field of the node's script.
 ---
----Example: `self.node:set_property("enablePhysics", true)`
+---Example: `self.node:set_property("shininess", 1.5)`
 ---@param path LdtkLevelNodeProperty|string The property's path, as the Inspector names it, or "script.<field>"
 ---@param value any The new value: a number, boolean, string or enum name; a vector as {x, y} (or x here and y next); a colour as {r, g, b[, a]} 0..1 or "#rrggbb[aa]"
 ---@param y? number A vector's y when value is its x
@@ -4056,6 +4079,7 @@ function LdtkLevelNode:get_property(path) end
 ---@overload fun(self: LdtkLevelNode, path: "pauseMode", value: "Inherit"|"Pausable"|"Always")
 ---@overload fun(self: LdtkLevelNode, path: "paused", value: boolean)
 ---@overload fun(self: LdtkLevelNode, path: "enabled", value: boolean)
+---@overload fun(self: LdtkLevelNode, path: "shininess", value: number)
 ---@overload fun(self: LdtkLevelNode, path: "enablePhysics", value: boolean)
 ---@overload fun(self: LdtkLevelNode, path: "spawnEntities", value: boolean)
 ---@overload fun(self: LdtkLevelNode, path: "parallax", value: boolean)
@@ -4078,6 +4102,7 @@ function LdtkLevelNode:set_property(path, value, y) end
 ---@field pauseMode "Inherit"|"Pausable"|"Always" Inherit the parent's pausing, Pausable (stops when paused) or Always (keeps running, e....
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
+---@field shininess number Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---@field solid boolean Build static colliders for the painted tiles.
 ---@field tint number[] Multiplies the texture's colours (white = unchanged; alpha fades it).
 ---@field layout "Square"|"Isometric"|"Staggered"|"HexPointy"|"HexFlat" The cells' shape: Square; Isometric (diamonds on a grid turned 45 degrees); Staggered (...
@@ -4097,6 +4122,7 @@ function LdtkLevelNode:set_property(path, value, y) end
 ---| "pauseMode" # "Inherit"|"Pausable"|"Always" - Inherit the parent's pausing, Pausable (stops when paused) or Always (keeps running, e....
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
+---| "shininess" # number - Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---| "solid" # boolean - Build static colliders for the painted tiles.
 ---| "tint" # number[] - Multiplies the texture's colours (white = unchanged; alpha fades it).
 ---| "layout" # "Square"|"Isometric"|"Staggered"|"HexPointy"|"HexFlat" - The cells' shape: Square; Isometric (diamonds on a grid turned 45 degrees); Staggered (...
@@ -4107,7 +4133,7 @@ function LdtkLevelNode:set_property(path, value, y) end
 
 ---Reads an Inspector property by its path (vectors and colours as tables); "script.<name>" reads a field of the node's script.
 ---
----Example: `local value = self.node:get_property("solid")`
+---Example: `local value = self.node:get_property("shininess")`
 ---@param path TileMapNodeProperty|string The property's path, as the Inspector names it ("position", "emitter.amount") or "script.<field>"
 ---@return any value Its value: a number, boolean, string or enum name; vectors and colours as tables (nil when there's no such property)
 ---@overload fun(self: TileMapNode, path: "position"): Vec2
@@ -4120,6 +4146,7 @@ function LdtkLevelNode:set_property(path, value, y) end
 ---@overload fun(self: TileMapNode, path: "pauseMode"): "Inherit"|"Pausable"|"Always"
 ---@overload fun(self: TileMapNode, path: "paused"): boolean
 ---@overload fun(self: TileMapNode, path: "enabled"): boolean
+---@overload fun(self: TileMapNode, path: "shininess"): number
 ---@overload fun(self: TileMapNode, path: "solid"): boolean
 ---@overload fun(self: TileMapNode, path: "tint"): number[]
 ---@overload fun(self: TileMapNode, path: "layout"): "Square"|"Isometric"|"Staggered"|"HexPointy"|"HexFlat"
@@ -4131,7 +4158,7 @@ function TileMapNode:get_property(path) end
 
 ---Sets an Inspector property by its path: vectors as {x, y} or x, y; colours as {r, g, b[, a]} 0..1 or "#rrggbb[aa]"; enums by name; "script.<name>" a field of the node's script.
 ---
----Example: `self.node:set_property("solid", true)`
+---Example: `self.node:set_property("shininess", 1.5)`
 ---@param path TileMapNodeProperty|string The property's path, as the Inspector names it, or "script.<field>"
 ---@param value any The new value: a number, boolean, string or enum name; a vector as {x, y} (or x here and y next); a colour as {r, g, b[, a]} 0..1 or "#rrggbb[aa]"
 ---@param y? number A vector's y when value is its x
@@ -4145,6 +4172,7 @@ function TileMapNode:get_property(path) end
 ---@overload fun(self: TileMapNode, path: "pauseMode", value: "Inherit"|"Pausable"|"Always")
 ---@overload fun(self: TileMapNode, path: "paused", value: boolean)
 ---@overload fun(self: TileMapNode, path: "enabled", value: boolean)
+---@overload fun(self: TileMapNode, path: "shininess", value: number)
 ---@overload fun(self: TileMapNode, path: "solid", value: boolean)
 ---@overload fun(self: TileMapNode, path: "tint", value: number[])
 ---@overload fun(self: TileMapNode, path: "layout", value: "Square"|"Isometric"|"Staggered"|"HexPointy"|"HexFlat")
@@ -4165,13 +4193,16 @@ function TileMapNode:set_property(path, value, y) end
 ---@field pauseMode "Inherit"|"Pausable"|"Always" Inherit the parent's pausing, Pausable (stops when paused) or Always (keeps running, e....
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
----@field kind "Point"|"Spot" Point: shines all round. Spot: a cone along the node's rotation.
+---@field kind "Point"|"Spot"|"Directional" Point: shines all round. Spot: a cone along the node's rotation. Directional: the sun -...
 ---@field color number[] Colour of the light.
 ---@field energy number Brightness multiplier.
 ---@field radius number Reach of the light (px).
 ---@field falloff number Fade towards the edge: 1 linear, 2 smooth, higher = tighter.
 ---@field spread number Spot: half-angle of the cone (degrees).
 ---@field shadows boolean Cast shadows from the scene's physics shapes (bodies, LDtk and tile map colliders; not ...
+---@field height number How high above the ground it is (px). On normal-mapped art a low light rakes across the...
+---@field elevation number Directional: the sun's angle above the ground (degrees) - low for long, raking light, 9...
+---@field shadowLength number Directional: how far shadows reach from what casts them (px); 0: to the edge of the view.
 
 ---@alias LightNodeProperty
 ---| "position" # Vec2 - Position relative to the parent, in pixels (+y is down).
@@ -4184,13 +4215,16 @@ function TileMapNode:set_property(path, value, y) end
 ---| "pauseMode" # "Inherit"|"Pausable"|"Always" - Inherit the parent's pausing, Pausable (stops when paused) or Always (keeps running, e....
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
----| "kind" # "Point"|"Spot" - Point: shines all round. Spot: a cone along the node's rotation.
+---| "kind" # "Point"|"Spot"|"Directional" - Point: shines all round. Spot: a cone along the node's rotation. Directional: the sun -...
 ---| "color" # number[] - Colour of the light.
 ---| "energy" # number - Brightness multiplier.
 ---| "radius" # number - Reach of the light (px).
 ---| "falloff" # number - Fade towards the edge: 1 linear, 2 smooth, higher = tighter.
 ---| "spread" # number - Spot: half-angle of the cone (degrees).
 ---| "shadows" # boolean - Cast shadows from the scene's physics shapes (bodies, LDtk and tile map colliders; not ...
+---| "height" # number - How high above the ground it is (px). On normal-mapped art a low light rakes across the...
+---| "elevation" # number - Directional: the sun's angle above the ground (degrees) - low for long, raking light, 9...
+---| "shadowLength" # number - Directional: how far shadows reach from what casts them (px); 0: to the edge of the view.
 
 ---Reads an Inspector property by its path (vectors and colours as tables); "script.<name>" reads a field of the node's script.
 ---
@@ -4207,13 +4241,16 @@ function TileMapNode:set_property(path, value, y) end
 ---@overload fun(self: LightNode, path: "pauseMode"): "Inherit"|"Pausable"|"Always"
 ---@overload fun(self: LightNode, path: "paused"): boolean
 ---@overload fun(self: LightNode, path: "enabled"): boolean
----@overload fun(self: LightNode, path: "kind"): "Point"|"Spot"
+---@overload fun(self: LightNode, path: "kind"): "Point"|"Spot"|"Directional"
 ---@overload fun(self: LightNode, path: "color"): number[]
 ---@overload fun(self: LightNode, path: "energy"): number
 ---@overload fun(self: LightNode, path: "radius"): number
 ---@overload fun(self: LightNode, path: "falloff"): number
 ---@overload fun(self: LightNode, path: "spread"): number
 ---@overload fun(self: LightNode, path: "shadows"): boolean
+---@overload fun(self: LightNode, path: "height"): number
+---@overload fun(self: LightNode, path: "elevation"): number
+---@overload fun(self: LightNode, path: "shadowLength"): number
 function LightNode:get_property(path) end
 
 ---Sets an Inspector property by its path: vectors as {x, y} or x, y; colours as {r, g, b[, a]} 0..1 or "#rrggbb[aa]"; enums by name; "script.<name>" a field of the node's script.
@@ -4232,13 +4269,16 @@ function LightNode:get_property(path) end
 ---@overload fun(self: LightNode, path: "pauseMode", value: "Inherit"|"Pausable"|"Always")
 ---@overload fun(self: LightNode, path: "paused", value: boolean)
 ---@overload fun(self: LightNode, path: "enabled", value: boolean)
----@overload fun(self: LightNode, path: "kind", value: "Point"|"Spot")
+---@overload fun(self: LightNode, path: "kind", value: "Point"|"Spot"|"Directional")
 ---@overload fun(self: LightNode, path: "color", value: number[])
 ---@overload fun(self: LightNode, path: "energy", value: number)
 ---@overload fun(self: LightNode, path: "radius", value: number)
 ---@overload fun(self: LightNode, path: "falloff", value: number)
 ---@overload fun(self: LightNode, path: "spread", value: number)
 ---@overload fun(self: LightNode, path: "shadows", value: boolean)
+---@overload fun(self: LightNode, path: "height", value: number)
+---@overload fun(self: LightNode, path: "elevation", value: number)
+---@overload fun(self: LightNode, path: "shadowLength", value: number)
 function LightNode:set_property(path, value, y) end
 
 ---@class JointNode
@@ -4862,6 +4902,7 @@ function LipSyncNode:set_property(path, value, y) end
 ---@field pauseMode "Inherit"|"Pausable"|"Always" Inherit the parent's pausing, Pausable (stops when paused) or Always (keeps running, e....
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
+---@field shininess number Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---@field texturePath string Texture to slice.
 ---@field size Vec2 Drawn size (px); the borders keep their size, the middle stretches.
 ---@field marginsLT Vec2 Left and top border widths (texture px).
@@ -4880,6 +4921,7 @@ function LipSyncNode:set_property(path, value, y) end
 ---| "pauseMode" # "Inherit"|"Pausable"|"Always" - Inherit the parent's pausing, Pausable (stops when paused) or Always (keeps running, e....
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
+---| "shininess" # number - Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---| "texturePath" # string - Texture to slice.
 ---| "size" # Vec2 - Drawn size (px); the borders keep their size, the middle stretches.
 ---| "marginsLT" # Vec2 - Left and top border widths (texture px).
@@ -4888,7 +4930,7 @@ function LipSyncNode:set_property(path, value, y) end
 
 ---Reads an Inspector property by its path (vectors and colours as tables); "script.<name>" reads a field of the node's script.
 ---
----Example: `local value = self.node:get_property("texturePath")`
+---Example: `local value = self.node:get_property("shininess")`
 ---@param path NineSliceNodeProperty|string The property's path, as the Inspector names it ("position", "emitter.amount") or "script.<field>"
 ---@return any value Its value: a number, boolean, string or enum name; vectors and colours as tables (nil when there's no such property)
 ---@overload fun(self: NineSliceNode, path: "position"): Vec2
@@ -4902,6 +4944,7 @@ function LipSyncNode:set_property(path, value, y) end
 ---@overload fun(self: NineSliceNode, path: "pauseMode"): "Inherit"|"Pausable"|"Always"
 ---@overload fun(self: NineSliceNode, path: "paused"): boolean
 ---@overload fun(self: NineSliceNode, path: "enabled"): boolean
+---@overload fun(self: NineSliceNode, path: "shininess"): number
 ---@overload fun(self: NineSliceNode, path: "texturePath"): string
 ---@overload fun(self: NineSliceNode, path: "size"): Vec2
 ---@overload fun(self: NineSliceNode, path: "marginsLT"): Vec2
@@ -4911,7 +4954,7 @@ function NineSliceNode:get_property(path) end
 
 ---Sets an Inspector property by its path: vectors as {x, y} or x, y; colours as {r, g, b[, a]} 0..1 or "#rrggbb[aa]"; enums by name; "script.<name>" a field of the node's script.
 ---
----Example: `self.node:set_property("texturePath", "text")`
+---Example: `self.node:set_property("shininess", 1.5)`
 ---@param path NineSliceNodeProperty|string The property's path, as the Inspector names it, or "script.<field>"
 ---@param value any The new value: a number, boolean, string or enum name; a vector as {x, y} (or x here and y next); a colour as {r, g, b[, a]} 0..1 or "#rrggbb[aa]"
 ---@param y? number A vector's y when value is its x
@@ -4926,6 +4969,7 @@ function NineSliceNode:get_property(path) end
 ---@overload fun(self: NineSliceNode, path: "pauseMode", value: "Inherit"|"Pausable"|"Always")
 ---@overload fun(self: NineSliceNode, path: "paused", value: boolean)
 ---@overload fun(self: NineSliceNode, path: "enabled", value: boolean)
+---@overload fun(self: NineSliceNode, path: "shininess", value: number)
 ---@overload fun(self: NineSliceNode, path: "texturePath", value: string)
 ---@overload fun(self: NineSliceNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: NineSliceNode, path: "marginsLT", x: number|Vec2|number[], y?: number)

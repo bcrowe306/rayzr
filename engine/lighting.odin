@@ -26,6 +26,7 @@ import rlgl "vendor:raylib/rlgl"
 Light_Kind :: enum {
 	Point,
 	Spot,
+	Directional, // the sun: one direction (its rotation) over everything, no radius
 }
 
 LightNode :: struct {
@@ -37,6 +38,9 @@ LightNode :: struct {
 	falloff: f32 `gui:"true" min:"0.1" max:"8"`,  // 1 linear, 2 smooth, higher = tighter
 	spread:  f32 `gui:"true" min:"1" max:"180"`,  // spot: half-angle of the cone (degrees)
 	shadows: bool `gui:"true"`,
+	height:    f32 `gui:"true" min:"0" max:"2000"`, // above the ground (px): low lights rake across normal maps, high ones light flat (#274)
+	elevation: f32 `gui:"true" min:"1" max:"90"`,   // Directional: the sun's angle above the ground (degrees)
+	shadowLength: f32 `gui:"true" min:"0" max:"4000"`, // Directional: how far shadows reach (px; 0 = no end)
 }
 
 LightNode_Create :: proc(scene: ^Scene, name: string = "Light", parent: ^Node = nil) -> ^LightNode {
@@ -48,6 +52,9 @@ LightNode_Create :: proc(scene: ^Scene, name: string = "Light", parent: ^Node = 
 	l.falloff = 2
 	l.spread = 35
 	l.shadows = true
+	l.height = 64
+	l.elevation = 45
+	l.shadowLength = 120
 	scene->addNode(l, parent)
 	return l
 }
@@ -59,17 +66,46 @@ in vec4 fragColor;
 out vec4 finalColor;
 uniform float falloff;
 uniform float spread;   // cos of the cone half-angle (-1 = point light)
+uniform float sun;      // 1: a directional light (sunDir), the quad covers the view
+uniform vec2 rot;       // the light's rotation (cos, sin)
+uniform float radius;
+uniform float height;
+uniform vec3 sunDir;    // towards the sun
+uniform float useNormals;
+uniform sampler2D normalMap; // the normal pass (normal_maps.odin): xy, specular, normal-mapped
+uniform vec2 screenSize;
 void main() {
-    vec2 d = fragTexCoord * 2.0 - 1.0;   // -1..1 across the light's square
-    float r = length(d);
-    if (r > 1.0) discard;
-    float a = pow(1.0 - r, falloff);
-    if (spread > -1.0) {
-        // The cone points along +x of the quad (rotated by the light).
-        float c = r > 0.0001 ? d.x / r : 1.0;
-        a *= smoothstep(spread, mix(spread, 1.0, 0.15), c);
+    float a = 1.0;
+    vec3 L = sunDir;
+    if (sun < 0.5) {
+        vec2 d = fragTexCoord * 2.0 - 1.0;   // -1..1 across the light's square
+        float r = length(d);
+        if (r > 1.0) discard;
+        a = pow(1.0 - r, falloff);
+        if (spread > -1.0) {
+            // The cone points along +x of the quad (rotated by the light).
+            float c = r > 0.0001 ? d.x / r : 1.0;
+            a *= smoothstep(spread, mix(spread, 1.0, 0.15), c);
+        }
+        vec2 w = vec2(rot.x * d.x - rot.y * d.y, rot.y * d.x + rot.x * d.y) * radius; // light -> pixel, world
+        L = normalize(vec3(-w, max(height, 0.001)));
     }
-    finalColor = vec4(fragColor.rgb * a * fragColor.a, 1.0);
+    float lit = 1.0;
+    float spec = 0.0;
+    if (useNormals > 0.5) {
+        vec4 nm = texture(normalMap, gl_FragCoord.xy / screenSize);
+        vec3 N = vec3(0.0, 0.0, 1.0);
+        if (nm.a > 0.5) {
+            vec2 nxy = nm.rg * 2.0 - 1.0;
+            N = vec3(nxy, sqrt(max(0.0, 1.0 - dot(nxy, nxy))));
+            lit = max(dot(N, L), 0.0);
+        }
+        if (nm.b > 0.004) {
+            vec3 H = normalize(L + vec3(0.0, 0.0, 1.0));
+            spec = nm.b * pow(max(dot(N, H), 0.0), 32.0) * 2.0;
+        }
+    }
+    finalColor = vec4(fragColor.rgb * a * fragColor.a * (lit + spec), 1.0);
 }
 `
 
@@ -79,7 +115,9 @@ lighting: struct {
 	shaderOk:   bool,
 	locFalloff: i32,
 	locSpread:  i32,
+	loc:        struct {sun, rot, radius, height, sunDir, useNormals, normalMap, screenSize: i32},
 	lightMap:   rl.RenderTexture2D,
+	normals:    rl.RenderTexture2D, // the normal pass (normal_maps.odin)
 	scratch:    rl.RenderTexture2D, // one light at a time (with its shadows)
 	size:       [2]i32,
 	ready:      bool, // a light map was prepared this frame
@@ -101,15 +139,19 @@ ensure_targets :: proc(w, h: i32) -> bool {
 		if !rl.IsShaderValid(lighting.shader) do return false
 		lighting.locFalloff = rl.GetShaderLocation(lighting.shader, "falloff")
 		lighting.locSpread = rl.GetShaderLocation(lighting.shader, "spread")
+		sh := lighting.shader
+		lighting.loc = {rl.GetShaderLocation(sh, "sun"), rl.GetShaderLocation(sh, "rot"), rl.GetShaderLocation(sh, "radius"), rl.GetShaderLocation(sh, "height"), rl.GetShaderLocation(sh, "sunDir"), rl.GetShaderLocation(sh, "useNormals"), rl.GetShaderLocation(sh, "normalMap"), rl.GetShaderLocation(sh, "screenSize")}
 		lighting.shaderOk = true
 	}
 	if lighting.size != {w, h} {
 		if lighting.lightMap.id != 0 {
 			rl.UnloadRenderTexture(lighting.lightMap)
 			rl.UnloadRenderTexture(lighting.scratch)
+			rl.UnloadRenderTexture(lighting.normals)
 		}
 		lighting.lightMap = rl.LoadRenderTexture(w, h)
 		lighting.scratch = rl.LoadRenderTexture(w, h)
+		lighting.normals = rl.LoadRenderTexture(w, h)
 		lighting.size = {w, h}
 	}
 	return true
@@ -121,6 +163,7 @@ Lighting_Unload :: proc() {
 	if lighting.lightMap.id != 0 {
 		rl.UnloadRenderTexture(lighting.lightMap)
 		rl.UnloadRenderTexture(lighting.scratch)
+		rl.UnloadRenderTexture(lighting.normals)
 	}
 	if lighting.shaderOk do rl.UnloadShader(lighting.shader)
 	lighting = {}
@@ -186,13 +229,48 @@ Lighting_Prepare :: proc(scene: ^Scene, cam: rl.Camera2D, w, h: i32) -> bool {
 	rl.ClearBackground(ambient)
 	rl.EndTextureMode()
 
+	// Normal maps (normal_maps.odin): the world's texture-drawn nodes into
+	// the normal buffer, when the project uses them.
+	useNormals: f32 = 0
+	if Lit_ProjectUsesNormals(scene, Node_ResourceManager(scene.rootNode)) {
+		Prof_Scope("lighting.normals")
+		rl.BeginTextureMode(lighting.normals)
+		rl.ClearBackground({128, 128, 0, 0}) // (flat, matte: lit as without normal maps)
+		rl.BeginMode2D(cam)
+		if Lit_BeginPass() {
+			screen: [RenderLayer][dynamic]^Node
+			buckets := Scene_CollectRenderables(scene, &screen)
+			layers := ~bit_set[RenderLayer]{}
+			if scene.camera != nil && scene.camera.targetLayers != {} do layers = scene.camera.targetLayers
+			Render_SetView(view)
+			Scene_RenderLayers(scene, buckets, scene.rootNode.gameContext if scene.rootNode != nil else nil, layers)
+			Render_ClearView()
+			Lit_EndPass()
+			useNormals = 1
+		}
+		rl.EndMode2D()
+		rl.EndTextureMode()
+	}
+
 	for n in scene.manager.nodes {
 		if n == nil || n.typeId != LightNode || !n.enabled do continue
 		l := cast(^LightNode)n
 		r := l.radius * max(abs(l.globalScale.x), abs(l.globalScale.y))
-		if r <= 0 || l.energy <= 0 do continue
+		if (r <= 0 && l.kind != .Directional) || l.energy <= 0 do continue
 		c := l.globalPosition
-		if c.x + r < view.x || c.x - r > view.x + view.width || c.y + r < view.y || c.y - r > view.y + view.height do continue
+		sunDir: [3]f32
+		sunFar: f32 = 0 // (a sun's shadows: how far)
+		if l.kind == .Directional {
+			// The sun: shadows as from a light far away against its direction.
+			a := math.to_radians(l.globalRotation)
+			dir := [2]f32{math.cos(a), math.sin(a)}
+			el := math.to_radians(clamp(l.elevation, 1, 90))
+			sunDir = {-dir.x * math.cos(el), -dir.y * math.cos(el), math.sin(el)}
+			diag := math.sqrt(view.width * view.width + view.height * view.height)
+			c = [2]f32{view.x + view.width * 0.5, view.y + view.height * 0.5} - dir * diag * 8
+			r = diag * 16
+			sunFar = l.shadowLength if l.shadowLength > 0 else diag * 4
+		} else if c.x + r < view.x || c.x - r > view.x + view.width || c.y + r < view.y || c.y - r > view.y + view.height do continue
 
 		// The light on its own target, shadows cut out, then added to the map.
 		Prof_Begin("lighting.light")
@@ -205,12 +283,31 @@ Lighting_Prepare :: proc(scene: ^Scene, cam: rl.Camera2D, w, h: i32) -> bool {
 		if l.kind == .Spot do spread = math.cos(math.to_radians(clamp(l.spread, 1, 180)))
 		rl.SetShaderValue(lighting.shader, lighting.locFalloff, &falloff, .FLOAT)
 		rl.SetShaderValue(lighting.shader, lighting.locSpread, &spread, .FLOAT)
+		{
+			sh := lighting.shader
+			isSun: f32 = 1 if l.kind == .Directional else 0
+			ra := math.to_radians(l.globalRotation)
+			rot := [2]f32{math.cos(ra), math.sin(ra)}
+			rad := r
+			hgt := l.height * max(abs(l.globalScale.x), abs(l.globalScale.y))
+			un := useNormals
+			sz := [2]f32{f32(w), f32(h)}
+			rl.SetShaderValue(sh, lighting.loc.sun, &isSun, .FLOAT)
+			rl.SetShaderValue(sh, lighting.loc.rot, &rot, .VEC2)
+			rl.SetShaderValue(sh, lighting.loc.radius, &rad, .FLOAT)
+			rl.SetShaderValue(sh, lighting.loc.height, &hgt, .FLOAT)
+			rl.SetShaderValue(sh, lighting.loc.sunDir, &sunDir, .VEC3)
+			rl.SetShaderValue(sh, lighting.loc.useNormals, &un, .FLOAT)
+			rl.SetShaderValue(sh, lighting.loc.screenSize, &sz, .VEC2)
+			rl.SetShaderValueTexture(sh, lighting.loc.normalMap, lighting.normals.texture)
+		}
 		col := l.color
 		e := clamp(l.energy, 0, 8)
 		col = {u8(min(f32(col.r) * e, 255)), u8(min(f32(col.g) * e, 255)), u8(min(f32(col.b) * e, 255)), 255}
 		// A textured quad (default white texture) so the shader gets UVs.
 		tex := rl.Texture2D{id = rlgl.GetTextureIdDefault(), width = 1, height = 1, mipmaps = 1, format = .UNCOMPRESSED_R8G8B8A8}
-		rl.DrawTexturePro(tex, {0, 0, 1, 1}, {c.x, c.y, r * 2, r * 2}, {r, r}, l.globalRotation, col)
+		if l.kind == .Directional do rl.DrawTexturePro(tex, {0, 0, 1, 1}, view, {0, 0}, 0, col) // (over the whole view)
+		else do rl.DrawTexturePro(tex, {0, 0, 1, 1}, {c.x, c.y, r * 2, r * 2}, {r, r}, l.globalRotation, col)
 		rl.EndShaderMode()
 		Prof_End()
 		if l.shadows {
@@ -228,6 +325,7 @@ Lighting_Prepare :: proc(scene: ^Scene, cam: rl.Camera2D, w, h: i32) -> bool {
 			rlgl.DrawRenderBatchActive()
 			rlgl.DisableBackfaceCulling()
 			far := r * 4
+			if l.kind == .Directional do far = sunFar
 			for poly in occluders {
 				n := len(poly)
 				area: f32 = 0 // twice the signed area: the winding (negative scale flips it)
@@ -308,5 +406,10 @@ Lighting_LightMapTexture :: proc() -> rl.Texture2D {
 }
 
 LightNode_KindName :: proc(k: Light_Kind) -> string {
-	return "spot" if k == .Spot else "point"
+	switch k {
+	case .Spot: return "spot"
+	case .Directional: return "directional"
+	case .Point:
+	}
+	return "point"
 }

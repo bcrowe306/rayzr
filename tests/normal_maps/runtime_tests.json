@@ -1,0 +1,26 @@
+[
+ {
+  "name": "normal maps: a point light over a normal-mapped ball, a plain one (flat, as before) and one with a specular map",
+  "project": "tests/normal_maps/project",
+  "scene": "scenes/point.scene.json",
+  "frames": 10,
+  "expect": [["Ball", "exists", "==", true]],
+  "golden": {"image": "tests/normal_maps/expected/point.png", "max_pixels": 0.01, "threshold": 40}
+ },
+ {
+  "name": "normal maps: the sun (Directional) from the left, elevation 30",
+  "project": "tests/normal_maps/project",
+  "scene": "scenes/sun.scene.json",
+  "frames": 10,
+  "expect": [["Sun", "exists", "==", true]],
+  "golden": {"image": "tests/normal_maps/expected/sun.png", "max_pixels": 0.01, "threshold": 40}
+ },
+ {
+  "name": "normal maps: the sun's shadows (parallel, Shadow Length 120) and a lit ball",
+  "project": "tests/normal_maps/project",
+  "scene": "scenes/shadows.scene.json",
+  "frames": 10,
+  "expect": [["Sun", "exists", "==", true]],
+  "golden": {"image": "tests/normal_maps/expected/shadows.png", "max_pixels": 0.01, "threshold": 40}
+ }
+]

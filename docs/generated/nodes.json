@@ -157,6 +157,7 @@
       "aliases": ["texture", "sprite"],
       "hasOrigin": true,
       "properties": [
+        {"name": "shininess", "kind": "number", "owner": "TextureNode", "default": 0, "min": 0, "max": 1, "doc": "Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image>_s.png specular map gives the glint per pixel too."},
         {"name": "tint", "kind": "color", "owner": "TextureNode", "default": "#ffffffff", "doc": "Multiplies the texture's colours (white = unchanged; alpha fades it)."}
       ]
     },
@@ -168,6 +169,7 @@
       "aliases": ["atlassprite", "atlas", "subtexture", "spritesheet"],
       "hasOrigin": true,
       "properties": [
+        {"name": "shininess", "kind": "number", "owner": "AtlasSpriteNode", "default": 0, "min": 0, "max": 1, "doc": "Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image>_s.png specular map gives the glint per pixel too."},
         {"name": "tint", "kind": "color", "owner": "AtlasSpriteNode", "default": "#ffffffff", "doc": "Multiplies the texture's colours (white = unchanged; alpha fades it)."}
       ]
     },
@@ -178,7 +180,9 @@
       "description": "Sprite sheet frame-by-frame animator with configurable frame durations, loops, and ping-pong modes.",
       "aliases": ["animationnode", "frameanimation", "animation"],
       "hasOrigin": true,
-      "properties": []
+      "properties": [
+        {"name": "shininess", "kind": "number", "owner": "FrameAnimationNode", "default": 0, "min": 0, "max": 1, "doc": "Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image>_s.png specular map gives the glint per pixel too."}
+      ]
     },
     {
       "type": "AnimationPlayerNode",
@@ -188,6 +192,7 @@
       "aliases": ["animationplayer"],
       "hasOrigin": true,
       "properties": [
+        {"name": "shininess", "kind": "number", "owner": "AnimationPlayerNode", "default": 0, "min": 0, "max": 1, "doc": "Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image>_s.png specular map gives the glint per pixel too."},
         {"name": "reverse", "kind": "boolean", "owner": "AnimationPlayerNode", "default": false, "doc": "Play the animation backwards."},
         {"name": "autoplay", "kind": "boolean", "owner": "AnimationPlayerNode", "default": false, "doc": "Start playing the current animation when the node becomes ready."}
       ]
@@ -200,6 +205,7 @@
       "aliases": ["aseprite", "ase"],
       "hasOrigin": true,
       "properties": [
+        {"name": "shininess", "kind": "number", "owner": "AsepriteNode", "default": 0, "min": 0, "max": 1, "doc": "Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image>_s.png specular map gives the glint per pixel too."},
         {"name": "file", "kind": "string", "owner": "AsepriteNode", "default": "", "doc": "The Aseprite file (.aseprite / .ase, project-relative). Saving it in Aseprite updates the node, in the editor and in a running game."},
         {"name": "animation", "kind": "string", "owner": "AsepriteNode", "default": "", "doc": "The tag played (its direction and repeat count as set in Aseprite); empty = every frame in order."},
         {"name": "autoplay", "kind": "boolean", "owner": "AsepriteNode", "default": true, "doc": "Start the animation when the node becomes ready."},
@@ -680,6 +686,7 @@
       "aliases": ["ldtk", "ldtklevel"],
       "hasOrigin": false,
       "properties": [
+        {"name": "shininess", "kind": "number", "owner": "LdtkLevelNode", "default": 0, "min": 0, "max": 1, "doc": "Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image>_s.png specular map gives the glint per pixel too."},
         {"name": "enablePhysics", "kind": "boolean", "owner": "LdtkLevelNode", "default": true, "doc": "Build colliders from IntGrid cells whose collision rule is Solid / One Way."},
         {"name": "spawnEntities", "kind": "boolean", "owner": "LdtkLevelNode", "default": true, "doc": "Spawn the level's entities (mapped to components) when ready."},
         {"name": "parallax", "kind": "boolean", "owner": "LdtkLevelNode", "default": true, "doc": "Apply the LDtk layers' parallax factors."},
@@ -699,6 +706,7 @@
       "aliases": ["tilemap"],
       "hasOrigin": false,
       "properties": [
+        {"name": "shininess", "kind": "number", "owner": "TileMapNode", "default": 0, "min": 0, "max": 1, "doc": "Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image>_s.png specular map gives the glint per pixel too."},
         {"name": "solid", "kind": "boolean", "owner": "TileMapNode", "default": false, "doc": "Build static colliders for the painted tiles."},
         {"name": "tint", "kind": "color", "owner": "TileMapNode", "default": "#ffffffff", "doc": "Multiplies the texture's colours (white = unchanged; alpha fades it)."},
         {"name": "layout", "kind": "enum", "owner": "TileMapNode", "default": "Square", "values": ["Square", "Isometric", "Staggered", "HexPointy", "HexFlat"], "doc": "The cells' shape: Square; Isometric (diamonds on a grid turned 45 degrees); Staggered (diamonds in rows, every other row shifted); Hex Pointy / Hex Flat (hexagons in offset rows / columns)."},
@@ -716,13 +724,16 @@
       "aliases": ["light", "pointlight", "spotlight"],
       "hasOrigin": false,
       "properties": [
-        {"name": "kind", "kind": "enum", "owner": "LightNode", "default": "Point", "values": ["Point", "Spot"], "doc": "Point: shines all round. Spot: a cone along the node's rotation."},
+        {"name": "kind", "kind": "enum", "owner": "LightNode", "default": "Point", "values": ["Point", "Spot", "Directional"], "doc": "Point: shines all round. Spot: a cone along the node's rotation. Directional: the sun - one direction (the node's rotation) over everything, no radius."},
         {"name": "color", "kind": "color", "owner": "LightNode", "default": "#ffecc8ff", "doc": "Colour of the light."},
         {"name": "energy", "kind": "number", "owner": "LightNode", "default": 1, "min": 0, "max": 8, "doc": "Brightness multiplier."},
         {"name": "radius", "kind": "number", "owner": "LightNode", "default": 256, "min": 1, "max": 4000, "doc": "Reach of the light (px)."},
         {"name": "falloff", "kind": "number", "owner": "LightNode", "default": 2, "min": 0.1, "max": 8, "doc": "Fade towards the edge: 1 linear, 2 smooth, higher = tighter."},
         {"name": "spread", "kind": "number", "owner": "LightNode", "default": 35, "min": 1, "max": 180, "doc": "Spot: half-angle of the cone (degrees)."},
-        {"name": "shadows", "kind": "boolean", "owner": "LightNode", "default": true, "doc": "Cast shadows from the scene's physics shapes (bodies, LDtk and tile map colliders; not sensors)."}
+        {"name": "shadows", "kind": "boolean", "owner": "LightNode", "default": true, "doc": "Cast shadows from the scene's physics shapes (bodies, LDtk and tile map colliders; not sensors)."},
+        {"name": "height", "kind": "number", "owner": "LightNode", "default": 64, "min": 0, "max": 2000, "doc": "How high above the ground it is (px). On normal-mapped art a low light rakes across the bumps, a high one lights them evenly. No effect on art without normal maps."},
+        {"name": "elevation", "kind": "number", "owner": "LightNode", "default": 45, "min": 1, "max": 90, "doc": "Directional: the sun's angle above the ground (degrees) - low for long, raking light, 90 for straight down."},
+        {"name": "shadowLength", "kind": "number", "owner": "LightNode", "default": 120, "min": 0, "max": 4000, "doc": "Directional: how far shadows reach from what casts them (px); 0: to the edge of the view."}
       ]
     },
     {
@@ -884,6 +895,7 @@
       "aliases": ["nineslice", "ninepatch"],
       "hasOrigin": true,
       "properties": [
+        {"name": "shininess", "kind": "number", "owner": "NineSliceNode", "default": 0, "min": 0, "max": 1, "doc": "Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image>_s.png specular map gives the glint per pixel too."},
         {"name": "texturePath", "kind": "string", "owner": "NineSliceNode", "default": "", "doc": "Texture to slice."},
         {"name": "size", "kind": "vec2", "owner": "NineSliceNode", "default": [200, 100], "min": 1, "max": 4000, "doc": "Drawn size (px); the borders keep their size, the middle stretches."},
         {"name": "marginsLT", "kind": "vec2", "owner": "NineSliceNode", "default": [16, 16], "min": 0, "max": 512, "doc": "Left and top border widths (texture px)."},

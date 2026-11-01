@@ -1,0 +1,146 @@
+{
+  "name": "shadows",
+  "draw_bounds": false,
+  "background": [150, 150, 160, 255],
+  "ambient": [50, 50, 60, 255],
+  "root": {
+    "type": "Node",
+    "name": "root",
+    "position": [0, 0],
+    "scale": [1, 1],
+    "rotation": 0,
+    "enabled": true,
+    "visible": true,
+    "layer": 0,
+    "children": [
+      {
+        "type": "CameraNode",
+        "name": "Camera",
+        "position": [320, 180],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
+        "properties": {
+          "isCurrent": true,
+          "followMode": "SingleTarget",
+          "dragType": "SmoothDamp",
+          "targetPosition": [0, 0],
+          "smoothDrag": true,
+          "smoothDragSpeed": [0.2, 0.2],
+          "springConstant": 15,
+          "dampingRatio": 1,
+          "predictionTime": [0.5, 0.5],
+          "maxDistance": [100000, 100000],
+          "offset": [0, 0],
+          "smoothOffset": true,
+          "smoothOffsetSpeed": 0.2,
+          "screenOffset": [640, 360],
+          "customScreenOffset": false,
+          "targetRotation": 0,
+          "allowRotation": true,
+          "smoothRotation": true,
+          "smoothRotationSpeed": 0.2,
+          "targetZoom": 1,
+          "smoothZoom": true,
+          "smoothZoomSpeed": 0.2,
+          "minZoom": 0.1,
+          "maxZoom": 10,
+          "autoZoom": true,
+          "zoomMargin": 0.1,
+          "hasLimits": false,
+          "smoothLimit": true,
+          "leftLimit": -1000000,
+          "rightLimit": 1000000,
+          "topLimit": -1000000,
+          "bottomLimit": 1000000,
+          "useHMargins": false,
+          "useVMargins": false,
+          "leftMargin": 0.25,
+          "rightMargin": 0.25,
+          "topMargin": 0.25,
+          "bottomMargin": 0.25,
+          "enableMouseFollow": false,
+          "mouseInfluence": [0.2, 0.2],
+          "shakePreset": "Custom",
+          "shakeTypes": ["Vertical", "Horizontal", "Random"],
+          "shakeSpeed": 15,
+          "shakeIntensity": 10,
+          "shakeTrauma": 1
+        }
+      },
+      {
+        "type": "StaticBodyNode",
+        "name": "Wall",
+        "position": [220, 150],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
+        "shapes": [
+          {"type": "Box", "offset": [0, 0], "rotation": 0, "radius": 0, "size": [60, 60], "cornerRadius": 0, "point1": [0, 0], "point2": [0, 0], "vertexCount": 0, "isLoop": false, "density": 0, "friction": 0, "restitution": 0, "rollingResistance": 0, "tangentSpeed": 0, "isSensor": false, "enableSensorEvents": false, "enableContactEvents": false, "enableHitEvents": false, "enablePreSolveEvents": false, "categoryLayers": [], "maskLayers": [], "groupIndex": 0}
+        ],
+        "properties": {
+          "debugColor": "#4ade80ff",
+          "oneWay": false
+        }
+      },
+      {
+        "type": "StaticBodyNode",
+        "name": "Pillar",
+        "position": [430, 200],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
+        "shapes": [
+          {"type": "Box", "offset": [0, 0], "rotation": 0, "radius": 0, "size": [30, 90], "cornerRadius": 0, "point1": [0, 0], "point2": [0, 0], "vertexCount": 0, "isLoop": false, "density": 0, "friction": 0, "restitution": 0, "rollingResistance": 0, "tangentSpeed": 0, "isSensor": false, "enableSensorEvents": false, "enableContactEvents": false, "enableHitEvents": false, "enablePreSolveEvents": false, "categoryLayers": [], "maskLayers": [], "groupIndex": 0}
+        ],
+        "properties": {
+          "debugColor": "#4ade80ff",
+          "oneWay": false
+        }
+      },
+      {
+        "type": "TextureNode",
+        "name": "Ball",
+        "position": [330, 270],
+        "scale": [1.5, 1.5],
+        "rotation": 0,
+        "pivot": [0.5, 0.5],
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
+        "texture": "textures/ball.png",
+        "properties": {
+          "shininess": 0,
+          "tint": "#ffffffff"
+        }
+      },
+      {
+        "type": "LightNode",
+        "name": "Sun",
+        "position": [0, 0],
+        "scale": [1, 1],
+        "rotation": 25,
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
+        "properties": {
+          "kind": "Directional",
+          "color": "#fff0d2ff",
+          "energy": 1,
+          "radius": 256,
+          "falloff": 2,
+          "spread": 35,
+          "shadows": true,
+          "height": 64,
+          "elevation": 30
+        }
+      }
+    ]
+  }
+}

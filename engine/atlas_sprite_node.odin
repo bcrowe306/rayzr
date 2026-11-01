@@ -6,6 +6,7 @@ import rl "vendor:raylib"
 
 AtlasSpriteNode :: struct {
 	using node: Node,
+	shininess: f32 `gui:"true" min:"0" max:"1"`, // lit: a glint from lights (#274; its image's _s.png too)
 	filePath:   string,
 	size:       [2]f32,
 	texture:    ^Texture,

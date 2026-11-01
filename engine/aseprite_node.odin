@@ -21,6 +21,7 @@ import rl "vendor:raylib"
 
 AsepriteNode :: struct {
 	using node:  Node,
+	shininess: f32 `gui:"true" min:"0" max:"1"`, // lit: a glint from lights (#274; its image's _s.png too)
 	file:        string `gui:"true"`, // the .aseprite / .ase (project-relative)
 	animation:   string `gui:"true"`, // a tag ("" = every frame, in order)
 	autoplay:    bool `gui:"true"`,

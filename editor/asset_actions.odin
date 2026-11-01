@@ -254,6 +254,7 @@ Asset_ContextMenu :: proc(state: ^EditorState, rel: string) {
 			}
 		}
 		if menu(ICON_FA_TABLE_CELLS, "Slice Sprite Sheet...", "slice-sheet") do Slicer_Open(state, rel)
+		if menu(ICON_FA_WAND_MAGIC_SPARKLES, "Generate Normal Map...", "normal-map") do NormalGen_Open(state, rel) // (lighting: normal_map_gen.odin)
 		if menu(ICON_FA_TABLE_CELLS, "Use as Tileset of Selected Tile Map", "use-tileset", sel != nil && sel.typeId == e.TileMapNode) {
 			Editor_RecordUndo(state, "Set tileset")
 			e.TileMapNode_SetTileset(cast(^e.TileMapNode)sel, rel, &state.game.gameContext)
