@@ -48,6 +48,13 @@ NODE_CATALOG := [?]NodeCatalogEntry{
 		typeName    = "BehaviorTreeNode",
 	},
 	{
+		name        = "GOAP Agent",
+		category    = "Animation & Effects",
+		icon        = ICON_FA_BULLSEYE,
+		description = "Goal-oriented action planning: give its parent goals (conditions on world keys) and actions (conditions, effects, costs, targets); it senses the world, picks the cheapest goal it can reach and plans the actions there. Edit it in the GOAP tab.",
+		typeName    = "GoapNode",
+	},
+	{
 		name        = "Oscillator",
 		category    = "Animation & Effects",
 		icon        = ICON_FA_RIGHT_LEFT,

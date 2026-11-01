@@ -5075,6 +5075,7 @@ RegisterEngineLuaBindings :: proc(L: ^lua.State, sm: ^ScriptManager) {
 		Script_RegisterTouchControlBindings(L) // touch_get_vector / touch_is_down (touch_controls.odin)
 		Script_RegisterFeelNodeBindings(L) // flash / blink / squash (game_feel.odin)
 		Script_RegisterViewportBindings(L) // get_texture / refresh / save_png (viewport_node.odin)
+		Script_RegisterGoapBindings(L) // goap_request_goal / goap_set_key ... (goap_lua.odin)
 		Script_RegisterBehaviorTreeBindings(L) // bt_tick / bt_get ... and Blackboard (behavior_tree_lua.odin)
 		Script_RegisterOscillatorBindings(L) // oscillator_start / stop / pause / resume ... (oscillator_node.odin)
 		Script_RegisterUIListBindings(L) // ui_set_items / ui_get_items (ui_list_props.odin)

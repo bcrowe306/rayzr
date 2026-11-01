@@ -234,6 +234,7 @@ Toolbar_StartSimulation :: proc(state: ^EditorState) {
 	}
 	OscPreview_Stop() // (its targets back first)
 	e.BB_Clear(&e.btGlobal) // the global blackboard starts empty each run
+	e.Goap_ResetGlobals()   // (GOAP's global keys too)
 	state.snapshotJson = e.Scene_SerializeToJSON(state.activeScene)
 	// Scripts run in the editor's Lua state: remember its globals so Stop
 	// can put them back (and reset module-level locals).

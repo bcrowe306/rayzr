@@ -35,6 +35,7 @@ NODE_TYPES := [?]Node_Type_Info{
 	{"AnimationPlayerNode", AnimationPlayerNode, factory_animation_player, {"animationplayer"}},
 	{"AsepriteNode", AsepriteNode, factory_aseprite, {"aseprite", "ase"}},
 	{"BehaviorTreeNode", BehaviorTreeNode, factory_behavior_tree, {"behavior tree", "behaviortree", "behaviour tree", "bt", "ai", "beehave"}},
+	{"GoapNode", GoapNode, factory_goap, {"goap", "goal oriented action planning", "planner", "planning", "ai planner"}},
 	{"StateMachineNode", StateMachineNode, factory_state_machine, {"statemachine", "state_machine"}},
 	{"ParticleEmitterNode", ParticleEmitterNode, factory_particles, {"particle", "particles", "particleemitter"}},
 	{"SoundNode", SoundNode, factory_sound, {"sound"}},
@@ -297,6 +298,11 @@ factory_touch_joystick :: proc(scene: ^Scene, parent: ^Node) -> ^Node {
 @(private = "file")
 factory_touch_button :: proc(scene: ^Scene, parent: ^Node) -> ^Node {
 	return TouchButtonNode_Create(scene, "TouchButton", parent)
+}
+
+@(private = "file")
+factory_goap :: proc(scene: ^Scene, parent: ^Node) -> ^Node {
+	return GoapNode_Create(scene, "GOAP", parent)
 }
 
 @(private = "file")

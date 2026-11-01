@@ -998,6 +998,8 @@ inspector_resources :: proc(state: ^EditorState, node: ^e.Node) {
 		inspector_state_machine(state, cast(^e.StateMachineNode)node)
 	case e.BehaviorTreeNode:
 		inspector_behavior_tree(state, cast(^e.BehaviorTreeNode)node) // (behavior_tree_editor.odin)
+	case e.GoapNode:
+		inspector_goap(state, cast(^e.GoapNode)node) // (goap_editor.odin)
 	case e.LdtkLevelNode:
 		ln := cast(^e.LdtkLevelNode)node
 		if UI_SectionHeader("LDtk Level") {
@@ -1335,6 +1337,7 @@ Editor_NodeIcon :: proc(node: ^e.Node) -> string {
 	case e.TimerNode: return ICON_FA_CLOCK
 	case e.StateMachineNode: return ICON_FA_DIAGRAM_PROJECT
 	case e.BehaviorTreeNode: return ICON_FA_SITEMAP
+	case e.GoapNode: return ICON_FA_BULLSEYE
 	case e.JointNode: return ICON_FA_LINK
 	case e.TextNode: return ICON_FA_FONT
 	case e.DialogueNode: return ICON_FA_COMMENT

@@ -5,7 +5,7 @@
 # to do first. (The templates' gameplay: scripts/templates/test_templates.py.)
 # drive: serial (touches bin/runners or other shared files; runs after the parallel drives)
 wait 5
-expect node-icons == 72/72
+expect node-icons == 73/73
 click @menu:Help
 click @menu:Help/Welcome
 expect item:welcome.create == visible

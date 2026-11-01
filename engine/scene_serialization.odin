@@ -305,6 +305,8 @@ write_node :: proc(w: ^Json_Writer, node: ^Node, manager: ^NodeManager) {
 		strings.write_byte(&w.sb, '}')
 	case BehaviorTreeNode:
 		BehaviorTree_WriteJSON(w, cast(^BehaviorTreeNode)node, &first)
+	case GoapNode:
+		Goap_WriteJSON(w, cast(^GoapNode)node, &first)
 	case StateMachineNode:
 		Json_Key(w, "state_machine", &first)
 		write_state_machine(w, cast(^StateMachineNode)node)
@@ -1088,6 +1090,8 @@ read_node :: proc(scene: ^Scene, obj: json.Object, parent: ^Node, ctx: ^GameCont
 		}
 	case BehaviorTreeNode:
 		if btObj, ok := sj_obj(obj, "behavior_tree"); ok do BehaviorTree_ReadJSON(cast(^BehaviorTreeNode)node, btObj)
+	case GoapNode:
+		if gObj, ok := sj_obj(obj, "goap"); ok do Goap_ReadJSON(cast(^GoapNode)node, gObj)
 	case StateMachineNode:
 		if smObj, ok := sj_obj(obj, "state_machine"); ok do read_state_machine(cast(^StateMachineNode)node, smObj)
 	case JointNode:
