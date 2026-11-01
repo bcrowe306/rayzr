@@ -1245,6 +1245,40 @@ preview_texture_import :: proc(state: ^EditorState) {
 	if imgui.Checkbox("Atlas##imp", &imp.atlas) do changed = true
 	Drive_Item("preview.import.atlas")
 	UI_Tooltip("Pack it into a sprite atlas on export: sprites sharing an atlas page draw in one batch (faster with many sprites). Not for textures with mipmaps / Trilinear, or ones a shader samples as a whole (those get their own copy)")
+	// Normal map (#274): <image>_n.png found by itself, none, or another image.
+	same_or_wrap(150)
+	{
+		choices := make([dynamic]string, context.temp_allocator)
+		append(&choices, "Normal: Auto (_n)", "Normal: None")
+		cur := 0 if imp.normalMap == "" else 1 if imp.normalMap == "none" else -1
+		for t in Editor_ListProjectFiles(state, "", TEXTURE_EXTS) do if t != rel && (strings.contains(t, "_n.") || strings.contains(strings.to_lower(t, context.temp_allocator), "normal")) {
+			if t == imp.normalMap do cur = len(choices)
+			append(&choices, fmt.tprintf("Normal: %s", t))
+		}
+		if cur < 0 {
+			cur = len(choices)
+			append(&choices, fmt.tprintf("Normal: %s", imp.normalMap))
+		}
+		imgui.SetNextItemWidth(150)
+		if c, ok := UI_Combo("preview.import.normal", cur, choices[:]); ok {
+			switch c {
+			case 0: imp.normalMap = ""
+			case 1: imp.normalMap = "none"
+			case: imp.normalMap = strings.clone(choices[c][len("Normal: "):], context.temp_allocator)
+			}
+			changed = true
+			e.Lit_ForgetAll()
+		}
+		found, _ := e.Lit_NormalPathFor(rm, state.previewTexturePath)
+		UI_Tooltip(fmt.tprintf("The normal map lights shade it by (2D lighting). Auto: %s next to it. Right-click the image > Generate Normal Map makes one.%s", filepath.base(found) if found != "" else "<image>_n.png", "" if found != "" else " (none found)"))
+		same_or_wrap(100)
+		if imgui.Checkbox("Green Down##imp", &imp.normalGreenDown) {
+			changed = true
+			e.Lit_ForgetAll()
+		}
+		Drive_Item("preview.import.green-down")
+		UI_Tooltip("The normal map's green points down (DirectX style, e.g. from some 3D tools); off: up (OpenGL style, most 2D tools)")
+	}
 	// Slicing preset (the Sprite Sheet Slicer starts from it; Save Preset there).
 	if imp.slice.grid != {} {
 		same_or_wrap(110)

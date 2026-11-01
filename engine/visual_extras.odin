@@ -39,6 +39,7 @@ release_texture :: proc(node: ^Node, tex: ^^Texture) {
 
 NineSliceNode :: struct {
 	using node:  Node,
+	shininess: f32 `gui:"true" min:"0" max:"1"`, // lit: a glint from lights (#274; its image's _s.png too)
 	texturePath: string `gui:"true"`,
 	size:        [2]f32 `gui:"true" min:"1" max:"4000"`,
 	marginsLT:   [2]f32 `gui:"true" min:"0" max:"512"`, // left, top border (texture pixels)
@@ -80,7 +81,7 @@ NineSliceNode_Render :: proc(node: ^Node, ctx: ^GameContext, dt: f32) {
 		left = i32(n.marginsLT.x), top = i32(n.marginsLT.y), right = i32(n.marginsRB.x), bottom = i32(n.marginsRB.y),
 		layout = .NINE_PATCH,
 	}
-	rl.DrawTextureNPatch(t, info, {n.globalPosition.x, n.globalPosition.y, size.x, size.y}, origin, n.globalRotation, n.tint)
+	Lit_DrawNPatch(t, info, {n.globalPosition.x, n.globalPosition.y, size.x, size.y}, origin, n.globalRotation, n.tint)
 }
 
 // --- ParallaxNode --------------------------------------------------------------------

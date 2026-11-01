@@ -1,0 +1,1 @@
+{"name": "Normal Maps", "initial_scene": "scenes/point.scene.json", "window": {"title": "t", "width": 640, "height": 360, "virtual_width": 640, "virtual_height": 360}, "physics": {"gravity": [0, 0], "debug_draw": false}, "scenes": ["scenes/point.scene.json", "scenes/sun.scene.json", "scenes/shadows.scene.json"]}

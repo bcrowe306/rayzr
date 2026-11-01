@@ -564,6 +564,13 @@ render_bucket :: proc(scene: ^Scene, nodes: []^Node, gameContext: ^GameContext, 
 	Prof_End()
 	Prof_Scope("render.draw")
 	for node in order {
+		// The normal pass (normal_maps.odin): texture-drawn nodes only, plain.
+		if renderNormalPass {
+			if !Lit_NodeDrawn(node) || node.material != nil do continue
+			normalPassNode = node
+			if node.render != nil do node->render(gameContext, deltaTime)
+			continue
+		}
 		// Game feel: blinked out, or drawn in a flash colour (game_feel.odin).
 		draw, flashing := true, false
 		if len(nodeFx) > 0 do draw, flashing = Fx_BeginDraw(node, node.material == nil)

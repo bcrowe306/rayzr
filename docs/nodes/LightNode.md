@@ -12,6 +12,10 @@ places back. Lights can cast shadows from physics shapes.
   rotation.
 - **Shadows behind walls and crates**: **Shadows** on; the walls are
   physics bodies.
+- **Daylight and long shadows**: a **Directional** light, the sun, lights
+  everything from one direction.
+- **Art with depth**: give sprites and tilesets normal maps (see Normal maps
+  below) and the light shades their bumps and edges as it moves.
 - **Not** for a glow that should look bright on a light scene: lights can't
   make anything brighter than its art. Use an additive sprite or a
   [Post Effect](PostEffectNode.md) instead.
@@ -25,12 +29,17 @@ places back. Lights can cast shadows from physics shapes.
    White means unlit: the scene is drawn as it is.
 2. **Add Node** (Ctrl+A) > *Light*. It's a warm point light with a
    256-pixel radius.
-3. In the Node tab's **Properties** section: **Kind** (*Point* shines all round, *Spot* shines in
-   a cone), **Color**, **Energy** (brightness), **Radius** (pixels),
-   **Falloff** (how it fades to the edge), **Spread** (a spot's half-angle
-   in degrees) and **Shadows**.
-4. For a spot light, rotate the node to aim it: at rotation 0 it points
-   right.
+3. In the Node tab's **Properties** section:
+   - **Kind**: *Point* shines all round, *Spot* shines in a cone, and
+     *Directional* is the sun, one direction over the whole view.
+   - **Color**, **Energy** (brightness), **Radius** (pixels), and
+     **Falloff** (how it fades to the edge).
+   - **Spread**: a spot's half-angle, in degrees.
+   - **Shadows**.
+   - **Height**: how far above the ground it is, for normal maps.
+   - A sun's **Elevation** (degrees above the ground) and **Shadow Length**.
+4. For a spot light or the sun, rotate the node to aim it: at rotation 0
+   it points right (a sun at rotation 0 shines from the left).
 5. Selected, the light shows its radius (or its cone) in the viewport. The
    toolbar's sun button switches the lighting preview on and off.
 
@@ -56,8 +65,40 @@ places back. Lights can cast shadows from physics shapes.
   light's own contribution.
 - A light whose circle is outside the view is skipped. Each visible light is
   one extra pass, so dozens of large shadowed lights cost more than a few.
+- A **Directional** light has no position or radius: it adds its colour
+  over the whole view. Its shadows run parallel, away from the sun, for
+  **Shadow Length** pixels (0: to the edge of the view).
 - Scripts set the ambient with `Scene.set_ambient(r, g, b)` (0 to 1) and read
   it with `Scene.get_ambient()`.
+
+## Normal maps
+
+Normal-mapped art is shaded by each light's direction, so a ball looks
+round and a brick wall shows its mortar.
+
+- **A normal map for an image** is `<image>_n.png` next to it, for example
+  `hero.png` and `hero_n.png`. It's found by itself. In Assets, the
+  image's import settings can point at another file (**Normal**), turn it
+  off (*None*), or flip the green channel for DirectX-style maps (**Green
+  Down**).
+- **No normal map?** Right-click the image in Assets > **Generate Normal
+  Map...**. It builds one from the sprite's outline (a bevel) and its
+  brightness (painted detail), with a preview lit by a light that follows
+  the mouse. **Save** writes `<image>_n.png`.
+- **Shininess** (0 to 1, on sprites, animations, nine slices, tile maps and
+  LDtk levels) adds a glint where a light hits. A specular map,
+  `<image>_s.png` (white is shiny), sets it per pixel.
+- **Height** decides the light's angle: a low light rakes across the
+  bumps and a high one lights them evenly. A sun's **Elevation** does the
+  same.
+- **What's shaded**: sprites (Texture, Atlas, Aseprite), animation frames,
+  nine slices, tile maps and LDtk tiles. Art without a normal map is lit
+  exactly as before, and so is text, vector art and particles.
+- **The cost**: when the project has normal maps and the scene is lit,
+  the world's sprites are drawn once more into a normal buffer, which the
+  lights read. Scenes without lights pay nothing. In exported games,
+  normal-mapped images keep their own textures (they aren't packed into
+  the sprite atlas).
 
 ## Example
 

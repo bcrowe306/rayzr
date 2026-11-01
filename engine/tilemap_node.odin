@@ -28,6 +28,7 @@ import rl "vendor:raylib"
 
 TileMapNode :: struct {
 	using node: Node,
+	shininess: f32 `gui:"true" min:"0" max:"1"`, // lit: a glint from lights (#274; its image's _s.png too)
 	tilesetPath: string,
 	tileset:     ^Texture,
 	tileSize:    [2]int, // pixels per tile (in the tileset and in the world)
@@ -351,10 +352,10 @@ draw_cells :: proc(tm: ^TileMapNode, cols, x0, y0, x1, y1: int, local: bool, ori
 			src := Texture_Src(tm.tileset, {f32(int(t) % cols) * tw, f32(int(t) / cols) * th, tw, th})
 			if local {
 				// Into a chunk: unscaled pixels from the chunk's corner.
-				rl.DrawTexturePro(tm.tileset.texture, src, {f32(x - origin.x) * tw, f32(y - origin.y) * th, tw, th}, {0, 0}, 0, rl.WHITE)
+				Lit_Draw(tm.tileset.texture, src, {f32(x - origin.x) * tw, f32(y - origin.y) * th, tw, th}, {0, 0}, 0, rl.WHITE)
 			} else {
 				p := TileMapNode_CellCorner(tm, {x, y})
-				rl.DrawTexturePro(tm.tileset.texture, src, {p.x, p.y, tw * sx, th * sy}, {0, 0}, tm.globalRotation, tm.tint)
+				Lit_Draw(tm.tileset.texture, src, {p.x, p.y, tw * sx, th * sy}, {0, 0}, tm.globalRotation, tm.tint)
 			}
 		}
 	}
@@ -417,7 +418,7 @@ draw_band :: proc(tm: ^TileMapNode, b: int, lo, hi: [2]int) {
 		p := TileMapNode_LocalToWorld(tm, {r.x, r.y})
 		sx := tm.globalScale.x if tm.globalScale.x != 0 else 1
 		sy := tm.globalScale.y if tm.globalScale.y != 0 else 1
-		rl.DrawTexturePro(tm.tileset.texture, src, {p.x, p.y, tw * sx, th * sy}, {0, 0}, tm.globalRotation, tm.tint)
+		Lit_Draw(tm.tileset.texture, src, {p.x, p.y, tw * sx, th * sy}, {0, 0}, tm.globalRotation, tm.tint)
 	})
 }
 
@@ -456,7 +457,7 @@ TileMapNode_Render :: proc(node: ^Node, ctx: ^GameContext, dt: f32) {
 	}
 	x0, y0, x1, y1 := tilemap_visible_cells(tm, renderView.rect, renderView.active)
 	if x1 <= x0 || y1 <= y0 do return
-	if tm.material != nil || !TileCache_Enabled() || (x1 - x0) * (y1 - y0) < TILE_CACHE_MIN_TILES {
+	if tm.material != nil || !TileCache_Enabled() || renderNormalPass || (x1 - x0) * (y1 - y0) < TILE_CACHE_MIN_TILES { // (the normal pass: tile by tile)
 		draw_cells(tm, cols, x0, y0, x1, y1, false)
 		return
 	}

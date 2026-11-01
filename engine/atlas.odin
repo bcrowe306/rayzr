@@ -194,6 +194,12 @@ Atlas_Build :: proc(projectDir: string, overrides: ^map[string][]u8, include: pr
 		Asset_ImportParse(string(data), &imp, context.temp_allocator)
 		// Mipmapped / repeating textures need their own texture.
 		if !imp.atlas || imp.mipmaps || imp.filter == .Trilinear do continue
+		// A normal-mapped image keeps its own texture (the normal pass swaps it whole: normal_maps.odin).
+		if imp.normalMap != "none" {
+			if imp.normalMap != "" do continue
+			ext := filepath.ext(asset)
+			if ext != "" && os.is_file(strings.concatenate({asset[:len(asset) - len(ext)], NORMAL_SUFFIX, ".png"}, context.temp_allocator)) do continue
+		}
 		img := rl.LoadImage(fmt.ctprint(asset))
 		if img.data == nil do continue
 		rl.ImageFormat(&img, .UNCOMPRESSED_R8G8B8A8)

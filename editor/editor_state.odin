@@ -336,6 +336,7 @@ Editor_Shutdown :: proc(state: ^EditorState) {
 	TerrainEditor_Shutdown()
 	TileAnimEditor_Shutdown()
 	TestsPanel_Shutdown()
+	NormalGen_Close()
 	LevelRules_Shutdown()
 	LevelLayers_Shutdown()
 	LevelEnums_Shutdown()

@@ -162,7 +162,7 @@ The first items depend on the type; the rest are on every asset.
 | Component | **Edit Component**, **New Component...**, **Select All Instances**, **Add to Scene**, **Add as Child of Selected** |
 | Custom node | **Add to Scene**, **Add as Child of Selected**, **Edit Script**, **Edit Type** (its defaults as a node), **Edit Definition** (the `.node.json` as text), **New Type Based on This...**, **Change Base Type...** |
 | Script | **Edit Script**, **Attach to Selected Node**, **Make Global** / **Remove Global** |
-| Texture | **Add Sprite to Scene**, **Use on Selected Sprite**, **Slice Sprite Sheet...**, **Use as Tileset of Selected Tile Map** |
+| Texture | **Add Sprite to Scene**, **Use on Selected Sprite**, **Slice Sprite Sheet...**, **Generate Normal Map...** (a normal map from the sprite's shape and brightness, for lighting), **Use as Tileset of Selected Tile Map** |
 | Audio | **Add Sound to Scene**, **Add Music to Scene**, **Use on Selected Sound/Music** |
 | LDtk level | **Edit in Level Tab**, **Add Level to Scene**, **Open in LDtk**, **Use on Selected Level** |
 | Aseprite file | **Add Sprite to Scene**, **Use on Selected Aseprite Node**, **Use as Tileset of Selected Tile Map**, **Edit in Aseprite** |
@@ -257,6 +257,8 @@ applied at once in the editor and when the game loads it - see
 | **Mipmaps** | Smaller copies for drawing the texture far smaller than its size. |
 | **Export: Keep / QOI** | How export stores it: as it is, or re-encoded as QOI (loads faster, usually a bigger file). |
 | **Atlas** | Packed into a sprite atlas on export, so sprites on one atlas page draw in one batch. See [atlas](../../engine/docs/atlas.md). |
+| **Normal** | The normal map lights shade it by: *Auto (_n)* uses `<image>_n.png` next to it, *None* turns it off, or pick another image. See [Light](../nodes/LightNode.md#normal-maps). |
+| **Green Down** | The normal map's green channel points down (DirectX style); off for OpenGL style, which most 2D tools make. |
 | **Slice** | Shown when the sheet has a slicing preset (saved with **Save Preset** in the Sprite Sheet Slicer); the **x** forgets it. |
 
 An SVG shows its own two settings instead: **Scale** (document units to

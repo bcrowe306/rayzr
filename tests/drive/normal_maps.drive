@@ -1,0 +1,24 @@
+# Normal maps (#274): an image's right-click > Generate Normal Map (strength,
+# softness, a lit preview) saves <image>_n.png; the image's import settings
+# show it found (Auto), or turn it off (None) / flip the green.
+wait 5
+rclick @asset:textures/Asteroid_4.png
+click @ctx:normal-map
+wait 5
+expect item:normal-gen.preview == visible
+drag @normal-gen.strength @normal-gen.strength+60,0
+wait 3
+screenshot normal_map_generator
+click @normal-gen.save
+wait 3
+expect log contains Saved textures/Asteroid_4_n.png
+wait-until item:asset:textures/Asteroid_4_n.png == visible timeout=300
+click @asset:textures/Asteroid_4.png
+wait 3
+click @preview.import.normal
+click @pick:Normal: None
+wait 2
+expect file:textures/Asteroid_4.png.import.json contains "normal_map": "none"
+click @preview.import.green-down
+wait 2
+expect file:textures/Asteroid_4.png.import.json contains "normal_green_down": true
