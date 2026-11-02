@@ -22,6 +22,7 @@ ProjectConfig :: struct {
 	name:          string,
 	version:       string,
 	engineVersion: string, // the editor release that last saved it ("engine_version"; version.odin)
+	formatNewer:   bool,   // project.json is from a newer Rayzr (#326): not saved over
 	initialScene:  string,
 	windowTitle:   string,
 	windowWidth:   int,
@@ -339,6 +340,7 @@ Project_ParseConfig :: proc(jsonBytes: []u8, allocator := context.allocator) -> 
 		log.error("[ProjectParser] Expected root JSON object")
 		return cfg, false
 	}
+	_, cfg.formatNewer = Format_Migrate(.Project, &rootObj, "project.json")
 
 	cfg.name = strings.clone(json_get_string(rootObj, "name", cfg.name), allocator)
 	cfg.version = strings.clone(json_get_string(rootObj, "version", cfg.version), allocator)
@@ -497,7 +499,8 @@ Project_SerializeToJSON :: proc(cfg: ^ProjectConfig, allocator := context.alloca
 	sb: strings.Builder
 	strings.builder_init(&sb, allocator)
 
-	strings.write_string(&sb, "{\n  \"name\": "); jstr(&sb, cfg.name)
+	fmt.sbprintf(&sb, "{{\n  \"%s\": %d", FORMAT_KEY, FORMAT_CURRENT[.Project])
+	strings.write_string(&sb, ",\n  \"name\": "); jstr(&sb, cfg.name)
 	strings.write_string(&sb, ",\n  \"version\": "); jstr(&sb, cfg.version)
 	// The release that saved it (a development build keeps what was there).
 	engineVersion := cfg.engineVersion if Version_IsDev(RAYZR_RELEASE) else RAYZR_RELEASE
@@ -618,6 +621,10 @@ Project_SaveConfigToFile :: proc(projectDir: string, cfg: ^ProjectConfig) -> boo
 	if cfg == nil do return false
 	jsonStr := Project_SerializeToJSON(cfg, context.temp_allocator)
 	projPath, _ := filepath.join({projectDir, "project.json"}, context.temp_allocator)
+	if cfg.formatNewer || Format_FileIsNewer(.Project, projPath) {
+		log.warnf("[Format] %s is from a newer Rayzr: not saved over (open the project in that version)", projPath)
+		return false
+	}
 	return os.write_entire_file(projPath, transmute([]u8)jsonStr) == nil
 }
 

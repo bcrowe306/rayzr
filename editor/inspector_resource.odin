@@ -115,7 +115,7 @@ ResourceInspector_Flush :: proc(state: ^EditorState) {
 	if !ri.pending || ri.path == "" do return
 	ri.pending = false
 	mod := ri_module(state)
-	if mod == nil do return
+	if mod == nil || Editor_FormatBlocksSave(state, ri.path) do return // (from a newer Rayzr: #326)
 	full, _ := filepath.join({state.projectPath, ri.path}, context.temp_allocator)
 	text := e.Resource_FileText(ri.class, ri.values, mod, ri.raw, context.temp_allocator)
 	if os.write_entire_file(full, transmute([]u8)text) != nil {

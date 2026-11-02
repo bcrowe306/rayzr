@@ -238,6 +238,10 @@ RayzrPackage_OpenFromMemory :: proc(data: []byte, allocator := context.allocator
 		log.error("[RayzrPackage] Invalid magic header (not a Rayzr package)")
 		return nil, false
 	}
+	if header.version > RAYZR_VERSION {
+		log.errorf("[RayzrPackage] The package is format %d, from a newer Rayzr (this runner reads up to %d): export it again with this version, or update the runner", header.version, RAYZR_VERSION)
+		return nil, false
+	}
 	if header.version != RAYZR_VERSION {
 		log.errorf("[RayzrPackage] Unsupported package version: %d", header.version)
 		return nil, false

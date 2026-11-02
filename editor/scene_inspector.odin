@@ -78,6 +78,7 @@ SceneHierarchy_RenderWindow :: proc(state: ^EditorState) {
 	if UI_HeaderButton(ICON_FA_COPY, "hier.duplicate", "Duplicate (Ctrl+D)") do SceneHierarchy_DuplicateSelected(state)
 	if UI_HeaderButton(ICON_FA_TRASH, "hier.delete", "Delete (Del)") do SceneHierarchy_DeleteSelected(state)
 	if !canModify do imgui.EndDisabled()
+	Editor_FormatNewerBanner(state)
 
 	// Tabs: the tree, the scene's signal connections, its settings (#195).
 	req, hasReq := scenePanelTabRequest.?
