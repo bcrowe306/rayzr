@@ -65,7 +65,7 @@ test_component_uid_rename_keeps_override :: proc(t: ^testing.T) {
 	saved := Scene_SerializeToJSON(scene, context.temp_allocator)
 	testing.expectf(t, strings.contains(saved, `"l1d00000": {"position"`), "the override refers to the uid: %s", saved)
 	testing.expect(t, !strings.contains(saved, `"Lid"`), "not the name")
-	testing.expect(t, !strings.contains(saved, `"uid"`), "the scene's instance has no uid of its own")
+	testing.expect(t, inst.uid != "" && inst.uid != "r00t0000", "the scene's instance has a uid of its own (#328), not the file's root")
 
 	// The component renames its child: the instance keeps its override.
 	_ = os.write_entire_file(UID_FILE, transmute([]u8)string(`{"type": "Node", "name": "Crate", "uid": "r00t0000", "children": [{"type": "Node", "name": "Hatch", "uid": "l1d00000", "position": [0, -10]}]}`))
@@ -104,7 +104,7 @@ test_component_uid_old_files :: proc(t: ^testing.T) {
 	a := uid_load(game, OLD_SCENE, "uid_old")
 	testing.expect_value(t, uid_kids(a, "CrateA")[0].position, [2]f32{0, -42})
 	savedA := Scene_SerializeToJSON(a, context.temp_allocator)
-	testing.expect(t, strings.contains(savedA, `"Lid": {"position"`) && !strings.contains(savedA, `"uid"`), "still by name")
+	testing.expect(t, strings.contains(savedA, `"Lid": {"position"`), "still by name (the scene's own nodes get uids: #328)")
 
 	// Writing the component gives every node a uid, unique in the file.
 	inst := Scene_FindNodeByName(a, "CrateA")
@@ -150,7 +150,7 @@ test_component_uid_copy_in_instance :: proc(t: ^testing.T) {
 	dup.position = {9, 9}
 	ProcessNodeQueues(scene.manager, &game.gameContext)
 	saved := Scene_SerializeToJSON(scene, context.temp_allocator)
-	testing.expectf(t, strings.contains(saved, `"$added"`) && !strings.contains(saved, `"uid"`), "an added node, no uid: %s", saved)
+	testing.expectf(t, strings.contains(saved, `"$added"`) && !strings.contains(saved, `"l1d00000"`), "an added node, not the original's uid: %s", saved)
 	again := uid_load(game, saved, "uid_copy_2")
 	kids := uid_kids(again, "CrateA")
 	testing.expect(t, len(kids) == 2 && kids[0].position == {0, 0} && kids[1].position == {9, 9}, "the original is unchanged")
@@ -180,7 +180,7 @@ test_component_uid_paste :: proc(t: ^testing.T) {
 	testing.expect(t, pasted.uid == "aaaaaaaa" && GetChildrenView(scene.manager, pasted)[0].uid == "bbbbbbbb", "...and pasted: the same nodes")
 }
 
-// Demo scenes don't gain uids or change when loaded and saved.
+// Demo scenes gain uids (#328) and then don't change when loaded and saved.
 @(test)
 test_component_uid_demo_scenes_unchanged :: proc(t: ^testing.T) {
 	game := new(Game)
@@ -193,7 +193,7 @@ test_component_uid_demo_scenes_unchanged :: proc(t: ^testing.T) {
 		if err != nil do continue
 		names := []string{"demo_uid_0", "demo_uid_1", "demo_uid_2"}
 		first := Scene_SerializeToJSON(uid_load(game, string(data), names[i]), context.temp_allocator)
-		testing.expectf(t, !strings.contains(first, `"uid"`), "%s: no uids", rel)
+		testing.expectf(t, strings.contains(first, `"uid"`), "%s: uids", rel)
 		second := Scene_SerializeToJSON(uid_load(game, first, names[i]), context.temp_allocator)
 		testing.expectf(t, first == second, "%s: stable", rel)
 	}

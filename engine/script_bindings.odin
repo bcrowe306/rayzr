@@ -3418,6 +3418,12 @@ lua_node_index :: proc "c" (L: ^lua.State) -> c.int {
 		lua.pushstring(L, strings.clone_to_cstring(node.name, context.temp_allocator))
 		return 1
 	}
+	if string(lua.tostring(L, 2)) == "uid" { // (read-only: saved with the scene, #328)
+		node, ok := to_node_userdata(L, 1)
+		if !ok {lua.pushnil(L); return 1}
+		lua.pushstring(L, strings.clone_to_cstring(node.uid, context.temp_allocator))
+		return 1
+	}
 	return lua_node_get_property(L) // (node, path)
 }
 
@@ -3429,6 +3435,10 @@ lua_node_newindex :: proc "c" (L: ^lua.State) -> c.int {
 	if lua.type(L, 2) == .STRING && string(lua.tostring(L, 2)) == "name" {
 		node, ok := to_node_userdata(L, 1)
 		if ok && lua.type(L, 3) == .STRING do node.name = strings.clone(string(lua.tostring(L, 3)), node.allocator)
+		return 0
+	}
+	if lua.type(L, 2) == .STRING && string(lua.tostring(L, 2)) == "uid" {
+		lua.L_error(L, "node.uid is read-only")
 		return 0
 	}
 	return lua_node_set_property(L) // (node, path, value)
@@ -4030,6 +4040,21 @@ lua_scene_find_node :: proc "c" (L: ^lua.State) -> c.int {
 	}
 	targetNode := Scene_FindNodeByName(sm.game.sceneManager.currentScene, string(nameC))
 	push_node_userdata(L, targetNode)
+	return 1
+}
+
+// Scene.find_by_uid(uid): the current scene's node with this uid (#328).
+@(private="file")
+lua_scene_find_by_uid :: proc "c" (L: ^lua.State) -> c.int {
+	context = Script_Context(L)
+	uidC := lua.tostring(L, 1)
+	sm := get_script_manager(L)
+	if uidC == nil || sm == nil || sm.game == nil || sm.game.sceneManager.currentScene == nil {
+		lua.pushnil(L)
+		return 1
+	}
+	scene := sm.game.sceneManager.currentScene
+	push_node_userdata(L, Node_FindByUid(scene.manager, scene.rootNode, string(uidC)))
 	return 1
 }
 
@@ -5513,6 +5538,8 @@ RegisterEngineLuaBindings :: proc(L: ^lua.State, sm: ^ScriptManager) {
 	lua.newtable(L)
 	lua.pushcfunction(L, lua_scene_find_node)
 	lua.setfield(L, -2, "find_node")
+	lua.pushcfunction(L, lua_scene_find_by_uid)
+	lua.setfield(L, -2, "find_by_uid")
 	lua.pushcfunction(L, lua_scene_find_by_tag)
 	lua.setfield(L, -2, "find_by_tag")
 	lua.pushcfunction(L, lua_scene_set_ambient)
