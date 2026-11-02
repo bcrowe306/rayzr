@@ -13,6 +13,7 @@
 
 ---@class Node
 ---@field name string The node's name (assigning renames it). Properties read and write as fields: `node.rotation = node.rotation + 5`.
+---@field uid string The node's stable id, saved with the scene and kept when it is renamed or moved (read-only). Look it up with `Scene.find_by_uid`; useful for saved games pointing at scene nodes.
 ---Represents an engine scene hierarchy node with transform, lifecycle, and optional physics.
 local Node = {}
 
@@ -11851,6 +11852,14 @@ local SceneModule = {}
 ---@param name NodeName|string The node's exact name (case-sensitive); the first match anywhere in the scene
 ---@return Node? node The first node with that name, or nil when there is none
 function SceneModule.find_node(name) end
+
+---Finds the active scene's node with a uid (`node.uid`): stays right when
+---the node is renamed or moved, so a saved game can store it.
+---
+---Example: `local chest = Scene.find_by_uid(save.opened_chest); if chest then chest:get_script():open() end`
+---@param uid string A uid read from `node.uid` (saved with the scene)
+---@return Node? node The node with that uid, or nil when there is none. Nodes inside a component instance share their component file's uids: the first match is returned
+function SceneModule.find_by_uid(uid) end
 
 ---Every node in the active scene with a tag, in tree order.
 ---

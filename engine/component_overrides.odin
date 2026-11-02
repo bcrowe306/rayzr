@@ -1376,6 +1376,24 @@ Component_FileJSON :: proc(root: ^Node, manager: ^NodeManager, allocator := cont
 	return Node_SerializeToJSON(root, manager, allocator)
 }
 
+// Scene_AssignUids: a uid on every node of the scene, unique in it (#328):
+// the ones it has are kept, missing or repeated ones are given now. Called
+// on load and save, so old scenes get theirs when next saved.
+Scene_AssignUids :: proc(scene: ^Scene) {
+	if scene == nil || scene.rootNode == nil do return
+	seen := make(map[string]bool, allocator = context.temp_allocator)
+	assign_uids(scene.manager, scene.rootNode, &seen)
+}
+
+// Node_FindByUid: the node of the scene with this uid (the first, depth
+// first; nodes inside linked instances share their file's uids).
+Node_FindByUid :: proc(manager: ^NodeManager, root: ^Node, uid: string) -> ^Node {
+	if root == nil || uid == "" do return nil
+	if root.uid == uid do return root
+	for c in GetChildrenView(manager, root) do if found := Node_FindByUid(manager, c, uid); found != nil do return found
+	return nil
+}
+
 // Node_ForgetCopiedUids: a pasted or duplicated subtree keeps a uid only
 // when no other node of the scene has it - a cut and pasted node keeps its
 // identity (instances' overrides stay on it); a copy is a new node (given a

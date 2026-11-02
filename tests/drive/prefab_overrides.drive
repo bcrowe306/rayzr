@@ -32,7 +32,6 @@ key ctrl+s
 expect file:scenes/main.scene.json contains "overrides": {"
 expect file:scenes/main.scene.json contains : {"position": [25,
 expect file:scenes/main.scene.json !contains "ParticleEmitter"
-expect file:scenes/main.scene.json !contains "uid"
 
 # The other instance is unaffected.
 expect node:PlayerShip/ParticleEmitter.position !contains 25.0,

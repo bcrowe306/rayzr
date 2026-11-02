@@ -22,8 +22,9 @@ import rl "vendor:raylib"
 // (editor guide lines: [{"x": 100}, {"y": 50}]), "root".
 //
 // Node object:
-//   "type", "name", "position", "scale", "rotation", "pivot" (the origin, nodes
-//   that draw a rectangle), "enabled", "visible", "layer"
+//   "type", "name", "uid" (stable id, unique in the file: given on load / save,
+//   kept through renames and moves - #328), "position", "scale", "rotation",
+//   "pivot" (the origin, nodes that draw a rectangle), "enabled", "visible", "layer"
 //   optional: "pause_mode", "paused", "tags", "editor_locked", "editor_hidden" (editor only)
 //   a component's root: "exposed": [{"uid", "property", "label"}] (component_exposed.odin)
 //   "properties": { <reflected gui:"true" fields> }        (see node_properties.odin)
@@ -43,6 +44,7 @@ Scene_SerializeToJSON :: proc(scene: ^Scene, allocator := context.allocator) -> 
 	// An editor preview's oscillated values aren't saved (oscillator_node.odin).
 	held := Oscillator_PreviewsHold(scene, true)
 	defer if held do Oscillator_PreviewsHold(scene, false)
+	Scene_AssignUids(scene) // (every node has one: #328)
 	w := Json_Writer{sb = strings.builder_make(allocator)}
 	strings.write_byte(&w.sb, '{')
 	w.indent = 1
@@ -853,6 +855,7 @@ Scene_InstantiateFromJSON :: proc(scene: ^Scene, jsonBytes: []u8, gameContext: ^
 	}
 
 	if rootNodeObj, hasRoot := sj_obj(rootObj, "root"); hasRoot {
+		if uid := sj_string(rootNodeObj, "uid", ""); uid != "" && scene.rootNode != nil do scene.rootNode.uid = strings.clone(uid, scene.rootNode.allocator)
 		if childrenArr, hasChildren := sj_arr(rootNodeObj, "children"); hasChildren {
 			for childVal in childrenArr {
 				if childObj, ok := childVal.(json.Object); ok {
@@ -861,6 +864,8 @@ Scene_InstantiateFromJSON :: proc(scene: ^Scene, jsonBytes: []u8, gameContext: ^
 			}
 		}
 	}
+
+	Scene_AssignUids(scene) // (old scenes: written when next saved, #328)
 
 	// The scene's camera is its current CameraNode. Old files also carry a
 	// scene-level "camera" block: honour it only if no camera node exists, so

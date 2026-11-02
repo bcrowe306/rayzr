@@ -193,6 +193,13 @@ Set up a player with a sprite and a camera that follows it:
 - Nodes inside a component instance keep their parent: change the
   structure in the component itself (**Edit Component**).
 - Locked nodes can still be edited in the tree and the Inspector.
+- Renaming or moving a node offers to update everything that points at it
+  (signals, node properties, animation tracks, scripts' `get_node` paths).
+- Every node has a stable id (`"uid"` in the scene file) that it keeps when
+  renamed or moved; a duplicate gets a new one. Scripts read it as
+  `node.uid` and find the node with `Scene.find_by_uid`. Saving writes keys
+  in a fixed order, so an edit shows up as a small diff in version control.
+  Older scenes get their ids the next time they are saved.
 - More: [Inspector](inspector.md), [viewport](viewport.md),
   [toolbar and menus](toolbar-menus.md), [components](../../engine/docs/components.md),
   [custom nodes](../../engine/docs/custom_nodes.md),
