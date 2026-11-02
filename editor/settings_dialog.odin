@@ -801,7 +801,7 @@ project_input :: proc(state: ^EditorState) {
 			imgui.SameLine(0, 6)
 			imgui.SetNextItemWidth(140)
 			if idx, changed := UI_Combo("settings.prompt-family", st.promptFamily, []string{"Xbox", "PlayStation", "Switch", "Steam Deck"}); changed do st.promptFamily = idx
-			UI_Tooltip("The button images games get from Input.glyph(action) - for this pad (and the keyboard)")
+			UI_Tooltip("The button images games get from Input.get_glyph(action) - for this pad (and the keyboard)")
 			imgui.Dummy({0, 4})
 			remove := -1
 			for &b, bi in a.bindings {

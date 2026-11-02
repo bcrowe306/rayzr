@@ -31,7 +31,7 @@ steps, a recipe, a high-score table's places.
 
 Set the items in the Node tab's **Items** box, one a line; two spaces at
 the start nest an item a level deeper (numbered on its own). Scripts:
-`node:ui_set_items({"Open the menu", "Pick a slot", "  Confirm"})`.
+`node:set_items({"Open the menu", "Pick a slot", "  Confirm"})`.
 
 ## How it works
 

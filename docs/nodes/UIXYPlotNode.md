@@ -29,7 +29,7 @@ compared.
 
 Set **Points** (and **Secondary Points**) in the Node tab, one `x, y` a
 line, along with **Title**, **X Label**, **Y Label** and the series names.
-Scripts: `node:ui_set_items({Vec2(0, 10), Vec2(1, 14)})` replaces the
+Scripts: `node:set_items({Vec2(0, 10), Vec2(1, 14)})` replaces the
 points, or `node:set_property("secondaryPoints", {...})`.
 
 ## How it works

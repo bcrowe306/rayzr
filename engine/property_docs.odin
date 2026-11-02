@@ -263,7 +263,7 @@ PROPERTY_DOCS := [?]Property_Doc_Entry {
 	{"ViewportNode.mode", "World: the running scene through the viewport's Camera child (add one: its follow target, zoom and limits) - minimaps, split-screen. Children: only the viewport's own children - an in-world screen, a preview."},
 	{"ViewportNode.size", "The size it's drawn at (Display), in px."},
 	{"ViewportNode.renderSize", "How many pixels it renders (0, 0: Size). Smaller is cheaper and pixelated - a 160x90 minimap drawn at 320x180."},
-	{"ViewportNode.updateMode", "Every Frame; When Visible (skipped while hidden or off screen); Once (a snapshot: node:refresh() redraws it)."},
+	{"ViewportNode.updateMode", "Every Frame; When Visible (skipped while hidden or off screen); Once (a snapshot: node:viewport_refresh() redraws it)."},
 	{"ViewportNode.display", "Draws its picture where it stands, at Size. Off: only used elsewhere (a Sprite's texture \"viewport:<name>\", a material)."},
 	{"ViewportNode.coversScreen", "World: it covers the screen (split-screen), so the main view's world isn't drawn underneath - only Screen Layers."},
 	{"ViewportNode.pixelated", "Scaled nearest-neighbour (crisp pixels) instead of smoothly."},

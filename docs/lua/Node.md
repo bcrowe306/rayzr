@@ -7,7 +7,7 @@
 - **Tags and types**: `add_tag("enemy")` and `has_tag` group nodes without a common parent. `is("AreaNode")` checks a node's type - a custom type, its built-in type, or `"Node"`.
 - **Events**: `emit("died", value)` calls the node script's `on_died` and every handler added with `connect`. `connect` returns an id for `disconnect`.
 - **Talking to another script**: `get_script()` returns that node's `self` - read its fields and call its methods (`enemy:get_script():take_damage(1)`).
-- **Removing**: `queue_free()` (or `destroy()`) removes the node and its children at the end of the frame. `add_child` moves a node under another, `remove_child` detaches one without destroying it.
+- **Removing**: `destroy()` removes the node and its children at the end of the frame. `add_child` moves a node under another, `remove_child` detaches one without destroying it.
 
 ## Example
 
@@ -53,7 +53,7 @@ function Patrol:take_damage(amount)
     self.node:emit("health_changed", self.health)
     if self.health <= 0 then
         self.node:emit("died")
-        self.node:queue_free()
+        self.node:destroy()
     end
 end
 
@@ -64,6 +64,6 @@ return Patrol
 
 - `get_position`, `set_position`, rotation and scale are local - relative to the parent. Compare nodes with different parents by `get_global_position()`. It is worked out before and after each frame's updates, so right after `set_position` it still has the old value.
 - `ready()` runs once, after every node of the scene exists, parents before children - `get_node` finds the children, but their own `ready()` hasn't run yet. A node added later gets its `ready()` before the next update; a disabled one waits until it is enabled.
-- `queue_free()` and `destroy()` are the same: the node stays until the end of the frame, so it is safe to call from its own `update`. A pooled node goes back to its pool instead. A reference to a removed node stays safe - its getters return defaults and `get_name()` returns nil.
+- `destroy()` waits for the end of the frame: the node stays until the end of the frame, so it is safe to call from its own `update`. A pooled node goes back to its pool instead. A reference to a removed node stays safe - its getters return defaults and `get_name()` returns nil.
 - `set_visible(false)` hides only the node's own drawing - its children still draw, and it keeps updating. To hide a whole branch, use `set_enabled(false)`.
 - An `emit` value can be a boolean, number, string, node or table - a table arrives as the same table, not a copy. A handler added with `connect` gets `(value, source)`.

@@ -31,6 +31,7 @@ main :: proc() {
 	// Profiling builds (-define:RAYZR_PROF=true, engine/profiling.odin): --prof trace.spall.
 	e.Prof_ParseArgs(os.args[1:])
 	context.allocator = e.Prof_Init(context.allocator)
+	e.Lua_WarnDeprecated = true // deprecated Lua names warn in the editor (#327)
 	code := editor_main()
 	e.Prof_Shutdown()
 	// (Called here, not deferred: os.exit skips defers.)

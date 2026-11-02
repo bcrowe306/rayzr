@@ -11,8 +11,8 @@ PlayStation one, B on a Switch).
 | Assignment | Player N has the Nth gamepad the OS lists, so the first pad plugged in is player 1's, the second player 2's. A pad nobody has goes to the first player without a connected pad. `Input.set_player_gamepad(player, pad)` reassigns (swapping, so two players never share one) |
 | Hot-plug | Every script gets `on_gamepad_connected(player, name)` / `on_gamepad_disconnected(player)` |
 | Rumble | `Input.vibrate(low, high, seconds[, player])` - the heavy and light motors, 0-1 each |
-| Prompts | `Input.glyph(action[, player])` - an image path for the action's button on the player's device; any image takes it |
-| Devices | `Input.device([player])`: `"keyboard"`, `"xbox"`, `"playstation"`, `"switch"`, `"steamdeck"`, `"generic"` or `"none"` - from the controller's name |
+| Prompts | `Input.get_glyph(action[, player])` - an image path for the action's button on the player's device; any image takes it |
+| Devices | `Input.get_device([player])`: `"keyboard"`, `"xbox"`, `"playstation"`, `"switch"`, `"steamdeck"`, `"generic"` or `"none"` - from the controller's name |
 
 ## Tutorial: two-player co-op
 
@@ -48,7 +48,7 @@ return Hero
 local Game = {}
 
 function Game:ready()
-    if Input.player_count() >= 2 then self:spawn(2) end
+    if Input.get_player_count() >= 2 then self:spawn(2) end
 end
 
 function Game:on_gamepad_connected(player, name)
@@ -65,7 +65,7 @@ return Game
 
 ## Button prompts
 
-`Input.glyph("jump")` is the image of the button the player presses for
+`Input.get_glyph("jump")` is the image of the button the player presses for
 `jump` now: the first binding for their device. Player 1 switches between
 keyboard and controller prompts with what they touched last; other players
 always get their pad's.
@@ -73,7 +73,7 @@ always get their pad's.
 ```lua
 -- A "Press [A] to jump" hint that follows the device.
 function Hint:update(dt)
-    local g = Input.glyph("jump")
+    local g = Input.get_glyph("jump")
     if g ~= self.shown then
         self.node:get_node("Icon"):set_texture(g)
         self.shown = g
@@ -88,7 +88,7 @@ the engine: keyboard and mouse, Xbox, PlayStation, Switch and Steam Deck
 Any of the pack's images can be used directly, e.g.
 `prompts:playstation/playstation_dpad_up` or `prompts:keyboard/mouse_scroll`
 (names: the pack's sheets in `engine/prompts/*.xml`).
-`Input.glyph(action, player, "switch")` asks for one device's prompt.
+`Input.get_glyph(action, player, "switch")` asks for one device's prompt.
 
 Positions, not letters: raylib's `RIGHT_FACE_DOWN` is the bottom face button
 on every pad - A on Xbox, Cross on PlayStation, B on Switch - and the

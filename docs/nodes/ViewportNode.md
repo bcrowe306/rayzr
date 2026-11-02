@@ -44,7 +44,7 @@ The editor shows each Viewport's picture live, with a frame around it.
 - **Update Mode**:
   - **Every Frame** redraws it every frame.
   - **When Visible** skips it while it's hidden or off screen.
-  - **Once** takes one picture; `node:refresh()` takes another.
+  - **Once** takes one picture; `node:viewport_refresh()` takes another.
 - **World** shows the world layers its camera draws (all of them without a
   camera), never Screen Layers, so the HUD isn't in it. Without a camera it
   shows the world around itself.
@@ -60,10 +60,10 @@ The editor shows each Viewport's picture live, with a frame around it.
 
 ## Scripts
 
-- `viewport:get_texture()` returns its path, `"viewport:<name>"`, for
+- `viewport:viewport_get_texture()` returns its path, `"viewport:<name>"`, for
   `sprite:set_texture(...)`.
-- `viewport:refresh()` redraws a viewport set to **Once**.
-- `viewport:save_png("photos/shot.png")` saves the picture. A relative path
+- `viewport:viewport_refresh()` redraws a viewport set to **Once**.
+- `viewport:viewport_save_png("photos/shot.png")` saves the picture. A relative path
   goes in the game's save-data folder.
 - Its properties work like any node's:
   `viewport:set_property("renderSize", 160, 90)`.
@@ -89,7 +89,7 @@ local Monitor = {}
 function Monitor:ready()
     -- "SecurityCam" is a Viewport (Display off) with a Camera 2D in the vault.
     local cam = Scene.find_node("SecurityCam")
-    self.node:set_texture(cam:get_texture()) -- this node is a Sprite
+    self.node:set_texture(cam:viewport_get_texture()) -- this node is a Sprite
 end
 
 return Monitor

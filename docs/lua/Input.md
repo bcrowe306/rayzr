@@ -37,10 +37,10 @@ function Ship:update(dt)
     end
 
     -- Swap the prompt when the player picks up the other device.
-    local device = Input.device()
+    local device = Input.get_device()
     if device ~= self.device then
         self.device = device
-        local image = Input.glyph("fire")
+        local image = Input.get_glyph("fire")
         if image then self.prompt:set_texture(image) end
     end
 end

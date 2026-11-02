@@ -430,6 +430,7 @@ Script_RegisterSaveModule :: proc(L: ^lua.State) {
 	reg(L, "clear", lua_save_clear)
 	reg(L, "flush", lua_save_flush)
 	reg(L, "slot", lua_save_slot)
-	reg(L, "path", lua_save_path)
+	reg(L, "get_path", lua_save_path)
+	Lua_SetDeprecated(L, lua_save_path, "path", "Save.get_path")
 	lua.setglobal(L, "Save")
 }

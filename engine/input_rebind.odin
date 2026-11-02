@@ -587,6 +587,10 @@ lua_input_listen :: proc "c" (L: ^lua.State) -> c.int {
 	ok := Input_RebindListen(input, string(lua.tostring(L, 1)), slot, device, conflicts, cancel)
 	if ok && lua.type(L, 2) == .TABLE {
 		lua.getfield(L, 2, "on_done")
+		if lua.type(L, -1) != .FUNCTION { // (on_complete is the same: #327)
+			lua.pop(L, 1)
+			lua.getfield(L, 2, "on_complete")
+		}
 		if lua.type(L, -1) == .FUNCTION do input.rebind.callback = lua.L_ref(L, lua.REGISTRYINDEX)
 		else do lua.pop(L, 1)
 	}
@@ -687,7 +691,8 @@ Script_RegisterRebindBindings :: proc(L: ^lua.State) {
 		lua.setfield(L, -2, name)
 	}
 	reg(L, "get_bindings", lua_input_get_bindings)
-	reg(L, "binding_text", lua_input_binding_text)
+	reg(L, "get_binding_text", lua_input_binding_text)
+	Lua_SetDeprecated(L, lua_input_binding_text, "binding_text", "Input.get_binding_text")
 	reg(L, "set_binding", lua_input_set_binding)
 	reg(L, "listen", lua_input_listen)
 	reg(L, "is_listening", lua_input_is_listening)
@@ -695,6 +700,7 @@ Script_RegisterRebindBindings :: proc(L: ^lua.State) {
 	reg(L, "reset_bindings", lua_input_reset_bindings)
 	reg(L, "save_bindings", lua_input_save_bindings)
 	reg(L, "find_conflicts", lua_input_find_conflicts)
-	reg(L, "last_device", lua_input_last_device)
+	reg(L, "get_last_device", lua_input_last_device)
+	Lua_SetDeprecated(L, lua_input_last_device, "last_device", "Input.get_last_device")
 	reg(L, "get_actions", lua_input_get_actions)
 }

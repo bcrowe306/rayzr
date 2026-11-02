@@ -30,7 +30,7 @@ Set **Columns** and **Rows** in the Node tab, one a line. A column is
 `Title`, or `Title|width` (a width of 1 or less is a share of the table,
 more is pixels); a row is its cells split by `|`, like `Ada|1200|Gold`.
 Scripts: `node:set_property("columns", {...})`, and
-`node:ui_set_items({"Ada|1200", "Bo|900"})` for the rows.
+`node:set_items({"Ada|1200", "Bo|900"})` for the rows.
 
 ## How it works
 

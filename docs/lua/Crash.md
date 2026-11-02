@@ -2,7 +2,7 @@
 
 - **Hearing about crashes from players**: at startup, `Crash.pending()` returns the reports from earlier runs. Show them, send them to your own server, or ask the player to paste them to you - then `Crash.dismiss` each one so it isn't offered again.
 - **Knowing what led up to a crash**: `Crash.note("entered level 3")` at milestones adds a line to the report's recent list, next to the last log lines.
-- **Pointing players at the files**: `Crash.dir()` is the folder the reports are in ("" in the editor's Simulate, which has no game crash folder; `pending` is empty there).
+- **Pointing players at the files**: `Crash.get_dir()` is the folder the reports are in ("" in the editor's Simulate, which has no game crash folder; `pending` is empty there).
 
 ## Example
 
@@ -15,7 +15,7 @@ local TitleScreen = {}
 function TitleScreen:ready()
     local reports = Crash.pending()
     if #reports > 0 then
-        Log.warn(#reports .. " crash report(s) in " .. Crash.dir())
+        Log.warn(#reports .. " crash report(s) in " .. Crash.get_dir())
         for _, report in ipairs(reports) do
             -- Send report.text to your own server here, or show it to the player.
             Log.info(report.text)

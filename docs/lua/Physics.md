@@ -26,7 +26,7 @@ end
 ---@param dt number
 function Turret:update(dt)
     if Input.is_key_pressed("F3") then
-        Physics.set_debug_draw(not Physics.get_debug_draw())
+        Physics.set_debug_draw(not Physics.is_debug_draw())
     end
     if not self.player then return end
     self.cooldown = self.cooldown - dt

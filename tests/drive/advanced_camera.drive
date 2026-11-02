@@ -40,10 +40,10 @@ key enter
 wait 3
 expect log contains ADV trauma=true
 screenshot shaking
-type local c2 = Scene.create_node("AdvancedCameraNode", "WideZz"); c2.priority = 5; c2.zoom = 0.5
+type local c2 = Scene.create("AdvancedCameraNode"); c2.name = "WideZz"; c2.priority = 5; c2.zoom = 0.5
 key enter
 wait 90
-type print("ADV now=" .. Camera.get_active():get_name() .. " old=" .. tostring(Scene.find_node("CamZz"):is_active()))
+type print("ADV now=" .. Camera.get_active():get_name() .. " old=" .. tostring(Scene.find_node("CamZz"):adv_camera_is_active()))
 key enter
 wait 3
 expect log contains ADV now=WideZz old=false

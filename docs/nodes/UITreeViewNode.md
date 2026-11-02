@@ -25,7 +25,7 @@ tool.
 
 Set the items in the Node tab's **Items** box, one a line; two spaces at
 the start nest an item under the one above it (`Weapons`, then
-`  Sword`). Scripts: `node:ui_set_items({"Weapons", "  Sword", "  Bow"})`.
+`  Sword`). Scripts: `node:set_items({"Weapons", "  Sword", "  Bow"})`.
 
 ## How it works
 

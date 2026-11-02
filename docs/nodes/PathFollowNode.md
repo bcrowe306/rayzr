@@ -84,7 +84,7 @@ Elevator.properties = {
 function Elevator:go_to(floor)
     local ratio = floor / (self.floors - 1)
     local route = self.node:get_parent() ---@type PathNode
-    Tween.to(self.node, "progress", ratio * route:path_length(), 1.5, "in_out_sine")
+    Tween.to(self.node, "progress", ratio * route:path_get_length(), 1.5, "in_out_sine")
 end
 
 return Elevator

@@ -423,10 +423,10 @@ AdvCam_Snap :: proc(c: ^AdvancedCameraNode, ctx: ^GameContext) {
 }
 
 // --- Lua -------------------------------------------------------------------------------
-// cam:add_trauma(amount)   stack shake (0..1)
-// cam:make_active()        priority above every other camera
-// cam:is_active()          the host shows it
-// cam:snap()               jump to the target now (no damping / blend)
+// cam:adv_camera_add_trauma(amount)   stack shake (0..1)
+// cam:adv_camera_make_active()        priority above every other camera
+// cam:adv_camera_is_active()          the host shows it
+// cam:adv_camera_snap()               jump to the target now (no damping / blend)
 // Camera.add_trauma(amount) / Camera.get_active() - the active advanced camera
 
 @(private = "file")
@@ -489,10 +489,14 @@ lua_camera_get_active :: proc "c" (L: ^lua.State) -> c.int {
 // Script_RegisterAdvCamNodeBindings adds the methods to the node metatable
 // (on the stack).
 Script_RegisterAdvCamNodeBindings :: proc(L: ^lua.State) {
-	lua.pushcfunction(L, lua_advcam_add_trauma); lua.setfield(L, -2, "add_trauma")
-	lua.pushcfunction(L, lua_advcam_make_active); lua.setfield(L, -2, "make_active")
-	lua.pushcfunction(L, lua_advcam_is_active); lua.setfield(L, -2, "is_active")
-	lua.pushcfunction(L, lua_advcam_snap); lua.setfield(L, -2, "snap")
+	lua.pushcfunction(L, lua_advcam_add_trauma); lua.setfield(L, -2, "adv_camera_add_trauma")
+	Lua_SetDeprecated(L, lua_advcam_add_trauma, "add_trauma", "adv_camera_add_trauma")
+	lua.pushcfunction(L, lua_advcam_make_active); lua.setfield(L, -2, "adv_camera_make_active")
+	Lua_SetDeprecated(L, lua_advcam_make_active, "make_active", "adv_camera_make_active")
+	lua.pushcfunction(L, lua_advcam_is_active); lua.setfield(L, -2, "adv_camera_is_active")
+	Lua_SetDeprecated(L, lua_advcam_is_active, "is_active", "adv_camera_is_active")
+	lua.pushcfunction(L, lua_advcam_snap); lua.setfield(L, -2, "adv_camera_snap")
+	Lua_SetDeprecated(L, lua_advcam_snap, "snap", "adv_camera_snap")
 }
 
 // Script_RegisterAdvCamCameraBindings adds Camera.add_trauma / get_active

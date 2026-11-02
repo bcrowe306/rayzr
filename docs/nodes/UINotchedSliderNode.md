@@ -53,7 +53,7 @@ a few steps: difficulty, quality presets, text speed, a 1-5 rating.
   it) and reads the mouse there too, so clicks line up either way.
 - **Notch Labels** (one a line, left to right) name the notches under the
   track; without them the slider shows its numbers. Scripts:
-  `node:ui_set_items({"Off", "Low", "High"})`.
+  `node:set_items({"Off", "Low", "High"})`.
 
 ## Signals
 

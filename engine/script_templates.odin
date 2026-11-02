@@ -312,7 +312,7 @@ function $CLASS$:on_body_entered(other)
     if self.sound ~= "" then Audio.play_sound(self.sound) end
     other:emit("collected", self.value)
     Tween.to(self.node, "scale", {0, 0}, 0.2, "in_back", {
-        on_complete = function(node) node:queue_free() end,
+        on_complete = function(node) node:destroy() end,
     })
 end
 

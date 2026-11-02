@@ -29,7 +29,7 @@ Set the buttons in the Node tab's **Items** box, one a line:
 `Icon|Label|Tooltip` (an icon name such as `Save`, either part may be
 empty; start with `toggle:` for a toggle), `-` for a separator and `~` for
 a spacer. A button's id is its line number (1, 2, ...). Scripts:
-`node:ui_set_items({"Save|Save|Save the game", "-", "toggle:|Grid"})`.
+`node:set_items({"Save|Save|Save the game", "-", "toggle:|Grid"})`.
 
 ## How it works
 

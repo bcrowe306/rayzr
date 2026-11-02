@@ -101,7 +101,7 @@ Followers are plain properties (`progress`, `speed`, `loop`, `rotate`,
 ```lua
 local cart = self.node:get_node("Track/Cart")       -- a PathFollow
 cart:follow_set_ratio(0.5)                          -- jump to the middle
-print(cart:follow_ratio())                          -- 0..1
+print(cart:follow_get_ratio())                          -- 0..1
 cart:follow_restart()                               -- back to the start (after path_finished)
 cart:connect("path_finished", function() self:arrived() end)
 
@@ -113,7 +113,7 @@ Paths themselves:
 
 ```lua
 local route = self.node:get_node("Route")
-local len = route:path_length()
+local len = route:path_get_length()
 local pos, dir = route:path_point_at(len * 0.25)    -- world position, direction
 local d = route:path_closest_offset(player.position) -- distance along the path
 
@@ -126,13 +126,13 @@ route:path_add_point(Vec2(400, 0))
 
 | Method | Returns |
 |---|---|
-| `path:path_length()` | number |
+| `path:path_get_length()` | number |
 | `path:path_point_at(distance)` | Vec2 world position, Vec2 direction |
 | `path:path_closest_offset(x, y \| Vec2)` | distance along the path |
 | `path:path_point_count()` | integer |
 | `path:path_get_point(i)` | pos, handle_in, handle_out (local, 1-based) |
 | `path:path_set_point(i, pos [, in, out])` / `path:path_add_point(pos [, in, out])` / `path:path_remove_point(i)` / `path:path_clear()` | - |
-| `follow:follow_ratio()` / `follow:follow_set_ratio(r)` / `follow:follow_restart()` | |
+| `follow:follow_get_ratio()` / `follow:follow_set_ratio(r)` / `follow:follow_restart()` | |
 
 Events: `path_finished` (Stop mode reached the end), `path_looped` (wrapped
 or turned).

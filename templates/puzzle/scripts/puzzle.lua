@@ -55,7 +55,8 @@ local function key(c, r) return c .. "," .. r end
 
 -- sprite: a TextureNode on the board at a cell.
 function Puzzle:sprite(name, tex, c, r, z)
-    local n = Scene.create_node("TextureNode", name, self.node)
+    local n = Scene.create("TextureNode", self.node)
+    n.name = name
     n:set_texture("textures/" .. tex .. ".png")
     n:set_property("zIndex", z)
     n:set_position(self:pos(c, r))

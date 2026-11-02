@@ -1,5 +1,5 @@
 # Spawning: Scene.instantiate is typed per component (its root's type)
-# and queue_free completes on nodes.
+# and destroy completes on nodes.
 wait 5
 wait-until file:.rayzr/definitions/project_types.lua contains fun(component: "components/AsteroidLarge.component.json", parent?: Node, x?: number|Vec2, y?: number): DynamicBodyNode timeout=600
 dblclick @asset:scripts/player_ship.lua
@@ -16,5 +16,5 @@ wait-until code.completion contains apply_impulse timeout=600
 key esc
 key end
 key enter
-type rock:queue_f
-wait-until code.completion contains queue_free timeout=600
+type rock:destr
+wait-until code.completion contains destroy timeout=600

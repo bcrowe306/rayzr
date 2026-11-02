@@ -85,10 +85,10 @@ With no target found it stays where it is.
 
 ```lua
 local cam = Scene.find_node("PlayerCam")
-cam:add_trauma(0.3)              -- stack shake (0..1)
-cam:make_active()                -- priority above every other camera
-if cam:is_active() then ... end  -- the host shows it
-cam:snap()                       -- jump to the target now (after a teleport)
+cam:adv_camera_add_trauma(0.3)              -- stack shake (0..1)
+cam:adv_camera_make_active()                -- priority above every other camera
+if cam:adv_camera_is_active() then ... end  -- the host shows it
+cam:adv_camera_snap()                       -- jump to the target now (after a teleport)
 
 Camera.add_trauma(0.5)           -- the active advanced camera
 local active = Camera.get_active()
@@ -137,7 +137,7 @@ Level
 function Arena:ready()
     self.cam = self.node:get_node("ArenaCam")
     self.node:get_node("Trigger"):connect("body_entered", function(body)
-        if body:get_name() == "Player" then self.cam:make_active() end
+        if body:get_name() == "Player" then self.cam:adv_camera_make_active() end
     end)
 end
 
@@ -173,7 +173,7 @@ screen while 0.8 shakes hard - the curve is what makes it feel good.
 1. Draw a **Path** along the shot.
 2. Add an Advanced Camera: **Follow Mode** Path, **Follow Path** that path,
    Follow Target the character walking the scene, Damping 0.3, priority -10.
-3. In the cutscene script: `cam:make_active()`; at the end
+3. In the cutscene script: `cam:adv_camera_make_active()`; at the end
    `cam.priority = -10`.
 
 ## Saved as

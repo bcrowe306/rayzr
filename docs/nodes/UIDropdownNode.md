@@ -26,7 +26,7 @@ a choice has several options.
 
 Set the items in the Node tab's **Items** box, one a line (they're saved
 with the scene). A script can replace them:
-`node:ui_set_items({"Low", "Medium", "High"})`, and `node:ui_get_items()`
+`node:set_items({"Low", "Medium", "High"})`, and `node:get_items()`
 reads them.
 
 ## How it works

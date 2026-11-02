@@ -38,7 +38,7 @@ click @menu:Game/Simulate in Editor
 wait 30
 click @bottom:console
 click @console.lua
-type local h = Scene.find_node("hills_zz"); local b = Scene.create_node("DynamicBodyNode", "DropBall"); b.position = Vec2(h.position.x, h.position.y - 150); local a = Scene.create_node("VectorShapeNode", "DropArt", b); a.preset = "Ring"; a.scale = Vec2(0.1, 0.1); a.collider = "Solid"; Log.info("VCOL start")
+type local h = Scene.find_node("hills_zz"); local b = Scene.create("DynamicBodyNode"); b.name = "DropBall"; b.position = Vec2(h.position.x, h.position.y - 150); local a = Scene.create_node("VectorShapeNode", "DropArt", b); a.preset = "Ring"; a.scale = Vec2(0.1, 0.1); a.collider = "Solid"; Log.info("VCOL start")
 key enter
 wait 120
 type local b = Scene.find_node("DropBall"); local h = Scene.find_node("hills_zz"); print("VCOL landed=" .. tostring(b.position.y < h.position.y and b.position.y > h.position.y - 120))

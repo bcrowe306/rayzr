@@ -28,8 +28,8 @@ player sees the whole choice at a glance.
 5. Handle `value_changed` (below).
 
 Set the options in the Node tab's **Options** box, one a line (saved with
-the scene). A script can replace them with `node:ui_set_items({...})` and
-read them with `node:ui_get_items()`.
+the scene). A script can replace them with `node:set_items({...})` and
+read them with `node:get_items()`.
 
 ## How it works
 

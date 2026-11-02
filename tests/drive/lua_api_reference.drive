@@ -20,7 +20,7 @@ screenshot hover
 key f1
 wait 3
 expect item:ref.window == visible
-expect ref-api contains AudioModule.play_sound(path, volume, pitch)
+expect ref-api contains AudioModule.play_sound(path, volume, pitch, bus)
 expect ref-api contains Example:
 expect ref-section contains Audio
 screenshot reference

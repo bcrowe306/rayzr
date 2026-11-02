@@ -547,5 +547,6 @@ Script_RegisterSkeletonBindings :: proc(L: ^lua.State) {
 	reg(L, "skeleton_bone_position", lua_skel_bone_position)
 	reg(L, "skeleton_bone_rotation", lua_skel_bone_rotation)
 	reg(L, "skeleton_set_bone_rotation", lua_skel_set_bone_rotation)
-	reg(L, "skeleton_duration", lua_skel_duration)
+	reg(L, "skeleton_get_duration", lua_skel_duration)
+	Lua_SetDeprecated(L, lua_skel_duration, "skeleton_duration", "skeleton_get_duration")
 }

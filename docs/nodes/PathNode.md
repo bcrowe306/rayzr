@@ -72,7 +72,7 @@ function Guard:ready()
 end
 
 function Guard:update(dt)
-    local length = self.route:path_length()
+    local length = self.route:path_get_length()
     self.distance = (self.distance + self.speed * dt) % length
     local pos, dir = self.route:path_point_at(self.distance)
     self.node:set_position(pos.x, pos.y)   -- (the guard is at the scene's root)

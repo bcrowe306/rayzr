@@ -290,10 +290,6 @@ Script_RegisterBehaviorTreeBindings :: proc(L: ^lua.State) {
 		{"bt_tick", lua_bt_tick},
 		{"bt_interrupt", lua_bt_interrupt},
 		{"bt_status", lua_bt_status},
-		{"bt_get", lua_bt_get},
-		{"bt_set", lua_bt_set},
-		{"bt_has", lua_bt_has},
-		{"bt_erase", lua_bt_erase},
 		{"bt_blackboard", lua_bt_blackboard},
 		{"bt_running_action", lua_bt_running_action},
 		{"bt_last_condition", lua_bt_last_condition},
@@ -301,6 +297,11 @@ Script_RegisterBehaviorTreeBindings :: proc(L: ^lua.State) {
 		lua.pushcfunction(L, f.fn)
 		lua.setfield(L, -2, f.name)
 	}
+	// The key functions with a `global` flag: the blackboard objects say it (#327).
+	Lua_SetDeprecated(L, lua_bt_get, "bt_get", "tree:bt_blackboard():get (or Blackboard:get)")
+	Lua_SetDeprecated(L, lua_bt_set, "bt_set", "tree:bt_blackboard():set (or Blackboard:set)")
+	Lua_SetDeprecated(L, lua_bt_has, "bt_has", "tree:bt_blackboard():has (or Blackboard:has)")
+	Lua_SetDeprecated(L, lua_bt_erase, "bt_erase", "tree:bt_blackboard():erase (or Blackboard:erase)")
 	// Blackboard: the global blackboard object (no __tree).
 	lua.newtable(L)
 	bb_push_meta(L)

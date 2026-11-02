@@ -8,13 +8,13 @@ the TileMaps of those names next to it: give the node one TileMap child per
 layer - `Ground` first, then `Walls`, `Decor`. When
 the scene starts (**Generate On Ready**) it makes a level: the tiles, their
 colliders, and the generator's entities (as children of the map). Call
-`generate()` again - or connect a signal to `generate`, no script needed -
+`levelgen_generate()` again - or connect a signal to `generate`, no script needed -
 for a new level.
 
 | | |
 |---|---|
 | **Seed** | The same seed makes the same level (0: the generator's own seed). |
-| **Random Seed** | A new level every time. **Last Seed** is the one used: show it to the player, save it, `generate(seed)` replays it. |
+| **Random Seed** | A new level every time. **Last Seed** is the one used: show it to the player, save it, `levelgen_generate(seed)` replays it. |
 | **Background** | Makes the level on a worker thread while the game keeps running (a loading screen stays smooth); `generated` fires when it is in. |
 | **Attempts** | With **Random Seed**: how many seeds it tries when the generator refuses a level - a **Check** node finding too little open, or the level in pieces - before it reports `generation_failed` (10). **Last Seed** is the one that worked. |
 
@@ -29,9 +29,9 @@ From Lua, before generating:
 function Level:ready()
     local gen = self.node:get_node("Generator")
     local level = Save.get("level", 1)
-    gen:set_level_param(1, "density", 0.42 + level * 0.02) -- (node 1: a random fill)
+    gen:levelgen_set_param(1, "density", 0.42 + level * 0.02) -- (node 1: a random fill)
     gen:connect("generated", function(seed) Log.info("level " .. seed) end)
-    gen:generate()
+    gen:levelgen_generate()
 end
 ```
 

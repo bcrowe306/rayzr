@@ -21,7 +21,8 @@ The **Rayzr** features a fast, memory-safe, embeddable Lua 5.4 scripting archite
 4. [Hot Reload](#hot-reload)
 5. [Editing Scripts in the Editor](#editing-scripts-in-the-editor)
 6. [Language Server (LSP) & EmmyLua Support](#language-server-lsp--emmylua-support)
-7. [Engine Lua API Reference](#engine-lua-api-reference)
+7. [API stability](#api-stability)
+8. [Engine Lua API Reference](#engine-lua-api-reference)
    - [Node Methods](#1-node-methods-selfnode)
    - [Engine Module](#2-engine-module-engine)
    - [Input Module](#3-input-module-input)
@@ -32,8 +33,8 @@ The **Rayzr** features a fast, memory-safe, embeddable Lua 5.4 scripting archite
    - [Log Module](#8-log-module-log--print)
    - [Project Module](#9-project-module-project)
    - [Vector Module](#10-vector-module-vector)
-8. [Release Packaging & Virtual File System (VFS)](#release-packaging--virtual-file-system-vfs)
-9. [Demo Game Integration](#demo-game-integration)
+9. [Release Packaging & Virtual File System (VFS)](#release-packaging--virtual-file-system-vfs)
+10. [Demo Game Integration](#demo-game-integration)
 
 ---
 
@@ -613,6 +614,61 @@ local body = self.node:get_node("Body")
 local Enemy = {}
 ```
 
+## API stability
+
+From 1.0 on, scripts written for one Rayzr 1.x release keep working in every
+later 1.x release. The promise covers everything the type definitions list
+(`engine/definitions/engine_api.lua`, and `editor/definitions/editor_api.lua`
+for plugins), which is what the Code tab completes. Names starting with an
+underscore are internal and may change.
+
+**Renamed functions keep working until 2.0.** When a name is replaced, the
+old one is kept as an alias of the new one. Calling it logs a warning once
+per call site that names the replacement, for example
+`scripts/hud.lua:12: player_count is deprecated, use Input.get_player_count`.
+The warning appears in the editor, in Play from the editor and in debug
+builds; exported release builds stay silent. The Code tab shows deprecated
+names struck through.
+
+Names renamed before 1.0, all still working:
+
+| Old | New |
+|---|---|
+| `node:queue_free()` | `node:destroy()` |
+| `character_is_grounded()` | `character_is_on_floor()` |
+| `Scene.create_node(type, name, parent)` | `Scene.create(type, parent)`, then `node.name = name` |
+| `tree:bt_get/bt_set/bt_has/bt_erase(key, global)` | `tree:bt_blackboard():get/set/has/erase(key)`, or `Blackboard:get(...)` |
+| `Input.device`, `last_device`, `gamepads`, `gamepad_name`, `player_count`, `binding_text`, `glyph` | `Input.get_device`, `get_last_device`, `get_gamepads`, `get_gamepad_name`, `get_player_count`, `get_binding_text`, `get_glyph` |
+| `Save.path()`, `Crash.dir()` | `Save.get_path()`, `Crash.get_dir()` |
+| `Audio.bus_peak(bus)` | `Audio.get_bus_peak(bus)` |
+| `Physics.get_debug_draw()`, `Scene.get_draw_bounds()` | `Physics.is_debug_draw()`, `Scene.is_draw_bounds()` |
+| `Console.open(bool)` | `Console.set_open(bool)` |
+| `sm_trigger_pending(name)` | `sm_is_trigger_pending(name)` |
+| Viewport `get_texture`, `refresh`, `save_png` | `viewport_get_texture`, `viewport_refresh`, `viewport_save_png` |
+| Advanced Camera `make_active`, `is_active`, `snap`, `add_trauma` | `adv_camera_make_active`, `adv_camera_is_active`, `adv_camera_snap`, `adv_camera_add_trauma` |
+| Level Generator `generate`, `is_generating`, `set_level_param`, `level_param`, `clear_level_params` | `levelgen_generate`, `levelgen_is_generating`, `levelgen_set_param`, `levelgen_get_param`, `levelgen_clear_params` |
+| Spawner `spawn`, `set_spawn_callback` | `spawner_spawn`, `spawner_set_callback` |
+| `follow_ratio`, `path_length`, `aseprite_frame`, `oscillator_state`, `sound_count`, `sound_last`, `skeleton_duration` | `follow_get_ratio`, `path_get_length`, `aseprite_get_frame`, `oscillator_get_state`, `sound_get_count`, `sound_get_last`, `skeleton_get_duration` |
+| `ui_set_items`, `ui_get_items` | `set_items`, `get_items` |
+
+**The naming rules the API follows:**
+
+- Every method a node type adds starts with its type's prefix (`camera_`,
+  `sound_`, `viewport_`, `levelgen_`...), because all nodes share one method
+  table. The base Node's methods and physics bodies' (`apply_force`) are the
+  exceptions.
+- Reading a value is `get_x` (or `<prefix>_get_x`), changing it `set_x`, and
+  a yes/no question starts with `is_`, `has_` or `can_`.
+- Events are named in the past tense: `clicked`, `body_entered`,
+  `finished`. Every node that ends its work raises `finished`; the Navigation
+  Agent and the Path Follower raise it along with `navigation_finished` and
+  `path_finished`.
+- A completion callback in an options table can be called `on_done` or
+  `on_complete`; both work everywhere.
+- Enum values read back capitalised (`node.pauseMode == "Inherit"`) and are
+  accepted in any case when set or passed (`set_pause_mode("inherit")`).
+  Compare them case-insensitively: `node.loop:lower() == "pingpong"`.
+
 ## Engine Lua API Reference
 
 ### 1. Node Methods (`self.node`)
@@ -792,7 +848,7 @@ for _, key in ipairs(Save.keys()) do Log.info(key) end
 | `Save.clear()` | Removes every key. |
 | `Save.flush()` | Writes the file now; returns `true` on success. |
 | `Save.slot([name])` | Switches save file (writing the current one first); returns the current slot. |
-| `Save.path()` | The current save file's path. |
+| `Save.get_path()` | The current save file's path. |
 
 Functions and nodes can't be saved (they're written as `null`). A damaged
 file is ignored (logged) and the game starts with empty data. The runner's
@@ -976,7 +1032,7 @@ tutorial: [`docs/draw_order.md`](docs/draw_order.md).
 
 Every sound and music plays into a bus (Master, Music, SFX and the
 project's own, made in the **Mixer** tab): `Audio.set_bus_volume / mute /
-solo / pan`, `Audio.get_buses`, `Audio.bus_peak`, `Audio.set_effect(bus,
+solo / pan`, `Audio.get_buses`, `Audio.get_bus_peak`, `Audio.set_effect(bus,
 effect, param, value)`, `Audio.set_effect_enabled`; `Audio.play_sound(path,
 volume, pitch, bus)` and `Audio.play_music(path, loop, bus)`; Sound / Music
 nodes have a `bus` property. Without a bus named, a sound plays into its
@@ -1037,11 +1093,11 @@ tutorial: [`docs/scene_flow.md`](docs/scene_flow.md).
 
 #### Paths (PathNode, PathFollowNode)
 
-A PathNode is a Bézier curve (`path_length`, `path_point_at(d)` -> world
+A PathNode is a Bézier curve (`path_get_length`, `path_point_at(d)` -> world
 position and direction, `path_closest_offset`, `path_add_point` / `path_set_point` /
 `path_get_point` / `path_remove_point` / `path_clear`); a PathFollowNode child
 travels along it (`progress`, `speed`, `loop` Stop / Loop / PingPong,
-`rotate`, `sideOffset`; `follow_ratio`, `follow_set_ratio`, `follow_restart`;
+`rotate`, `sideOffset`; `follow_get_ratio`, `follow_set_ratio`, `follow_restart`;
 events `path_finished`, `path_looped`). A CharacterMover rides whatever
 floor it stands on when that floor moves. Guide:
 [`docs/paths.md`](docs/paths.md).
@@ -1068,7 +1124,7 @@ The same seed gives the same level. Guide:
 A **Spawner** spawns components where it is - its world position, rotation
 and flip, plus offsets - from its list: Single, All, Random (weighted),
 Sequential (loop / ping-pong / stop) or Shuffle. Put it on a player and
-`self.node:get_node("Muzzle"):spawn()` fires from the hand (the bullet goes
+`self.node:get_node("Muzzle"):spawner_spawn()` fires from the hand (the bullet goes
 under the scene's root, so it doesn't follow). Also `spawn_at`,
 `spawn_reset`, `spawn_alive_count`, `spawn_entries`, `spawn_add`; Auto
 Spawn, cooldown, chance, max alive, total limit, spread, speed, pooling;
@@ -1078,16 +1134,16 @@ events `spawned`, `limit_reached`, `list_finished`; a signal can call its
 Setting up what it spawns: values set on a spawned root right after
 `spawn()` (script, built-in, resource and node properties) are seen by its
 `ready()`. For every spawn - Auto Spawn, signals and pools included -
-`spawner:set_spawn_callback(function(node, info, spawner) ... end)` runs
+`spawner:spawner_set_callback(function(node, info, spawner) ... end)` runs
 before the node's `ready()`, with `info.component` and `info.index` (the
 list entry, from 1); `spawner:spawn_info(node)` gives the same for a live
 spawned root (e.g. in a `spawned` handler).
 
 ```lua
-for _, bullet in ipairs(self.node:get_node("Hand/Muzzle"):spawn()) do
+for _, bullet in ipairs(self.node:get_node("Hand/Muzzle"):spawner_spawn()) do
     bullet:get_script().speed = 400
 end
-spawner:set_spawn_callback(function(enemy, info)
+spawner:spawner_set_callback(function(enemy, info)
     enemy:get_script().weapon = weapons[info.index]
 end)
 ```
@@ -1473,8 +1529,8 @@ between them by priority; follow modes, LDtk level limits, trauma shake):
 ```lua
 Camera.add_trauma(0.4)                       -- shake the active advanced camera (stacks to 1)
 local cam = Camera.get_active()              -- nil when the scene has none
-Scene.find_node("BossCam"):make_active()     -- priority above the others: the host blends to it
-cam:add_trauma(0.2); cam:snap(); cam:is_active()
+Scene.find_node("BossCam"):adv_camera_make_active()     -- priority above the others: the host blends to it
+cam:adv_camera_add_trauma(0.2); cam:adv_camera_snap(); cam:adv_camera_is_active()
 cam:connect("became_active", function() end) -- also "became_inactive"
 ```
 
@@ -1525,7 +1581,7 @@ local hurtbox = Scene.create("Hurtbox", self.node, 0, -8)
 local all = Scene.find_nodes_of_type("Hurtbox")
 
 -- Remove a node (and its children) at the end of the frame.
-rock:queue_free()          -- same as rock:destroy()
+rock:destroy()          -- same as rock:destroy()
 
 -- Scene transitions
 Scene.change_scene("battle_arena")

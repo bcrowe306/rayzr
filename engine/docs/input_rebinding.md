@@ -34,7 +34,7 @@ keyboard.
 ```lua
 -- One row: the action, its keys, a button to change them.
 function Options:show_jump()
-    self.jump_label.text = "Jump: " .. Input.binding_text("jump") -- "Space / A"
+    self.jump_label.text = "Jump: " .. Input.get_binding_text("jump") -- "Space / A"
 end
 
 function Options:on_rebind_jump_pressed()
@@ -93,9 +93,9 @@ binding.
 
 ```lua
 function Hint:update(dt)
-    local pad = Input.last_device() == "gamepad"
+    local pad = Input.get_last_device() == "gamepad"
     -- The interact action: slot 1 is its key, slot 2 its gamepad button.
-    self.node.text = "Press " .. Input.binding_text("interact", pad and 2 or 1)
+    self.node.text = "Press " .. Input.get_binding_text("interact", pad and 2 or 1)
 end
 ```
 
@@ -115,14 +115,14 @@ end
 |---|---|
 | `Input.get_actions()` | The project's actions, in order. |
 | `Input.get_bindings(action)` | `{device, name, key / mouse / button / axis, positive, text}` per binding. |
-| `Input.binding_text(action [, slot])` | "Space / A", or one slot's text. |
+| `Input.get_binding_text(action [, slot])` | "Space / A", or one slot's text. |
 | `Input.set_binding(action, slot, binding \| nil [, conflicts])` | Set / remove a binding. |
 | `Input.listen(action [, {slot, device, conflicts, cancel, on_done}])` | Capture the next press. |
 | `Input.is_listening()` / `Input.cancel_listen()` | |
 | `Input.reset_bindings([action])` | Back to the project's. |
 | `Input.save_bindings()` | (Done automatically after each change.) |
 | `Input.find_conflicts(binding)` | Actions using it. |
-| `Input.last_device()` | `"keyboard"` or `"gamepad"`. |
+| `Input.get_last_device()` | `"keyboard"` or `"gamepad"`. |
 
 ## Where it's saved
 

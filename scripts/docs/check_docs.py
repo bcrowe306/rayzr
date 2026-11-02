@@ -126,6 +126,8 @@ class Checker:
         no_example = no_param_doc = no_return_doc = 0
         for cname, c in classes.items():
             for fn in c["functions"]:
+                if fn.get("deprecated"):
+                    continue  # an old name pointing at its replacement (#327)
                 doc = " ".join(fn["doc"]).strip()
                 if not doc:
                     self.error(f"engine_api.lua: {cname}{fn['sep']}{fn['name']} has no description")
