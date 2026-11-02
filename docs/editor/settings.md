@@ -231,7 +231,9 @@ settings. **Use Presets** turns the ticked targets into presets. Then:
   (**Project setting**, **On** or **Off**), **Include** and **Exclude**
   (file patterns, one per line - `*.psd`, `raw/`, `levels/test_*`; empty
   Include = everything), **Debug** (the debug runner: debug info, a
-  console window on Windows).
+  console window on Windows), **Single File** (Windows and Linux, on by
+  default: one executable with the game and the UI font inside; off: the
+  executable, `game.rayzr` and `fonts/` in a folder).
 - **Save and Export This Preset** saves the settings and exports that one
   preset.
 

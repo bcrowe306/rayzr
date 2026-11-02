@@ -16,9 +16,12 @@ import "winres"
 // platform the editor builds it once (needs `odin`) and then exports.
 //
 // A preset's folder (<output>/<preset name> unless it sets one):
-//   Windows  <Name>.exe (+ the runner's libraries), game.rayzr, fonts/
+//   Windows  <Name>.exe with game.rayzr and the font appended (#292: one file,
+//            engine/appended_payload.odin); the preset's Single File off:
+//            <Name>.exe (+ the runner's libraries), game.rayzr, fonts/
 //   macOS    <Name>.app                (export_macos.odin)
-//   Linux    <Name>.AppDir             (+ <Name>-<arch>.AppImage with appimagetool)
+//   Linux    <Name> (one file, as on Windows), <Name>.AppDir
+//            (+ <Name>-<arch>.AppImage with appimagetool)
 //
 // The packaged project.json carries the preset's overrides (version, icon,
 // window), and only the files the preset includes go into game.rayzr.
@@ -227,8 +230,8 @@ export_preset :: proc(state: ^EditorState, p: ^e.Export_Preset, outDir: string) 
 
 	switch t {
 	case .MacOS:   return Export_MacApp(state, &pc, runner, rayzr, dir, name)
-	case .Linux:   return export_linux(state, &pc, runner, rayzr, dir, name)
-	case .Windows: return export_windows(state, &pc, runner, rayzr, dir, name)
+	case .Linux:   return export_linux(state, &pc, runner, rayzr, dir, name, !p.separateFiles)
+	case .Windows: return export_windows(state, &pc, runner, rayzr, dir, name, !p.separateFiles)
 	case .Web:     return export_web(state, &pc, runner, rayzr, dir, name)
 	case .Android: return export_android(state, &pc, runner, rayzr, dir, name)
 	}
@@ -236,7 +239,7 @@ export_preset :: proc(state: ^EditorState, p: ^e.Export_Preset, outDir: string) 
 }
 
 @(private = "file")
-export_windows :: proc(state: ^EditorState, cfg: ^e.ProjectConfig, runner, rayzr, dir, name: string) -> (string, bool) {
+export_windows :: proc(state: ^EditorState, cfg: ^e.ProjectConfig, runner, rayzr, dir, name: string, single: bool) -> (string, bool) {
 	exe, _ := filepath.join({dir, strings.concatenate({name, ".exe"}, context.temp_allocator)}, context.temp_allocator)
 	if err := os.copy_file(exe, runner); err != nil {
 		Editor_Log(state, .Error, "Could not copy the runner to %s: %v", exe, err)
@@ -245,6 +248,15 @@ export_windows :: proc(state: ^EditorState, cfg: ^e.ProjectConfig, runner, rayzr
 	for lib in runner_libraries(runner) {
 		dst, _ := filepath.join({dir, filepath.base(lib)}, context.temp_allocator)
 		_ = os.copy_file(dst, lib)
+	}
+	if single {
+		// One file: the icon / version resources first (writing them rewrites
+		// the exe), then the game and the font appended (#292). (Signing, when
+		// it comes, goes after this.)
+		windows_resources(state, cfg, exe, name)
+		if !append_game(state, exe, rayzr, runner_font(runner) if cfg.export.includeFont else "") do return "", false
+		export_remove_stale(dir, {"game.rayzr", "fonts"})
+		return strings.clone(dir, context.temp_allocator), true
 	}
 	dstRayzr, _ := filepath.join({dir, "game.rayzr"}, context.temp_allocator)
 	if err := os.copy_file(dstRayzr, rayzr); err != nil {
@@ -261,6 +273,38 @@ export_windows :: proc(state: ^EditorState, cfg: ^e.ProjectConfig, runner, rayzr
 	}
 	windows_resources(state, cfg, exe, name)
 	return strings.clone(dir, context.temp_allocator), true
+}
+
+// append_game appends the package and the font to an exported runner, with
+// the footer the runner looks for (engine/appended_payload.odin).
+@(private = "file")
+append_game :: proc(state: ^EditorState, exe, rayzr, font: string) -> bool {
+	runnerData, rerr := os.read_entire_file(exe, context.temp_allocator)
+	pkg, perr := os.read_entire_file(rayzr, context.temp_allocator)
+	if rerr != nil || perr != nil {
+		Editor_Log(state, .Error, "Could not read the runner or the package for %s", exe)
+		return false
+	}
+	fontData: []u8
+	if font != "" {
+		if d, ferr := os.read_entire_file(font, context.temp_allocator); ferr == nil do fontData = d
+	}
+	if err := os.write_entire_file(exe, e.Appended_Build(runnerData, pkg, fontData, context.temp_allocator)); err != nil {
+		Editor_Log(state, .Error, "Could not write %s: %v", exe, err)
+		return false
+	}
+	return true
+}
+
+// export_remove_stale removes what a folder export left in `dir` (a game
+// exported as one file now would otherwise find the old game.rayzr first).
+@(private = "file")
+export_remove_stale :: proc(dir: string, names: []string) {
+	for n in names {
+		p, _ := filepath.join({dir, n}, context.temp_allocator)
+		if os.is_dir(p) do _ = os.remove_all(p)
+		else if os.is_file(p) do _ = os.remove(p)
+	}
 }
 
 // windows_resources writes the icon and version info into the exe.
@@ -296,7 +340,18 @@ windows_resources :: proc(state: ^EditorState, cfg: ^e.ProjectConfig, exe, name:
 // export_linux writes <dir>/<Name>.AppDir and, with appimagetool on PATH
 // (Linux), <Name>-<arch>.AppImage next to it.
 @(private = "file")
-export_linux :: proc(state: ^EditorState, cfg: ^e.ProjectConfig, runner, rayzr, dir, name: string) -> (string, bool) {
+export_linux :: proc(state: ^EditorState, cfg: ^e.ProjectConfig, runner, rayzr, dir, name: string, single: bool) -> (string, bool) {
+	if single {
+		// One file besides the AppDir / AppImage: the runner with the game and
+		// the font appended (#292) - for stores and archives.
+		bin, _ := filepath.join({dir, name}, context.temp_allocator)
+		if err := os.copy_file(bin, runner); err != nil {
+			Editor_Log(state, .Error, "Could not copy the runner to %s: %v", bin, err)
+			return "", false
+		}
+		if !append_game(state, bin, rayzr, runner_font(runner) if cfg.export.includeFont else "") do return "", false
+		_ = os.chmod(bin, os.Permissions_Default_File + os.Permissions_Execute_All)
+	}
 	icon := ""
 	if cfg.icon != "" do icon, _ = filepath.join({state.projectPath, cfg.icon}, context.temp_allocator)
 	font := runner_font(runner) if cfg.export.includeFont else ""

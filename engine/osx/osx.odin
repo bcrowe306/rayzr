@@ -39,6 +39,8 @@ open :: os.open
 read_dir :: os.read_dir
 close :: os.close
 read :: os.read
+read_at :: os.read_at
+file_size :: os.file_size
 pipe_has_data :: os.pipe_has_data
 get_working_directory :: os.get_working_directory
 exit :: os.exit

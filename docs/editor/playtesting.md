@@ -147,17 +147,21 @@ Debugging with breakpoints also needs Play.
 | Item | What it does |
 |---|---|
 | **File > Export > .rayzr Package** | Asks for a folder and writes `<project>.rayzr` there - the whole project in one file (modified scenes are saved first; textures set to QOI or Atlas are converted). The toolbar's box icon does the same. |
-| **File > Export > Standalone Game** | Saves everything and exports each export preset (or each ticked target) with the settings in Project Settings > **Export**: a folder per preset with the game runner, `game.rayzr` and the UI font. |
+| **File > Export > Standalone Game** | Saves everything and exports each export preset (or each ticked target) with the settings in Project Settings > **Export**: a folder per preset with the game: on Windows and Linux one executable with the game inside it. |
 | **File > Export > Open Web Export in Browser** | Serves the last web export from a small local web server and opens it in your browser. |
 
 What a standalone export writes, per platform:
 
 | Platform | Folder contents |
 |---|---|
-| Windows | `<Name>.exe` (with the runner's libraries), `game.rayzr`, `fonts/` |
+| Windows | `<Name>.exe`, the game and the UI font inside it. With the preset's **Single File** off: `<Name>.exe`, `game.rayzr`, `fonts/` |
 | macOS | `<Name>.app` - signed, and notarized when a Developer ID and notary profile are set |
-| Linux | `<Name>.AppDir`, plus an `.AppImage` when `appimagetool` is installed |
+| Linux | `<Name>`, one executable with the game inside (for stores and archives), and `<Name>.AppDir`, plus an `.AppImage` when `appimagetool` is installed |
 | Web | `index.html` with the runner and `game.rayzr` |
+
+A single-file game writes its UI font to the system's temp folder the first
+time it runs. `THIRD_PARTY_NOTICES.txt` is always next to the game, because
+the engine's licenses ask for it.
 
 Runners for each platform come with the editor (`runners/<platform>/`).
 Settings > Project > Export shows which are ready. All settings:

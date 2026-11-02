@@ -32,6 +32,7 @@ Export_Preset :: struct {
 	include:        [dynamic]string, // patterns; empty = everything
 	exclude:        [dynamic]string,
 	debug:          bool,    // the debug runner (logs, console on Windows)
+	separateFiles:  bool,    // Windows / Linux: a folder (exe + game.rayzr + fonts/) instead of one file (#292)
 }
 
 Export_Preset_Destroy :: proc(p: ^Export_Preset, allocator := context.allocator) {
@@ -106,6 +107,7 @@ Export_PresetsParse :: proc(exportObj: json.Object, x: ^Export_Settings, allocat
 			exclude        = make([dynamic]string, allocator),
 		}
 		if b, bok := o["debug"].(json.Boolean); bok do p.debug = bool(b)
+		if b, bok := o["single_file"].(json.Boolean); bok do p.separateFiles = !bool(b)
 		if b, bok := o["fullscreen"].(json.Boolean); bok do p.fullscreen = .On if b else .Off
 		str_list(o, "include", &p.include, allocator)
 		str_list(o, "exclude", &p.exclude, allocator)
@@ -147,6 +149,7 @@ Export_PresetsWrite :: proc(sb: ^strings.Builder, x: ^Export_Settings) {
 			strings.write_byte(&w.sb, ']')
 		}
 		if p.debug do strings.write_string(&w.sb, ", \"debug\": true")
+		if p.separateFiles do strings.write_string(&w.sb, ", \"single_file\": false")
 		strings.write_byte(&w.sb, '}')
 	}
 	strings.write_string(&w.sb, "\n  ]")

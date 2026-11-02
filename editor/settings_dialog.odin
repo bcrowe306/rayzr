@@ -1143,6 +1143,13 @@ export_presets_section :: proc(state: ^EditorState) {
 	imgui.Checkbox("##presetdebug", &p.debug)
 	Drive_Item("settings.preset-debug")
 	UI_Tooltip("Use the debug runner (debug info; a console window on Windows)")
+	if p.target == .Windows || p.target == .Linux {
+		UI_PropLabel("Single File")
+		single := !p.separateFiles
+		if imgui.Checkbox("##presetsingle", &single) do p.separateFiles = !single
+		Drive_Item("settings.preset-single-file")
+		UI_Tooltip("One executable with the game and the UI font inside it (Linux: besides the AppImage). Off: the executable, game.rayzr and fonts/ in a folder")
+	}
 	UI_PropLabel("")
 	if UI_Button(fmt.tprintf("%s  Save and Export This Preset", ICON_FA_BOX_ARCHIVE), "settings.export-preset") {
 		settings_save(state)
