@@ -516,7 +516,9 @@ LevelGenEditor_Render :: proc(state: ^EditorState) {
 	lge_keys(state)
 	lge_toolbar(state)
 	avail := imgui.GetContentRegionAvail()
-	if imgui.BeginChild("##lge_canvas", {max(avail.x - 300, 200), avail.y}, {.ResizeX}, {.NoScrollbar, .NoScrollWithMouse}) do lge_canvas(state)
+	// (NoMove: dragging a link or a node on the canvas must not move the
+	// floating window - #334.)
+	if imgui.BeginChild("##lge_canvas", {max(avail.x - 300, 200), avail.y}, {.ResizeX}, {.NoScrollbar, .NoScrollWithMouse, .NoMove}) do lge_canvas(state)
 	imgui.EndChild()
 	imgui.SameLine(0, 6)
 	if imgui.BeginChild("##lge_side", {0, avail.y}, {}, {}) do lge_side(state)
