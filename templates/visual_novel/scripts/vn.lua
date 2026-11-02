@@ -177,7 +177,7 @@ function VN:draw_stage()
             local c = self.on_stage[who]
             slot:set_texture("textures/" .. who .. "_" .. c.pose .. ".png")
             local lit = self.speaker == nil or self.speaker == who
-            slot:set_property("tint", lit and { 255, 255, 255, 255 } or { 170, 170, 185, 255 })
+            slot:set_property("tint", lit and { 1, 1, 1, 1 } or { 0.67, 0.67, 0.73, 1 })
             local _, y = slot:get_position()
             slot:set_position(x, y)
         end

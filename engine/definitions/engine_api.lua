@@ -2,12 +2,19 @@
 --- Lua API Definitions for Rayzr
 --- Language Server Protocol (LSP) stubs for autocomplete and type checking.
 
+---A colour, the same everywhere the API takes one: "#rrggbb" / "#rrggbbaa",
+---a table {r, g, b[, a]} (or {r = , g = , b = , a = }) with channels 0 to 1,
+---or - where a function takes it as its arguments - the numbers r, g, b[, a].
+---@alias Color string|number[]|{r: number, g: number, b: number, a?: number}
+
 ---@class RaycastHit
 ---@field hit boolean Whether the ray struck a physics shape
 ---@field point_x number World X hit coordinate
 ---@field point_y number World Y hit coordinate
 ---@field normal_x number World surface normal X
 ---@field normal_y number World surface normal Y
+---@field point Vec2 World hit point (point_x, point_y as a Vec2)
+---@field normal Vec2 World surface normal (normal_x, normal_y as a Vec2)
 ---@field fraction number Hit fraction from 0.0 to 1.0 along ray length
 ---@field node? Node Engine node attached to the struck body, if any
 
@@ -9149,9 +9156,9 @@ function Node:set_blend_mode(mode) end
 ---Sets the light's colour (0..1).
 ---
 ---Example: `local lamp = self.node:get_node("Lamp"); lamp:light_set_color(1.0, 0.8, 0.4)`
----@param r number Red, 0 to 1 (clamped)
----@param g number Green, 0 to 1 (clamped)
----@param b number Blue, 0 to 1 (clamped)
+---@param r number|Color Red, 0 to 1 - or the whole colour ("#ffcc66", {1, 0.8, 0.4})
+---@param g? number Green, 0 to 1
+---@param b? number Blue, 0 to 1
 function LightNode:light_set_color(r, g, b) end
 
 ---Sets the light's energy (a brightness multiplier, 0 or more; the Inspector goes to 8).
@@ -9313,8 +9320,8 @@ function LineNode:line_set_points(points) end
 ---LineNode: appends a point (local to the node).
 ---
 ---Example: `self.node:get_node("Path"):line_add_point(64, 32)`
----@param x number X in px, local to the node
----@param y number Y in px, local to the node (+y is down)
+---@param x number|Vec2 X in px, local to the node (or a Vec2, without the next number)
+---@param y? number Y in px, local to the node (+y is down)
 function LineNode:line_add_point(x, y) end
 
 ---LineNode: removes every point.
@@ -9576,19 +9583,19 @@ function PathFollowNode:follow_restart() end
 ---Waypoints from the start to the end, or nil when unreachable.
 ---
 ---Example: `local level = Scene.find_node("Level"); local path = level:nav_find_path(x, y, tx, ty, {diagonal = false})`
----@param x1 number Start X, world px
----@param y1 number Start Y, world px
----@param x2 number Goal X, world px
----@param y2 number Goal Y, world px
+---@param x1 number|Vec2 Start X, world px (or a Vec2, without the next number)
+---@param y1? number Start Y, world px
+---@param x2 number|Vec2 Goal X, world px (or a Vec2, without the next number)
+---@param y2? number Goal Y, world px
 ---@param opts? NavOptions diagonal, smooth (both default true), walkable_painted, radius; nil for the defaults
----@return number[][]? World-px waypoints: the start point, cell centres along the way, then the goal; nil when unreachable or the node has no grid
+---@return Vec2[]? World-px waypoints: the start point, cell centres along the way, then the goal; nil when unreachable or the node has no grid
 function NavGrid:nav_find_path(x1, y1, x2, y2, opts) end
 
 ---Whether the grid cell at a world position is walkable.
 ---
 ---Example: `local level = Scene.find_node("Level"); if level:nav_is_walkable(tx, ty) then self.target = {tx, ty} end`
----@param x number World X in px
----@param y number World Y in px
+---@param x number|Vec2 World X in px (or a Vec2, without the next number)
+---@param y? number World Y in px
 ---@param opts? NavOptions walkable_painted and radius (an agent this many px wide must fit) count here; nil for the defaults
 ---@return boolean true when the cell there is open; false for a wall, outside the grid, or a node with no grid
 function NavGrid:nav_is_walkable(x, y, opts) end
@@ -9601,10 +9608,10 @@ function NavigationRegionNode:nav_rebake() end
 ---Blocks (or opens) a world rectangle for paths - doors, bridges, placed towers. Kept across rebakes.
 ---
 ---Example: `region:nav_set_blocked(door.position.x - 16, door.position.y - 32, 32, 64, not self.open)`
----@param x number Left edge, world px
----@param y number Top edge, world px
----@param w number Width in px
----@param h number Height in px
+---@param x number|Vec2 Left edge, world px (or a Vec2, without the next number)
+---@param y? number Top edge, world px
+---@param w number|Vec2 Width in px (or a Vec2, without the next number)
+---@param h? number Height in px
 ---@param blocked? boolean true blocks every cell the rectangle touches, false reopens them (default true)
 function NavigationRegionNode:nav_set_blocked(x, y, w, h, blocked) end
 
@@ -11229,8 +11236,8 @@ function LdtkLevelNode:ldtk_get_neighbours(level) end
 ---The level at a world position (world mode: any loaded level; otherwise looked up in the world layout).
 ---
 ---Example: `local lv = Scene.find_node("Level"); local id = lv:ldtk_level_at(self.node:get_global_position())`
----@param x number World X in px
----@param y number World Y in px
+---@param x number|Vec2 World X in px (or a Vec2, without the next number)
+---@param y? number World Y in px
 ---@return string? Identifier of the level under the point; nil when there is none
 function LdtkLevelNode:ldtk_level_at(x, y) end
 
@@ -11291,8 +11298,8 @@ function LdtkLevelNode:ldtk_is_layer_visible(name) end
 ---
 ---Example: `local lv = Scene.find_node("Level"); local v = lv:ldtk_get_int_grid("Collisions", self.node:get_global_position())`
 ---@param layer LdtkLayer|string IntGrid layer identifier, e.g. "Collisions"
----@param x number World X in px
----@param y number World Y in px
+---@param x number|Vec2 World X in px (or a Vec2, without the next number)
+---@param y? number World Y in px
 ---@return integer The IntGrid value under the point; 0 for an empty cell, a point outside the level or an unknown layer
 function LdtkLevelNode:ldtk_get_int_grid(layer, x, y) end
 
@@ -11300,8 +11307,8 @@ function LdtkLevelNode:ldtk_get_int_grid(layer, x, y) end
 ---
 ---Example: `local lv = Scene.find_node("Level"); local name = lv:ldtk_get_int_grid_name("Collisions", self.node:get_global_position())`
 ---@param layer LdtkLayer|string IntGrid layer identifier
----@param x number World X in px
----@param y number World Y in px
+---@param x number|Vec2 World X in px (or a Vec2, without the next number)
+---@param y? number World Y in px
 ---@return string The value's identifier set in LDtk; "" for an empty cell or an unnamed value
 function LdtkLevelNode:ldtk_get_int_grid_name(layer, x, y) end
 
@@ -11326,8 +11333,8 @@ function LdtkLevelNode:ldtk_get_int_grid_values(layer) end
 ---
 ---Example: `local lv = Scene.find_node("Level"); local cx, cy = lv:ldtk_world_to_cell("Collisions", self.node:get_global_position())`
 ---@param layer LdtkLayer|string Layer identifier, e.g. "Collisions"
----@param x number World X in px
----@param y number World Y in px
+---@param x number|Vec2 World X in px (or a Vec2, without the next number)
+---@param y? number World Y in px
 ---@return integer cx Cell column, 0-based (may be outside the layer); -1 for an unknown layer or no level under the point
 ---@return integer cy Cell row, 0-based; -1 in the same cases
 function LdtkLevelNode:ldtk_world_to_cell(layer, x, y) end
@@ -11728,7 +11735,7 @@ function AccessibilityModule.reset() end
 ---@field speaker? string Shown before the line
 ---@field duration? number Seconds (default: its reading time)
 ---@field caption? boolean A sound caption (shown when the player has captions on) instead of a spoken line
----@field color? Color
+---@field color? Color The line's text colour (channels 0 to 1; older 0-255 tables still work)
 
 ---@class SubtitlesModule
 ---The subtitle track: lines at the bottom centre over everything, each for
@@ -12563,8 +12570,8 @@ function AudioModule.play_sound(path, volume, pitch, bus) end
 ---
 ---Example: `local x, y = self.node:get_position(); Audio.play_sound_at("sounds/explosion.wav", x, y)`
 ---@param path AudioPath|string The sound file, project-relative; plays into its import bus, else SFX
----@param x number World X the sound comes from (px)
----@param y number World Y the sound comes from (px)
+---@param x number|Vec2 World X the sound comes from (px) (or a Vec2, without the next number)
+---@param y? number World Y the sound comes from (px)
 ---@param volume? number 0..1 (default 1) before distance: full within 100 px of the listener, fading to silent at 900 px, panned fully at 450 px to a side
 function AudioModule.play_sound_at(path, x, y, volume) end
 
@@ -13001,9 +13008,9 @@ function SceneModule.find_by_tag(tag) end
 ---White = an unlit scene. With LightNodes, the scene is lit by them on top.
 ---
 ---Example: `Scene.set_ambient(0.2, 0.2, 0.35)`
----@param r number Red, 0 to 1
----@param g number Green, 0 to 1
----@param b number Blue, 0 to 1
+---@param r number|Color Red, 0 to 1 - or the whole colour ("#33334d", {0.2, 0.2, 0.3})
+---@param g? number Green, 0 to 1
+---@param b? number Blue, 0 to 1
 ---@param a? number Alpha, 0 to 1; default 1
 function SceneModule.set_ambient(r, g, b, a) end
 
@@ -13527,12 +13534,12 @@ local NavigationModule = {}
 ---
 ---Example: `local path = Navigation.find_path(Scene.find_node("Level"), x, y, tx, ty, {smooth = false})`
 ---@param map Node The TileMapNode, LdtkLevelNode or NavigationRegionNode whose grid to path on
----@param x1 number Start world X, in px
----@param y1 number Start world Y, in px
----@param x2 number Goal world X, in px
----@param y2 number Goal world Y, in px
+---@param x1 number|Vec2 Start world X, in px (or a Vec2, without the next number)
+---@param y1? number Start world Y, in px
+---@param x2 number|Vec2 Goal world X, in px (or a Vec2, without the next number)
+---@param y2? number Goal world Y, in px
 ---@param opts? NavOptions diagonal (default true), smooth (default true), radius in px (default 0), walkable_painted (TileMap only); nil for the defaults
----@return number[][]? path Waypoints as {x, y} world points from the start to the goal (or the nearest spot that fits the radius); nil when unreachable, the start or goal is blocked, or map has no grid
+---@return Vec2[]? path Waypoints as {x, y} world points from the start to the goal (or the nearest spot that fits the radius); nil when unreachable, the start or goal is blocked, or map has no grid
 function NavigationModule.find_path(map, x1, y1, x2, y2, opts) end
 
 ---@type NavigationModule
@@ -14093,6 +14100,7 @@ function VectorModule.scale(sx, sy) end
 ---@type VectorModule
 Vector = VectorModule
 
+---The callbacks a script can define. Any event a node raises ("x") also calls `on_x(value)` on its own script - the events listed here and every other one (`spawned`, `level_generated`, `frame_changed`, custom `emit` names...). A state machine calls `on_enter_<state>(previous)`, `on_update_<state>(dt)` and `on_exit_<state>(next)`; a signal wired in the editor calls `on_<source>_<signal>` unless another method is named.
 ---@class ScriptInstanceBase
 ---@field node Node The node this script is attached to.
 ---@field properties table<string, any> Custom exported script properties table.
@@ -14121,3 +14129,12 @@ Vector = VectorModule
 ---@field on_selected? fun(self: self, index: integer) Event (UI lists): selection changed.
 ---@field on_gamepad_connected? fun(self: self, player: integer, name: string) Event (every script): a player's gamepad was plugged in.
 ---@field on_gamepad_disconnected? fun(self: self, player: integer) Event (every script): a player's gamepad was unplugged.
+---@field on_parent_added? fun(self: self, parent: Node) Event: the node was added under a parent.
+---@field on_parent_removed? fun(self: self, parent: Node) Event: the node was taken from its parent.
+---@field on_spawn? fun(self: self) Pooling (Pool.take, a pooled Spawner): runs before the node's first update after every take - after ready() the first time. Reset its state here.
+---@field on_despawn? fun(self: self) Pooling: runs when the node goes back to its pool (destroy() on a pooled node).
+---@field on_tap? fun(self: self, x: number, y: number) Touch (every script): a quick tap, at x, y in game units.
+---@field on_double_tap? fun(self: self, x: number, y: number) Touch (every script): two taps close together.
+---@field on_long_press? fun(self: self, x: number, y: number) Touch (every script): a finger held still.
+---@field on_swipe? fun(self: self, dx: number, dy: number, speed: number) Touch (every script): a quick flick; dx, dy its direction (unit), speed in units per second.
+---@field on_pinch? fun(self: self, scale: number, pan_x: number, pan_y: number) Touch (every script): two fingers - scale this frame (>1 apart), pan the move of their centre.
