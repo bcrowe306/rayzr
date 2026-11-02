@@ -63,7 +63,7 @@ function Countdown:update(dt)
     local s = math.ceil(self.left)
     self.node:set_text(string.format("%d:%02d", s // 60, s % 60))
     if self.left <= 10 then
-        self.node:set_property("textColor", "#ff4040")
+        self.node:set_property("text_color", "#ff4040")
     end
 end
 

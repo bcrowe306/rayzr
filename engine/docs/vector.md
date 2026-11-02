@@ -181,7 +181,7 @@ what's left of their outline. It works on presets too.
 -- Draw a signature on over a second.
 local sig = self.node:get_node("Signature")
 sig.trimEnd = 0
-Tween.to(sig, "trimEnd", 1, 1.0)
+Tween.to(sig, "trim_end", 1, 1.0)
 ```
 
 ## Filters and line scaling
@@ -282,8 +282,8 @@ happens in the vertex shader too (on the shared mesh: no copy).
 local body = self.node:get_node("Body")
 body.warpTopLeft = Vec2(-20, 30)
 body.warpTopRight = Vec2(20, 30)
-Tween.to(body, "warpTopLeft", Vec2(0, 0), 0.25, "out_back")
-Tween.to(body, "warpTopRight", Vec2(0, 0), 0.25, "out_back")
+Tween.to(body, "warp_top_left", Vec2(0, 0), 0.25, "out_back")
+Tween.to(body, "warp_top_right", Vec2(0, 0), 0.25, "out_back")
 ```
 
 ## Collision from the art

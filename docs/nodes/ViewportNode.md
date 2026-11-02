@@ -66,7 +66,7 @@ The editor shows each Viewport's picture live, with a frame around it.
 - `viewport:viewport_save_png("photos/shot.png")` saves the picture. A relative path
   goes in the game's save-data folder.
 - Its properties work like any node's:
-  `viewport:set_property("renderSize", 160, 90)`.
+  `viewport:set_property("render_size", 160, 90)`.
 
 ## Example
 

@@ -55,8 +55,8 @@ HealthBar.properties = {
 
 function HealthBar:ready()
     self.health = self.max_health
-    self.node:set_property("minValue", 0)
-    self.node:set_property("maxValue", self.max_health)
+    self.node:set_property("min_value", 0)
+    self.node:set_property("max_value", self.max_health)
     self.node:set_property("value", self.health)
 end
 
@@ -64,7 +64,7 @@ function HealthBar:hurt(amount)
     self.health = math.max(0, self.health - amount)
     self.node:set_property("value", self.health)
     if self.health <= self.max_health * 0.25 then
-        self.node:set_property("fillColor", "#e53e3e")
+        self.node:set_property("fill_color", "#e53e3e")
     end
 end
 

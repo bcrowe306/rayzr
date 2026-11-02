@@ -46,7 +46,7 @@ end
 -- apply_settings: the title screen's (none saved: the Dialogue box's own).
 function VN:apply_settings()
     local s = Save.get("settings", {})
-    if s.text_speed then self.box:set_property("revealSpeed", s.text_speed) end
+    if s.text_speed then self.box:set_property("reveal_speed", s.text_speed) end
     self.box:dialogue_set_auto(self.auto, s.auto_delay)
 end
 

@@ -77,7 +77,7 @@ end
 
 function Clouds:set_storm(on)
     local speed = on and self.storm_speed or self.calm_speed
-    self.node:set_property("scrollSpeed", speed, 0)
+    self.node:set_property("scroll_speed", speed, 0)
     self.node:set_property("tint", on and "#8a90a0" or "#ffffff")
 end
 
