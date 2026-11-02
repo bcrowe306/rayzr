@@ -31,7 +31,7 @@ screen with Stats / Items / Skills.
    Color** and **Border Color**.
 
 Set the tabs in the Node tab's **Tab Names** box, one title a line (a new
-container has "Tab 1" and "Tab 2"). Scripts: `node:ui_set_items({"Video",
+container has "Tab 1" and "Tab 2"). Scripts: `node:set_items({"Video",
 "Audio", "Controls"})`.
 
 ## How it works

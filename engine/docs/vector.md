@@ -326,7 +326,7 @@ worms-style terrain, bites out of a cookie, bullet holes.
 function Bomb:on_collision_started(other)
     local ground = Scene.find_node("Terrain")
     ground:vector_cut(self.node.position, 48)
-    self.node:queue_free()
+    self.node:destroy()
 end
 ```
 

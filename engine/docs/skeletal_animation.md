@@ -76,7 +76,7 @@ hero:skeleton_is_playing()
 hero:skeleton_set_skin("armored")
 hero:skeleton_animations()                -- { "attack", "idle", "run" }
 hero:skeleton_skins() / hero:skeleton_bones()
-hero:skeleton_duration("attack")          -- seconds
+hero:skeleton_get_duration("attack")          -- seconds
 
 local muzzle = hero:skeleton_bone_position("gun_tip")  -- Vec2 in the world
 local angle = hero:skeleton_bone_rotation("arm")        -- degrees

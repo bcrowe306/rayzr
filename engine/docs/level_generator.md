@@ -328,9 +328,9 @@ this node only - one generator file, many levels (denser caves later on).
 
 ```lua
 local gen = self.node:get_node("Generator")
-gen:set_level_param(1, "density", 0.5)      -- generator node 1's density, for this node
+gen:levelgen_set_param(1, "density", 0.5)      -- generator node 1's density, for this node
 gen:connect("generated", function(seed) hud:show_seed(seed) end)
-gen:generate()                              -- a new level (or generate(seed): that one)
+gen:levelgen_generate()                              -- a new level (or levelgen_generate(seed): that one)
 ```
 
 A signal can call `generate` with no script (a "next level" button's

@@ -17,7 +17,7 @@ import lua "lua54"
 // - A parked node stays in the tree, disabled (no update, no drawing) with
 //   its physics bodies disabled; taking it re-enables it, moves it (its
 //   bodies teleported, velocities zeroed) and puts it under the parent.
-// - Removing a pooled node (node:destroy(), queue_free, a Visibility
+// - Removing a pooled node (node:destroy(), a Visibility
 //   Notifier's Remove Parent, RemoveNode) returns it to its pool instead.
 //   If its parent is removed, it goes with it (the pool forgets it).
 // - Scripts: on_spawn() runs on the root's script before its first update

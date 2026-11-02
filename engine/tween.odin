@@ -368,6 +368,10 @@ lua_tween_to :: proc "c" (L: ^lua.State) -> c.int {
 		yoyo = bool(lua.toboolean(L, -1))
 		lua.pop(L, 1)
 		lua.getfield(L, 6, "on_complete")
+		if lua.type(L, -1) != .FUNCTION { // (on_done is the same: #327)
+			lua.pop(L, 1)
+			lua.getfield(L, 6, "on_done")
+		}
 		if lua.type(L, -1) == .FUNCTION do ref = lua.L_ref(L, lua.REGISTRYINDEX)
 		else do lua.pop(L, 1)
 	}

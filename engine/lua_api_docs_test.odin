@@ -18,13 +18,15 @@ test_lua_api_documented :: proc(t: ^testing.T) {
 		if generated && strings.has_prefix(l, "-- ") && strings.has_suffix(l, " end") {generated = false; continue}
 		if generated || !strings.has_prefix(l, "function ") do continue
 		count += 1
-		hasDesc, hasExample := false, false
+		hasDesc, hasExample, deprecated := false, false, false
 		for j := i - 1; j >= 0 && strings.has_prefix(lines[j], "---"); j -= 1 {
 			d := lines[j][3:]
+			if strings.has_prefix(d, "@deprecated") do deprecated = true // (an old name: it points at the new one, #327)
 			if strings.has_prefix(d, "@") || strings.trim_space(d) == "" do continue
 			if strings.has_prefix(d, "Example:") do hasExample = true
 			else do hasDesc = true
 		}
+		if deprecated do continue
 		if !hasDesc || !hasExample do append(&missing, fmt.tprintf("%s%s%s", l, "" if hasDesc else "  (no description)", "" if hasExample else "  (no example)"))
 	}
 	for m in missing do fmt.println(m)

@@ -14,7 +14,7 @@
   `Audio.set_effect` and `set_effect_enabled` change one effect on one bus.
 - **Mixing from a script**: `set_bus_mute`, `set_bus_solo` and
   `set_bus_pan` act like the Mixer tab's buttons; `get_buses` lists the
-  buses and `bus_peak` reads a bus's level for meters or music-reactive
+  buses and `get_bus_peak` reads a bus's level for meters or music-reactive
   effects.
 
 ## Example

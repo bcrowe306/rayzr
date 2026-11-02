@@ -296,7 +296,7 @@ plot_points2_set :: proc(node: ^Node, items: []string) {
 }
 
 // --- Lua ---------------------------------------------------------------------------
-// node:ui_set_items({...}) / node:ui_get_items() -> {...}: the node's main
+// node:set_items({...}) / node:get_items() -> {...}: the node's main
 // list (UI_MainList). Items are strings in the formats above; numbers and
 // Vec2 / {x, y} tables (XY Plot points) are turned into text.
 
@@ -357,7 +357,9 @@ lua_ui_get_items :: proc "c" (L: ^lua.State) -> c.int {
 // metatable (on the stack).
 Script_RegisterUIListBindings :: proc(L: ^lua.State) {
 	lua.pushcfunction(L, lua_ui_set_items)
-	lua.setfield(L, -2, "ui_set_items")
+	lua.setfield(L, -2, "set_items")
+	Lua_SetDeprecated(L, lua_ui_set_items, "ui_set_items", "set_items")
 	lua.pushcfunction(L, lua_ui_get_items)
-	lua.setfield(L, -2, "ui_get_items")
+	lua.setfield(L, -2, "get_items")
+	Lua_SetDeprecated(L, lua_ui_get_items, "ui_get_items", "get_items")
 }

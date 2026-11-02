@@ -164,7 +164,7 @@ built-in ones.
   **+** to add one.
 - **Prompts**: the pad whose button images are shown next to each binding
   - **Xbox**, **PlayStation**, **Switch** or **Steam Deck**. Games get the
-  same images from `Input.glyph(action)`.
+  same images from `Input.get_glyph(action)`.
 - **Each binding**: its prompt image, the device (**None**, **Key**,
   **Mouse**, **Gamepad Button**, **Gamepad Axis**), the key or button, and
   **x** to remove it. A gamepad axis also has **+** (the positive

@@ -62,7 +62,7 @@ script.
 - **Assets > Custom Nodes**: double-click (at the view's centre), drag into
   the viewport, or right-click > Add to Scene / Add as Child of Selected.
 - **Lua**: `Scene.create("Hurtbox", parent, x, y)` - with its values and
-  script, `ready()` called as usual. `Scene.create_node("Hurtbox")` works
+  script, `ready()` called as usual. `Scene.create("Hurtbox")` works
   too.
 - **LDtk**: an entity can spawn as a type - see [LDtk entities](#ldtk-entities).
 

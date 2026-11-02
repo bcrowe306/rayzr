@@ -89,6 +89,9 @@ to_event_value :: proc(L: ^lua.State, idx: c.int) -> EventValue {
 // method, then every connected handler.
 Script_DispatchEvent :: proc(owner: ^Node, name: string, value: EventValue, ctx: ^GameContext) {
 	if owner == nil do return
+	// The prefixed *_finished events are "finished" too, like every other
+	// node's end-of-work event (#327).
+	defer if (name == "navigation_finished" || name == "path_finished") && Node_IsAlive(owner) do Script_DispatchEvent(owner, "finished", value, ctx)
 	if len(btWatchers) > 0 do BT_SignalSeen(owner, name) // (Behavior Trees' Wait For Signal)
 	mgr := manager_for(owner, ctx)
 	if mgr == nil || !mgr.isReady || mgr.L == nil || mgr.suspended do return

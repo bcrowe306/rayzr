@@ -49,7 +49,7 @@ function Goal:on_body_entered(other)
     progress.unlocked = math.max(progress.unlocked, self.level + 1)
     Save.set("progress", progress)
 
-    if not Save.flush() then Log.warn("could not write", Save.path()) end
+    if not Save.flush() then Log.warn("could not write", Save.get_path()) end
     Scene.change_scene(self.next_scene)
 end
 

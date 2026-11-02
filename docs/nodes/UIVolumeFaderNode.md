@@ -90,7 +90,7 @@ return MusicFader
 ```
 
 The script is on the fader. A [Volume Meter](UIVolumeMeterNode.md) beside
-it can show the bus playing (`Audio.bus_peak`).
+it can show the bus playing (`Audio.get_bus_peak`).
 
 ## Screenshot
 

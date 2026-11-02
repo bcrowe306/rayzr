@@ -36,7 +36,7 @@ end
 ```
 
 That's all that changes in most games: `Pool.take` instead of
-`Scene.instantiate`. `destroy()` / `queue_free()` on a pooled node returns it
+`Scene.instantiate`. `destroy()` on a pooled node returns it
 to its pool instead of freeing it (so does a Visibility Notifier set to
 **Remove Parent**).
 

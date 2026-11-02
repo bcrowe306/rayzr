@@ -279,7 +279,7 @@ Stopping Simulate drops every resource table: the next run loads them fresh.
        self.health.current = math.min(self.health.max, self.health.current + self.health.regen * dt)
    end
    function Enemy:hurt(n)
-       if self.health:damage(n) then self.node:queue_free() end
+       if self.health:damage(n) then self.node:destroy() end
    end
    return Enemy
    ```

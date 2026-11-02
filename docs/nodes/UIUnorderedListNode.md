@@ -28,7 +28,7 @@ a row. Use it for objectives, credits, patch notes or an inventory read-out.
 
 Set the items in the Node tab's **Items** box, one a line; two spaces at
 the start nest an item a level deeper. Scripts:
-`node:ui_set_items({"Find the key", "  Ask the guard"})`.
+`node:set_items({"Find the key", "  Ask the guard"})`.
 
 ## How it works
 

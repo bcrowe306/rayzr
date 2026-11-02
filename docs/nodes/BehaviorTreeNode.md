@@ -150,12 +150,10 @@ return SeePlayer
 - `tree:bt_tick(dt)` runs a tree once (**Manual** trees), and returns
   `"success"`, `"failure"` or `"running"`.
 - `tree:bt_interrupt()` and `tree:bt_status()`.
-- `tree:bt_get(key)`, `bt_set(key, value)`, `bt_has(key)` and
-  `bt_erase(key)` read and change the blackboard. Pass `true` as the last
-  argument for the global blackboard.
 - `tree:bt_blackboard()` returns the blackboard as an object with `get`,
   `set`, `has`, `erase` and `keys`. `Blackboard:get("alarm")` reads the
-  global one.
+  global one. (The older `bt_get` / `bt_set` / `bt_has` / `bt_erase` still
+  work until Rayzr 2.0, with a deprecation warning.)
 - `tree:bt_running_action()` and `tree:bt_last_condition()` say what's
   running and the last condition checked.
 
@@ -185,6 +183,6 @@ The guard's own script keeps its health on the blackboard:
 ```lua
 function Guard:on_hit(damage)
     self.hp = self.hp - damage
-    self.node:get_node("Brain"):bt_set("hp", self.hp)
+    self.node:get_node("Brain"):bt_blackboard():set("hp", self.hp)
 end
 ```

@@ -8,7 +8,7 @@ player, a rhythm game's HUD or a debug overlay.
 ## When to use it
 
 - **Showing how loud a bus is**: next to a [Volume Fader](UIVolumeFaderNode.md)
-  in an audio options screen, fed from `Audio.bus_peak`.
+  in an audio options screen, fed from `Audio.get_bus_peak`.
 - **Any value that behaves like a level**: a microphone input, an engine's
   rev, a charge that peaks and falls.
 - **Not** for a setting the player changes: the meter takes no input. Use a
@@ -54,7 +54,7 @@ player, a rhythm game's HUD or a debug overlay.
 
 ## Example
 
-A stereo meter for the Music bus. `Audio.bus_peak` returns linear levels
+A stereo meter for the Music bus. `Audio.get_bus_peak` returns linear levels
 (1 = 0 dB), so the script converts them.
 
 ```lua
@@ -67,7 +67,7 @@ local function to_db(v)
 end
 
 function MusicMeter:update(dt)
-    local l, r = Audio.bus_peak("Music")
+    local l, r = Audio.get_bus_peak("Music")
     self.node.levelL = to_db(l)
     self.node.levelR = to_db(r)
 end

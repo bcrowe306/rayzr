@@ -22,7 +22,7 @@ editor overview is [`../../editor/README.md`](../../editor/README.md).
 | [Sprite atlases](atlas.md) | Tick Atlas on textures: export packs them into pages (fewer draw calls); how it works, what to leave out, helpers for engine code. |
 | [Import settings](import_settings.md) | Per-asset settings next to the file: texture filter / wrap / mipmaps / slicing preset / QOI on export, audio gain and default bus - with tutorials. |
 | [Audio mixer](audio_mixer.md) | Buses (fader, pan, mute / solo, effects, routing), the Mixer tab, Lua control - with tutorials. |
-| [Gamepads and local multiplayer](gamepads.md) | Up to 4 players with their own controllers, hot-plug events, rumble (native per OS), button prompts that match the controller (`Input.glyph`), simulated pads for tests - with a co-op tutorial. |
+| [Gamepads and local multiplayer](gamepads.md) | Up to 4 players with their own controllers, hot-plug events, rumble (native per OS), button prompts that match the controller (`Input.get_glyph`), simulated pads for tests - with a co-op tutorial. |
 | [Input and rebinding](input_rebinding.md) | Actions, player rebinding (listen, conflicts, saving), gamepad menus, the Controls Menu template. |
 | [Changing scenes](scene_flow.md) | Transitions, preloading, loading screens (background texture decoding) - with a loading screen tutorial. |
 | [Paths and followers](paths.md) | Bézier paths edited in the viewport; followers for moving platforms, patrols, rails - with tutorials. |

@@ -90,7 +90,7 @@ end
 | `Crash.pending()` | Reports from earlier runs not yet dismissed: `{ {path =, text =}, ... }` |
 | `Crash.dismiss(path)` | Don't return it again (renamed `.seen`) |
 | `Crash.note(text)` | A line for the next report's recent list ("entered level 3") |
-| `Crash.dir()` | The crash folder |
+| `Crash.get_dir()` | The crash folder |
 
 Notes are cheap (a copy into a fixed ring of 48 lines): call them at
 milestones, not every frame.

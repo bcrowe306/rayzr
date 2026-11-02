@@ -84,7 +84,8 @@ function PauseMenu:ready()
 end
 
 function PauseMenu:add_button(text, on_click)
-    local b = Scene.create_node("UIButtonNode", text .. "Button", self.menu) --[[@as UIButtonNode]]
+    local b = Scene.create("UIButtonNode", self.menu) --[[@as UIButtonNode]]
+    b.name = text .. "Button"
     b.text = text
     b.size = Vec2(240, 40)
     b:connect("clicked", on_click)

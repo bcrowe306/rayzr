@@ -84,7 +84,7 @@ It saves keyframing anything that just goes back and forth.
 
 - `osc:oscillator_start()`, `oscillator_stop()`, `oscillator_pause()` and
   `oscillator_resume()`.
-- `local state, cycles = osc:oscillator_state()` returns `"stopped"`,
+- `local state, cycles = osc:oscillator_get_state()` returns `"stopped"`,
   `"running"` or `"paused"`, and the cycles since Start. 2.25 is a quarter
   of the way into the third cycle.
 - `osc:oscillator_add_mapping("../Door", "position.y", 0, -64)` adds a
@@ -112,7 +112,7 @@ end
 
 function Switch:on_body_entered(body)
     if body == nil or body:get_name() ~= "Player" then return end
-    local state = self.move:oscillator_state()
+    local state = self.move:oscillator_get_state()
     if state == "paused" then
         self.move:oscillator_resume()
     elseif state == "stopped" then

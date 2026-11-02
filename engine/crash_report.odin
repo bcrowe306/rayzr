@@ -421,6 +421,7 @@ Script_RegisterCrashModule :: proc(L: ^lua.State) {
 	reg(L, "pending", lua_crash_pending)
 	reg(L, "dismiss", lua_crash_dismiss)
 	reg(L, "note", lua_crash_note)
-	reg(L, "dir", lua_crash_dir)
+	reg(L, "get_dir", lua_crash_dir)
+	Lua_SetDeprecated(L, lua_crash_dir, "dir", "Crash.get_dir")
 	lua.setglobal(L, "Crash")
 }

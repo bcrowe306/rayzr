@@ -608,6 +608,7 @@ def parse_lua_api(path):
     """LuaCATS definitions -> classes: {name: {doc, fields, functions, parents}}."""
     classes, order, table_of = {}, [], {}
     doc, params, returns = [], [], []
+    deprecated = False
     current = None
     with open(path, encoding="utf-8") as f:
         lines = f.read().split("\n")
@@ -635,6 +636,9 @@ def parse_lua_api(path):
         if m:
             returns.append(split_type(m.group(1)))
             continue
+        if s.startswith("---@deprecated"):
+            deprecated = True  # an old name kept until 2.0 (#327)
+            continue
         if s.startswith("---@"):
             continue
         if s.startswith("---"):
@@ -655,11 +659,11 @@ def parse_lua_api(path):
                 order.append(owner)
             classes[owner]["functions"].append({
                 "name": m.group(3), "sep": m.group(2), "args": m.group(4), "doc": doc,
-                "params": params, "returns": returns})
-            doc, params, returns = [], [], []
+                "params": params, "returns": returns, "deprecated": deprecated})
+            doc, params, returns, deprecated = [], [], [], False
             continue
         if s == "" or not s.startswith("--"):
-            doc, params, returns = [], [], []
+            doc, params, returns, deprecated = [], [], [], False
     globals_ = {}
     for line in lines:
         m = re.match(r"^(\w+)\s*=\s*(\w+)\s*$", line.strip())

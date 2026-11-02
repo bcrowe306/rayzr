@@ -97,7 +97,7 @@ function Arena:ready()
     local trigger = self.node:get_node("Trigger") ---@type AreaNode
     trigger:connect("body_entered", function(body)
         if body ~= nil and body:get_name() == "Player" then
-            self.cam:make_active()
+            self.cam:adv_camera_make_active()
         end
     end)
     self.cam:connect("became_active", function()
@@ -107,7 +107,7 @@ end
 
 -- Called by the boss when it takes damage.
 function Arena:boss_hit(damage)
-    self.cam:add_trauma(math.min(damage / 50, 0.6))
+    self.cam:adv_camera_add_trauma(math.min(damage / 50, 0.6))
 end
 
 function Arena:boss_defeated()

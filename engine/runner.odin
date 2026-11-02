@@ -514,6 +514,8 @@ Runner_Start :: proc(opts: Run_Options) -> (^Runner_State, bool) {
 	// The editor's Play: it drives the game over stdin/stdout. (Read from the
 	// command line too: front ends pass on only the options they know.)
 	if opts.editorLink || slice.contains(os.args, "--editor-link") do EditorLink_Enable(game)
+	// Deprecated Lua names warn in debug builds and the editor's Play (#327).
+	if EditorLink_Enabled() do Lua_WarnDeprecated = true
 	// The developer console: debug builds, the editor's Play, or a release
 	// build when the project allows it.
 	if ODIN_DEBUG || EditorLink_Enabled() || video.consoleInRelease || opts.console != "" {

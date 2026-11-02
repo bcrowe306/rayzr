@@ -39,7 +39,7 @@ the facing.
 -- A player's script: fire from the hand.
 function Player:update(dt)
     if Input.is_action_pressed("fire") then
-        self.node:get_node("Hand/Muzzle"):spawn()   -- the roots spawned (empty if held back)
+        self.node:get_node("Hand/Muzzle"):spawner_spawn()   -- the roots spawned (empty if held back)
     end
 end
 ```
@@ -84,7 +84,7 @@ seen in `ready()`:
 ```lua
 -- A script calls spawn(): set up each root it returns.
 function Player:fire()
-    for _, bullet in ipairs(self.node:get_node("Hand/Muzzle"):spawn()) do
+    for _, bullet in ipairs(self.node:get_node("Hand/Muzzle"):spawner_spawn()) do
         local s = bullet:get_script()
         s.speed = 400
         s.owner = self.node
@@ -103,7 +103,7 @@ the list, from 1). Setting it again replaces it; `nil` clears it.
 function Level:ready()
     local attacks = { Resource.load("resources/sword.resource.json"),
                       Resource.load("resources/bow.resource.json") }
-    self.node:get_node("EnemySpawner"):set_spawn_callback(function(enemy, info, spawner)
+    self.node:get_node("EnemySpawner"):spawner_set_callback(function(enemy, info, spawner)
         enemy:get_script().difficulty = self.difficulty
         enemy:get_script().weapon = attacks[info.index]   -- goblins (1) get a sword, archers (2) a bow
     end)

@@ -22,7 +22,7 @@ import rlgl "vendor:raylib/rlgl"
 //
 // The picture renders at Render Size and is drawn (Display) stretched to
 // Size. Other things use it by the path "viewport:<name>": a Sprite's
-// texture, a material's texture parameter, node:get_texture() in Lua.
+// texture, a material's texture parameter, node:viewport_get_texture() in Lua.
 // It's stored the right way up (a second copy of the render), so shaders
 // and saved PNGs see it as drawn.
 //
@@ -337,7 +337,7 @@ ViewportNode_SavePNG :: proc(v: ^ViewportNode, path: string) -> bool {
 }
 
 // ----------------------------------------------------------------------------
-// Lua: node:get_texture() / refresh() / save_png(path) on a Viewport
+// Lua: node:viewport_get_texture() / refresh() / save_png(path) on a Viewport
 // ----------------------------------------------------------------------------
 
 @(private = "file")
@@ -380,9 +380,12 @@ lua_viewport_save_png :: proc "c" (L: ^lua.State) -> c.int {
 // Script_RegisterViewportBindings: the node methods (on the node method table).
 Script_RegisterViewportBindings :: proc(L: ^lua.State) {
 	lua.pushcfunction(L, lua_viewport_get_texture)
-	lua.setfield(L, -2, "get_texture")
+	lua.setfield(L, -2, "viewport_get_texture")
+	Lua_SetDeprecated(L, lua_viewport_get_texture, "get_texture", "viewport_get_texture")
 	lua.pushcfunction(L, lua_viewport_refresh)
-	lua.setfield(L, -2, "refresh")
+	lua.setfield(L, -2, "viewport_refresh")
+	Lua_SetDeprecated(L, lua_viewport_refresh, "refresh", "viewport_refresh")
 	lua.pushcfunction(L, lua_viewport_save_png)
-	lua.setfield(L, -2, "save_png")
+	lua.setfield(L, -2, "viewport_save_png")
+	Lua_SetDeprecated(L, lua_viewport_save_png, "save_png", "viewport_save_png")
 }

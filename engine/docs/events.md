@@ -30,7 +30,7 @@ end
 function Coin:on_body_entered(other)
     GameState.score = GameState.score + 10
     Events.emit("score_changed", GameState.score)
-    self.node:queue_free()
+    self.node:destroy()
 end
 ```
 

@@ -110,7 +110,7 @@ end
 
 ```lua
 function Speaker:update(dt)
-    local l, r = Audio.bus_peak("Music")
+    local l, r = Audio.get_bus_peak("Music")
     local s = 1 + math.max(l, r) * 0.3
     self.node.scale = {s, s}
 end
@@ -139,7 +139,7 @@ doesn't stack voices). The Inspector's **Preview** plays one play like
 that (Sequential and Shuffle step on each press without moving the
 node's own place; the Cooldown is for repeated plays, so it doesn't apply).
 Scripts: `node:sound_play()` follows the mode, `node:sound_play_index(i)`
-plays one, `node:sound_count()`, `node:sound_last()`.
+plays one, `node:sound_get_count()`, `node:sound_get_last()`.
 
 ## Scripting
 
@@ -151,7 +151,7 @@ plays one, `node:sound_count()`, `node:sound_last()`.
 | `Audio.set_bus_volume(bus, v)` / `get_bus_volume(bus)` | A fader (linear: 1 = 0 dB, 0.5 ≈ -6 dB). |
 | `Audio.set_bus_mute(bus, on)` / `set_bus_solo(bus, on)` / `set_bus_pan(bus, p)` | |
 | `Audio.get_buses()` | The bus names, Master first. |
-| `Audio.bus_peak(bus)` | Left, right levels now. |
+| `Audio.get_bus_peak(bus)` | Left, right levels now. |
 | `Audio.set_effect(bus, effect, param, value)` | An effect parameter (effect by type name or 1-based position). |
 | `Audio.set_effect_enabled(bus, effect, on)` | Bypass / enable. |
 | `Audio.set_lowpass(hz)` / `Audio.set_reverb(mix, size)` | Shortcuts: a low-pass / reverb on Master. |

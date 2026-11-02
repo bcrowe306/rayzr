@@ -1688,7 +1688,7 @@ lua_node_sound_play_index :: proc "c" (L: ^lua.State) -> c.int {
 	return 0
 }
 
-// node:sound_count(): how many sounds it has.
+// node:sound_get_count(): how many sounds it has.
 @(private="file")
 lua_node_sound_count :: proc "c" (L: ^lua.State) -> c.int {
 	context = Script_Context(L)
@@ -4992,8 +4992,7 @@ RegisterEngineLuaBindings :: proc(L: ^lua.State, sm: ^ScriptManager) {
 		lua.setfield(L, -2, "remove_child")
 		lua.pushcfunction(L, lua_node_destroy)
 		lua.setfield(L, -2, "destroy")
-		lua.pushcfunction(L, lua_node_destroy)
-		lua.setfield(L, -2, "queue_free") // the same: removal waits for the end of the frame
+		Lua_SetDeprecated(L, lua_node_destroy, "queue_free", "destroy") // (#327)
 		lua.pushcfunction(L, lua_node_set_shader)
 		lua.setfield(L, -2, "set_shader")
 		lua.pushcfunction(L, lua_node_set_shader_param)
@@ -5071,7 +5070,8 @@ RegisterEngineLuaBindings :: proc(L: ^lua.State, sm: ^ScriptManager) {
 		lua.pushcfunction(L, lua_sm_trigger)
 		lua.setfield(L, -2, "sm_trigger")
 		lua.pushcfunction(L, lua_sm_trigger_pending)
-		lua.setfield(L, -2, "sm_trigger_pending")
+		lua.setfield(L, -2, "sm_is_trigger_pending")
+		Lua_SetDeprecated(L, lua_sm_trigger_pending, "sm_trigger_pending", "sm_is_trigger_pending")
 		lua.pushcfunction(L, lua_sm_clear_trigger)
 		lua.setfield(L, -2, "sm_clear_trigger")
 		lua.pushcfunction(L, lua_sm_transition)
@@ -5140,8 +5140,7 @@ RegisterEngineLuaBindings :: proc(L: ^lua.State, sm: ^ScriptManager) {
 		// CharacterMoverNode
 		lua.pushcfunction(L, lua_node_character_move)
 		lua.setfield(L, -2, "character_move")
-		lua.pushcfunction(L, lua_node_character_is_grounded)
-		lua.setfield(L, -2, "character_is_grounded")
+		Lua_SetDeprecated(L, lua_node_character_is_grounded, "character_is_grounded", "character_is_on_floor")
 		lua.pushcfunction(L, lua_node_character_get_velocity)
 		lua.setfield(L, -2, "character_get_velocity")
 		lua.pushcfunction(L, lua_node_character_set_velocity)
@@ -5301,9 +5300,11 @@ RegisterEngineLuaBindings :: proc(L: ^lua.State, sm: ^ScriptManager) {
 		lua.pushcfunction(L, lua_node_sound_play_index)
 		lua.setfield(L, -2, "sound_play_index")
 		lua.pushcfunction(L, lua_node_sound_count)
-		lua.setfield(L, -2, "sound_count")
+		lua.setfield(L, -2, "sound_get_count")
+		Lua_SetDeprecated(L, lua_node_sound_count, "sound_count", "sound_get_count")
 		lua.pushcfunction(L, lua_node_sound_last)
-		lua.setfield(L, -2, "sound_last")
+		lua.setfield(L, -2, "sound_get_last")
+		Lua_SetDeprecated(L, lua_node_sound_last, "sound_last", "sound_get_last")
 
 		lua.pushcfunction(L, lua_node_music_play)
 		lua.setfield(L, -2, "music_play")
@@ -5446,7 +5447,8 @@ RegisterEngineLuaBindings :: proc(L: ^lua.State, sm: ^ScriptManager) {
 	lua.pushcfunction(L, lua_audio_get_buses)
 	lua.setfield(L, -2, "get_buses")
 	lua.pushcfunction(L, lua_audio_bus_peak)
-	lua.setfield(L, -2, "bus_peak")
+	lua.setfield(L, -2, "get_bus_peak")
+	Lua_SetDeprecated(L, lua_audio_bus_peak, "bus_peak", "Audio.get_bus_peak")
 	lua.pushcfunction(L, lua_audio_set_effect)
 	lua.setfield(L, -2, "set_effect")
 	lua.pushcfunction(L, lua_audio_set_effect_enabled)
@@ -5523,7 +5525,8 @@ RegisterEngineLuaBindings :: proc(L: ^lua.State, sm: ^ScriptManager) {
 	lua.pushcfunction(L, lua_physics_set_debug_draw)
 	lua.setfield(L, -2, "set_debug_draw")
 	lua.pushcfunction(L, lua_physics_get_debug_draw)
-	lua.setfield(L, -2, "get_debug_draw")
+	lua.setfield(L, -2, "is_debug_draw")
+	Lua_SetDeprecated(L, lua_physics_get_debug_draw, "get_debug_draw", "Physics.is_debug_draw")
 	lua.pushcfunction(L, lua_physics_is_paused)
 	lua.setfield(L, -2, "is_paused")
 	lua.pushcfunction(L, lua_physics_set_paused)
@@ -5566,8 +5569,7 @@ RegisterEngineLuaBindings :: proc(L: ^lua.State, sm: ^ScriptManager) {
 	lua.setfield(L, -2, "reload")
 	lua.pushcfunction(L, lua_scene_get_nodes)
 	lua.setfield(L, -2, "get_nodes")
-	lua.pushcfunction(L, lua_scene_create_node)
-	lua.setfield(L, -2, "create_node")
+	Lua_SetDeprecated(L, lua_scene_create_node, "create_node", "Scene.create (then set node.name)")
 	lua.pushcfunction(L, lua_scene_instantiate)
 	lua.setfield(L, -2, "instantiate")
 	lua.pushcfunction(L, lua_scene_create)
@@ -5575,7 +5577,8 @@ RegisterEngineLuaBindings :: proc(L: ^lua.State, sm: ^ScriptManager) {
 	lua.pushcfunction(L, lua_scene_find_nodes_of_type)
 	lua.setfield(L, -2, "find_nodes_of_type")
 	lua.pushcfunction(L, lua_scene_get_draw_bounds)
-	lua.setfield(L, -2, "get_draw_bounds")
+	lua.setfield(L, -2, "is_draw_bounds")
+	Lua_SetDeprecated(L, lua_scene_get_draw_bounds, "get_draw_bounds", "Scene.is_draw_bounds")
 	lua.pushcfunction(L, lua_scene_set_draw_bounds)
 	lua.setfield(L, -2, "set_draw_bounds")
 	lua.setglobal(L, "Scene")

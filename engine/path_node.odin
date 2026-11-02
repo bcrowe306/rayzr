@@ -280,12 +280,12 @@ PathFollowNode_Place :: proc(f: ^PathFollowNode, path: ^Node) {
 }
 
 // --- Lua -------------------------------------------------------------------------------
-// path:path_length() -> px
+// path:path_get_length() -> px
 // path:path_point_at(distance) -> Vec2 (world), Vec2 (direction, world)
 // path:path_closest_offset(x, y | Vec2) -> distance along the path
 // path:path_point_count() / path:path_get_point(i) -> pos, in, out (local Vec2s; 1-based)
 // path:path_set_point(i, pos [, in, out]) / path:path_add_point(pos [, in, out]) / path:path_remove_point(i) / path:path_clear()
-// follow:follow_ratio() -> 0..1 / follow:follow_set_ratio(r) / follow:follow_restart()
+// follow:follow_get_ratio() -> 0..1 / follow:follow_set_ratio(r) / follow:follow_restart()
 
 @(private = "file")
 lua_path_arg :: proc(L: ^lua.State) -> ^PathNode {
@@ -438,7 +438,8 @@ Script_RegisterPathBindings :: proc(L: ^lua.State) {
 		lua.pushcfunction(L, fn)
 		lua.setfield(L, -2, name)
 	}
-	reg(L, "path_length", lua_path_length)
+	reg(L, "path_get_length", lua_path_length)
+	Lua_SetDeprecated(L, lua_path_length, "path_length", "path_get_length")
 	reg(L, "path_point_at", lua_path_point_at)
 	reg(L, "path_closest_offset", lua_path_closest_offset)
 	reg(L, "path_point_count", lua_path_point_count)
@@ -447,7 +448,8 @@ Script_RegisterPathBindings :: proc(L: ^lua.State) {
 	reg(L, "path_add_point", lua_path_add_point)
 	reg(L, "path_remove_point", lua_path_remove_point)
 	reg(L, "path_clear", lua_path_clear)
-	reg(L, "follow_ratio", lua_follow_ratio)
+	reg(L, "follow_get_ratio", lua_follow_ratio)
+	Lua_SetDeprecated(L, lua_follow_ratio, "follow_ratio", "follow_get_ratio")
 	reg(L, "follow_set_ratio", lua_follow_set_ratio)
 	reg(L, "follow_restart", lua_follow_restart)
 }

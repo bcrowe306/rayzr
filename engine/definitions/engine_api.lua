@@ -487,9 +487,8 @@ function Node:remove_child(child) end
 ---Example: `self.node:destroy()`
 function Node:destroy() end
 
----Removes this node and its children at the end of the frame (= destroy).
----
----Example: `if self.health <= 0 then self.node:queue_free() end`
+---Deprecated: use `destroy` (works until Rayzr 2.0).
+---@deprecated Use destroy
 function Node:queue_free() end
 
 -- ----------------------------------------------------------------------------
@@ -8278,13 +8277,23 @@ function TextHolder:get_text() end
 
 ---Replaces the node's list (#227): a Dropdown's items, a Radio Group's options, a List View's / Tree View's / Bullet or Numbered List's / Toolbar's items, a Table's rows, an XY Plot's points, a Tab Container's tab names, a Notched Slider's notch labels. One string an item, as in the Inspector: 2 leading spaces nest a Tree / List item; table cells split by "|"; toolbar items "Icon|Label|Tooltip"; points "x, y" or Vec2 / {x, y}. Other lists: set_property("columns", {...}).
 ---
----Example: `self.node:get_node("Difficulty"):ui_set_items({"Easy", "Normal", "Hard"})`
+---Example: `self.node:get_node("Difficulty"):set_items({"Easy", "Normal", "Hard"})`
+---@param items (string|number|Vec2|number[])[] One entry per item, as typed in the Inspector (strings, numbers, or Vec2 or {x, y} for plot points); replaces the whole list; nodes without a list ignore it
+function UIListHolder:set_items(items) end
+
+---Deprecated: use `set_items` (works until Rayzr 2.0).
+---@deprecated Use set_items
 ---@param items (string|number|Vec2|number[])[] One entry per item, as typed in the Inspector (strings, numbers, or Vec2 or {x, y} for plot points); replaces the whole list; nodes without a list ignore it
 function UIListHolder:ui_set_items(items) end
 
 ---The node's list (see ui_set_items), one string an item.
 ---
----Example: `for i, name in ipairs(self.node:ui_get_items()) do print(i, name) end`
+---Example: `for i, name in ipairs(self.node:get_items()) do print(i, name) end`
+---@return string[] One string per item, as in the Inspector; empty for nodes without a list
+function UIListHolder:get_items() end
+
+---Deprecated: use `get_items` (works until Rayzr 2.0).
+---@deprecated Use get_items
 ---@return string[] One string per item, as in the Inspector; empty for nodes without a list
 function UIListHolder:ui_get_items() end
 
@@ -8380,7 +8389,13 @@ function TrailNode:trail_clear() end
 
 ---Spawns as the spawner's mode says (or entry `index`, 1-based, whatever the mode); returns the spawned roots - empty when held back (cooldown, maxAlive, totalLimit, chance, an empty list).
 ---
----Example: `for _, bullet in ipairs(self.node:get_node("Muzzle"):spawn()) do bullet:get_script().owner = self.node end`
+---Example: `for _, bullet in ipairs(self.node:get_node("Muzzle"):spawner_spawn()) do bullet:get_script().owner = self.node end`
+---@param index? integer An entry of the list, from 1, spawned whatever the mode; nil picks as the mode says
+---@return Node[] nodes The spawned root nodes; empty when held back (cooldown, maxAlive, totalLimit, chance, an empty list)
+function SpawnerNode:spawner_spawn(index) end
+
+---Deprecated: use `spawner_spawn` (works until Rayzr 2.0).
+---@deprecated Use spawner_spawn
 ---@param index? integer An entry of the list, from 1, spawned whatever the mode; nil picks as the mode says
 ---@return Node[] nodes The spawned root nodes; empty when held back (cooldown, maxAlive, totalLimit, chance, an empty list)
 function SpawnerNode:spawn(index) end
@@ -8432,7 +8447,12 @@ function SpawnerNode:spawn_clear() end
 
 ---Sets a function called for every node this spawner makes - by spawn(), spawn_at(), Auto Spawn, a signal or the pool - once it's placed and before its ready() / on_spawn(): set it up there. info.component is the component's path, info.index its entry in the list (from 1). Setting it again replaces it; nil clears it.
 ---
----Example: `spawner:set_spawn_callback(function(enemy, info, spawner) enemy:get_script().weapon = weapons[info.index] end)`
+---Example: `spawner:spawner_set_callback(function(enemy, info, spawner) enemy:get_script().weapon = weapons[info.index] end)`
+---@param fn? fun(node: Node, info: {component: string, index: integer}, spawner: SpawnerNode) Called as fn(node, info, spawner) for every spawned node before its ready(); info is {component, index}. nil clears it
+function SpawnerNode:spawner_set_callback(fn) end
+
+---Deprecated: use `spawner_set_callback` (works until Rayzr 2.0).
+---@deprecated Use spawner_set_callback
 ---@param fn? fun(node: Node, info: {component: string, index: integer}, spawner: SpawnerNode) Called as fn(node, info, spawner) for every spawned node before its ready(); info is {component, index}. nil clears it
 function SpawnerNode:set_spawn_callback(fn) end
 
@@ -8445,7 +8465,14 @@ function SpawnerNode:spawn_info(node) end
 
 ---Makes a level into its TileMap (seed: this one, else the node's seed, a random one with randomSeed, or the generator's). Returns true, or false and why (also emitted as "generation_failed"). With background on it returns true once started; "generated" fires when the level is in.
 ---
----Example: `local ok, why = self.node:get_node("Generator"):generate(Save.get("seed", 7))`
+---Example: `local ok, why = self.node:get_node("Generator"):levelgen_generate(Save.get("seed", 7))`
+---@param seed? integer Seed for this level; nil or 0 uses the node's Seed, else a random one when Random Seed is on, else the generator file's seed
+---@return boolean ok True when the level was made (or, with Background on, started)
+---@return string? why The reason when ok is false (e.g. "already generating"); nil on success
+function LevelGeneratorNode:levelgen_generate(seed) end
+
+---Deprecated: use `levelgen_generate` (works until Rayzr 2.0).
+---@deprecated Use levelgen_generate
 ---@param seed? integer Seed for this level; nil or 0 uses the node's Seed, else a random one when Random Seed is on, else the generator file's seed
 ---@return boolean ok True when the level was made (or, with Background on, started)
 ---@return string? why The reason when ok is false (e.g. "already generating"); nil on success
@@ -8453,13 +8480,25 @@ function LevelGeneratorNode:generate(seed) end
 
 ---Whether a background generation is running.
 ---
----Example: `if not gen:is_generating() then loading:hide() end`
+---Example: `if not gen:levelgen_is_generating() then loading:hide() end`
+---@return boolean generating True while a background generation runs
+function LevelGeneratorNode:levelgen_is_generating() end
+
+---Deprecated: use `levelgen_is_generating` (works until Rayzr 2.0).
+---@deprecated Use levelgen_is_generating
 ---@return boolean generating True while a background generation runs
 function LevelGeneratorNode:is_generating() end
 
 ---Sets a parameter of one of the generator's nodes for this node's levels (from the next generate): one generator file, many levels.
 ---
----Example: `gen:set_level_param(1, "density", 0.4 + level * 0.02); gen:generate()`
+---Example: `gen:levelgen_set_param(1, "density", 0.4 + level * 0.02); gen:generate()`
+---@param node_id integer The id of a node in the generator file (.levelgen.json)
+---@param name string Its parameter's name
+---@param value number|boolean A number, or a boolean (stored as 1 or 0); used from the next generate
+function LevelGeneratorNode:levelgen_set_param(node_id, name, value) end
+
+---Deprecated: use `levelgen_set_param` (works until Rayzr 2.0).
+---@deprecated Use levelgen_set_param
 ---@param node_id integer The id of a node in the generator file (.levelgen.json)
 ---@param name string Its parameter's name
 ---@param value number|boolean A number, or a boolean (stored as 1 or 0); used from the next generate
@@ -8467,7 +8506,14 @@ function LevelGeneratorNode:set_level_param(node_id, name, value) end
 
 ---A parameter set on this node with set_level_param (nil: the generator's own applies).
 ---
----Example: `local density = gen:level_param(1, "density") or 0.45`
+---Example: `local density = gen:levelgen_get_param(1, "density") or 0.45`
+---@param node_id integer The generator node's id
+---@param name string Its parameter's name
+---@return number? value The value set with set_level_param (a boolean comes back as 1 or 0), or nil when none is set (the generator's own applies)
+function LevelGeneratorNode:levelgen_get_param(node_id, name) end
+
+---Deprecated: use `levelgen_get_param` (works until Rayzr 2.0).
+---@deprecated Use levelgen_get_param
 ---@param node_id integer The generator node's id
 ---@param name string Its parameter's name
 ---@return number? value The value set with set_level_param (a boolean comes back as 1 or 0), or nil when none is set (the generator's own applies)
@@ -8475,20 +8521,31 @@ function LevelGeneratorNode:level_param(node_id, name) end
 
 ---Drops the parameters set on this node (all, a generator node's, or one).
 ---
----Example: `gen:clear_level_params()`
+---Example: `gen:levelgen_clear_params()`
+---@param node_id? integer Only this generator node's parameters; nil means every node
+---@param name? string Only the parameter of this name; nil means all of them
+function LevelGeneratorNode:levelgen_clear_params(node_id, name) end
+
+---Deprecated: use `levelgen_clear_params` (works until Rayzr 2.0).
+---@deprecated Use levelgen_clear_params
 ---@param node_id? integer Only this generator node's parameters; nil means every node
 ---@param name? string Only the parameter of this name; nil means all of them
 function LevelGeneratorNode:clear_level_params(node_id, name) end
 
 ---The path's length in pixels (along the curve).
 ---
----Example: `local len = self.node:get_node("Route"):path_length()`
+---Example: `local len = self.node:get_node("Route"):path_get_length()`
+---@return number Length along the curve in the path's own px (before its scale); 0 for an empty path
+function PathNode:path_get_length() end
+
+---Deprecated: use `path_get_length` (works until Rayzr 2.0).
+---@deprecated Use path_get_length
 ---@return number Length along the curve in the path's own px (before its scale); 0 for an empty path
 function PathNode:path_length() end
 
 ---The point at a distance along the path (world) and the direction the path goes there.
 ---
----Example: `local pos, dir = route:path_point_at(route:path_length() * 0.5)`
+---Example: `local pos, dir = route:path_point_at(route:path_get_length() * 0.5)`
 ---@param distance number Px along the path from its first point (clamped to 0 .. path_length)
 ---@return Vec2 position World position of that point
 ---@return Vec2 direction Unit vector, the direction the path runs there (world)
@@ -8547,7 +8604,12 @@ function PathNode:path_clear() end
 
 ---How far along its path the follower is: 0 at the start, 1 at the end.
 ---
----Example: `if platform:follow_ratio() > 0.5 then ... end`
+---Example: `if platform:follow_get_ratio() > 0.5 then ... end`
+---@return number Progress as a fraction of the path's length, 0 to 1; 0 without a parent path
+function PathFollowNode:follow_get_ratio() end
+
+---Deprecated: use `follow_get_ratio` (works until Rayzr 2.0).
+---@deprecated Use follow_get_ratio
 ---@return number Progress as a fraction of the path's length, 0 to 1; 0 without a parent path
 function PathFollowNode:follow_ratio() end
 
@@ -8690,7 +8752,12 @@ function AsepriteNode:aseprite_is_playing() end
 
 ---The frame shown (0-based).
 ---
----Example: `if sprite:aseprite_frame() == 3 then shoot() end`
+---Example: `if sprite:aseprite_get_frame() == 3 then shoot() end`
+---@return integer frame The frame shown, from 0
+function AsepriteNode:aseprite_get_frame() end
+
+---Deprecated: use `aseprite_get_frame` (works until Rayzr 2.0).
+---@deprecated Use aseprite_get_frame
 ---@return integer frame The frame shown, from 0
 function AsepriteNode:aseprite_frame() end
 
@@ -8804,31 +8871,55 @@ function SkeletonNode:skeleton_set_bone_rotation(name, degrees) end
 
 ---An animation's length in seconds (default: the current one).
 ---
----Example: `local t = skel:skeleton_duration("attack")`
+---Example: `local t = skel:skeleton_get_duration("attack")`
+---@param name? string The animation's name; nil uses the current one
+---@return number seconds The animation's length in seconds; 0 when there is no such animation
+function SkeletonNode:skeleton_get_duration(name) end
+
+---Deprecated: use `skeleton_get_duration` (works until Rayzr 2.0).
+---@deprecated Use skeleton_get_duration
 ---@param name? string The animation's name; nil uses the current one
 ---@return number seconds The animation's length in seconds; 0 when there is no such animation
 function SkeletonNode:skeleton_duration(name) end
 
 ---Adds shake trauma (stacks up to 1, decays by Shake Decay per second).
 ---
----Example: `cam:add_trauma(0.4)  -- a hit`
+---Example: `cam:adv_camera_add_trauma(0.4)  -- a hit`
+---@param amount number Trauma to add: 0.2 a bump, 0.5 a hit, 1 an explosion; the total is capped at 1 (negative calms it)
+function AdvancedCameraNode:adv_camera_add_trauma(amount) end
+
+---Deprecated: use `adv_camera_add_trauma` (works until Rayzr 2.0).
+---@deprecated Use adv_camera_add_trauma
 ---@param amount number Trauma to add: 0.2 a bump, 0.5 a hit, 1 an explosion; the total is capped at 1 (negative calms it)
 function AdvancedCameraNode:add_trauma(amount) end
 
 ---Raises its priority above every other advanced camera: the host blends to it.
 ---
----Example: `Scene.find_node("BossCam"):make_active()`
+---Example: `Scene.find_node("BossCam"):adv_camera_make_active()`
+function AdvancedCameraNode:adv_camera_make_active() end
+
+---Deprecated: use `adv_camera_make_active` (works until Rayzr 2.0).
+---@deprecated Use adv_camera_make_active
 function AdvancedCameraNode:make_active() end
 
 ---The scene's camera shows this one now.
 ---
----Example: `if cam:is_active() then hud:show_hint() end`
+---Example: `if cam:adv_camera_is_active() then hud:show_hint() end`
+---@return boolean true when the scene's camera is showing this one; false for other node types
+function AdvancedCameraNode:adv_camera_is_active() end
+
+---Deprecated: use `adv_camera_is_active` (works until Rayzr 2.0).
+---@deprecated Use adv_camera_is_active
 ---@return boolean true when the scene's camera is showing this one; false for other node types
 function AdvancedCameraNode:is_active() end
 
 ---Jumps to where it wants to be now (no damping; ends the blend if active) - after a teleport.
 ---
----Example: `player.position = spawn; cam:snap()`
+---Example: `player.position = spawn; cam:adv_camera_snap()`
+function AdvancedCameraNode:adv_camera_snap() end
+
+---Deprecated: use `adv_camera_snap` (works until Rayzr 2.0).
+---@deprecated Use adv_camera_snap
 function AdvancedCameraNode:snap() end
 
 
@@ -8896,7 +8987,13 @@ function StateMachineNode:sm_trigger(name) end
 
 ---Whether a trigger is set and not used up yet (waiting for an arrow, or in its buffer time).
 ---
----Example: `if sm:sm_trigger_pending("attack") then self:show_combo_hint() end`
+---Example: `if sm:sm_is_trigger_pending("attack") then self:show_combo_hint() end`
+---@param name StateMachineTrigger|string The trigger's name
+---@return boolean pending True while the trigger is set and not used up (waiting for an arrow or within its buffer)
+function StateMachineNode:sm_is_trigger_pending(name) end
+
+---Deprecated: use `sm_is_trigger_pending` (works until Rayzr 2.0).
+---@deprecated Use sm_is_trigger_pending
 ---@param name StateMachineTrigger|string The trigger's name
 ---@return boolean pending True while the trigger is set and not used up (waiting for an arrow or within its buffer)
 function StateMachineNode:sm_trigger_pending(name) end
@@ -9074,9 +9171,8 @@ function CharacterMoverNode:character_set_control_mode(mode) end
 ---@param jump? boolean True jumps (vy = -jump speed) when grounded; nil or false doesn't
 function CharacterMoverNode:character_move(dirX, jump) end
 
----Same as character_is_on_floor().
----
----Example: `if self.node:character_is_grounded() then self.coyote = 0.1 end`
+---Deprecated: use `character_is_on_floor` (works until Rayzr 2.0).
+---@deprecated Use character_is_on_floor
 ---@return boolean grounded True when standing on a floor (false right after a jump starts)
 function CharacterMoverNode:character_is_grounded() end
 
@@ -9512,19 +9608,34 @@ function TouchButtonNode:touch_is_down() end
 ---A Viewport's picture as a texture path, "viewport:<name>": give it to a
 ---Sprite (sprite:set_texture) or a material's texture parameter.
 ---
----Example: `Scene.find_node("Monitor"):set_texture(Scene.find_node("SecurityCam"):get_texture())`
+---Example: `Scene.find_node("Monitor"):set_texture(Scene.find_node("SecurityCam"):viewport_get_texture())`
+---@return string path
+function ViewportNode:viewport_get_texture() end
+
+---Deprecated: use `viewport_get_texture` (works until Rayzr 2.0).
+---@deprecated Use viewport_get_texture
 ---@return string path
 function ViewportNode:get_texture() end
 
 ---Renders a viewport set to Update Mode "Once" again (a snapshot), next frame.
 ---
----Example: `Scene.find_node("Photo"):refresh()`
+---Example: `Scene.find_node("Photo"):viewport_refresh()`
+function ViewportNode:viewport_refresh() end
+
+---Deprecated: use `viewport_refresh` (works until Rayzr 2.0).
+---@deprecated Use viewport_refresh
 function ViewportNode:refresh() end
 
 ---Saves the viewport's picture as a PNG: a relative path goes in the game's
 ---save-data folder (screenshots, photo mode). False when it has no picture yet.
 ---
----Example: `Scene.find_node("Photo"):save_png("photos/shot_1.png")`
+---Example: `Scene.find_node("Photo"):viewport_save_png("photos/shot_1.png")`
+---@param path string A .png path (relative: in the save-data folder)
+---@return boolean saved
+function ViewportNode:viewport_save_png(path) end
+
+---Deprecated: use `viewport_save_png` (works until Rayzr 2.0).
+---@deprecated Use viewport_save_png
 ---@param path string A .png path (relative: in the save-data folder)
 ---@return boolean saved
 function ViewportNode:save_png(path) end
@@ -9551,7 +9662,13 @@ function OscillatorNode:oscillator_resume() end
 
 ---Whether the oscillator is "stopped", "running" or "paused", and how many cycles it has run since Start (the phase: 2.25 is a quarter into the third cycle).
 ---
----Example: `local state, cycles = osc:oscillator_state()`
+---Example: `local state, cycles = osc:oscillator_get_state()`
+---@return string state
+---@return number cycles
+function OscillatorNode:oscillator_get_state() end
+
+---Deprecated: use `oscillator_get_state` (works until Rayzr 2.0).
+---@deprecated Use oscillator_get_state
 ---@return string state
 ---@return number cycles
 function OscillatorNode:oscillator_state() end
@@ -9590,33 +9707,29 @@ function BehaviorTreeNode:bt_interrupt() end
 ---@return string status
 function BehaviorTreeNode:bt_status() end
 
----A value from the tree's blackboard (or the global one when `global` is true).
----
----Example: `local target = brain:bt_get("target")`
+---Deprecated: use `tree:bt_blackboard():get (or Blackboard:get)` (works until Rayzr 2.0).
+---@deprecated Use tree:bt_blackboard():get (or Blackboard:get)
 ---@param key string The value's name
 ---@param global? boolean The global blackboard
 ---@return any value
 function BehaviorTreeNode:bt_get(key, global) end
 
----Sets a blackboard value (nil erases it). A node is kept as its path from the tree.
----
----Example: `brain:bt_set("target", player)`
+---Deprecated: use `tree:bt_blackboard():set (or Blackboard:set)` (works until Rayzr 2.0).
+---@deprecated Use tree:bt_blackboard():set (or Blackboard:set)
 ---@param key string The value's name
 ---@param value any A boolean, number, string, vector or node
 ---@param global? boolean The global blackboard
 function BehaviorTreeNode:bt_set(key, value, global) end
 
----Whether the blackboard has a value for the key.
----
----Example: `if brain:bt_has("target") then ... end`
+---Deprecated: use `tree:bt_blackboard():has (or Blackboard:has)` (works until Rayzr 2.0).
+---@deprecated Use tree:bt_blackboard():has (or Blackboard:has)
 ---@param key string The value's name
 ---@param global? boolean The global blackboard
 ---@return boolean set
 function BehaviorTreeNode:bt_has(key, global) end
 
----Removes a blackboard value.
----
----Example: `brain:bt_erase("target")`
+---Deprecated: use `tree:bt_blackboard():erase (or Blackboard:erase)` (works until Rayzr 2.0).
+---@deprecated Use tree:bt_blackboard():erase (or Blackboard:erase)
 ---@param key string The value's name
 ---@param global? boolean The global blackboard
 function BehaviorTreeNode:bt_erase(key, global) end
@@ -9850,13 +9963,23 @@ function SoundNode:sound_play_index(index) end
 
 ---How many sounds it has.
 ---
----Example: `local n = self.node:get_node("Footsteps"):sound_count()`
+---Example: `local n = self.node:get_node("Footsteps"):sound_get_count()`
+---@return integer count How many sounds are in its list
+function SoundNode:sound_get_count() end
+
+---Deprecated: use `sound_get_count` (works until Rayzr 2.0).
+---@deprecated Use sound_get_count
 ---@return integer count How many sounds are in its list
 function SoundNode:sound_count() end
 
 ---The sound it played last (1 = the first; 0 = none yet).
 ---
----Example: `local i = self.node:get_node("Footsteps"):sound_last()`
+---Example: `local i = self.node:get_node("Footsteps"):sound_get_last()`
+---@return integer index The sound played last, from 1; 0 when none has played yet
+function SoundNode:sound_get_last() end
+
+---Deprecated: use `sound_get_last` (works until Rayzr 2.0).
+---@deprecated Use sound_get_last
 ---@return integer index The sound played last, from 1; 0 when none has played yet
 function SoundNode:sound_last() end
 
@@ -10422,6 +10545,7 @@ function Node:ldtk_referenced_by(field) end
 ---@field loops? integer Extra runs (-1 = forever)
 ---@field yoyo? boolean Every other run goes back
 ---@field on_complete? fun(node: Node) Called when it finishes
+---@field on_done? fun(node: Node) The same as on_complete (either name works)
 
 ---@class TweenModule
 ---Animates node properties over time with easing.
@@ -10474,7 +10598,7 @@ function TweenModule.ease(ease, t) end
 -- ============================================================================
 
 ---@class PoolModule
----Reuses instances of a component instead of creating and freeing them (bullets, sparks, coins). A pooled node is parked disabled (no update, no drawing, bodies off) and comes back on take; `node:destroy()` / `queue_free()` on one returns it to its pool. Its root's script gets `on_spawn()` before its first update after every take (after `ready()` the first time) and `on_despawn()` when returned. Pools last while the scene is loaded.
+---Reuses instances of a component instead of creating and freeing them (bullets, sparks, coins). A pooled node is parked disabled (no update, no drawing, bodies off) and comes back on take; `node:destroy()` / `destroy()` on one returns it to its pool. Its root's script gets `on_spawn()` before its first update after every take (after `ready()` the first time) and `on_despawn()` when returned. Pools last while the scene is loaded.
 local PoolModule = {}
 
 ---Takes an instance of the component: a parked one, else a new one (nil at the pool's max). Added under `parent` (else the scene's root) at x, y local to it.
@@ -10807,7 +10931,12 @@ function SaveModule.slot(name) end
 
 ---Returns the file path of the current save slot.
 ---
----Example: `Log.info("saving to", Save.path())`
+---Example: `Log.info("saving to", Save.get_path())`
+---@return string path The full path of the current slot's file
+function SaveModule.get_path() end
+
+---Deprecated: use `Save.get_path` (works until Rayzr 2.0).
+---@deprecated Use Save.get_path
 ---@return string path The full path of the current slot's file
 function SaveModule.path() end
 
@@ -10846,7 +10975,12 @@ function CrashModule.note(text) end
 
 ---The crash folder.
 ---
----Example: `print("crash reports in " .. Crash.dir())`
+---Example: `print("crash reports in " .. Crash.get_dir())`
+---@return string The crash folder's path ("" when there is none: on the web, or in the editor's Simulate)
+function CrashModule.get_dir() end
+
+---Deprecated: use `Crash.get_dir` (works until Rayzr 2.0).
+---@deprecated Use Crash.get_dir
 ---@return string The crash folder's path ("" when there is none: on the web, or in the editor's Simulate)
 function CrashModule.dir() end
 
@@ -11270,6 +11404,7 @@ function InputModule.is_touch_device() end
 ---@field conflicts? "clear"|"swap"|"allow" Another action using it loses it (clear, default), gets this one's old binding (swap), or keeps it (allow)
 ---@field cancel? string The key that cancels (default "ESCAPE")
 ---@field on_done? fun(result: "bound"|"cancelled", text: string) Called when it's bound or cancelled
+---@field on_complete? fun(result: "bound"|"cancelled", text: string) The same as on_done (either name works)
 
 ---An action's bindings, each with a player-facing `text`.
 ---
@@ -11280,7 +11415,14 @@ function InputModule.get_bindings(action) end
 
 ---What to show for an action's bindings: "Space / A" (or one slot's).
 ---
----Example: `label.text = "Jump: " .. Input.binding_text("jump")`
+---Example: `label.text = "Jump: " .. Input.get_binding_text("jump")`
+---@param action InputAction The action's name, e.g. "jump"
+---@param slot? integer Only this binding, 1-based (default: all of them joined with " / ")
+---@return string What to show the player, e.g. "Space / A"; "-" when there is nothing to show
+function InputModule.get_binding_text(action, slot) end
+
+---Deprecated: use `Input.get_binding_text` (works until Rayzr 2.0).
+---@deprecated Use Input.get_binding_text
 ---@param action InputAction The action's name, e.g. "jump"
 ---@param slot? integer Only this binding, 1-based (default: all of them joined with " / ")
 ---@return string What to show the player, e.g. "Space / A"; "-" when there is nothing to show
@@ -11336,13 +11478,18 @@ function InputModule.find_conflicts(binding) end
 
 ---The kind of device the player used last - show keyboard or gamepad prompts.
 ---
----Example: `hint.text = Input.last_device() == "gamepad" and "Press A" or "Press Space"`
+---Example: `hint.text = Input.get_last_device() == "gamepad" and "Press A" or "Press Space"`
+---@return "keyboard"|"gamepad" "gamepad" after a pad button press, else "keyboard" (also for the mouse)
+function InputModule.get_last_device() end
+
+---Deprecated: use `Input.get_last_device` (works until Rayzr 2.0).
+---@deprecated Use Input.get_last_device
 ---@return "keyboard"|"gamepad" "gamepad" after a pad button press, else "keyboard" (also for the mouse)
 function InputModule.last_device() end
 
 ---The project's actions, in the order of Project Settings > Input (for building a controls menu).
 ---
----Example: `for _, name in ipairs(Input.get_actions()) do print(name, Input.binding_text(name)) end`
+---Example: `for _, name in ipairs(Input.get_actions()) do print(name, Input.get_binding_text(name)) end`
 ---@return string[] The action names, in Project Settings > Input order
 function InputModule.get_actions() end
 
@@ -11372,7 +11519,15 @@ function InputModule.get_vibration(player) end
 
 ---The button prompt image for an action: its first binding on the device the player uses now (a key on the keyboard; A / Cross / B... on a pad). Use it as any image path (set_texture, UI images). nil when the action has nothing on that device.
 ---
----Example: `self.node:get_node("Prompt"):set_texture(Input.glyph("jump"))` - "prompts:xbox/xbox_button_a"
+---Example: `self.node:get_node("Prompt"):set_texture(Input.get_glyph("jump"))` - "prompts:xbox/xbox_button_a"
+---@param action InputAction The action's name, e.g. "jump"
+---@param player? integer Which player's device to use, 1-4 (default 1)
+---@param device? "keyboard"|"xbox"|"playstation"|"switch"|"steamdeck" Force a family: "keyboard", "xbox", "playstation", "switch" or "steamdeck" (default: what the player uses now)
+---@return string? An image path like "prompts:xbox/xbox_button_a" for set_texture or UI images; nil when the action has no binding on that device
+function InputModule.get_glyph(action, player, device) end
+
+---Deprecated: use `Input.get_glyph` (works until Rayzr 2.0).
+---@deprecated Use Input.get_glyph
 ---@param action InputAction The action's name, e.g. "jump"
 ---@param player? integer Which player's device to use, 1-4 (default 1)
 ---@param device? "keyboard"|"xbox"|"playstation"|"switch"|"steamdeck" Force a family: "keyboard", "xbox", "playstation", "switch" or "steamdeck" (default: what the player uses now)
@@ -11381,7 +11536,13 @@ function InputModule.glyph(action, player, device) end
 
 ---The device a player uses now: "keyboard" (player 1, last used the keyboard / mouse or has no pad), the gamepad's kind (from its name), or "none".
 ---
----Example: `if Input.device() == "playstation" then hint.text = "Press Cross" end`
+---Example: `if Input.get_device() == "playstation" then hint.text = "Press Cross" end`
+---@param player? integer Which player, 1-4 (default 1)
+---@return "keyboard"|"xbox"|"playstation"|"switch"|"steamdeck"|"generic"|"none" "keyboard" (player 1 on keyboard or mouse, or without a pad), the pad family ("xbox", "playstation", "switch", "steamdeck", "generic"), or "none"
+function InputModule.get_device(player) end
+
+---Deprecated: use `Input.get_device` (works until Rayzr 2.0).
+---@deprecated Use Input.get_device
 ---@param player? integer Which player, 1-4 (default 1)
 ---@return "keyboard"|"xbox"|"playstation"|"switch"|"steamdeck"|"generic"|"none" "keyboard" (player 1 on keyboard or mouse, or without a pad), the pad family ("xbox", "playstation", "switch", "steamdeck", "generic"), or "none"
 function InputModule.device(player) end
@@ -11395,7 +11556,13 @@ function InputModule.is_gamepad_connected(player) end
 
 ---The name of a player's gamepad (nil: none).
 ---
----Example: `print(Input.gamepad_name(1))` - "Xbox Wireless Controller"
+---Example: `print(Input.get_gamepad_name(1))` - "Xbox Wireless Controller"
+---@param player? integer Which player, 1-4 (default 1)
+---@return string? The pad's name, e.g. "Xbox Wireless Controller"; nil when the player has none
+function InputModule.get_gamepad_name(player) end
+
+---Deprecated: use `Input.get_gamepad_name` (works until Rayzr 2.0).
+---@deprecated Use Input.get_gamepad_name
 ---@param player? integer Which player, 1-4 (default 1)
 ---@return string? The pad's name, e.g. "Xbox Wireless Controller"; nil when the player has none
 function InputModule.gamepad_name(player) end
@@ -11409,20 +11576,30 @@ function InputModule.get_player_gamepad(player) end
 
 ---Gives a player a gamepad (nil: none). A player that had it gets this player's old one, so two players never share a pad - a "press A to join" screen.
 ---
----Example: `for _, p in ipairs(Input.gamepads()) do if not p.player then Input.set_player_gamepad(next_free, p.pad) end end`
+---Example: `for _, p in ipairs(Input.get_gamepads()) do if not p.player then Input.set_player_gamepad(next_free, p.pad) end end`
 ---@param player integer Which player, 1-4
 ---@param pad? integer The gamepad number, 1-4 (nil takes the player's pad away; a player who had this pad gets the old one)
 function InputModule.set_player_gamepad(player, pad) end
 
 ---The connected gamepads.
 ---
----Example: `for _, p in ipairs(Input.gamepads()) do print(p.pad, p.name, p.device, p.player) end`
+---Example: `for _, p in ipairs(Input.get_gamepads()) do print(p.pad, p.name, p.device, p.player) end`
+---@return {pad: integer, name: string, device: string, player: integer?}[] One entry per connected pad: pad number (1-4), name, device family, and player (nil when nobody has it)
+function InputModule.get_gamepads() end
+
+---Deprecated: use `Input.get_gamepads` (works until Rayzr 2.0).
+---@deprecated Use Input.get_gamepads
 ---@return {pad: integer, name: string, device: string, player: integer?}[] One entry per connected pad: pad number (1-4), name, device family, and player (nil when nobody has it)
 function InputModule.gamepads() end
 
 ---How many players: player 1 plus every other player with a gamepad.
 ---
 ---Example: `for p = 2, 4 do if Input.is_gamepad_connected(p) then self:spawn_player(p) end end -- (players with a pad: count with player_count)`
+---@return integer 1 plus each of players 2-4 that has a connected gamepad
+function InputModule.get_player_count() end
+
+---Deprecated: use `Input.get_player_count` (works until Rayzr 2.0).
+---@deprecated Use Input.get_player_count
 ---@return integer 1 plus each of players 2-4 that has a connected gamepad
 function InputModule.player_count() end
 
@@ -11496,7 +11673,14 @@ function AudioModule.get_buses() end
 
 ---A bus's level right now (post-fader peaks, falling off smoothly) - for in-game meters or music-reactive effects.
 ---
----Example: `local l, r = Audio.bus_peak("Music"); self.node.scale = {1 + l * 0.2, 1 + l * 0.2}`
+---Example: `local l, r = Audio.get_bus_peak("Music"); self.node.scale = {1 + l * 0.2, 1 + l * 0.2}`
+---@param bus AudioBus A bus name, any case
+---@return number left Left level now, about 0..1 (above 1 when the bus clips; 0 for an unknown bus)
+---@return number right Right level now, same scale
+function AudioModule.get_bus_peak(bus) end
+
+---Deprecated: use `Audio.get_bus_peak` (works until Rayzr 2.0).
+---@deprecated Use Audio.get_bus_peak
 ---@param bus AudioBus A bus name, any case
 ---@return number left Left level now, about 0..1 (above 1 when the bus clips; 0 for an unknown bus)
 ---@return number right Right level now, same scale
@@ -11801,13 +11985,18 @@ function PhysicsModule.set_gravity(gx, gy) end
 ---Draws collision shapes, joints and areas while the game runs (debugging);
 ---the project's Show Colliders setting (physics.debug_draw) sets the start.
 ---
----Example: `if Input.is_key_pressed("F3") then Physics.set_debug_draw(not Physics.get_debug_draw()) end`
+---Example: `if Input.is_key_pressed("F3") then Physics.set_debug_draw(not Physics.is_debug_draw()) end`
 ---@param on boolean True draws colliders, joints and areas over the game; false hides them
 function PhysicsModule.set_debug_draw(on) end
 
 ---Whether colliders are drawn while the game runs.
 ---
----Example: `local showing = Physics.get_debug_draw()`
+---Example: `local showing = Physics.is_debug_draw()`
+---@return boolean True while colliders are drawn
+function PhysicsModule.is_debug_draw() end
+
+---Deprecated: use `Physics.is_debug_draw` (works until Rayzr 2.0).
+---@deprecated Use Physics.is_debug_draw
 ---@return boolean True while colliders are drawn
 function PhysicsModule.get_debug_draw() end
 
@@ -11848,7 +12037,7 @@ local SceneModule = {}
 
 ---Finds any node in the active scene hierarchy by name.
 ---
----Example: `local player = Scene.find_node("Player"); if player then player:queue_free() end`
+---Example: `local player = Scene.find_node("Player"); if player then player:destroy() end`
 ---@param name NodeName|string The node's exact name (case-sensitive); the first match anywhere in the scene
 ---@return Node? node The first node with that name, or nil when there is none
 function SceneModule.find_node(name) end
@@ -11863,7 +12052,7 @@ function SceneModule.find_by_uid(uid) end
 
 ---Every node in the active scene with a tag, in tree order.
 ---
----Example: `for _, enemy in ipairs(Scene.find_by_tag("enemy")) do enemy:queue_free() end`
+---Example: `for _, enemy in ipairs(Scene.find_by_tag("enemy")) do enemy:destroy() end`
 ---@param tag NodeTag|string The tag to look for, as set in the Inspector or with node:add_tag
 ---@return Node[] Every node with the tag, in tree order; an empty list when none has it
 function SceneModule.find_by_tag(tag) end
@@ -11978,9 +12167,8 @@ function SceneModule.reload() end
 ---@return Node[] Every node in the active scene; an empty list with no scene
 function SceneModule.get_nodes() end
 
----Dynamically instantiates a new scene node and adds it to the active scene graph.
----
----Example: `local timer = Scene.create_node("TimerNode", "Cooldown", self.node)`
+---Deprecated: use `Scene.create (then set node.name)` (works until Rayzr 2.0).
+---@deprecated Use Scene.create (then set node.name)
 ---@param nodeType string A node type or Add Node search name ("TimerNode", "timer", "sprite"); default "Node"; an unknown type makes nothing (returns nil, logs a warning)
 ---@param name? string The new node's name; nil leaves the default
 ---@param parent? Node The node to add it under; nil adds it under the scene's root
@@ -12022,7 +12210,12 @@ function SceneModule.find_nodes_of_type(typeName) end
 
 ---Checks if debug collider and bounds rendering is enabled on this scene.
 ---
----Example: `local on = Scene.get_draw_bounds(); Scene.set_draw_bounds(not on)`
+---Example: `local on = Scene.is_draw_bounds(); Scene.set_draw_bounds(not on)`
+---@return boolean True while the scene draws debug colliders and bounds; false with no scene
+function SceneModule.is_draw_bounds() end
+
+---Deprecated: use `Scene.is_draw_bounds` (works until Rayzr 2.0).
+---@deprecated Use Scene.is_draw_bounds
 ---@return boolean True while the scene draws debug colliders and bounds; false with no scene
 function SceneModule.get_draw_bounds() end
 
@@ -12488,7 +12681,12 @@ function ConsoleModule.is_enabled() end
 
 ---Opens (or with false, closes) the console.
 ---
----Example: `Console.open()`
+---Example: `Console.set_open()`
+---@param open? boolean Default true
+function ConsoleModule.set_open(open) end
+
+---Deprecated: use `Console.set_open` (works until Rayzr 2.0).
+---@deprecated Use Console.set_open
 ---@param open? boolean Default true
 function ConsoleModule.open(open) end
 

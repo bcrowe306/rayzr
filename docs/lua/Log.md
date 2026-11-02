@@ -28,7 +28,7 @@ function Coin:ready()
     end
     pickup:connect("body_entered", function(other)
         Log.info("coin collected by", other, "worth", self.value)
-        self.node:queue_free()
+        self.node:destroy()
     end)
 end
 

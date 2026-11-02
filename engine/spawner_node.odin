@@ -586,7 +586,8 @@ Script_RegisterSpawnerBindings :: proc(L: ^lua.State) {
 		lua.pushcfunction(L, fn)
 		lua.setfield(L, -2, name)
 	}
-	reg(L, "spawn", lua_spawn)
+	reg(L, "spawner_spawn", lua_spawn)
+	Lua_SetDeprecated(L, lua_spawn, "spawn", "spawner_spawn")
 	reg(L, "spawn_at", lua_spawn_at)
 	reg(L, "spawn_reset", lua_spawn_reset)
 	reg(L, "spawn_alive_count", lua_spawn_alive_count)
@@ -594,6 +595,7 @@ Script_RegisterSpawnerBindings :: proc(L: ^lua.State) {
 	reg(L, "spawn_add", lua_spawn_add)
 	reg(L, "spawn_remove", lua_spawn_remove)
 	reg(L, "spawn_clear", lua_spawn_clear)
-	reg(L, "set_spawn_callback", lua_set_spawn_callback)
+	reg(L, "spawner_set_callback", lua_set_spawn_callback)
+	Lua_SetDeprecated(L, lua_set_spawn_callback, "set_spawn_callback", "spawner_set_callback")
 	reg(L, "spawn_info", lua_spawn_info)
 }
