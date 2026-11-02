@@ -205,7 +205,7 @@ behind the art, the colour filter applies to the art.
 ```lua
 -- Highlight the character under the mouse; grey it out when it's dead.
 local hero = self.node:get_node("Hero")
-hero.glowColor = {255, 210, 63, 255}
+hero.glow_color = "#ffd23f"
 hero.glowSize = 12
 hero.saturation = 0
 ```

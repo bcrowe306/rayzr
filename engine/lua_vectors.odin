@@ -60,7 +60,7 @@ local function make(name, keys)
     function V.lerp(a, b, t) return a + (b - a) * t end
     function V.unpack(a) local r = {} for i = 1, n do r[i] = a[keys[i]] end return table.unpack(r) end
     function V.copy(a) return new(V.unpack(a)) end
-    return setmetatable({ new = new, mt = V }, { __call = function(_, ...) return new(...) end }), V
+    return setmetatable({ new = new, _mt = V }, { __call = function(_, ...) return new(...) end }), V
 end
 local V2
 Vec2, V2 = make("Vec2", {"x", "y"})
@@ -82,7 +82,7 @@ Lua_RegisterVectors :: proc(L: ^lua.State) {
 	_ = lua.L_dostring(L, LUA_VECTORS)
 	lua.getglobal(L, "Vec2")
 	if lua.type(L, -1) == .TABLE {
-		lua.getfield(L, -1, "mt")
+		lua.getfield(L, -1, "_mt")
 		lua.setfield(L, lua.REGISTRYINDEX, "Engine.Vec2")
 	}
 	lua.pop(L, 1)

@@ -395,12 +395,13 @@ lua_ldtk_level_at :: proc "c" (L: ^lua.State) -> c.int {
 		lua.pushnil(L)
 		return 1
 	}
-	lvl, _ := level_local(ln, {f32(lua.tonumber(L, 2)), f32(lua.tonumber(L, 3))})
+	px, py := arg_xy(L, 2) // (x, y or a Vec2)
+	lvl, _ := level_local(ln, {px, py})
 	if lvl == nil && ln.project != nil && ln.level != nil && !ln.worldMode {
 		// Single level: look the point up in the world layout.
 		sx := ln.globalScale.x if ln.globalScale.x != 0 else 1
 		sy := ln.globalScale.y if ln.globalScale.y != 0 else 1
-		local := ([2]f32{f32(lua.tonumber(L, 2)), f32(lua.tonumber(L, 3))} - ln.globalPosition) / [2]f32{sx, sy}
+		local := ([2]f32{px, py} - ln.globalPosition) / [2]f32{sx, sy}
 		lvl = Ldtk_LevelAt(ln.project, Ldtk_WorldOf(ln.project, ln.level), local + {f32(ln.level.worldX), f32(ln.level.worldY)}, ln.level.worldDepth)
 	}
 	if lvl == nil do lua.pushnil(L)
@@ -522,7 +523,8 @@ lua_ldtk_is_layer_visible :: proc "c" (L: ^lua.State) -> c.int {
 layer_at :: proc(L: ^lua.State, ln: ^LdtkLevelNode, nameIdx: c.int) -> (^LdtkLayerInstance, [2]f32) {
 	name, ok := str_arg(L, nameIdx)
 	if !ok do return nil, {}
-	lvl, p := level_local(ln, {f32(lua.tonumber(L, nameIdx + 1)), f32(lua.tonumber(L, nameIdx + 2))})
+	x, y := arg_xy(L, nameIdx + 1) // (x, y or a Vec2)
+	lvl, p := level_local(ln, {x, y})
 	if lvl == nil do return nil, {}
 	return Ldtk_GetLayer(lvl, name), p
 }

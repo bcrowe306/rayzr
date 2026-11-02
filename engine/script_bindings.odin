@@ -2446,6 +2446,10 @@ lua_physics_raycast :: proc "c" (L: ^lua.State) -> c.int {
 	lua.setfield(L, -2, "normal_x")
 	lua.pushnumber(L, lua.Number(query.normal.y))
 	lua.setfield(L, -2, "normal_y")
+	Lua_PushVec2(L, query.point) // (the same as Vec2s: #327)
+	lua.setfield(L, -2, "point")
+	Lua_PushVec2(L, query.normal)
+	lua.setfield(L, -2, "normal")
 	lua.pushnumber(L, lua.Number(query.fraction))
 	lua.setfield(L, -2, "fraction")
 	if query.hitNode != nil {
@@ -2846,8 +2850,9 @@ lua_audio_play_sound_at :: proc "c" (L: ^lua.State) -> c.int {
 	if pathC == nil || sm == nil || sm.game == nil || !rl.IsAudioDeviceReady() do return 0
 	sound, ok := sm.game.resourceManager->loadAudioSound(Project_ResolveAssetPath(&sm.game.gameContext, string(pathC)))
 	if !ok || sound == nil do return 0
-	pos := [2]f32{f32(lua.tonumber(L, 2)), f32(lua.tonumber(L, 3))}
-	vol := f32(lua.tonumber(L, 4)) if lua.gettop(L) >= 4 else 1
+	px, py, volIdx := arg_xy_next(L, 2) // (x, y or a Vec2)
+	pos := [2]f32{px, py}
+	vol := f32(lua.tonumber(L, volIdx)) if lua.gettop(L) >= volIdx else 1
 	pan: f32 = 0.5
 	if listener, has := Audio_ListenerPosition(&sm.game.gameContext); has {
 		v, p := Audio_Spatialize(pos, listener, 100, 900, 450)
@@ -3128,15 +3133,15 @@ lua_audio_set_master_volume :: proc "c" (L: ^lua.State) -> c.int {
 // Scene Bindings (Engine.Scene)
 // ----------------------------------------------------------------------------
 
-// Scene.set_ambient(r, g, b [, a]) (0..1): the light map's base colour.
+// Scene.set_ambient(color): the light map's base colour - "#rrggbb",
+// {r, g, b[, a]} or r, g, b[, a] (0..1).
 @(private="file")
 lua_scene_set_ambient :: proc "c" (L: ^lua.State) -> c.int {
 	context = Script_Context(L)
 	sm := get_script_manager(L)
 	if sm == nil || sm.game == nil || sm.game.sceneManager.currentScene == nil do return 0
-	a := f32(lua.tonumber(L, 4)) if lua.type(L, 4) == .NUMBER else 1
-	ch :: proc(v: f32) -> u8 {return u8(clamp(v, 0, 1) * 255 + 0.5)}
-	amb := rl.Color{ch(f32(lua.tonumber(L, 1))), ch(f32(lua.tonumber(L, 2))), ch(f32(lua.tonumber(L, 3))), ch(a)}
+	amb, _, ok := Lua_ArgColor(L, 1)
+	if !ok do return 0
 	if amb == {} do amb.a = 1 // ({} means "not set": white)
 	sm.game.sceneManager.currentScene.ambient = amb
 	return 0
@@ -3161,13 +3166,12 @@ light_arg :: proc(L: ^lua.State) -> ^LightNode {
 	return cast(^LightNode)node
 }
 
-// light:light_set_color(r, g, b) (0..1)
+// light:light_set_color(color): "#rrggbb", {r, g, b} or r, g, b (0..1)
 @(private="file")
 lua_light_set_color :: proc "c" (L: ^lua.State) -> c.int {
 	context = Script_Context(L)
 	if l := light_arg(L); l != nil {
-		ch :: proc(v: f32) -> u8 {return u8(clamp(v, 0, 1) * 255 + 0.5)}
-		l.color = {ch(f32(lua.tonumber(L, 2))), ch(f32(lua.tonumber(L, 3))), ch(f32(lua.tonumber(L, 4))), 255}
+		if col, _, ok := Lua_ArgColor(L, 2); ok do l.color = col // (any colour form: #327)
 	}
 	return 0
 }
@@ -3521,17 +3525,8 @@ lua_node_set_property :: proc "c" (L: ^lua.State) -> c.int {
 		x, y := arg_xy(L, 3) // x, y or a vector ({x =, y =} / {x, y})
 		(^[2]f32)(p.ptr)^ = {x, y}
 	case .Color:
-		ch :: proc(v: f32) -> u8 {return u8(clamp(v, 0, 1) * 255 + 0.5)}
-		if lua.type(L, 3) == .TABLE {
-			a: f32 = 1
-			lua.rawgeti(L, 3, 4)
-			if lua.type(L, -1) == .NUMBER do a = f32(lua.tonumber(L, -1))
-			lua.pop(L, 1)
-			(^rl.Color)(p.ptr)^ = {ch(tbl(L, 1)), ch(tbl(L, 2)), ch(tbl(L, 3)), ch(a)}
-		} else if lua.type(L, 3) == .STRING {
-			// "#rrggbb" / "#rrggbbaa", as in scene files.
-			if c, ok := Color_FromHex(string(lua.tostring(L, 3))); ok do (^rl.Color)(p.ptr)^ = c
-		}
+		// "#rrggbb[aa]", {r, g, b[, a]} or r, g, b[, a] (lua_color.odin).
+		if col, _, ok := Lua_ArgColor(L, 3); ok do (^rl.Color)(p.ptr)^ = col
 	case .Enum:
 		if s := lua.tostring(L, 3); s != nil {
 			for n, i in Property_EnumNames(p) do if strings.equal_fold(n, string(s)) do Property_SetEnumIndex(p, i)
@@ -3692,17 +3687,16 @@ nav_opts :: proc(L: ^lua.State, idx: c.int) -> Nav_Options {
 nav_find :: proc(L: ^lua.State, mapIdx: c.int) -> c.int {
 	node, ok := to_node_userdata(L, mapIdx)
 	if !ok {lua.pushnil(L); return 1}
-	opts := nav_opts(L, mapIdx + 5)
+	// The points: x, y numbers or Vec2s (#327); the options after them.
+	fx, fy, next := arg_xy_next(L, mapIdx + 1)
+	tx, ty, optsIdx := arg_xy_next(L, next)
+	opts := nav_opts(L, optsIdx)
 	g := Nav_GridFor(node, opts)
-	from := [2]f32{f32(lua.tonumber(L, mapIdx + 1)), f32(lua.tonumber(L, mapIdx + 2))}
-	to := [2]f32{f32(lua.tonumber(L, mapIdx + 3)), f32(lua.tonumber(L, mapIdx + 4))}
-	path := Nav_FindPath(g, from, to, opts)
+	path := Nav_FindPath(g, {fx, fy}, {tx, ty}, opts)
 	if path == nil {lua.pushnil(L); return 1}
 	lua.createtable(L, c.int(len(path)), 0)
 	for p, i in path {
-		lua.createtable(L, 2, 0)
-		lua.pushnumber(L, lua.Number(p.x)); lua.rawseti(L, -2, 1)
-		lua.pushnumber(L, lua.Number(p.y)); lua.rawseti(L, -2, 2)
+		Lua_PushVec2(L, p) // (a Vec2: p.x, or p[1] as before)
 		lua.rawseti(L, -2, lua.Integer(i + 1))
 	}
 	return 1
@@ -3734,7 +3728,8 @@ lua_node_nav_is_walkable :: proc "c" (L: ^lua.State) -> c.int {
 		if g := Nav_GridFor(node, opts); g != nil {
 			rc := opts.radius / max(min(g.cell.x, g.cell.y), 0.0001)
 			if rc > 0 do Nav_Clearance(g)
-			walk = Nav_Walkable(g, Nav_CellAt(g, {f32(lua.tonumber(L, 2)), f32(lua.tonumber(L, 3))}), rc)
+			x, y := arg_xy(L, 2) // (x, y or a Vec2)
+			walk = Nav_Walkable(g, Nav_CellAt(g, {x, y}), rc)
 		}
 	}
 	lua.pushboolean(L, b32(walk))
@@ -4014,7 +4009,10 @@ lua_node_line_set_points :: proc "c" (L: ^lua.State) -> c.int {
 lua_node_line_add_point :: proc "c" (L: ^lua.State) -> c.int {
 	context = Script_Context(L)
 	node, ok := to_node_userdata(L, 1)
-	if ok && node.typeId == LineNode do append(&(cast(^LineNode)node).points, [2]f32{f32(lua.tonumber(L, 2)), f32(lua.tonumber(L, 3))})
+	if ok && node.typeId == LineNode {
+		x, y := arg_xy(L, 2) // (x, y or a Vec2)
+		append(&(cast(^LineNode)node).points, [2]f32{x, y})
+	}
 	return 0
 }
 

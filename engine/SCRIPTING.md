@@ -673,6 +673,12 @@ Names renamed before 1.0, all still working:
   `finished`. Every node that ends its work raises `finished`; the Navigation
   Agent and the Path Follower raise it along with `navigation_finished` and
   `path_finished`.
+- A point is two numbers or a Vec2, wherever a function takes one
+  (`line_add_point(Vec2(4, 8))`, `nav_find_path(from, to)`); a function that
+  returns several points returns Vec2s.
+- A colour is `"#rrggbb[aa]"`, a table `{r, g, b[, a]}` with channels from 0
+  to 1, or, as a function's arguments, `r, g, b[, a]`. Channels above 1 are
+  read as 0-255.
 - Property names are snake_case (`node.z_index`); the Inspector's camelCase
   names (`zIndex`) work too.
 - A completion callback in an options table can be called `on_done` or
