@@ -130,7 +130,7 @@ test_format_newer_files :: proc(t: ^testing.T) {
 	testing.expect(t, scene.formatNewer && Scene_FindNodeByName(scene, "Kept") != nil, "flagged, read as well as possible")
 	testing.expect(t, Format_IsNewer(.Component, Format_OfText(transmute([]u8)string(`{"format": 5, "type": "Node"}`))), "a component's format is read from its text")
 
-	dir := "/tmp/rayzr_format_newer_test"
+	dir := "test_format_newer" // (relative, like the other tests: no /tmp on Windows)
 	os.make_directory_all(dir)
 	defer os.remove_all(dir)
 	proj, _ := filepath.join({dir, "project.json"}, context.temp_allocator)
@@ -147,5 +147,5 @@ test_format_newer_files :: proc(t: ^testing.T) {
 	side := strings.concatenate({img, IMPORT_SUFFIX}, context.temp_allocator)
 	_ = os.write_entire_file(side, transmute([]u8)string(`{"format": 99, "filter": "bilinear"}`))
 	testing.expect(t, !Asset_ImportSave(&game.resourceManager, img, {mipmaps = true}), "import settings not saved over")
-	testing.expect(t, Format_FileIsNewer(.Import, side) && !Format_FileIsNewer(.Import, "/tmp/rayzr_format_missing.json"), "missing files aren't newer")
+	testing.expect(t, Format_FileIsNewer(.Import, side) && !Format_FileIsNewer(.Import, "test_format_newer/missing.json"), "missing files aren't newer")
 }
