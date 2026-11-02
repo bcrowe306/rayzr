@@ -701,6 +701,43 @@ test_ldtk_doc_field_values_arrays_refs :: proc(t: ^testing.T) {
 }
 
 @(test)
+test_ldtk_doc_remove_entity_clears_refs :: proc(t: ^testing.T) {
+	doc, ok := Ldtk_Doc_New("/tmp/rayzr_zz_unlink.ldtk")
+	testing.expect(t, ok)
+	if !ok do return
+	defer Ldtk_Doc_Destroy(doc)
+	a := doc.allocator
+	ents := -1
+	for &ly, j in doc.levels[0].layers do if Ldtk_Doc_LayerDef(doc, &ly).type == .Entities do ents = j
+	lever := Ldtk_Doc_AddEntityDef(doc, "Lever")
+	one := Ldtk_Doc_AddFieldDef(doc, lever, "F_EntityRef", "door")
+	many := Ldtk_Doc_AddFieldDef(doc, lever, "F_EntityRef", "doors")
+	LdtkJson_SetStr(Ldtk_Doc_FieldDef(doc, one), "allowedRefs", "Any", a)
+	LdtkJson_SetStr(Ldtk_Doc_FieldDef(doc, many), "allowedRefs", "Any", a)
+	LdtkJson_SetBool(Ldtk_Doc_FieldDef(doc, many), "isArray", true, a)
+	Ldtk_Doc_RefreshDefs(doc)
+	l := Ldtk_Doc_AddEntity(doc, 0, ents, lever, {16, 16})
+	d1 := Ldtk_Doc_AddEntity(doc, 0, ents, lever, {64, 16})
+	d2 := Ldtk_Doc_AddEntity(doc, 0, ents, lever, {96, 16})
+	fi :: proc(ent: ^LdtkJson, uid: int) -> ^LdtkJson {
+		for f in LdtkJson_Arr(ent, "fieldInstances") do if LdtkJson_Int(f, "defUid", -1) == uid do return f
+		return nil
+	}
+	testing.expect(t, Ldtk_Doc_SetFieldRef(doc, fi(l, one), 0, l, LdtkJson_Str(d1, "iid")))
+	for d in ([]^LdtkJson{d1, d2}) {
+		j := Ldtk_Doc_FieldArrayAdd(doc, fi(l, many))
+		testing.expect(t, Ldtk_Doc_SetFieldRef(doc, fi(l, many), j, l, LdtkJson_Str(d, "iid")))
+	}
+	// deleting d1: the single link becomes null, the array loses its value
+	testing.expect(t, Ldtk_Doc_RemoveEntity(doc, 0, ents, d1))
+	_, null := Ldtk_Doc_FieldText(doc, fi(l, one), 0)
+	testing.expect(t, null)
+	testing.expect_value(t, Ldtk_Doc_FieldArrayLen(doc, fi(l, many)), 1)
+	left, _ := Ldtk_Doc_FieldText(doc, fi(l, many), 0)
+	testing.expect_value(t, left, LdtkJson_Str(d2, "iid"))
+}
+
+@(test)
 test_ldtk_doc_field_and_entity_def_ops :: proc(t: ^testing.T) {
 	doc, ok := Ldtk_Doc_New("/tmp/rayzr_zz_defops.ldtk")
 	testing.expect(t, ok)

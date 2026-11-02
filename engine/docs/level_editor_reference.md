@@ -423,7 +423,7 @@ Values that each entity (or level) carries for the game. Edit them in the
 | Enum | a list of the enum's values |
 | Point | "cx,cy", or the crosshair: click a cell in the level |
 | FilePath | a path, or the folder button: a project file of an accepted type |
-| EntityRef | the crosshair: click the entity in the level (it may be in another level); the arrow button goes to it |
+| EntityRef | the crosshair: click the entity in the level (it may be in another level); the arrow button goes to it; the broken-link button disconnects it |
 | Tile | **Use picked tile**: the tiles picked in a tileset palette |
 
 - **Arrays**: **+** adds a value (for points and references, you then
@@ -437,6 +437,10 @@ Values that each entity (or level) carries for the game. Edit them in the
   regex, a file of the wrong type.
 - **Symmetrical references** (a definition option): pointing A at B makes B
   point at A, and clearing it removes both links.
+- **Disconnecting a reference**: the broken-link button (or right-click >
+  **Clear**) for a single reference, the remove button for an array value.
+  Deleting an entity also removes the references to it from its level;
+  references from other levels show as lost until you disconnect them.
 
 In the game, an entity's fields set the script properties with the same
 names.

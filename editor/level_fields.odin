@@ -278,6 +278,17 @@ value_widget :: proc(state: ^EditorState, fd: ^e.LdtkJson, fi: ^e.LdtkJson, idx,
 			imgui.SameLine(0, 2)
 			if UI_IconButton(ICON_FA_UP_RIGHT_FROM_SQUARE, fmt.tprintf("level.field.goto:%s:%d", name, idx), "", false, 24) do level_goto_entity(cur)
 			level_tip("Go to that entity (opens its level)", "fields")
+			if !inArray {
+				// (array values: the remove button)
+				imgui.SameLine(0, 2)
+				if UI_IconButton(ICON_FA_LINK_SLASH, fmt.tprintf("level.field.unlink:%s:%d", name, idx), "", false, 24) {
+					e.Ldtk_Doc_Checkpoint(doc, L.level, "Unlink")
+					if owner != nil do e.Ldtk_Doc_SetFieldRef(doc, fi, idx, owner, "") // (symmetrical refs)
+					else do e.Ldtk_Doc_SetFieldRaw(doc, fi, idx, "")
+					field_changed(fi, i, mirror, owner)
+				}
+				level_tip("Disconnect: point at no entity", "fields")
+			}
 		}
 	case .Tile:
 		ts := e.Ldtk_Doc_Tileset(doc, e.LdtkJson_Int(fd, "tilesetUid", -1))
