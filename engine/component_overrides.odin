@@ -351,6 +351,7 @@ component_base_json :: proc(ctx: ^GameContext, compPath: string) -> (json.Object
 	obj, isObj := val.(json.Object)
 	if !isObj do return nil, false
 	if inner, has := obj["node"].(json.Object); has do obj = inner
+	Format_Migrate(.Component, &obj)
 	return obj, true
 }
 
@@ -602,6 +603,7 @@ component_expand :: proc(ctx: ^GameContext, compPath: string, stack: ^[dynamic]s
 	obj, isObj = val.(json.Object)
 	if !isObj do return nil, "", "the component file is not a node"
 	if inner, has := obj["node"].(json.Object); has do obj = inner
+	Format_Migrate(.Component, &obj, compPath)
 	normalize_base(&obj, ctx)
 	append(stack, compPath)
 	expand_links(ctx, &obj, stack)
@@ -1364,7 +1366,14 @@ Component_InstanceJSON :: proc(node: ^Node, manager: ^NodeManager, allocator := 
 		serializeFullInstance, serializeExpandNested = prev, prevExpand
 		serializeRootUidNode, serializeRootUid = prevNode, prevUid
 	}
-	return Node_SerializeToJSON(node, manager, allocator)
+	return Component_StampFormat(Node_SerializeToJSON(node, manager, context.temp_allocator), allocator)
+}
+
+// Component_StampFormat: a component file's text (a node object) with the
+// current format first (#326).
+Component_StampFormat :: proc(nodeText: string, allocator := context.allocator) -> string {
+	if len(nodeText) == 0 || nodeText[0] != '{' do return strings.clone(nodeText, allocator)
+	return fmt.aprintf("{{\n  \"%s\": %d,%s", FORMAT_KEY, FORMAT_CURRENT[.Component], nodeText[1:], allocator = allocator)
 }
 
 // Component_FileJSON: a component document's root as its file, with a uid
@@ -1373,7 +1382,7 @@ Component_InstanceJSON :: proc(node: ^Node, manager: ^NodeManager, allocator := 
 Component_FileJSON :: proc(root: ^Node, manager: ^NodeManager, allocator := context.allocator) -> string {
 	seen := make(map[string]bool, allocator = context.temp_allocator)
 	assign_uids(manager, root, &seen)
-	return Node_SerializeToJSON(root, manager, allocator)
+	return Component_StampFormat(Node_SerializeToJSON(root, manager, context.temp_allocator), allocator)
 }
 
 // Scene_AssignUids: a uid on every node of the scene, unique in it (#328):

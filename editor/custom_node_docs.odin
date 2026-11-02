@@ -114,6 +114,7 @@ Editor_SaveCustomNodeDoc :: proc(state: ^EditorState, scene: ^e.Scene) -> bool {
 		return false
 	}
 	node := kids[0]
+	if Editor_FormatBlocksSave(state, scene.filePath) do return false // (from a newer Rayzr: #326)
 	t, problem := e.CustomNode_Get(ctx, scene.filePath)
 	if t == nil {
 		Editor_Log(state, .Error, "%s can't be saved: %s", scene.filePath, problem)
@@ -413,6 +414,7 @@ Editor_RebaseCustomNode :: proc(state: ^EditorState, rel, newBase: string) -> bo
 // they are now) and writes it again.
 @(private = "file")
 custom_resave_file :: proc(state: ^EditorState, rel: string) -> bool {
+	if Editor_FormatBlocksSave(state, rel) do return false // (from a newer Rayzr: #326)
 	ctx := &state.game.gameContext
 	full, _ := filepath.join({state.projectPath, rel}, context.temp_allocator)
 	data, err := os.read_entire_file(full, context.temp_allocator)

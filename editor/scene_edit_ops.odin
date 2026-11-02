@@ -195,7 +195,7 @@ undo_file_restored :: proc(state: ^EditorState, rel, text: string, sceneRestored
 	for doc in state.componentDocs {
 		if doc == nil || doc.filePath != rel do continue
 		kids := e.GetChildrenView(doc.manager, doc.rootNode)
-		same := len(kids) > 0 && e.Node_SerializeToJSON(kids[0], doc.manager, context.temp_allocator) == text
+		same := len(kids) > 0 && e.Component_StampFormat(e.Node_SerializeToJSON(kids[0], doc.manager, context.temp_allocator), context.temp_allocator) == text
 		state.savedVersion[doc] = state.sceneVersion[doc] if same else -1
 		state.modifiedCacheFrames = 0
 		state.modifiedCountFrames = 0
@@ -452,6 +452,7 @@ Editor_SaveComponent :: proc(state: ^EditorState, node: ^e.Node, name: string = 
 	_ = os.make_directory_all(Editor_ComponentsDir(state))
 	// Never replaces an existing component: a free name (Enemy_2...) (#73).
 	rel := Component_FreePath(state, name if name != "" else node.name)
+	if Editor_FormatBlocksSave(state, rel) do return "", false // (from a newer Rayzr: #326)
 	path, _ := filepath.join({state.projectPath, rel}, context.temp_allocator)
 	// The file holds the full subtree (not a link to itself).
 	json := e.Component_InstanceJSON(node, mgr, context.temp_allocator)
@@ -478,6 +479,7 @@ Editor_SaveComponent :: proc(state: ^EditorState, node: ^e.Node, name: string = 
 Editor_ApplyInstanceToComponent :: proc(state: ^EditorState, inst: ^e.Node) -> bool {
 	if inst == nil || inst.componentPath == "" || state.activeScene == nil do return false
 	rel := strings.clone(inst.componentPath, context.temp_allocator)
+	if Editor_FormatBlocksSave(state, rel) do return false // (from a newer Rayzr: #326)
 	json := e.Component_InstanceJSON(inst, state.activeScene.manager, context.temp_allocator)
 	disk, _ := filepath.join({state.projectPath, rel}, context.temp_allocator)
 	// One undo step for the scene and the file (#76), taken before the file
@@ -517,7 +519,7 @@ Editor_ApplyOverride :: proc(state: ^EditorState, node: ^e.Node, key: string) ->
 	if state.activeScene == nil || node == nil do return false
 	ctx := &state.game.gameContext
 	rel, json := e.Component_ApplyOverrideJSON(state.activeScene, node, key, ctx, context.temp_allocator)
-	if rel == "" do return false
+	if rel == "" || Editor_FormatBlocksSave(state, rel) do return false // (from a newer Rayzr: #326)
 	disk, _ := filepath.join({state.projectPath, rel}, context.temp_allocator)
 	// One undo step for the scene and the file, taken before the file
 	// changes (#76).

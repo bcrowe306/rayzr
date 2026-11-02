@@ -54,6 +54,7 @@ Resource_File :: struct {
 	script: string,
 	values: map[string]ScriptValue,
 	raw:    map[string]string,
+	newer:  bool, // from a newer Rayzr (#326): the editor won't save over it
 }
 
 RESOURCE_EXT :: ".resource.json"
@@ -422,6 +423,7 @@ Resource_ParseText :: proc(path, text: string, quiet := false) -> (file: Resourc
 			return
 		}
 	}
+	_, file.newer = Format_Migrate(.Resource, &obj, path if !quiet else "")
 	script, isStr := obj["script"].(json.String)
 	if !isStr || script == "" {
 		if !quiet do Script_Problem(.Warning, "[Resource] %s: no \"script\" (its class)", path)
@@ -464,6 +466,7 @@ Resource_FileText :: proc(script: string, values: map[string]ScriptValue, mod: ^
 	strings.write_byte(&w.sb, '{')
 	w.indent = 1
 	first := true
+	Json_Key(&w, FORMAT_KEY, &first); fmt.sbprintf(&w.sb, "%d", FORMAT_CURRENT[.Resource])
 	Json_Key(&w, "type", &first); Json_String(&w, "resource")
 	Json_Key(&w, "script", &first); Json_String(&w, script)
 	Json_Key(&w, "properties", &first)

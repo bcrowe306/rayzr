@@ -1,0 +1,26 @@
+# #326: a scene saved by a newer Rayzr opens read-only - a banner says so,
+# what this version understands shows, and saving never writes over it.
+# drive: copy tests/drive/fixtures/format_newer scenes
+wait 5
+dblclick @asset:scenes/future.scene.json
+expect scene == scenes/future.scene.json
+expect node:Kept.exists == true
+expect item:scene.format_newer == visible
+screenshot read_only_banner
+
+# An edit, then Ctrl+S: the file keeps its newer format and data.
+click @hier:Kept
+dblclick @insp.position.x
+key ctrl+a
+type 99
+key enter
+key ctrl+s
+expect log contains was saved by a newer version of Rayzr
+expect file:scenes/future.scene.json contains "format": 99
+expect file:scenes/future.scene.json contains from_the_future
+
+# Older scenes open as usual and are saved in the current format.
+dblclick @asset:scenes/main.scene.json
+expect item:scene.format_newer == missing
+key ctrl+s
+expect file:scenes/main.scene.json contains "format": 1,
