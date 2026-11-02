@@ -370,25 +370,13 @@ num :: #force_inline proc "contextless" (L: ^lua.State, i: c.int, def: f32 = 0) 
 @(private = "file")
 vec :: #force_inline proc "contextless" (L: ^lua.State, i: c.int) -> [2]f32 {return {num(L, i), num(L, i + 1)}}
 
-// lua_color: (r, g, b[, a]) 0..1, {r, g, b[, a]} 0..1, or "#rrggbb[aa]".
+// lua_color: (r, g, b[, a]) 0..1, {r, g, b[, a]} 0..1, or "#rrggbb[aa]"
+// (Lua_ArgColor).
 @(private = "file")
 lua_color :: proc(L: ^lua.State, i: c.int) -> [4]u8 {
-	#partial switch lua.type(L, i) {
-	case .STRING:
-		if col, ok := Color_FromHex(string(lua.tostring(L, i))); ok do return {col.r, col.g, col.b, col.a}
-	case .TABLE:
-		ch: [4]f32 = {0, 0, 0, 1}
-		for k in 0 ..< 4 {
-			lua.rawgeti(L, i, lua.Integer(k + 1))
-			if lua.type(L, -1) == .NUMBER do ch[k] = f32(lua.tonumber(L, -1))
-			lua.pop(L, 1)
-		}
-		return {u8(clamp(ch[0], 0, 1) * 255 + 0.5), u8(clamp(ch[1], 0, 1) * 255 + 0.5), u8(clamp(ch[2], 0, 1) * 255 + 0.5), u8(clamp(ch[3], 0, 1) * 255 + 0.5)}
-	case .NUMBER:
-		ch := [4]f32{num(L, i), num(L, i + 1), num(L, i + 2), num(L, i + 3, 1)}
-		return {u8(clamp(ch[0], 0, 1) * 255 + 0.5), u8(clamp(ch[1], 0, 1) * 255 + 0.5), u8(clamp(ch[2], 0, 1) * 255 + 0.5), u8(clamp(ch[3], 0, 1) * 255 + 0.5)}
-	}
-	return {0, 0, 0, 255}
+	col, _, ok := Lua_ArgColor(L, i)
+	if !ok do return {0, 0, 0, 255}
+	return {col.r, col.g, col.b, col.a}
 }
 
 // lua_paint: a gradient table made by Vector.linear_gradient /

@@ -505,9 +505,10 @@ lua_nav_set_blocked :: proc "c" (L: ^lua.State) -> c.int {
 	context = Script_Context(L)
 	r := lua_region(L)
 	if r == nil do return 0
-	x, y := f32(lua.tonumber(L, 2)), f32(lua.tonumber(L, 3))
-	w, h := f32(lua.tonumber(L, 4)), f32(lua.tonumber(L, 5))
-	NavRegion_SetBlocked(r, {x, y}, {x + w, y + h}, lua.type(L, 6) != .BOOLEAN || bool(lua.toboolean(L, 6)))
+	// The corner and the size: numbers or Vec2s (#327); the flag after them.
+	x, y, next := arg_xy_next(L, 2)
+	w, h, flag := arg_xy_next(L, next)
+	NavRegion_SetBlocked(r, {x, y}, {x + w, y + h}, lua.type(L, flag) != .BOOLEAN || bool(lua.toboolean(L, flag)))
 	return 0
 }
 

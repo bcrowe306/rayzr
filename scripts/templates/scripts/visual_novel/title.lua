@@ -25,7 +25,7 @@ function Title:ready()
     local cont = Scene.find_node("Continue")
     if not Save.has("autosave") then
         cont.text = "Continue (no save yet)"
-        cont:set_property("text_color", { 150, 150, 160, 255 })
+        cont:set_property("text_color", { 0.59, 0.59, 0.63, 1 })
     end
     local n = 0
     for _ in pairs(Save.get("endings", {})) do n = n + 1 end

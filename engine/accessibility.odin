@@ -436,23 +436,12 @@ lua_sub_show :: proc "c" (L: ^lua.State) -> c.int {
 		if bool(lua.toboolean(L, -1)) do kind = .Caption
 		lua.pop(L, 1)
 		lua.getfield(L, 2, "color")
-		if lua.type(L, -1) == .TABLE do color = lua_table_color(L, lua.gettop(L))
+		if c, _, ok := Lua_ArgColor(L, lua.gettop(L)); ok do color = c // (any colour form; 0..255 still read: #327)
 		lua.pop(L, 1)
 	}
 	if duration <= 0 do duration = Subtitles_ReadingTime(text)
 	lua.pushinteger(L, lua.Integer(Subtitles_Show(text, speaker, duration, kind, color)))
 	return 1
-}
-
-@(private = "file")
-lua_table_color :: proc(L: ^lua.State, idx: c.int) -> rl.Color {
-	get :: proc(L: ^lua.State, idx: c.int, i: lua.Integer, def: f64) -> u8 {
-		lua.rawgeti(L, idx, i)
-		defer lua.pop(L, 1)
-		v := f64(lua.tonumber(L, -1)) if lua.type(L, -1) == .NUMBER else def
-		return u8(clamp(v, 0, 255))
-	}
-	return {get(L, idx, 1, 255), get(L, idx, 2, 255), get(L, idx, 3, 255), get(L, idx, 4, 255)}
 }
 
 @(private = "file")
