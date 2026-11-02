@@ -47,6 +47,7 @@ Editor_OpenComponent :: proc(state: ^EditorState, rel: string) -> bool {
 	scene.rootNode.gameContext = &state.game.gameContext
 	node := e.Scene_InstantiateNodeFromJSON(scene, data, scene.rootNode, &state.game.gameContext)
 	if node != nil do node.position = {0, 0}
+	scene.formatNewer = e.Format_IsNewer(.Component, e.Format_OfText(data)) // (read-only: #326)
 	e.ProcessNodeQueues(scene.manager, &state.game.gameContext)
 	e.Node_SetGlobalPositions(scene.manager, scene.rootNode)
 	scene.isLoaded = true
@@ -69,6 +70,7 @@ Editor_OpenComponent :: proc(state: ^EditorState, rel: string) -> bool {
 // Editor_SaveComponentDoc writes a component document back to its file and
 // refreshes the instances in every open scene.
 Editor_SaveComponentDoc :: proc(state: ^EditorState, scene: ^e.Scene) -> bool {
+	if Editor_FormatBlocksSave(state, scene.filePath) do return false // (from a newer Rayzr: #326)
 	if Editor_IsCustomNodeDoc(state, scene) do return Editor_SaveCustomNodeDoc(state, scene)
 	children := e.GetChildrenView(scene.manager, scene.rootNode)
 	if len(children) == 0 {

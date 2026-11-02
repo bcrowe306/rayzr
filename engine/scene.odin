@@ -16,6 +16,7 @@ Scene :: struct {
 	name: string,
 	filePath: string,   // project-relative scene file ("scenes/main.scene.json"), "" for code scenes
 	sourceJson: string, // scene file contents; rebuilt from on every (re)load
+	formatNewer: bool,  // the file is from a newer Rayzr (#326): the editor won't save over it
 	drawBounds: bool,
 	// Clear colour while this scene runs (alpha 0 = the game's default).
 	backgroundColor: rl.Color,

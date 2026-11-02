@@ -18,7 +18,7 @@ import rl "vendor:raylib"
 // Scene_InstantiateFromJSON reads back, so a load -> save -> load round trip
 // keeps every node, property, resource, script value and the hierarchy.
 //
-// Scene object: "name", "draw_bounds", "background", "ambient", "guides"
+// Scene object: "format" (file_format.odin), "name", "draw_bounds", "background", "ambient", "guides"
 // (editor guide lines: [{"x": 100}, {"y": 50}]), "root".
 //
 // Node object:
@@ -49,6 +49,8 @@ Scene_SerializeToJSON :: proc(scene: ^Scene, allocator := context.allocator) -> 
 	strings.write_byte(&w.sb, '{')
 	w.indent = 1
 	first := true
+	Json_Key(&w, FORMAT_KEY, &first)
+	fmt.sbprintf(&w.sb, "%d", FORMAT_CURRENT[.Scene])
 	Json_Key(&w, "name", &first)
 	Json_String(&w, scene.name)
 	Json_Key(&w, "draw_bounds", &first)
@@ -810,6 +812,7 @@ Scene_InstantiateFromJSON :: proc(scene: ^Scene, jsonBytes: []u8, gameContext: ^
 	}
 	rootObj, isObj := parsedVal.(json.Object)
 	if !isObj do return false
+	_, scene.formatNewer = Format_Migrate(.Scene, &rootObj, scene.filePath if scene.filePath != "" else scene.name)
 
 	if scene.name == "" {
 		scene.name = strings.clone(sj_string(rootObj, "name", "Scene"))
@@ -919,6 +922,7 @@ Scene_InstantiateNodeFromJSON :: proc(scene: ^Scene, jsonBytes: []u8, parent: ^N
 	if !isObj do return nil
 	if inner, ok := sj_obj(obj, "node"); ok do obj = inner
 	else if inner, ok := sj_obj(obj, "root"); ok && sj_string(obj, "type", "") == "" do obj = inner
+	Format_Migrate(.Component, &obj) // (a component file: its "format" beside the root's keys)
 	target := parent if parent != nil else scene.rootNode
 	return read_node(scene, obj, target, gameContext)
 }
@@ -1769,7 +1773,7 @@ sj_obj_has :: proc(obj: json.Object, key: string) -> bool {
 Component_NewJSON :: proc(typeName, name: string, allocator := context.allocator) -> string {
 	if _, ok := Node_TypeInfoByName(typeName); !ok do return ""
 	quoted, _ := json.marshal(name, allocator = context.temp_allocator)
-	return fmt.aprintf("{{\n  \"name\": %s,\n  \"component\": true,\n  \"type\": \"%s\"\n}}\n", string(quoted), typeName, allocator = allocator)
+	return fmt.aprintf("{{\n  \"%s\": %d,\n  \"name\": %s,\n  \"component\": true,\n  \"type\": \"%s\"\n}}\n", FORMAT_KEY, FORMAT_CURRENT[.Component], string(quoted), typeName, allocator = allocator)
 }
 
 // Component_ReadFile reads a component (prefab) file through the asset

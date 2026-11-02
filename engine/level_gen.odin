@@ -401,6 +401,7 @@ Gen_GraphParse :: proc(data: []u8, allocator := context.allocator) -> (g: Gen_Gr
 	if perr != .None do return g, fmt.tprintf("not valid JSON (%v)", perr)
 	root, ok := value.(json.Object)
 	if !ok do return g, "not a JSON object"
+	Format_Migrate(.LevelGen, &root)
 	if sz, sok := root["size"].(json.Array); sok && len(sz) >= 2 {
 		w, _ := json_number(sz[0])
 		h, _ := json_number(sz[1])
@@ -491,7 +492,7 @@ Gen_GraphParse :: proc(data: []u8, allocator := context.allocator) -> (g: Gen_Gr
 Gen_GraphSerialize :: proc(g: ^Gen_Graph, allocator := context.allocator) -> string {
 	w: Json_Writer
 	w.sb = strings.builder_make(allocator)
-	fmt.sbprintf(&w.sb, "{{\"size\": [%d, %d], \"seed\": %d", g.size.x, g.size.y, g.seed)
+	fmt.sbprintf(&w.sb, "{{\"%s\": %d, \"size\": [%d, %d], \"seed\": %d", FORMAT_KEY, FORMAT_CURRENT[.LevelGen], g.size.x, g.size.y, g.seed)
 	if g.output != 0 do fmt.sbprintf(&w.sb, ", \"output\": %d", g.output)
 	strings.write_string(&w.sb, ", \"nodes\": [")
 	for &n, i in g.nodes {

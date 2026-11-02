@@ -318,6 +318,7 @@ Editor_OpenScene :: proc(state: ^EditorState, relPath: string) -> bool {
 // Editor_SaveSceneDocument writes one scene to its file.
 Editor_SaveSceneDocument :: proc(state: ^EditorState, scene: ^e.Scene) -> bool {
 	if scene == nil || scene.filePath == "" do return false
+	if Editor_FormatBlocksSave(state, scene.filePath) do return false // (from a newer Rayzr: #326)
 	if Editor_IsComponentDoc(state, scene) do return Editor_SaveComponentDoc(state, scene)
 	jsonStr := e.Scene_SerializeToJSON(scene)
 	defer delete(jsonStr)

@@ -199,6 +199,7 @@ Terrains_Parse :: proc(data: []u8, allocator := context.allocator) -> (ts: Tile_
 	value, perr := json.parse(data, allocator = context.temp_allocator)
 	if perr != .None do return ts, fmt.tprintf("not valid JSON (%v)", perr)
 	root, _ := value.(json.Object)
+	Format_Migrate(.Tileset, &root)
 	list, _ := root["terrains"].(json.Array)
 	for v in list {
 		obj, ok := v.(json.Object)
@@ -247,7 +248,7 @@ Terrains_AnimationOf :: proc(ts: ^Tile_Terrains, tile: i32) -> int {
 Terrains_Serialize :: proc(ts: ^Tile_Terrains, allocator := context.allocator) -> string {
 	w: Json_Writer
 	w.sb = strings.builder_make(allocator)
-	strings.write_string(&w.sb, "{\"terrains\": [")
+	fmt.sbprintf(&w.sb, "{{\"%s\": %d, \"terrains\": [", FORMAT_KEY, FORMAT_CURRENT[.Tileset])
 	for &t, i in ts.terrains {
 		strings.write_string(&w.sb, "," if i > 0 else "")
 		strings.write_string(&w.sb, "\n  {\"name\": ")

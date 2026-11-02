@@ -308,7 +308,7 @@ lge_restore :: proc(from, to: ^[dynamic]string) {
 
 @(private = "file")
 lge_save :: proc(state: ^EditorState) -> bool {
-	if !lge.loaded do return false
+	if !lge.loaded || Editor_FormatBlocksSave(state, lge.path) do return false // (from a newer Rayzr: #326)
 	full, _ := filepath.join({state.projectPath, lge.path}, context.temp_allocator)
 	if os.write_entire_file(full, transmute([]u8)e.Gen_GraphSerialize(&lge.graph, context.temp_allocator)) != nil {
 		Editor_Log(state, .Error, "Could not save %s", lge.path)

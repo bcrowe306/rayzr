@@ -144,6 +144,7 @@ CustomNode_Parse :: proc(path, text: string) -> (^CustomNodeType, string) {
 	if err != .None do return nil, fmt.tprintf("not valid JSON (%v)", err)
 	obj, isObj := val.(json.Object)
 	if !isObj do return nil, "not a JSON object"
+	Format_Migrate(.CustomNode, &obj, path)
 	str :: proc(o: json.Object, k: string) -> string {s, _ := o[k].(json.String); return string(s)}
 	name, base, inherits := str(obj, "name"), str(obj, "base"), str(obj, "inherits")
 	if ok, problem := CustomNode_IsValidName(name); !ok do return nil, fmt.tprintf("its name: %s", problem)
@@ -590,6 +591,7 @@ CustomNode_DefinitionJSON :: proc(d: CustomNode_Definition, allocator := context
 		if v == "" do return
 		Json_Key(w, k, first); Json_String(w, v)
 	}
+	Json_Key(&w, FORMAT_KEY, &first); fmt.sbprintf(&w.sb, "%d", FORMAT_CURRENT[.CustomNode])
 	field(&w, "name", d.name, &first)
 	if d.inherits != "" do field(&w, "inherits", d.inherits, &first)
 	else do field(&w, "base", d.base, &first)

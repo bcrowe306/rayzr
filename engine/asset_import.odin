@@ -3,6 +3,7 @@ package engine
 import "base:runtime"
 import "core:encoding/json"
 import "core:fmt"
+import "core:log"
 import "core:math"
 import os "osx"
 import "core:path/filepath"
@@ -64,6 +65,7 @@ Asset_Import :: struct {
 	hasOrigin:   bool,
 	// A file was found (else the defaults).
 	found:    bool,
+	formatNewer: bool, // the file is from a newer Rayzr (#326)
 }
 
 // The cache: entries (and their strings) live in one arena, freed together
@@ -146,6 +148,7 @@ Asset_ImportParse :: proc(text: string, e: ^Asset_Import, allocator := context.a
 	o, ok := v.(json.Object)
 	if !ok do return
 	e.found = true
+	_, e.formatNewer = Format_Migrate(.Import, &o)
 	num :: proc(o: json.Object, k: string) -> (f64, bool) {
 		#partial switch x in o[k] {
 		case json.Float: return x, true
@@ -230,13 +233,20 @@ Asset_ImportToJSON :: proc(e: Asset_Import, allocator := context.allocator) -> s
 	if e.normalMap != "" {sep(&sb, &n); fmt.sbprintf(&sb, "\"normal_map\": %q", e.normalMap)}
 	if e.normalGreenDown {sep(&sb, &n); strings.write_string(&sb, "\"normal_green_down\": true")}
 	strings.write_string(&sb, "\n}\n" if n > 0 else "}\n")
-	return strings.to_string(sb)
+	if n == 0 do return strings.to_string(sb)
+	defer strings.builder_destroy(&sb)
+	text := strings.to_string(sb)
+	return fmt.aprintf("{{\n  \"%s\": %d,%s", FORMAT_KEY, FORMAT_CURRENT[.Import], text[1:], allocator = allocator)
 }
 
 // Asset_ImportSave writes (or, at the defaults, deletes) an asset's file
 // and forgets the cached entry. `fullPath` is the asset's path on disk.
 Asset_ImportSave :: proc(rm: ^ResourceManager, fullPath: string, e: Asset_Import) -> bool {
 	side := strings.concatenate({fullPath, IMPORT_SUFFIX}, context.temp_allocator)
+	if Format_FileIsNewer(.Import, side) {
+		log.warnf("[Format] %s is from a newer Rayzr: not saved over", side)
+		return false
+	}
 	Asset_ImportForget(Asset_RelPath(rm, fullPath))
 	if Asset_ImportIsDefault(e) {
 		if os.is_file(side) do return os.remove(side) == nil

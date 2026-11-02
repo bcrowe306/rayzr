@@ -48,6 +48,7 @@ Editor_SaveTerrains :: proc(state: ^EditorState, image: string) {
 	ts := terrainSets[image]
 	if ts == nil do return
 	rel := e.Terrain_SidecarPath(image)
+	if Editor_FormatBlocksSave(state, rel) do return // (from a newer Rayzr: #326)
 	full, _ := filepath.join({state.projectPath, rel}, context.temp_allocator)
 	if os.write_entire_file(full, transmute([]u8)e.Terrains_Serialize(ts, context.temp_allocator)) != nil {
 		Editor_Log(state, .Error, "Could not save %s", rel)
