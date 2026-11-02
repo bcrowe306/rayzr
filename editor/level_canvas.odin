@@ -1606,21 +1606,49 @@ draw_field_geometry :: proc() {
 					rad := f32(v) * (fs.mode == "RadiusGrid" ? g : 1)
 					if rad > 0 do rl.DrawCircleLinesV(center, rad, fs.color)
 				case "RefLinkBetweenPivots", "RefLinkBetweenCenters":
-					for i in 0 ..< n {
-						t, isNull := e.Ldtk_Doc_FieldText(doc, fs.fi, i)
-						if isNull do continue
-						tli, tlayer, target, ok := e.Ldtk_Doc_FindEntity(doc, t)
-						if !ok || tli != L.level do continue
-						to := layer_origin_of(tlayer)
-						a := fs.mode == "RefLinkBetweenCenters" ? center : pivot
-						tr := e.Ldtk_Doc_EntityRect(target)
-						tp := e.LdtkJson_Arr(target, "px")
-						b := fs.mode == "RefLinkBetweenCenters" ? to + {f32(tr[0]) + f32(tr[2]) * 0.5, f32(tr[1]) + f32(tr[3]) * 0.5} : to + {f32(tp[0].num), f32(tp[1].num)}
-						draw_link(a, b, e.LdtkJson_Str(fs.fd, "editorLinkStyle", "StraightArrow"), fs.color, thick)
-					}
+					draw_ref_links(ent, j, fs.fi, fs.fd, fs.mode == "RefLinkBetweenCenters", fs.color, thick, false)
 				}
 			}
+			// The selected entity's links (out and in) show whatever the
+			// field's display mode, like LDtk.
+			for fi in e.LdtkJson_Arr(ent, "fieldInstances") {
+				fd := e.Ldtk_Doc_FieldDef(doc, e.LdtkJson_Int(fi, "defUid", -1))
+				if fd == nil || e.Ldtk_FieldKindOf(fd) != .EntityRef do continue
+				mode := e.LdtkJson_Str(fd, "editorDisplayMode", "Hidden")
+				if mode == "RefLinkBetweenPivots" || mode == "RefLinkBetweenCenters" do continue
+				col := base
+				if dc := e.LdtkJson_Str(fd, "editorDisplayColor"); dc != "" do col = e.Ldtk_ParseHexColor(dc, base)
+				draw_ref_links(ent, j, fi, fd, true, col, thick, true)
+			}
 		}
+	}
+}
+
+// draw_ref_links: the arrows of one EntityRef field of `ent` (on layer
+// `layer`) to targets in the active level. onlySelected: only the links
+// that start or end at a selected entity.
+@(private = "file")
+draw_ref_links :: proc(ent: ^e.LdtkJson, layer: int, fi, fd: ^e.LdtkJson, centers: bool, col: rl.Color, thick: f32, onlySelected: bool) {
+	L := &GlobalLevel
+	doc := L.doc
+	endpoint :: proc(ent: ^e.LdtkJson, o: [2]f32, centers: bool) -> [2]f32 {
+		if centers {
+			r := e.Ldtk_Doc_EntityRect(ent)
+			return o + {f32(r[0]) + f32(r[2]) * 0.5, f32(r[1]) + f32(r[3]) * 0.5}
+		}
+		px := e.LdtkJson_Arr(ent, "px")
+		return len(px) >= 2 ? o + {f32(px[0].num), f32(px[1].num)} : o
+	}
+	srcSel := e.Ldtk_Selection_HasEntity(&L.sel, ent)
+	for i in 0 ..< e.Ldtk_Doc_FieldArrayLen(doc, fi) {
+		t, isNull := e.Ldtk_Doc_FieldText(doc, fi, i)
+		if isNull do continue
+		tli, tlayer, target, ok := e.Ldtk_Doc_FindEntity(doc, t)
+		if !ok || tli != L.level do continue
+		if onlySelected && !srcSel && !e.Ldtk_Selection_HasEntity(&L.sel, target) do continue
+		a := endpoint(ent, layer_origin_of(layer), centers)
+		b := endpoint(target, layer_origin_of(tlayer), centers)
+		draw_link(a, b, e.LdtkJson_Str(fd, "editorLinkStyle", "StraightArrow"), col, thick)
 	}
 }
 

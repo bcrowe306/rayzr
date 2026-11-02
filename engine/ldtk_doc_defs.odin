@@ -641,7 +641,7 @@ Ldtk_Doc_AddFieldDef :: proc(doc: ^Ldtk_Doc, entityUid: int, type: string, ident
 	pbool(o, "canBeNull", nullable, a)
 	pnull(o, "arrayMinLength", a)
 	pnull(o, "arrayMaxLength", a)
-	pstr(o, "editorDisplayMode", "Hidden", a)
+	pstr(o, "editorDisplayMode", type == "F_EntityRef" ? "RefLinkBetweenCenters" : "Hidden", a) // (references: an arrow, like LDtk)
 	pint(o, "editorDisplayScale", 1, a)
 	pstr(o, "editorDisplayPos", "Above", a)
 	pstr(o, "editorLinkStyle", "StraightArrow", a)
