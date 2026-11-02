@@ -1,6 +1,8 @@
 # Level editor fields: an enum value on a Door, a Button's array of entity
 # references picked in the canvas (the arrow shows), a Point field added in
-# the Entities tab and picked as a cell, undo, Esc cancels picking.
+# the Entities tab and picked as a cell, undo, Esc cancels picking; a
+# single reference picked then unlinked, and deleting a referenced entity
+# clears the links to it.
 exec cp -R tests/drive/fixtures/ldtk $PROJECT/levels_zz
 wait 90
 click @root.level
@@ -67,3 +69,34 @@ expect level.picking == false
 key cmd+s
 wait 3
 expect file:levels_zz/topdown.ldtk contains "__identifier": "lockedWith", "__type": "LocalEnum.Item", "__value": "KeyA", "__tile": null
+# a single EntityRef field on the Door: point it at another Door, unlink it
+click @level.tab:Entities
+click @defs.entity:Door
+wait 2
+click @defs.entity.tab:Fields
+wait 1
+click @defs.field.type
+click @pick:EntityRef
+click @defs.field.add
+wait 2
+click @level.layer:Entities
+key v
+click @level.origin+376,120
+wait 2
+expect level.selected == Door
+click @level.field.pick:entityref:0
+wait 1
+click @level.origin+296,120
+wait 2
+expect level.fieldvalue:entityref == Door
+screenshot single_reference
+click @level.field.unlink:entityref:0
+wait 2
+expect level.fieldvalue:entityref == 
+# deleting the Door the Button's targets point at clears that link
+key delete
+wait 2
+click @level.origin+344,56
+wait 2
+expect level.selected == Button
+expect level.fieldvalue:targets == 

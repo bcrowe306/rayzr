@@ -377,6 +377,7 @@ Ldtk_Doc_RemoveEntity :: proc(doc: ^Ldtk_Doc, li, layer: int, ent: ^LdtkJson) ->
 	for it, i in list.items {
 		if it == ent {
 			ordered_remove(&list.items, i)
+			Ldtk_Doc_ClearRefsTo(doc, li, LdtkJson_Str(ent, "iid"))
 			doc.levels[li].dirty = true
 			Ldtk_Doc_Touch(doc)
 			return true

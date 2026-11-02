@@ -542,6 +542,29 @@ Ldtk_Doc_SetFieldRef :: proc(doc: ^Ldtk_Doc, fi: ^LdtkJson, idx: int, from: ^Ldt
 	return true
 }
 
+// Ldtk_Doc_ClearRefsTo removes level li's references to entity `iid` (a
+// deleted entity): array values go, single ones become null. Only that
+// level, so one level undo step brings them back; references from other
+// levels stay and show as lost.
+Ldtk_Doc_ClearRefsTo :: proc(doc: ^Ldtk_Doc, li: int, iid: string) {
+	if iid == "" || li < 0 || li >= len(doc.levels) do return
+	for &ly in doc.levels[li].layers {
+		for ent in LdtkJson_Arr(ly.obj, "entityInstances") {
+			for fi in LdtkJson_Arr(ent, "fieldInstances") {
+				fd := Ldtk_Doc_FieldDef(doc, LdtkJson_Int(fi, "defUid", -1))
+				if fd == nil || Ldtk_FieldKindOf(fd) != .EntityRef do continue
+				isArray := LdtkJson_Bool(fd, "isArray")
+				for i := Ldtk_Doc_FieldArrayLen(doc, fi) - 1; i >= 0; i -= 1 {
+					if t, _ := Ldtk_Doc_FieldText(doc, fi, i); t != iid do continue
+					if isArray do Ldtk_Doc_FieldArrayRemove(doc, fi, i)
+					else do Ldtk_Doc_SetFieldRaw(doc, fi, i, "")
+					doc.levels[li].dirty = true
+				}
+			}
+		}
+	}
+}
+
 @(private = "file")
 ldtk_field_of :: proc(ent: ^LdtkJson, fieldUid: int) -> ^LdtkJson {
 	for fi in LdtkJson_Arr(ent, "fieldInstances") do if LdtkJson_Int(fi, "defUid", -1) == fieldUid do return fi
