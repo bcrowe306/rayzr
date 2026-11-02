@@ -109,8 +109,8 @@ function Player:update(dt)
     self.node:get_node("Sprite").position = {0, -h}
 end
 
-world:set_property("ySort", true)
-tree:set_property("ySortOffset", 48)
+world:set_property("y_sort", true)
+tree:set_property("y_sort_offset", 48)
 ```
 
 ## Saved as

@@ -57,8 +57,8 @@ A reverb knob for a mixer bus's effect send, from 0 to 1.
 local ReverbKnob = {}
 
 function ReverbKnob:ready()
-    self.node:set_property("minValue", 0)
-    self.node:set_property("maxValue", 1)
+    self.node:set_property("min_value", 0)
+    self.node:set_property("max_value", 1)
     self.node:set_property("value", Save.get("reverb", 0.3))
     Audio.set_bus_volume("Reverb", self.node:get_property("value"))
 end

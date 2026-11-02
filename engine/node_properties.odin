@@ -5,6 +5,7 @@ import "core:fmt"
 import "core:reflect"
 import "core:strconv"
 import "core:strings"
+import "core:unicode"
 import rl "vendor:raylib"
 
 // ============================================================================
@@ -75,15 +76,81 @@ Struct_CollectProperties :: proc(tid: typeid, base: rawptr, allocator := context
 
 // Node_FindProperty looks a property up by path.
 Node_FindProperty :: proc(node: ^Node, name: string) -> (Node_Property, bool) {
+	if p, ok := node_find_property_exact(node, name); ok do return p, true
+	// Scripts may use other names for it (#327): the snake_case form of the
+	// Inspector's camelCase name (z_index, emitter.gravity_velocity), or a
+	// renamed property's new name.
+	if alias := Property_Alias(node, name); alias != "" do return node_find_property_exact(node, alias)
+	if strings.contains_rune(name, '_') {
+		if camel := Property_CamelName(name); camel != name do return node_find_property_exact(node, camel)
+	}
+	return {}, false
+}
+
+@(private = "file")
+node_find_property_exact :: proc(node: ^Node, name: string) -> (Node_Property, bool) {
 	for p in Node_CollectProperties(node) {
 		if p.name == name do return p, true
 	}
 	return Node_BaseProperty(node, name)
 }
 
+// Property_CamelName: a snake_case property path in the Inspector's form,
+// segment by segment ("emitter.gravity_velocity" -> "emitter.gravityVelocity").
+Property_CamelName :: proc(name: string, allocator := context.temp_allocator) -> string {
+	sb := strings.builder_make(allocator)
+	up := false
+	for r in name {
+		if r == '_' {up = true; continue}
+		if r == '.' do up = false
+		strings.write_rune(&sb, unicode.to_upper(r) if up else r)
+		up = false
+	}
+	return strings.to_string(sb)
+}
+
+// Property_SnakeName: the snake_case form scripts use for an Inspector
+// property path ("zIndex" -> "z_index", "emitter.gravityVelocity" ->
+// "emitter.gravity_velocity").
+Property_SnakeName :: proc(name: string, allocator := context.temp_allocator) -> string {
+	sb := strings.builder_make(allocator)
+	prev: rune
+	for r in name {
+		if unicode.is_upper(r) {
+			if prev != 0 && prev != '.' && prev != '_' do strings.write_byte(&sb, '_')
+			strings.write_rune(&sb, unicode.to_lower(r))
+		} else {
+			strings.write_rune(&sb, r)
+		}
+		prev = r
+	}
+	return strings.to_string(sb)
+}
+
+// Property_ScriptName: the name scripts use for an Inspector property path
+// (its snake_case form, or the new name of a renamed one).
+Property_ScriptName :: proc(node: ^Node, name: string, allocator := context.temp_allocator) -> string {
+	if node != nil && node.typeId == PathFollowNode && name == "rotate" do return "face_direction"
+	// Their snake_case forms are methods (is_paused(), is_awake()): the
+	// properties keep the Inspector's names.
+	if name == "isPaused" || name == "isAwake" do return name
+	return Property_SnakeName(name, allocator)
+}
+
+// Property_Alias: the Inspector name of a property a script knows by
+// another name ("" = none) - one renamed because a node method shares it.
+Property_Alias :: proc(node: ^Node, name: string) -> string {
+	if node == nil do return ""
+	switch {
+	case node.typeId == PathFollowNode && (name == "face_direction" || name == "faceDirection"):
+		return "rotate" // (`rotate` is also Node:rotate(): follower.rotate reads the method)
+	}
+	return ""
+}
+
 // Node_BaseProperty: a field every node has (the Inspector's Transform
 // section): position, rotation, scale, layer, zIndex, ySort, ySortOffset,
-// pauseMode, paused, enabled;
+// pauseMode, paused, enabled, visible;
 // origin (Node.pivot) for the nodes that have one.
 Node_BaseProperty :: proc(node: ^Node, name: string) -> (Node_Property, bool) {
 	if node == nil do return {}, false
@@ -102,6 +169,7 @@ Node_BaseProperty :: proc(node: ^Node, name: string) -> (Node_Property, bool) {
 	case "pauseMode": p.kind, p.ptr, p.type = .Enum, &node.pauseMode, type_info_of(Pause_Mode)
 	case "paused":   p.kind, p.ptr, p.type = .Bool, &node.paused, type_info_of(bool)
 	case "enabled":  p.kind, p.ptr, p.type = .Bool, &node.enabled, type_info_of(bool)
+	case "visible":  p.kind, p.ptr, p.type = .Bool, &node.renderable, type_info_of(bool) // (set_visible / is_visible)
 	case: return node_type_property(node, name)
 	}
 	return p, true

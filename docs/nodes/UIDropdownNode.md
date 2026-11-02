@@ -64,7 +64,7 @@ local LEVELS = { [0] = "low", [1] = "medium", [2] = "high" }
 function QualityOption:ready()
     local saved = Save.get("quality", "medium")
     for index, name in pairs(LEVELS) do
-        if name == saved then self.node:set_property("selectedIndex", index) end
+        if name == saved then self.node:set_property("selected_index", index) end
     end
 end
 

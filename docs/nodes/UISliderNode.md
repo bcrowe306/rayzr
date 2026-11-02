@@ -70,8 +70,8 @@ local MusicVolume = {}
 
 function MusicVolume:ready()
     local slider = self.node ---@type UISliderNode
-    slider:set_property("minValue", 0)
-    slider:set_property("maxValue", 1)
+    slider:set_property("min_value", 0)
+    slider:set_property("max_value", 1)
     slider:set_property("value", Save.get("music_volume", 0.8))
     Audio.set_bus_volume("music", slider:get_property("value"))
 end

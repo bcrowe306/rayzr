@@ -90,7 +90,7 @@ function Bullet:on_spawn()
 end
 
 function Bullet:launch(direction)
-    self.node:set_property("linearVelocity", direction:normalized() * self.speed)
+    self.node:set_property("linear_velocity", direction:normalized() * self.speed)
 end
 
 function Bullet:update(dt)

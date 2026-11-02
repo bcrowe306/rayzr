@@ -174,9 +174,19 @@ A node's Inspector properties read and write as fields - the same as
 self.node.position = Vec2(100, 200)
 self.node.rotation = self.node.rotation + 90 * dt
 local cam = Scene.find_node("MainCamera")
-cam.followMode = "SingleTarget"            -- enums by name
+cam.follow_mode = "SingleTarget"           -- enums by name
+self.node.z_index = 10                     -- draw on top
+self.node.visible = false                  -- the same as set_visible(false)
 self.node.name = "Boss"                    -- name renames
 ```
+
+Scripts use snake_case names (`z_index`, `text_color`,
+`emitter.gravity_velocity`). The Inspector shows them in camelCase
+(`zIndex`), the name scene files use, and that name works in scripts too.
+Two properties keep their camelCase name because a method has the snake_case
+one: `isPaused` (Music) and `isAwake` (bodies); use `is_paused()` and
+`is_awake()`. The Path Follower's **Rotate** is `face_direction` in scripts,
+because `rotate` is the node method that turns a node.
 
 Fields complete per node class with their type and help. Paths with a dot
 (`emitter.amount`) and script fields (`script.health`) stay with
@@ -663,6 +673,8 @@ Names renamed before 1.0, all still working:
   `finished`. Every node that ends its work raises `finished`; the Navigation
   Agent and the Path Follower raise it along with `navigation_finished` and
   `path_finished`.
+- Property names are snake_case (`node.z_index`); the Inspector's camelCase
+  names (`zIndex`) work too.
 - A completion callback in an options table can be called `on_done` or
   `on_complete`; both work everywhere.
 - Enum values read back capitalised (`node.pauseMode == "Inherit"`) and are
@@ -1025,7 +1037,7 @@ rather than re-pathing every frame.
 Every node has `zIndex` (draw order within its layer, added to the
 parent's), `ySort` (draw its children by Y: top-down / isometric depth) and
 `ySortOffset` (added to its Y when its parent sorts) - as properties:
-`node.zIndex = 10`, `world:set_property("ySort", true)`. Guide with a
+`node.zIndex = 10`, `world:set_property("y_sort", true)`. Guide with a
 tutorial: [`docs/draw_order.md`](docs/draw_order.md).
 
 #### The audio mixer (Audio, buses)

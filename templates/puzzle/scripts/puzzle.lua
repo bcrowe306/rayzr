@@ -58,7 +58,7 @@ function Puzzle:sprite(name, tex, c, r, z)
     local n = Scene.create("TextureNode", self.node)
     n.name = name
     n:set_texture("textures/" .. tex .. ".png")
-    n:set_property("zIndex", z)
+    n:set_property("z_index", z)
     n:set_position(self:pos(c, r))
     return n
 end

@@ -22,7 +22,7 @@ test_lua_node_properties_definitions :: proc(t: ^testing.T) {
 		n := Node_CreateByTypeName(scene, info.name)
 		if n == nil do continue
 		props := make([dynamic]Node_Property, context.temp_allocator)
-		for name in ([]string{"position", "scale", "rotation", "origin", "layer", "zIndex", "ySort", "ySortOffset", "pauseMode", "paused", "enabled"}) {
+		for name in ([]string{"position", "scale", "rotation", "origin", "layer", "zIndex", "ySort", "ySortOffset", "pauseMode", "paused", "enabled", "visible"}) {
 			if p, ok := Node_BaseProperty(n, name); ok do append(&props, p)
 		}
 		own := Node_CollectProperties(n)
@@ -34,12 +34,16 @@ test_lua_node_properties_definitions :: proc(t: ^testing.T) {
 		cls := info.name
 		// Property-style access: node.<property> (paths without dots).
 		fmt.sbprintf(&sb, "\n---@class %s\n", cls)
+		// Scripts use the snake_case names (#327); the Inspector's camelCase
+		// ones still work (scene files use them).
 		for p in props {
 			ty := lua_prop_type(p)
 			if ty == "" || strings.contains(p.name, ".") do continue
 			doc := Property_Doc(p)
 			if len(doc) > 90 do doc = strings.concatenate({doc[:87], "..."}, context.temp_allocator)
-			fmt.sbprintf(&sb, "---@field %s %s %s\n", p.name, ty, doc)
+			name := Property_ScriptName(n, p.name)
+			fmt.sbprintf(&sb, "---@field %s %s %s\n", name, ty, doc)
+			if name != p.name && name == Property_SnakeName(p.name) do fmt.sbprintf(&sb, "---@field %s %s Same as %s (the Inspector's name)\n", p.name, ty, name)
 		}
 		fmt.sbprintf(&sb, "\n---@alias %sProperty\n", cls)
 		for p in props {
@@ -47,24 +51,25 @@ test_lua_node_properties_definitions :: proc(t: ^testing.T) {
 			if ty == "" do continue
 			doc := Property_Doc(p)
 			if len(doc) > 90 do doc = strings.concatenate({doc[:87], "..."}, context.temp_allocator)
-			fmt.sbprintf(&sb, "---| %q # %s%s%s\n", p.name, ty, " (runtime)" if p.runtime else "", fmt.tprintf(" - %s", doc) if doc != "" else "")
+			fmt.sbprintf(&sb, "---| %q # %s%s%s\n", Property_ScriptName(n, p.name), ty, " (runtime)" if p.runtime else "", fmt.tprintf(" - %s", doc) if doc != "" else "")
 		}
 		// The examples use the class's own first scriptable property (else position).
 		ex := Node_Property{name = "position", kind = .Vec2}
 		for p in own {
 			if lua_prop_type(p) != "" && !p.runtime && !strings.contains(p.name, ".") {ex = p; break}
 		}
-		fmt.sbprintf(&sb, "\n---Reads an Inspector property by its path (vectors and colours as tables); \"script.<name>\" reads a field of the node's script.\n---\n---Example: `local value = self.node:get_property(%q)`\n---@param path %sProperty|string The property's path, as the Inspector names it (\"position\", \"emitter.amount\") or \"script.<field>\"\n---@return any value Its value: a number, boolean, string or enum name; vectors and colours as tables (nil when there's no such property)\n", ex.name, cls)
+		ex.name = Property_ScriptName(n, ex.name)
+		fmt.sbprintf(&sb, "\n---Reads an Inspector property by its path (vectors and colours as tables); \"script.<name>\" reads a field of the node's script.\n---\n---Example: `local value = self.node:get_property(%q)`\n---@param path %sProperty|string The property's path in snake_case (\"position\", \"z_index\", \"emitter.amount\"; the Inspector's camelCase names work too) or \"script.<field>\"\n---@return any value Its value: a number, boolean, string or enum name; vectors and colours as tables (nil when there's no such property)\n", ex.name, cls)
 		for p in props {
-			if ty := lua_prop_type(p); ty != "" do fmt.sbprintf(&sb, "---@overload fun(self: %s, path: %q): %s\n", cls, p.name, ty)
+			if ty := lua_prop_type(p); ty != "" do fmt.sbprintf(&sb, "---@overload fun(self: %s, path: %q): %s\n", cls, Property_ScriptName(n, p.name), ty)
 		}
 		fmt.sbprintf(&sb, "function %s:get_property(path) end\n", cls)
-		fmt.sbprintf(&sb, "\n---Sets an Inspector property by its path: vectors as {{x, y}} or x, y; colours as {{r, g, b[, a]}} 0..1 or \"#rrggbb[aa]\"; enums by name; \"script.<name>\" a field of the node's script.\n---\n---Example: `self.node:set_property(%q, %s)`\n---@param path %sProperty|string The property's path, as the Inspector names it, or \"script.<field>\"\n---@param value any The new value: a number, boolean, string or enum name; a vector as {{x, y}} (or x here and y next); a colour as {{r, g, b[, a]}} 0..1 or \"#rrggbb[aa]\"\n---@param y? number A vector's y when value is its x\n", ex.name, lua_example_value(ex), cls)
+		fmt.sbprintf(&sb, "\n---Sets an Inspector property by its path: vectors as {{x, y}} or x, y; colours as {{r, g, b[, a]}} 0..1 or \"#rrggbb[aa]\"; enums by name; \"script.<name>\" a field of the node's script.\n---\n---Example: `self.node:set_property(%q, %s)`\n---@param path %sProperty|string The property's path in snake_case (the Inspector's camelCase names work too), or \"script.<field>\"\n---@param value any The new value: a number, boolean, string or enum name; a vector as {{x, y}} (or x here and y next); a colour as {{r, g, b[, a]}} 0..1 or \"#rrggbb[aa]\"\n---@param y? number A vector's y when value is its x\n", ex.name, lua_example_value(ex), cls)
 		for p in props {
 			ty := lua_prop_type(p)
 			if ty == "" do continue
-			if p.kind == .Vec2 do fmt.sbprintf(&sb, "---@overload fun(self: %s, path: %q, x: number|Vec2|number[], y?: number)\n", cls, p.name)
-			else do fmt.sbprintf(&sb, "---@overload fun(self: %s, path: %q, value: %s)\n", cls, p.name, ty)
+			if p.kind == .Vec2 do fmt.sbprintf(&sb, "---@overload fun(self: %s, path: %q, x: number|Vec2|number[], y?: number)\n", cls, Property_ScriptName(n, p.name))
+			else do fmt.sbprintf(&sb, "---@overload fun(self: %s, path: %q, value: %s)\n", cls, Property_ScriptName(n, p.name), ty)
 		}
 		fmt.sbprintf(&sb, "function %s:set_property(path, value, y) end\n", cls)
 	}

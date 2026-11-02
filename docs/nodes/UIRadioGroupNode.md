@@ -59,7 +59,7 @@ local DifficultyOption = {}
 local DAMAGE = { [0] = 0.5, [1] = 1.0, [2] = 1.5 } -- easy, normal, hard
 
 function DifficultyOption:ready()
-    self.node:set_property("selectedIndex", Save.get("difficulty", 1))
+    self.node:set_property("selected_index", Save.get("difficulty", 1))
 end
 
 function DifficultyOption:on_value_changed(index)
