@@ -715,6 +715,8 @@ test_ldtk_doc_remove_entity_clears_refs :: proc(t: ^testing.T) {
 	LdtkJson_SetStr(Ldtk_Doc_FieldDef(doc, one), "allowedRefs", "Any", a)
 	LdtkJson_SetStr(Ldtk_Doc_FieldDef(doc, many), "allowedRefs", "Any", a)
 	LdtkJson_SetBool(Ldtk_Doc_FieldDef(doc, many), "isArray", true, a)
+	// new references show as an arrow (LDtk's default); other fields are hidden
+	testing.expect_value(t, LdtkJson_Str(Ldtk_Doc_FieldDef(doc, one), "editorDisplayMode"), "RefLinkBetweenCenters")
 	Ldtk_Doc_RefreshDefs(doc)
 	l := Ldtk_Doc_AddEntity(doc, 0, ents, lever, {16, 16})
 	d1 := Ldtk_Doc_AddEntity(doc, 0, ents, lever, {64, 16})

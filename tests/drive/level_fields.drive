@@ -1,7 +1,7 @@
 # Level editor fields: an enum value on a Door, a Button's array of entity
 # references picked in the canvas (the arrow shows), a Point field added in
 # the Entities tab and picked as a cell, undo, Esc cancels picking; a
-# single reference picked then unlinked, and deleting a referenced entity
+# single reference picked (its arrow shows) then unlinked, and deleting a referenced entity
 # clears the links to it.
 exec cp -R tests/drive/fixtures/ldtk $PROJECT/levels_zz
 wait 90
@@ -89,7 +89,33 @@ wait 1
 click @level.origin+296,120
 wait 2
 expect level.fieldvalue:entityref == Door
+# a new reference field draws its arrow (Reference link by default)
 screenshot single_reference
+# Display: Hidden - the selected entity's links still show
+click @level.tab:Entities
+click @defs.entity:Door
+wait 2
+click @defs.entity.tab:Fields
+click @defs.field:entityref
+wait 1
+click @defs.field.display
+click @pick:Hidden
+wait 1
+expect level.fielddef == entityref EntityRef Hidden
+click @level.layer:Entities
+key v
+click @level.origin+376,120
+wait 2
+expect level.selected == Door
+screenshot hidden_link_selected
+# not selected: no arrow
+click @level.origin+40,232
+wait 2
+expect level.selected == 
+screenshot hidden_link_unselected
+click @level.origin+376,120
+wait 2
+expect level.selected == Door
 click @level.field.unlink:entityref:0
 wait 2
 expect level.fieldvalue:entityref == 

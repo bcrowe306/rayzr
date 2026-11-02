@@ -464,6 +464,11 @@ Entities tab):
 Fields still at their default (or empty arrays) are only shown when
 **Always show** is on. Errors are always shown, in red.
 
+New reference fields start as **Reference link (centres)**. Whatever a
+reference field's Display, the selected entity's links show: the arrows
+from it and the arrows to it. Links to entities in other levels aren't
+drawn.
+
 ## Enums tab
 <!-- topic: tab.enums -->
 
