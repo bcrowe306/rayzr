@@ -1,11 +1,25 @@
--- The HUD (layer 8, fixed on screen): hearts, the key, a hint for what E
--- does, and messages.
+-- The HUD (layer 7, fixed on screen): hearts, the key, the floor, the
+-- gold, a hint for what E does, and messages. It also starts the run
+-- (Game.ensure_run) when this floor is played on its own - from the editor
+-- (F6).
 
 ---@class Hud : ScriptInstanceBase
 local Hud = {}
 
+Hud.properties = {
+    level = { type = "int", default = 1, min = 1, label = "Floor" },  -- this scene's place in Game.LEVELS
+}
+
 function Hud:ready()
+    self.run = Game:ensure_run(self.level)
     self.msg_timer = 0
+    self.node:get_child("FloorText").text = string.format("Floor %d / %d", self.level, #Game.LEVELS)
+    self:refresh()
+end
+
+-- refresh: the gold (the run's score).
+function Hud:refresh()
+    self.node:get_child("Gold").text = string.format("Gold %d", self.run.score)
 end
 
 function Hud:set_hearts(hp, max)

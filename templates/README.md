@@ -8,7 +8,7 @@ Character's art was drawn for Rayzr.
 | Template | |
 |---|---|
 | [Platformer](platformer/README.md) | Run and jump through two levels: coins, spikes, enemies to stomp, three lives; a title, settings, a pause menu, saved progress |
-| [Top-down RPG](rpg/README.md) | Explore a small dungeon: talk to a wizard, fight slimes, find the key, unlock the door and escape |
+| [Top-down RPG](rpg/README.md) | Two dungeon floors: talk to a wizard, fight slimes, collect gold, find each key, unlock the door, take the stairs; a title, settings, a pause menu, saved progress |
 | [Shoot 'em up](shmup/README.md) | Fly through three stages of enemies: pooled bullets, explosions, three lives; a title, settings, a pause menu, a saved high score |
 | [Puzzle (Sokoban)](puzzle/README.md) | Push every crate onto a target: three levels typed as text, move limits, undo; a title, settings, a pause menu, saved progress |
 | [Visual Novel](visual_novel/README.md) | A branching story: characters, backgrounds, choices, three endings; save slots, a backlog, auto and skip |

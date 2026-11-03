@@ -550,6 +550,8 @@ def adventure():
 
 # --- top-down RPG -------------------------------------------------------------------
 
+# Floors as text: # wall, . floor, P player, N the wizard, s slime, p potion,
+# g gold, c the chest (the key), L the locked door, X the exit (the stairs).
 RPG_MAP = [
     "##############################",
     "#.......#..........#.........#",
@@ -557,24 +559,32 @@ RPG_MAP = [
     "#.......#.......s..#....X....#",
     "#...N...+..........L.........#",
     "#.......#....s.....#.........#",
-    "#.......#.........c#.........#",
-    "#..p....#..........#.........#",
+    "#.......#.........c#....g....#",
+    "#..p..g.#...g......#.........#",
     "#.......#..........#.........#",
     "##############################",
 ]
 
+RPG_MAP2 = [
+    "##############################",
+    "#......#..........s.#........#",
+    "#.P....#............#...g....#",
+    "#......+.....s......#........#",
+    "#..g...#............L....X...#",
+    "#......#....s.......#........#",
+    "####.##############.#........#",
+    "#c...s..............#........#",
+    "#p......g...s.......#...g....#",
+    "##############################",
+]
 
-def rpg():
-    t = Template("rpg", "Top-down RPG",
-                 "Explore a small dungeon: talk to a wizard, fight slimes with a sword, find the key in a "
-                 "chest, unlock the door and escape. Hearts, a potion, dialogue.", "dungeon", 2)
-    t.begin()
-    t.art("tiny-dungeon/tilemap_packed.png", "textures/dungeon.png")
-    t.art("pixel-platformer/tilemap_packed.png", "textures/ui.png")  # hearts
-    t.license("Tiny Dungeon", "Pixel Platformer (hearts)")
+
+def rpg_floor(rows, name, level):
+    """A floor (a scene) from a text map: the tile maps, the wizard, slimes,
+    potions, gold, the chest, the locked door, the exit, the player, the HUD."""
     T = 16
     SHEET, SG = "textures/dungeon.png", (12, 11)
-    rows = grid_of(RPG_MAP)
+    rows = grid_of(rows)
     H, W = len(rows), len(rows[0])
     walls = [[-1] * W for _ in range(H)]
     floor = [[-1] * W for _ in range(H)]
@@ -607,16 +617,20 @@ def rpg():
         tilemap("Floor", SHEET, T, floor, layer=1, z=-1),
         tilemap("Walls", SHEET, T, walls, solid=True, layer=1),
     ]
-    (nc, nr), = ents["N"]
-    children.append({"type": "Node", "name": "Wizard", "position": center(nc, nr), "tags": ["interactable"],
-                     "script": {"path": "scripts/npc.lua"},
-                     "children": [sprite("Sprite", SHEET, SG, {"idle": ([84], 1, True)}, pos=(0, -2), layer=2)]})
+    for (nc, nr) in ents.get("N", []):
+        children.append({"type": "Node", "name": "Wizard", "position": center(nc, nr), "tags": ["interactable"],
+                         "script": {"path": "scripts/npc.lua"},
+                         "children": [sprite("Sprite", SHEET, SG, {"idle": ([84], 1, True)}, pos=(0, -2), layer=2)]})
     for i, (c, r) in enumerate(ents.get("s", [])):
         children.append(char(f"Slime{i + 1}", 108, center(c, r), "scripts/slime.lua", tags=["enemy"]))
     for i, (c, r) in enumerate(ents.get("p", [])):
         children.append({"type": "AreaNode", "name": f"Potion{i + 1}", "position": center(c, r),
                          "shapes": [{"type": "Circle", "radius": 6}], "script": {"path": "scripts/potion.lua"},
                          "children": [sprite("Sprite", SHEET, SG, {"idle": ([115], 1, True)}, layer=2)]})
+    for i, (c, r) in enumerate(ents.get("g", [])):
+        children.append({"type": "AreaNode", "name": f"Gold{i + 1}", "position": center(c, r), "tags": ["gold"],
+                         "shapes": [{"type": "Circle", "radius": 6}], "script": {"path": "scripts/gold.lua"},
+                         "children": [sprite("Sprite", "textures/ui.png", (20, 9), {"spin": ([151, 152], 6, True)}, layer=2)]})
     (cc, cr), = ents["c"]
     children.append({"type": "Node", "name": "Chest", "position": center(cc, cr), "tags": ["interactable"],
                      "script": {"path": "scripts/chest.lua"},
@@ -634,23 +648,53 @@ def rpg():
     ]))
     hearts = [sprite(f"Heart{i + 1}", "textures/ui.png", (20, 9), {"full": ([44], 1, True), "empty": ([46], 1, True)},
                      pos=(10 + i * 14, 10), layer=7) for i in range(3)]
-    children.append({"type": "Node", "name": "HUD", "script": {"path": "scripts/hud.lua"}, "children": hearts + [
+    children.append({"type": "Node", "name": "HUD", "script": {"path": "scripts/hud.lua", "properties": {"level": level}},
+                     "children": hearts + [
         text("Key", "", (56, 2), color="#f5d76eff"),
+        text("FloorText", "", (160, 2), align="Center", pivot=(0.5, 0)),
+        text("Gold", "Gold 0", (312, 2), align="Right", pivot=(1, 0), color="#f5d76eff"),
         text("Hint", "", (160, 158), align="Center", pivot=(0.5, 0)),
         text("Message", "", (160, 60), size=32, align="Center", pivot=(0.5, 0.5)),
     ]})
     children.append({"type": "DialogueNode", "name": "Dialogue", "position": [10, 118], "layer": 7,
                      "properties": {"size": [300, 52], "font": PIXEL_FONT, "fontSize": 16, "padding": 6, "revealSpeed": 60,
                                     "panelColor": "#1c1820f5", "advanceAction": "confirm"}})
-    t.json("scenes/dungeon.scene.json", with_touch(scene("dungeon", children, background=(37, 19, 26, 255)), (320, 180),
-                                                   buttons=(("attack", "A"), ("interact, confirm", "E"))))
-    t.json("project.json", project("Top-down RPG", ["scenes/dungeon.scene.json"], MOVE_ACTIONS + [
+    children.append(pause_menu(PIXEL_STYLE, "#e74c3cff"))
+    return with_touch(scene(name, children, background=(37, 19, 26, 255)), (320, 180),
+                      buttons=(("attack", "A"), ("interact, confirm", "E")), pause="pause")
+
+
+def rpg():
+    t = Template("rpg", "Top-down RPG",
+                 "Explore two dungeon floors: talk to a wizard, fight slimes with a sword, collect gold, find "
+                 "each floor's key, unlock the door and take the stairs. A title screen, settings, a pause "
+                 "menu, saved progress.", "dungeon", 2)
+    t.begin()
+    t.art("tiny-dungeon/tilemap_packed.png", "textures/dungeon.png")
+    t.art("pixel-platformer/tilemap_packed.png", "textures/ui.png")  # hearts, gold
+    t.license("Tiny Dungeon", "Pixel Platformer (hearts, gold)")
+    # A small game (#329): two floors (the stairs lead down to the next), the
+    # hearts are your life - a defeat is game over; the furthest floor and
+    # the most gold saved; the title, a pause menu, the result screen.
+    levels = ["scenes/floor1.scene.json", "scenes/floor2.scene.json"]
+    for i, rows in enumerate((RPG_MAP, RPG_MAP2)):
+        t.json(levels[i], rpg_floor(rows, f"floor{i + 1}", i + 1))
+    white, red, dark = "#e9dcc2ff", "#e74c3cff", (37, 19, 26, 255)
+
+    def backdrop():  # (walls above and below)
+        return tilemap("Backdrop", "textures/dungeon.png", 16, [[40] * 20] + [[-1] * 20] * 9 + [[40] * 20] * 2,
+                       layer=0, z=-1)
+    t.json("scenes/title.scene.json", title_scene("Top-down RPG", PIXEL_STYLE, white, red, dark, [backdrop()], level_word="Floor"))
+    t.json("scenes/result.scene.json", result_scene(PIXEL_STYLE, white, red, dark, [backdrop()]))
+    t.json("project.json", project("Top-down RPG", ["scenes/title.scene.json"] + levels + ["scenes/result.scene.json"], MOVE_ACTIONS + [
         action("attack", "SPACE", "J", "pad:RIGHT_FACE_LEFT"),
         action("interact", "E", "K", "pad:RIGHT_FACE_DOWN"),
-        action("confirm", "E", "ENTER", "K", "pad:RIGHT_FACE_DOWN"),
-    ], gravity=(0, 0)))
-    for s_ in ("player", "slime", "npc", "chest", "locked_door", "potion", "exit", "hud"):
+        action("confirm", "E", "ENTER", "KP_ENTER", "K", "pad:RIGHT_FACE_DOWN"),
+        action("pause", "ESCAPE", "P", "pad:MIDDLE_RIGHT"),
+    ], gravity=(0, 0), globals_=GAME_GLOBALS))
+    for s_ in ("player", "slime", "npc", "chest", "locked_door", "potion", "gold", "exit", "hud"):
         t.script(s_)
+    game_scripts(t, levels, lives=None, score_name="Gold", level_word="Floor")
     with open(os.path.join(SCRIPTS, "rpg", "README.md")) as f:
         t.write("README.md", f.read())
     return t

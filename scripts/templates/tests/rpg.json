@@ -1,5 +1,425 @@
 [
  {
+  "name": "play-through: the title's Play starts floor 1",
+  "frames": 60,
+  "input": [
+   "10 ENTER tap"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "floor1"
+   ],
+   [
+    "FloorText",
+    "text",
+    "==",
+    "Floor 1 / 2"
+   ],
+   [
+    "Gold",
+    "text",
+    "==",
+    "Gold 0"
+   ],
+   [
+    "Heart3",
+    "animation",
+    "==",
+    "full"
+   ]
+  ]
+ },
+ {
+  "name": "play-through: from the title, floor 1 played through (gold, the chest's key, the door, the stairs) goes down to floor 2 (unlocked and saved)",
+  "frames": 620,
+  "input": [
+   "10 ENTER tap",
+   "40 DOWN down",
+   "67 DOWN up",
+   "67 RIGHT down",
+   "161 RIGHT up",
+   "161 DOWN down",
+   "202 DOWN up",
+   "202 RIGHT down",
+   "327 RIGHT up",
+   "330 E tap",
+   "335 UP down",
+   "376 UP up",
+   "380 E tap",
+   "390 RIGHT down",
+   "472 RIGHT up",
+   "472 UP down",
+   "500 UP up"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "floor2"
+   ],
+   [
+    "FloorText",
+    "text",
+    "==",
+    "Floor 2 / 2"
+   ],
+   [
+    "Gold",
+    "text",
+    "==",
+    "Gold 5"
+   ],
+   [
+    "@file:save.json",
+    "progress.unlocked",
+    "==",
+    2
+   ]
+  ]
+ },
+ {
+  "name": "play-through: from the title, standing among the slimes - defeated is game over",
+  "frames": 540,
+  "input": [
+   "10 ENTER tap",
+   "40 DOWN down",
+   "67 DOWN up",
+   "67 RIGHT down"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "result"
+   ],
+   [
+    "Heading",
+    "text",
+    "==",
+    "Game over"
+   ],
+   [
+    "Again",
+    "text",
+    "contains",
+    "Retry floor 1"
+   ]
+  ]
+ },
+ {
+  "name": "play-through: floor 2 played through (a slime fought, the key, the door, the stairs) wins the game (a new best)",
+  "frames": 690,
+  "scene": "scenes/floor2.scene.json",
+  "input": [
+   "5 RIGHT down",
+   "33 RIGHT up",
+   "33 DOWN down",
+   "40 SPACE tap",
+   "54 SPACE tap",
+   "68 SPACE tap",
+   "82 SPACE tap",
+   "96 SPACE tap",
+   "110 DOWN up",
+   "110 LEFT down",
+   "110 SPACE tap",
+   "124 SPACE tap",
+   "138 SPACE tap",
+   "150 LEFT up",
+   "152 E tap",
+   "160 RIGHT down",
+   "170 SPACE tap",
+   "184 SPACE tap",
+   "198 SPACE tap",
+   "212 SPACE tap",
+   "226 SPACE tap",
+   "240 SPACE tap",
+   "254 SPACE tap",
+   "268 SPACE tap",
+   "282 SPACE tap",
+   "296 SPACE tap",
+   "310 SPACE tap",
+   "324 SPACE tap",
+   "430 RIGHT up",
+   "430 UP down",
+   "478 UP up",
+   "480 E tap",
+   "485 RIGHT down"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "result"
+   ],
+   [
+    "Heading",
+    "text",
+    "==",
+    "You win!"
+   ],
+   [
+    "Score",
+    "text",
+    "==",
+    "Gold 5"
+   ],
+   [
+    "Best",
+    "text",
+    "==",
+    "New best!"
+   ],
+   [
+    "@file:save.json",
+    "progress.best",
+    "==",
+    5
+   ]
+  ]
+ },
+ {
+  "name": "play-through: the result screen's Retry plays the floor again",
+  "frames": 60,
+  "scene": "scenes/result.scene.json",
+  "input": [
+   "10 ENTER tap"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "floor1"
+   ],
+   [
+    "Gold",
+    "text",
+    "==",
+    "Gold 0"
+   ]
+  ]
+ },
+ {
+  "name": "play-through: the unlocked floor survives a restart - the title starts at floor 2",
+  "frames": 60,
+  "patch_scene": "scenes/floor1.scene.json",
+  "patch": {
+   "Player": {
+    "position": [
+     392,
+     80
+    ]
+   }
+  },
+  "before": [
+   {
+    "frames": 200,
+    "input": [
+     "10 ENTER tap",
+     "40 UP down"
+    ]
+   }
+  ],
+  "input": [
+   "10 ENTER tap"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "floor2"
+   ],
+   [
+    "@file:save.json",
+    "progress.unlocked",
+    "==",
+    2
+   ]
+  ]
+ },
+ {
+  "name": "play-through: the volume set in Settings survives a restart",
+  "frames": 60,
+  "before": [
+   {
+    "frames": 120,
+    "input": [
+     "10 DOWN tap",
+     "20 DOWN tap",
+     "30 ENTER tap",
+     "45 LEFT tap",
+     "55 LEFT tap",
+     "65 LEFT tap",
+     "75 DOWN tap",
+     "85 ENTER tap"
+    ]
+   }
+  ],
+  "input": [
+   "10 DOWN tap",
+   "20 DOWN tap",
+   "30 ENTER tap"
+  ],
+  "expect": [
+   [
+    "Volume",
+    "text",
+    "==",
+    "Volume  < 50% >"
+   ],
+   [
+    "@file:save.json",
+    "settings.volume",
+    "==",
+    0.5
+   ]
+  ]
+ },
+ {
+  "name": "play-through: Quit on the title ends the game",
+  "frames": 120,
+  "quits": true,
+  "input": [
+   "10 UP tap",
+   "20 ENTER tap"
+  ]
+ },
+ {
+  "name": "pause: Esc pauses; Title screen goes back to the title",
+  "frames": 130,
+  "scene": "scenes/floor1.scene.json",
+  "input": [
+   "20 ESCAPE tap",
+   "25 RIGHT down",
+   "40 DOWN tap",
+   "50 DOWN tap",
+   "60 ENTER tap"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "title"
+   ]
+  ]
+ },
+ {
+  "name": "pause: Resume plays on",
+  "frames": 110,
+  "scene": "scenes/floor1.scene.json",
+  "input": [
+   "20 ESCAPE tap",
+   "40 ENTER tap",
+   "50 RIGHT down"
+  ],
+  "expect": [
+   [
+    "PauseMenu",
+    "visible",
+    "==",
+    false
+   ],
+   [
+    "Player",
+    "x",
+    ">",
+    60
+   ]
+  ]
+ },
+ {
+  "name": "pause stops the game",
+  "frames": 90,
+  "scene": "scenes/floor1.scene.json",
+  "input": [
+   "20 ESCAPE tap",
+   "25 RIGHT down"
+  ],
+  "expect": [
+   [
+    "PauseMenu",
+    "visible",
+    "==",
+    true
+   ],
+   [
+    "Player",
+    "x",
+    "<",
+    45
+   ]
+  ]
+ },
+ {
+  "name": "touch: tapping Play on the title starts floor 1",
+  "frames": 60,
+  "input": [
+   "10 touch1 160 88 tap"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "floor1"
+   ]
+  ]
+ },
+ {
+  "name": "touch: the pause button pauses",
+  "frames": 90,
+  "scene": "scenes/floor1.scene.json",
+  "input": [
+   "20 touch1 300 15 tap"
+  ],
+  "expect": [
+   [
+    "PauseMenu",
+    "visible",
+    "==",
+    true
+   ]
+  ]
+ },
+ {
+  "name": "gold adds to the run's gold",
+  "frames": 40,
+  "scene": "scenes/floor1.scene.json",
+  "patch": {
+   "Player": {
+    "position": [
+     184,
+     120
+    ]
+   }
+  },
+  "input": [
+   "5 RIGHT down"
+  ],
+  "expect": [
+   [
+    "Gold",
+    "text",
+    "==",
+    "Gold 5"
+   ],
+   [
+    "Gold3",
+    "exists",
+    "==",
+    false
+   ]
+  ]
+ },
+ {
   "name": "walking up to the wizard shows the prompt",
   "frames": 45,
   "input": [
@@ -15,7 +435,8 @@
     "==",
     "E: Talk"
    ]
-  ]
+  ],
+  "scene": "scenes/floor1.scene.json"
  },
  {
   "name": "talking stops the player",
@@ -45,7 +466,8 @@
     "==",
     ""
    ]
-  ]
+  ],
+  "scene": "scenes/floor1.scene.json"
  },
  {
   "name": "the chest gives the key",
@@ -74,7 +496,8 @@
     "==",
     "You found a key!"
    ]
-  ]
+  ],
+  "scene": "scenes/floor1.scene.json"
  },
  {
   "name": "the door is locked without it",
@@ -103,7 +526,8 @@
     "==",
     "E: Locked"
    ]
-  ]
+  ],
+  "scene": "scenes/floor1.scene.json"
  },
  {
   "name": "the key opens the door",
@@ -130,7 +554,8 @@
     ">",
     330
    ]
-  ]
+  ],
+  "scene": "scenes/floor1.scene.json"
  },
  {
   "name": "a slime hurts",
@@ -156,7 +581,8 @@
     "==",
     "full"
    ]
-  ]
+  ],
+  "scene": "scenes/floor1.scene.json"
  },
  {
   "name": "the sword beats a slime",
@@ -182,10 +608,11 @@
     "==",
     false
    ]
-  ]
+  ],
+  "scene": "scenes/floor1.scene.json"
  },
  {
-  "name": "the exit wins",
+  "name": "the stairs finish the floor",
   "frames": 50,
   "patch": {
    "Player": {
@@ -203,9 +630,10 @@
     "Message",
     "text",
     "==",
-    "You escaped!"
+    "Down the stairs!"
    ]
-  ]
+  ],
+  "scene": "scenes/floor1.scene.json"
  },
  {
   "name": "touch: E opens the chest",
@@ -234,6 +662,7 @@
     "==",
     "You found a key!"
    ]
-  ]
+  ],
+  "scene": "scenes/floor1.scene.json"
  }
 ]
