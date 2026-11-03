@@ -816,10 +816,13 @@ def sokoban_solve(rows, limit=2_000_000):
 
 def puzzle():
     t = Template("puzzle", "Puzzle (Sokoban)",
-                 "Push every crate onto a target. Three levels written as text in a script, undo, restart, "
-                 "a move counter, smooth moves. Add levels by typing them.", "puzzle-piece", 4)
+                 "Push every crate onto a target. Three levels written as text in a script, move limits, undo, "
+                 "restart, smooth moves. A title screen, settings, a pause menu, saved progress.", "puzzle-piece", 4)
+    limits = []
     for i, lv in enumerate(PUZZLE_LEVELS):
-        assert sokoban_solve(lv) is not None, f"puzzle level {i + 1} can't be solved"
+        sol = sokoban_solve(lv)
+        assert sol is not None, f"puzzle level {i + 1} can't be solved"
+        limits.append(2 * len(sol) + 6)  # (the move limit: room for a few mistakes)
     t.begin()
     for name in ("ground", "wall", "crate", "crate_on_goal", "goal", "player"):
         t.art(f"sokoban/{name}.png", f"textures/{name}.png")
@@ -827,21 +830,33 @@ def puzzle():
     # The levels go into the script as Lua strings.
     lua_levels = ",\n".join("    {\n" + ",\n".join(f'        "{row}"' for row in lv) + ",\n    }" for lv in PUZZLE_LEVELS)
     with open(os.path.join(SCRIPTS, "puzzle", "puzzle.lua")) as f:
-        t.write("scripts/puzzle.lua", f.read().replace("--$LEVELS$", lua_levels))
+        t.write("scripts/puzzle.lua", f.read().replace("--$LEVELS$", lua_levels)
+                .replace("--$LIMITS$", ", ".join(str(n) for n in limits)))
+    # A small game (#329): the three levels with move limits (out of moves:
+    # game over), the furthest level and each level's fewest moves saved;
+    # the title, a pause menu, the result screen.
+    ink, red, sand = "#3b2a20ff", "#c0392bff", (229, 207, 167, 255)
     children = [
         {"type": "CameraNode", "name": "Camera", "position": [640, 360], "properties": {"isCurrent": True}},
         {"type": "Node", "name": "Board", "script": {"path": "scripts/puzzle.lua", "properties": {"start_level": 1}}},
-        text("Level", "Level 1", (24, 16), size=32, color="#3b2a20ff"),
-        text("Moves", "Moves 0", (1256, 16), size=32, align="Right", pivot=(1, 0), color="#3b2a20ff"),
-        text("Help", "Arrows / WASD move   Z undo   R restart", (640, 690), size=32, align="Center", pivot=(0.5, 1), color="#3b2a20aa"),
-        text("Message", "", (640, 80), size=48, align="Center", pivot=(0.5, 0.5), color="#3b2a20ff"),
+        text("Level", "Level 1", (24, 16), size=32, color=ink),
+        text("Moves", "Moves 0", (1256, 16), size=32, align="Right", pivot=(1, 0), color=ink),
+        text("Help", "Arrows / WASD move   Z undo   R restart   Esc pause", (640, 690), size=32, align="Center",
+             pivot=(0.5, 1), color="#3b2a20aa"),
+        text("Message", "", (640, 80), size=48, align="Center", pivot=(0.5, 0.5), color=ink),
+        pause_menu(HD_STYLE, red),
     ]
-    t.json("scenes/puzzle.scene.json", with_touch(scene("puzzle", children, background=(229, 207, 167, 255)), (1280, 720),
-                                                  buttons=(("undo", "Undo"), ("restart", "R"))))
-    t.json("project.json", project("Puzzle", ["scenes/puzzle.scene.json"], MOVE_ACTIONS + [
+    t.json("scenes/puzzle.scene.json", with_touch(scene("puzzle", children, background=sand), (1280, 720),
+                                                  buttons=(("undo", "Undo"), ("restart", "R")), pause="pause"))
+    t.json("scenes/title.scene.json", title_scene("Puzzle", HD_STYLE, ink, red, sand))
+    t.json("scenes/result.scene.json", result_scene(HD_STYLE, ink, red, sand))
+    t.json("project.json", project("Puzzle", ["scenes/title.scene.json", "scenes/puzzle.scene.json", "scenes/result.scene.json"],
+                                   MOVE_ACTIONS + [
         action("undo", "Z", "U", "BACKSPACE", "pad:RIGHT_FACE_RIGHT"),
         action("restart", "R", "pad:RIGHT_FACE_UP"),
-    ], virtual=(1280, 720), gravity=(0, 0), pixel=False))
+    ] + GAME_ACTIONS, virtual=(1280, 720), gravity=(0, 0), pixel=False, globals_=GAME_GLOBALS))
+    # (Every level is the puzzle scene: the board builds the run's level.)
+    game_scripts(t, ["scenes/puzzle.scene.json"] * len(PUZZLE_LEVELS), lives=None, score_name="Moves", lower_is_better=True)
     with open(os.path.join(SCRIPTS, "puzzle", "README.md")) as f:
         t.write("README.md", f.read())
     return t
