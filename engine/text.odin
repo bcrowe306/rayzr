@@ -35,6 +35,7 @@ Text_Font :: struct {
 	path:      string,       // (heap) the font file, for its MSDF
 	msdf:      ^Msdf_Font,   // made the first time it's drawn sharp (nil: none)
 	msdfTried: bool,
+	spaceRatio: f32, // the space's advance per px of size, from the font file (0: unknown; #357)
 }
 
 // Text_Rendering: how text is drawn (TextNode's Rendering, #270).
@@ -46,6 +47,20 @@ Text_Rendering :: enum u8 {
 
 // The engine font's file (InitEngineFonts), for its MSDF.
 engineFontFile: string
+
+// The engine font's space advance per px of size (InitEngineFonts; 0:
+// unknown - Text_MeasureRune falls back to the bitmap font's).
+engineSpaceRatio: f32
+
+// Text_SpaceRatio: a TrueType font's space advance per px of size - as
+// raylib sizes fonts, by pixel height (ascent - descent). 0 when the font
+// can't be read (a CFF .otf, a bitmap font).
+Text_SpaceRatio :: proc(data: []u8) -> f32 {
+	ttf, ok := Ttf_Open(data)
+	if !ok do return 0
+	adv, _ := Ttf_Advance(&ttf, Ttf_GlyphIndex(&ttf, ' '))
+	return adv / max(ttf.ascent - ttf.descent, 1)
+}
 
 @(private = "file")
 msdfShader: struct {
@@ -126,15 +141,16 @@ Text_GetFont :: proc(path: string, size: f32, sdf := false, ctx: ^GameContext = 
 	f := new(Text_Font, Engine_HeapAllocator())
 	defer fontCache[strings.clone(key, Engine_HeapAllocator())] = f
 	if vector do f.path = strings.clone(path, Engine_HeapAllocator())
+	data: []u8
+	if vector && ctx != nil && ctx.game != nil {
+		if d, ok := AssetManager_ReadFileBytes(&ctx.game.assetManager, path, context.temp_allocator); ok do data = d
+	}
+	if data != nil do f.spaceRatio = Text_SpaceRatio(data)
 	if path == "" || !rl.IsWindowReady() {
 		f.engine = true
 		return f
 	}
 	cps := font_codepoints()
-	data: []u8
-	if ctx != nil && ctx.game != nil {
-		if d, ok := AssetManager_ReadFileBytes(&ctx.game.assetManager, path, context.temp_allocator); ok do data = d
-	}
 	switch {
 	case vector && sdf && data != nil:
 		base: c.int = 48
@@ -162,7 +178,10 @@ Text_GetFont :: proc(path: string, size: f32, sdf := false, ctx: ^GameContext = 
 		f.font = rl.LoadFont(strings.clone_to_cstring(disk, context.temp_allocator))
 		f.size = f32(f.font.baseSize)
 	}
-	if f.font.texture.id == 0 do f.engine = true // missing: the engine font
+	if f.font.texture.id == 0 { // missing: the engine font
+		f.engine = true
+		f.spaceRatio = 0
+	}
 	return f
 }
 
@@ -185,6 +204,15 @@ Text_UnloadFonts :: proc() {
 
 // Text_MeasureRune: advance of one character at `size`.
 Text_MeasureRune :: proc(f: ^Text_Font, r: rune, size: f32) -> f32 {
+	// A space from the font file's own advance, rounded: raylib bakes each
+	// advance truncated to whole pixels at the size, which for the space at
+	// small sizes leaves 1 px or less (#357, #363) - text ran together,
+	// worst drawn sharp, where the glyphs keep their true widths.
+	if r == ' ' || r == 0xA0 {
+		ratio := f.spaceRatio if f != nil else 0
+		if ratio <= 0 && (f == nil || f.engine) do ratio = engineSpaceRatio
+		if ratio > 0 do return max(math.round(ratio * size), 1)
+	}
 	if f == nil || f.engine {
 		buf, n := utf8.encode_rune(r)
 		return MeasureEngineText(strings.clone_to_cstring(string(buf[:n]), context.temp_allocator), size).x

@@ -510,11 +510,12 @@ Scene_RenderNodeHirearchy :: proc(scene: ^Scene, node: ^Node, gameContext: ^Game
 
 Scene_FindNodeByName :: proc(scene: ^Scene, name: string) -> ^Node {
 	if scene == nil || scene.manager == nil do return nil
+	// (A node queued for removal is gone already, #356.)
 	for node in scene.manager.nodes {
-		if node != nil && node.name == name do return node
+		if node != nil && !node.removing && node.name == name do return node
 	}
 	for node in scene.manager.addition {
-		if node != nil && node.name == name do return node
+		if node != nil && !node.removing && node.name == name do return node
 	}
 	return nil
 }

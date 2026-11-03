@@ -7,7 +7,8 @@
 //     game.rayzr        (the packaged project)
 //     fonts/OpenSans-Regular.ttf
 //
-// Usage: runner [project-dir | game.rayzr] [--scene <file>] [--frames N]
+// Usage: runner [project-dir | game.rayzr] [--scene <file>]
+//        [--frames N]         (quit after N frames; a capture below is of frame N, else of frame 30)
 //        [--screenshot out.png] [--dump-scene out.json] [--hidden]
 //        [--user-data <dir>]  (Save data folder instead of the platform's)
 //        [--bench N]          (N uncapped frames, then frame timings; scripts/make_bench_project.py)

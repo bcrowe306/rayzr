@@ -320,6 +320,9 @@ levelgen_apply :: proc(lg: ^LevelGeneratorNode, r: ^Gen_Result, seed: u64, ctx: 
 	}
 	lg.lastSeed = int(seed)
 	if lg.rebakeNavigation do LevelGeneratorNode_RebakeNavigation(sc, ctx)
+	// (#355) The placed nodes' global positions composed before "generated":
+	// a handler reads them at once (not the frame after).
+	if sc != nil && sc.manager != nil do Node_SetGlobalPositions(sc.manager, sc.rootNode)
 	levelgen_progress(lg, 1, ctx)
 	lg.onGenerated->notify(lg, int(seed), ctx)
 	if ctx != nil && ctx.game != nil do EventBus_Publish(&ctx.game.events, "level_generated", tm.name, tm)
@@ -570,6 +573,7 @@ levelgen_chunks_progress :: proc(lg: ^LevelGeneratorNode, w: ^Gen_Chunk_World, c
 	w.navDirty = false
 	if w.done do return
 	w.done = true
+	if sc != nil && sc.manager != nil do Node_SetGlobalPositions(sc.manager, sc.rootNode) // (#355)
 	lg.onGenerated->notify(lg, int(w.seed), ctx)
 	if ctx != nil && ctx.game != nil {
 		if tm := LevelGeneratorNode_Target(lg, ctx, sc); tm != nil do EventBus_Publish(&ctx.game.events, "level_generated", tm.name, tm)

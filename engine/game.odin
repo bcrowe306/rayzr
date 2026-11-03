@@ -263,6 +263,10 @@ GameRun :: proc(game: ^Game, deltaTime: f32) {
 
 GameTerminate :: proc(game: ^Game) {
 	if game == nil do return
+	// The scenes go first (#367): on_exited_tree, then on_destroy, while Lua,
+	// the event bus and the tweens are still up - and before the final save
+	// flush below, so what they Save.set is written.
+	Game_TeardownScenes(game)
 	GameFeel_Destroy(game)
 	BB_Clear(&btGlobal) // (the global blackboard: per run)
 	Goap_ResetGlobals() // (GOAP's global keys too)
@@ -297,6 +301,21 @@ GameTerminate :: proc(game: ^Game) {
 	CustomNodes_Forget()
 	vmem.arena_destroy(&game.arena)
 	free(game)
+}
+
+// Game_TeardownScenes unloads the loaded scenes as a scene change does
+// (Scene_Unload): every node's "exited_tree", then its script's on_destroy.
+// At quit, before anything they could use goes (GameTerminate).
+Game_TeardownScenes :: proc(game: ^Game) {
+	if game == nil || !game.scriptManager.isReady do return
+	ctx := &game.gameContext
+	for _, scene in game.sceneManager.scenes {
+		if scene == nil || !scene.isLoaded || scene.manager == nil do continue
+		prev := ctx.scene
+		ctx.scene = scene
+		Scene_Unload(scene, ctx)
+		ctx.scene = prev
+	}
 }
 
 GameCreateScene :: proc(game: ^Game, name: string, next_scene: bool, setup: SceneSetupProc = nil) -> ^Scene {

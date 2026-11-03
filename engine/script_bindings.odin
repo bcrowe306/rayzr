@@ -256,6 +256,7 @@ lua_node_get_node :: proc "c" (L: ^lua.State) -> c.int {
 	}
 	path := string(lua.tostring(L, 2))
 	found := Node_ResolvePath(node.gameContext.scene.manager, node, path)
+	if found != nil && found.removing && !node.removing do found = nil // (queued for removal, #356)
 	if found == nil do script_warn_once(L, path, "get_node: no node at \"%s\" from %s", path, node.name)
 	push_node_userdata(L, found)
 	return 1
@@ -430,10 +431,15 @@ lua_node_get_children :: proc "c" (L: ^lua.State) -> c.int {
 	children := GetChildren(node.gameContext.scene.manager, node)
 	defer delete(children)
 
+	// (Children queued for removal are gone already, #356 - but a node
+	// going itself still sees its own.)
 	lua.createtable(L, c.int(len(children)), 0)
-	for child, i in children {
+	i := 0
+	for child in children {
+		if child == nil || (child.removing && !node.removing) do continue
+		i += 1
 		push_node_userdata(L, child)
-		lua.rawseti(L, -2, lua.Integer(i + 1))
+		lua.rawseti(L, -2, lua.Integer(i))
 	}
 	return 1
 }
@@ -456,7 +462,7 @@ lua_node_get_child :: proc "c" (L: ^lua.State) -> c.int {
 	defer delete(children)
 
 	for child in children {
-		if child.name == targetName {
+		if child != nil && (!child.removing || node.removing) && child.name == targetName {
 			push_node_userdata(L, child)
 			return 1
 		}
@@ -4052,7 +4058,8 @@ lua_scene_find_by_uid :: proc "c" (L: ^lua.State) -> c.int {
 		return 1
 	}
 	scene := sm.game.sceneManager.currentScene
-	push_node_userdata(L, Node_FindByUid(scene.manager, scene.rootNode, string(uidC)))
+	found := Node_FindByUid(scene.manager, scene.rootNode, string(uidC))
+	push_node_userdata(L, found if found == nil || !found.removing else nil) // (#356)
 	return 1
 }
 
@@ -4415,7 +4422,7 @@ lua_scene_get_nodes :: proc "c" (L: ^lua.State) -> c.int {
 	lua.createtable(L, c.int(len(mgr.nodes)), 0)
 	idx := 1
 	for node in mgr.nodes {
-		if node != nil {
+		if node != nil && !node.removing { // (queued for removal: gone already, #356)
 			push_node_userdata(L, node)
 			lua.rawseti(L, -2, lua.Integer(idx))
 			idx += 1

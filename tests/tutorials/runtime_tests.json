@@ -644,6 +644,33 @@
   "quits": true
  },
  {
+  "name": "ui tutorial (#362): the keyboard too - Enter on the focused Play starts the game (input-script keys reach the widgets)",
+  "project": "docs/tutorials/ui",
+  "frames": 60,
+  "input": [
+   "25 ENTER tap 3"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "main"
+   ]
+  ]
+ },
+ {
+  "name": "ui tutorial (#362): Down then Enter on the title screen quits (keyboard focus navigation)",
+  "project": "docs/tutorials/ui",
+  "frames": 600,
+  "input": [
+   "20 DOWN tap 3",
+   "35 ENTER tap 3"
+  ],
+  "expect": [],
+  "quits": true
+ },
+ {
   "name": "ui tutorial (#295): ui_focus() is true on a button, false on a non-widget",
   "project": "docs/tutorials/ui",
   "frames": 20,
