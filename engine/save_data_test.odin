@@ -111,3 +111,43 @@ Save.flush()
 	Save_SetGameName("My: Game")
 	testing.expect(t, strings.has_suffix(Save_UserDataDir("My: Game"), "My_ Game"), Save_UserDataDir("My: Game"))
 }
+
+// #367: at quit the scene is torn down (on_exited_tree, then on_destroy)
+// before the final save flush - what they Save.set is written.
+@(test)
+test_save_teardown_before_flush :: proc(t: ^testing.T) {
+	dir, _ := filepath.join({Engine_TempDir(), "rayzr_save_teardown_test"}, context.temp_allocator)
+	_ = os.remove_all(dir)
+	defer os.remove_all(dir)
+	Save_SetDirectory(dir)
+	defer Save_Reset()
+	file, _ := filepath.join({dir, "save.json"}, context.temp_allocator)
+
+	ScriptVFS_RegisterEmbedded("save_teardown.lua", `
+local M = {}
+M.properties = {}
+function M:ready() Save.set("ready", true) end
+function M:on_exited_tree() Save.set("exited", Scene.find_node("Keeper") ~= nil) end
+function M:on_destroy() Save.set("destroyed", 3) end
+return M
+`)
+	game := new(Game)
+	InitializeGame(game)
+	scene := game->createScene("teardown", true)
+	ProcessSceneChange(&game.sceneManager, &game.gameContext)
+	game.state = .Running
+	n := Node_CreateByTypeName(scene, "Node")
+	n.name = "Keeper"
+	n.gameContext = &game.gameContext
+	game->run(0.016)
+	Script_AttachToNode(n, "save_teardown.lua", nil, &game.scriptManager)
+	game->run(0.016)
+	game->terminate()
+
+	data, err := os.read_entire_file(file, context.temp_allocator)
+	testing.expectf(t, err == nil, "the save written: %v", err)
+	text := string(data)
+	testing.expectf(t, strings.contains(text, `"ready": true`), "ready's value: %s", text)
+	testing.expectf(t, strings.contains(text, `"exited": true`), "on_exited_tree ran at quit (the scene still there): %s", text)
+	testing.expectf(t, strings.contains(text, `"destroyed": 3`), "on_destroy's Save.set kept: %s", text)
+}
