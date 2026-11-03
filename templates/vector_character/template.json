@@ -1,6 +1,6 @@
 {
   "name": "Vector Character",
-  "description": "Pip, a cartoon character drawn as vector art and rigged with bones: walk left and right, talk with lip-sync, blink. One SVG cut into parts, a Skeleton, a Lip Sync node.",
+  "description": "Walk Pip, a cartoon character drawn as vector art and rigged with bones, through three short stages to the flag before the clock runs out: jump the thorns, dodge the bees, stop to talk (lip-synced) to his twin. One SVG cut into parts, a Skeleton, Lip Sync nodes; a title, settings, a pause menu, best times saved.",
   "icon": "bezier-curve",
   "order": 8
 }

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A bee, stage 3's hazard (drawn for Rayzr; the repo's licence). 80 x 60,
+     facing left. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="60" viewBox="0 0 80 60">
+  <g id="bee">
+    <ellipse cx="38" cy="10" rx="14" ry="10" fill="#e6f6ff" stroke="#24425c" stroke-width="2" opacity="0.85"/>
+    <ellipse cx="54" cy="12" rx="12" ry="9" fill="#e6f6ff" stroke="#24425c" stroke-width="2" opacity="0.85"/>
+    <ellipse cx="44" cy="36" rx="30" ry="20" fill="#f5c542" stroke="#24425c" stroke-width="3"/>
+    <path d="M36 17 C32 28 32 44 36 55 M52 17 C48 28 48 44 52 55" fill="none" stroke="#24425c" stroke-width="7"/>
+    <path d="M74 36 L80 36" stroke="#24425c" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="22" cy="32" r="5" fill="#24425c"/>
+    <circle cx="20" cy="30" r="1.5" fill="#ffffff"/>
+  </g>
+</svg>

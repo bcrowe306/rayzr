@@ -1494,13 +1494,25 @@ def pip_rig():
         "arm_front_lower": {"rotate": rot(0, 10, 0.4, 70, 0.8, 50, 1.2, 10)},
         "arm_back_upper": {"rotate": rot(0, -3, 0.6, -6, 1.2, -3)},
     }
+    jump = {  # in the air: knees up, arms flung up (held)
+        "hip": {"translate": [{"time": 0, "x": 0, "y": 6}]},
+        "torso": {"rotate": [{"time": 0, "value": -4}]},
+        "leg_front_upper": {"rotate": [{"time": 0, "value": 50}]},
+        "leg_front_lower": {"rotate": [{"time": 0, "value": -75}]},
+        "leg_back_upper": {"rotate": [{"time": 0, "value": 10}]},
+        "leg_back_lower": {"rotate": [{"time": 0, "value": -60}]},
+        "arm_front_upper": {"rotate": [{"time": 0, "value": 140}]},
+        "arm_front_lower": {"rotate": [{"time": 0, "value": 20}]},
+        "arm_back_upper": {"rotate": [{"time": 0, "value": 120}]},
+        "arm_back_lower": {"rotate": [{"time": 0, "value": 20}]},
+    }
     return {
         "skeleton": {"spine": "4.2.22", "width": 300, "height": 420,
                      "$comment": "Pip's rig: bones only (the art is art/pip.svg, bent by them). Written by scripts/templates/make_templates.py."},
         "bones": bones,
         "slots": [],
         "skins": [{"name": "default", "attachments": {}}],
-        "animations": {"idle": {"bones": idle}, "walk": {"bones": walk}, "talk": {"bones": talk}},
+        "animations": {"idle": {"bones": idle}, "walk": {"bones": walk}, "talk": {"bones": talk}, "jump": {"bones": jump}},
     }
 
 
@@ -1516,7 +1528,7 @@ MUMBLE_SOUNDS = {
 }
 
 
-def mumble_wav(cues_tsv, path, rate=22050):
+def mumble_wav(cues_tsv, path, rate=22050, pitch_scale=1.0):
     """A cartoon mumble that says the cue file: each cue's vowel (MUMBLE_SOUNDS)
     as a voice of harmonics shaped by its formants, the pitch wandering round
     a phrase's intonation, gliding from cue to cue; 16-bit mono WAV."""
@@ -1543,7 +1555,7 @@ def mumble_wav(cues_tsv, path, rate=22050):
             w.append(loud * (0.15 + peak) / math.sqrt(k) if formants else 0.0)
         return w
     # Each cue's pitch: a phrase falling from 240 to 190 Hz, with a wobble.
-    pitch = [240 - 50 * (t / end) + rnd.uniform(-18, 18) for t, _ in cues]
+    pitch = [(240 - 50 * (t / end) + rnd.uniform(-18, 18)) * pitch_scale for t, _ in cues]
     phases = [0.0] * H
     cur = [0.0] * H
     f0 = pitch[0]
@@ -1576,27 +1588,29 @@ def mumble_wav(cues_tsv, path, rate=22050):
         w.writeframes(b"".join(struct.pack("<h", int(s / peak * 0.6 * 32767)) for s in samples))
 
 
-def vector_character():
-    t = Template("vector_character", "Vector Character",
-                 "Pip, a cartoon character drawn as vector art and rigged with bones: walk left and right, "
-                 "talk with lip-sync, blink. One SVG cut into parts, a Skeleton, a Lip Sync node.", "bezier-curve", 8)
-    t.begin()
-    src = os.path.join(SCRIPTS, "vector_character")
-    for name, rel in (("pip.svg", "art/pip.svg"), ("backdrop.svg", "art/backdrop.svg"),
-                      ("pip_mumble.tsv", "audio/pip_mumble.tsv")):
-        with open(os.path.join(src, name)) as f:
-            t.write(rel, f.read())
-    with open(os.path.join(src, "pip_mumble.tsv")) as f:
-        mumble_wav(f.read(), os.path.join(t.dir, "audio", "pip_mumble.wav"))
-    t.json("rigs/pip.json", pip_rig())
-    t.script("pip")
-    t.write("art/LICENSE-ART.txt", "Pip and the backdrop were drawn for Rayzr: the same licence as the engine.\n"
-                                   "The voice is synthesized by scripts/templates/make_templates.py.\n"
-                                   "Font (fonts/): Kenney Pixel by Kenney (www.kenney.nl), CC0.\n")
-    os.rmdir(os.path.join(t.dir, "textures"))  # (no textures: vector art)
-    os.rmdir(os.path.join(t.dir, "components"))
+# The stages (#329): side-on walks to a flag, as the stage's width, its
+# clock, the thorn bushes' x, the bees' x, where Pep (Pip's brother) waits
+# and what they say, the flag's x. Pip walks at 220 px/s and a jump
+# carries him ~185 px.
+PIP_GROUND = 640  # the path's top in backdrop.svg: everyone's feet
+VECTOR_STAGES = [
+    {"width": 1900, "time": 20, "thorns": [650, 1350], "bees": [], "friend": 1000, "goal": 1700,
+     "pip": "Pep! Is the flag this way?", "pep": "Straight on. Jump the thorns!"},
+    {"width": 2300, "time": 22, "thorns": [560, 900, 1600, 1850], "bees": [], "friend": 1250, "goal": 2100,
+     "pip": "More thorns? Really?", "pep": "Two at a time, now. Hop hop!"},
+    {"width": 2600, "time": 26, "thorns": [600, 1550, 2200], "bees": [1050, 1850], "friend": 1300, "goal": 2400,
+     "pip": "Pep, the bees!", "pep": "Walk under them when they fly up!"},
+]
+VECTOR_INK, VECTOR_ORANGE, VECTOR_SKY = "#24425cff", "#e5602aff", (143, 208, 242, 255)
+VECTOR_ACTIONS = MOVE_ACTIONS + [
+    action("jump", "W", "UP", "SPACE", "pad:RIGHT_FACE_DOWN"),
+    action("talk", "T", "pad:RIGHT_FACE_LEFT"),
+]
 
-    boxes = svg_group_boxes(os.path.join(src, "pip.svg"))
+
+def pip_parts(prefix="", tint=None):
+    """Pip's parts: a Vector Shape per group of pip.svg, placed over the rig's bones."""
+    boxes = svg_group_boxes(os.path.join(SCRIPTS, "vector_character", "pip.svg"))
     ox, oy = PIP_ORIGIN
     parts = []
     for name, bones, smooth in PIP_PARTS:
@@ -1605,31 +1619,131 @@ def vector_character():
         props = {"file": "art/pip.svg", "group": name, "skinBones": bones, "skinSmooth": smooth}
         if name in ("eyes", "mouth"):
             props["frame"] = 0  # (eyes open, the mouth at rest)
-        parts.append({"type": "VectorShapeNode", "name": "".join(w.title() for w in name.split("_")),
+        if tint:
+            props["tint"] = tint
+        parts.append({"type": "VectorShapeNode", "name": prefix + "".join(w.title() for w in name.split("_")),
                       "position": [(x0 + x1) / 2 - ox, (y0 + y1) / 2 - oy], "properties": props})
-    children = [
-        {"type": "CameraNode", "name": "Camera", "position": [640, 360], "properties": {"isCurrent": True}},
-        {"type": "VectorShapeNode", "name": "Backdrop", "position": [0, 0], "pivot": [0, 0], "layer": 0,
-         "properties": {"file": "art/backdrop.svg"}},
-        {"type": "Node", "name": "Pip", "position": [640, 640], "layer": 2,
-         "script": {"path": "scripts/pip.lua"},
+    return parts
+
+
+def pip_node(x, script_props=None, scale=0.6):
+    """Pip: the script, Rig (a Skeleton holding the parts) and LipSync."""
+    n = {"type": "Node", "name": "Pip", "position": [x, PIP_GROUND], "scale": [scale, scale], "layer": 2,
          "children": [
              {"type": "SkeletonNode", "name": "Rig",
               "properties": {"file": "rigs/pip.json", "animation": "idle", "loop": True, "autoplay": True,
                              "mixTime": 0.2},
-              "children": parts},
+              "children": pip_parts()},
              {"type": "LipSyncNode", "name": "LipSync",
               "properties": {"mouth": "../Rig/Mouth", "sound": "audio/pip_mumble.wav"}},
-         ]},
-        text("Help", "A / D or arrows: walk    T: talk", (640, 40), size=32, align="Center", pivot=(0.5, 0.5),
-             color="#24425cff"),
+         ]}
+    if script_props is not None:
+        n["script"] = {"path": "scripts/pip.lua", "properties": script_props}
+    return n
+
+
+def pep_node(x, scale=0.5):
+    """Pep, Pip's little brother: the same art, smaller and tinted, facing left, with a voice of his own."""
+    return {"type": "Node", "name": "Pep", "position": [x, PIP_GROUND], "scale": [scale, scale], "layer": 1,
+            "children": [
+                {"type": "SkeletonNode", "name": "PepRig", "scale": [-1, 1],
+                 "properties": {"file": "rigs/pip.json", "animation": "idle", "loop": True, "autoplay": True,
+                                "mixTime": 0.2},
+                 "children": pip_parts("Pep", tint="#dcecffff")},
+                {"type": "LipSyncNode", "name": "PepLipSync",
+                 "properties": {"mouth": "../PepRig/PepMouth", "sound": "audio/pep_mumble.wav"}},
+            ]}
+
+
+def vector_backdrop(width):
+    """backdrop.svg side by side (its hills' ends meet; 2 px over each other: no seam)."""
+    return [{"type": "VectorShapeNode", "name": f"Backdrop{i + 1}" if i else "Backdrop", "position": [i * 1278, 0],
+             "pivot": [0, 0], "layer": 0, "properties": {"file": "art/backdrop.svg"}}
+            for i in range((width + 1277) // 1278)]
+
+
+def vector_stage(n, st):
+    """A stage (a scene): the backdrop, the thorns and bees, Pep, the flag, Pip, the HUD."""
+    W = st["width"]
+    hazards = [{"type": "VectorShapeNode", "name": f"Thorns{i + 1}", "position": [x, PIP_GROUND + 4],
+                "pivot": [0.5, 1], "layer": 1, "tags": ["hazard"], "properties": {"file": "art/thorns.svg"},
+                "script": {"path": "scripts/hazard.lua", "properties": {"kind": "thorns", "width": 76, "height": 48}}}
+               for i, x in enumerate(st["thorns"])]
+    hazards += [{"type": "VectorShapeNode", "name": f"Bee{i + 1}", "position": [x, 430], "layer": 3,
+                 "tags": ["hazard"], "properties": {"file": "art/bee.svg"},
+                 "script": {"path": "scripts/hazard.lua",
+                            "properties": {"kind": "bee", "width": 50, "height": 36, "bob": 170, "period": 3,
+                                           "phase": 0.5 * i}}}
+                for i, x in enumerate(st["bees"])]
+    bubble = {"size": 32, "align": "Center", "pivot": (0.5, 1), "color": VECTOR_INK, "layer": 3}
+    children = [
+        {"type": "CameraNode", "name": "Camera", "position": [640, 360], "follow": "../Pip",
+         "properties": {"isCurrent": True, "followMode": "SingleTarget", "dragType": "SmoothDamp", "hasLimits": True,
+                        "leftLimit": 0, "rightLimit": W, "topLimit": 0, "bottomLimit": 720}},
+        {"type": "Node", "name": "Stage", "script": {"path": "scripts/stage.lua", "properties": {
+            "stage": n, "time_limit": st["time"], "pip_line": st["pip"], "pep_line": st["pep"]}}},
+    ] + vector_backdrop(W) + hazards + [
+        {"type": "VectorShapeNode", "name": "Goal", "position": [st["goal"], PIP_GROUND + 4], "pivot": [0.2, 1],
+         "layer": 1, "properties": {"file": "art/flag.svg"}},
+        pep_node(st["friend"]),
+        pip_node(160, {"min_x": 60, "max_x": W - 60}),
+        text("PipSays", "", (0, 0), **bubble),
+        text("PepSays", "", (0, 0), **bubble),
+        text("StageText", f"Stage {n} / {len(VECTOR_STAGES)}", (16, 12), size=32, color=VECTOR_INK),
+        text("Time", "", (16, 52), size=32, color=VECTOR_INK),
+        text("Message", "", (640, 140), size=48, align="Center", pivot=(0.5, 0.5), color=VECTOR_INK),
+        text("Help", "A / D walk   W / Space jump   T talk   Esc pause", (1264, 700), size=32, align="Right",
+             pivot=(1, 1), color="#24425caa"),
+        pause_menu(HD_STYLE, VECTOR_ORANGE),
     ]
-    sc = with_touch(scene("pip", children, background=(143, 208, 242, 255)), (1280, 720),
-                    stick=("move_left", "move_right", "", ""), buttons=(("talk", "T"),))
-    t.json("scenes/pip.scene.json", sc)
-    t.json("project.json", project("Vector Character", ["scenes/pip.scene.json"], MOVE_ACTIONS[:2] + [
-        action("talk", "T", "pad:RIGHT_FACE_DOWN"),
-    ], virtual=(1280, 720), pixel=False))
+    return with_touch(scene(f"stage{n}", children, background=VECTOR_SKY), (1280, 720),
+                      stick=("move_left", "move_right", "", ""), buttons=(("jump", "A"), ("talk", "T")), pause="pause")
+
+
+def vector_character():
+    t = Template("vector_character", "Vector Character",
+                 "Walk Pip, a cartoon character drawn as vector art and rigged with bones, through three short "
+                 "stages to the flag before the clock runs out: jump the thorns, dodge the bees, stop to talk "
+                 "(lip-synced) to his twin. One SVG cut into parts, a Skeleton, Lip Sync nodes; a title, settings, "
+                 "a pause menu, best times saved.", "bezier-curve", 8)
+    t.begin()
+    src = os.path.join(SCRIPTS, "vector_character")
+    for name, rel in (("pip.svg", "art/pip.svg"), ("backdrop.svg", "art/backdrop.svg"), ("thorns.svg", "art/thorns.svg"),
+                      ("bee.svg", "art/bee.svg"), ("flag.svg", "art/flag.svg"),
+                      ("pip_mumble.tsv", "audio/pip_mumble.tsv"), ("pep_mumble.tsv", "audio/pep_mumble.tsv")):
+        with open(os.path.join(src, name)) as f:
+            t.write(rel, f.read())
+    with open(os.path.join(src, "pip_mumble.tsv")) as f:
+        mumble_wav(f.read(), os.path.join(t.dir, "audio", "pip_mumble.wav"))
+    with open(os.path.join(src, "pep_mumble.tsv")) as f:
+        mumble_wav(f.read(), os.path.join(t.dir, "audio", "pep_mumble.wav"), pitch_scale=1.3)
+    t.json("rigs/pip.json", pip_rig())
+    for s_ in ("pip", "stage", "hazard"):
+        t.script(s_)
+    t.write("art/LICENSE-ART.txt", "Pip, Pep, the backdrop, the thorns, the bee and the flag were drawn for Rayzr: the\n"
+                                   "same licence as the engine.\n"
+                                   "The voices are synthesized by scripts/templates/make_templates.py.\n"
+                                   "Font (fonts/): Kenney Pixel by Kenney (www.kenney.nl), CC0.\n")
+    os.rmdir(os.path.join(t.dir, "textures"))  # (no textures: vector art)
+    os.rmdir(os.path.join(t.dir, "components"))
+
+    # A small game (#329): three stages, each a walk to the flag against the
+    # clock; a thorn bush or a bee touched is game over, and so is the clock
+    # running out. On the way Pip stops to talk to Pep (the clock waits).
+    # The furthest stage and each one's best time are saved; the title, a
+    # pause menu, the result screen.
+    levels = [f"scenes/stage{i + 1}.scene.json" for i in range(len(VECTOR_STAGES))]
+    for i, st in enumerate(VECTOR_STAGES):
+        t.json(levels[i], vector_stage(i + 1, st))
+    decor = vector_backdrop(1280) + [pip_node(230, scale=0.75), pep_node(1050, scale=0.62)]
+    t.json("scenes/title.scene.json", title_scene("Pip's Walk", HD_STYLE, VECTOR_INK, VECTOR_ORANGE, VECTOR_SKY,
+                                                  decor=decor, level_word="Stage"))
+    t.json("scenes/result.scene.json", result_scene(HD_STYLE, VECTOR_INK, VECTOR_ORANGE, VECTOR_SKY,
+                                                    decor=vector_backdrop(1280)))
+    t.json("project.json", project("Vector Character", ["scenes/title.scene.json"] + levels + ["scenes/result.scene.json"],
+                                   VECTOR_ACTIONS + GAME_ACTIONS, virtual=(1280, 720), gravity=(0, 0), pixel=False,
+                                   globals_=GAME_GLOBALS))
+    game_scripts(t, levels, lives=None, score_name="Time", lower_is_better=True, level_word="Stage", extra=True)
     with open(os.path.join(src, "README.md")) as f:
         t.write("README.md", f.read())
     return t

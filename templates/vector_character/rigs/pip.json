@@ -1020,6 +1020,91 @@
      ]
     }
    }
+  },
+  "jump": {
+   "bones": {
+    "hip": {
+     "translate": [
+      {
+       "time": 0,
+       "x": 0,
+       "y": 6
+      }
+     ]
+    },
+    "torso": {
+     "rotate": [
+      {
+       "time": 0,
+       "value": -4
+      }
+     ]
+    },
+    "leg_front_upper": {
+     "rotate": [
+      {
+       "time": 0,
+       "value": 50
+      }
+     ]
+    },
+    "leg_front_lower": {
+     "rotate": [
+      {
+       "time": 0,
+       "value": -75
+      }
+     ]
+    },
+    "leg_back_upper": {
+     "rotate": [
+      {
+       "time": 0,
+       "value": 10
+      }
+     ]
+    },
+    "leg_back_lower": {
+     "rotate": [
+      {
+       "time": 0,
+       "value": -60
+      }
+     ]
+    },
+    "arm_front_upper": {
+     "rotate": [
+      {
+       "time": 0,
+       "value": 140
+      }
+     ]
+    },
+    "arm_front_lower": {
+     "rotate": [
+      {
+       "time": 0,
+       "value": 20
+      }
+     ]
+    },
+    "arm_back_upper": {
+     "rotate": [
+      {
+       "time": 0,
+       "value": 120
+      }
+     ]
+    },
+    "arm_back_lower": {
+     "rotate": [
+      {
+       "time": 0,
+       "value": 20
+      }
+     ]
+    }
+   }
   }
  }
 }
