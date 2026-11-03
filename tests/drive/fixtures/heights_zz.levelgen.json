@@ -1,0 +1,5 @@
+{"size": [48, 30], "seed": 5, "nodes": [
+  {"id": 1, "type": "noise", "params": {"type": "perlin", "scale": 12, "octaves": 3}, "pos": [0, 0]},
+  {"id": 2, "type": "remap", "inputs": {"in": 1}, "params": {"from_min": 0.3, "from_max": 0.7, "to_min": 0, "to_max": 1}, "pos": [200, 0]},
+  {"id": 3, "type": "blur", "inputs": {"in": 2}, "params": {"radius": 1}, "pos": [400, 0]}
+]}

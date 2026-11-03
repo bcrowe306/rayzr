@@ -1,0 +1,11 @@
+[
+ {
+  "name": "height layers (#171): a 3-level height map into 3 stacked TileMaps, terrain edges, cliff faces and walls",
+  "project": "tests/levelgen_heights/project",
+  "frames": 60,
+  "expect": [
+   ["Log", "text", "contains", "heights ok"],
+   ["Gen", "exists", "==", true]
+  ]
+ }
+]

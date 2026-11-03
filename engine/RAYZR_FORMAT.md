@@ -230,7 +230,7 @@ reflected properties in the scene (`chunked`, `chunkSize`, `chunkRadius`,
 | `format` | integer | no | The file format (currently 1; a file without it is format 0, read the same). Newer than the reader: read as well as possible, the editor opens it read-only. |
 | `size` | `[w, h]` | no | The level in cells, 1-4096 each (default `[32, 24]`). |
 | `seed` | integer | no | The default seed (0 when missing). A seed passed when generating replaces it. |
-| `output` | integer | no | The id of the node whose result is the level (its tiles fill the main TileMap). Missing or 0: the last `tile_output` that writes tiles, else the last `tile_output`, else the last node. |
+| `output` | integer | no | The id of the node whose result is the level (its tiles fill the main TileMap). Missing or 0: the last `tile_output` that writes tiles, else the last `tile_output`, else the last `height_output`, else the last node. |
 | `nodes` | array | no | The nodes (below), in any order. |
 | `frames` | array | no | The editor's comment frames (#171, part 1). Generation ignores them. Written only when there are any. |
 
@@ -247,6 +247,7 @@ reflected properties in the scene (`chunked`, `chunkSize`, `chunkRadius`,
 | `component` | string | `entity_output` | The `.component.json` it places. |
 | `script` | string | `script` | The `.lua` file (returning `function(ctx)`). |
 | `sample`, `wang` | | `wfc` | Below. |
+| `heights`, `tileset`, `walls` | | `height_output` | Below. |
 
 ### Node types and parameters
 
@@ -287,6 +288,7 @@ mixes in its id).
 | *(registered)* | as registered | as registered |
 | `tile_output` | `in` | `empty` (-1), `tile_w` (16), `tile_h` (16), `writes`: `tiles` / `components` (#171, part 3), `tile_ids` (false; #171) |
 | `entity_output` | `in` | `max` (0 = every point); and `component` |
+| `height_output` | `in` | `levels` (3, 1-16), `fill`: `stack` / `only`, `thresholds`: `even` / `custom`, `walls_tile` (0), `tile_w` (16), `tile_h` (16); and `heights`, `tileset`, `walls` (#171) |
 
 ### Tile output
 
@@ -313,6 +315,26 @@ mixes in its id).
 holds tile ids (a `wfc` node's) - each cell takes the tile its value
 rounds to, a negative value `empty`; `rules` are skipped, `patterns` still
 run (their `min`..`max` then compare tile ids).
+
+### Height output (`height_output`)
+
+Its input is a height map (0..1). Each cell's **level** is the highest k
+(1 .. `levels` - 1) whose threshold its value reaches, else 0: with
+`thresholds` `even` level k starts at k / `levels`; with `custom` at
+`heights[k].min` (raised to the level below's when lower; a level without
+an entry: k / `levels`). With `fill` `stack` a cell at level k is written
+into the maps of levels 0..k, with `only` into level k's alone.
+
+| Key | | |
+|---|---|---|
+| `heights` | array | Each level's settings, level 0 first: `{"min", "layer", "tiles", "terrain", "cliff", "cliff_terrain", "solid"}`. `min`: its custom threshold (level 0: unused). `layer`: the TileMap it fills, by name next to the main one (`""`: the main one). `tiles`: tile indices, one picked per cell by the seed; `terrain` (optional): a terrain of `tileset` instead, auto-tiled with the cells at that level or higher counting as the terrain (beyond the level: yes). `cliff` / `cliff_terrain` (optional, levels 1 and up): tiles or a terrain for the cliff face - the cells below the level whose grid-north neighbour is at it - in the level's map. `solid` (optional, default false): its edge cells (an 8-neighbour below it) and face cells go into `walls`. Entries past `levels` are kept, unused; missing ones are empty (no tiles, the main map). Writers write `min`, `layer` and `tiles` always, the others when set. |
+| `tileset` | string | Optional: the image the tiles count in; its terrains come from `<image>.tileset.json`. |
+| `walls` | string | Optional: the TileMap (by name, next to the main one) the solid levels' edges and faces go into, as `params.walls_tile`. Written only when set; nothing is written there when no level is solid. |
+
+Levels (and outputs) naming the same map are laid over each other - the
+later one's non-empty cells win (a level naming `""` lays over the main
+`tile_output`'s tiles). A missing map is an error after the rest is
+written, as for a `tile_output`'s `layer`.
 
 ### Wave Function Collapse (`wfc`)
 
@@ -359,12 +381,13 @@ middles are inside it.
 
 Format 1 since #326. The keys added later - `frames`, `noise.type`,
 `poisson_scatter`, `params.writes` and a rule's `component`, the `wfc`
-node (with its `sample` and `wang`) and `params.tile_ids` - are optional
-and additive: a file without them reads as before, so they didn't change
-the format number. Graphs that use none of them save exactly as before. An
-older Rayzr reads a newer graph without them: it ignores frames and the
-`writes` and `tile_ids` parameters, and fails on a node type it doesn't
-know (`wfc`).
+node (with its `sample` and `wang`), `params.tile_ids` and the
+`height_output` node (with its `heights`, `tileset` and `walls`; #171) -
+are optional and additive: a file without them reads as before, so they
+didn't change the format number. Graphs that use none of them save exactly
+as before. An older Rayzr reads a newer graph without them: it ignores
+frames and the `writes` and `tile_ids` parameters, and fails on a node
+type it doesn't know (`wfc`, `height_output`: "unknown node type").
 
 ---
 

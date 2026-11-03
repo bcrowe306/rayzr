@@ -1,0 +1,201 @@
+# #171 (stretch): height layers - a Height Output added from the canvas
+# menu and fed a height map, its levels set (count, custom thresholds), each
+# level's TileMap and terrain picked (and a cliff face, solid walls), the
+# preview's shades and edges, saved; then Generate Now fills the stacked
+# TileMaps.
+wait 5
+exec mkdir -p $PROJECT/levels
+exec cp tests/levelgen_heights/project/textures/heights.png $PROJECT/textures/heights_zz.png
+exec cp tests/levelgen_heights/project/textures/heights.tileset.json $PROJECT/textures/heights_zz.tileset.json
+exec cp tests/drive/fixtures/heights_zz.levelgen.json $PROJECT/levels/heights_zz.levelgen.json
+wait-until item:asset:levels/heights_zz.levelgen.json == visible timeout=300
+wait-until item:asset:textures/heights_zz.png == visible timeout=300
+# The bottom panel gets room for the Tile Map tab.
+click @menu:View
+click @menu:View/Workspaces
+click @menu:Workspaces/Animation
+wait 3
+key escape
+
+# A Level Generator with four TileMaps: the ground (the main map), two
+# levels above and the walls - the first three drawing the tileset.
+click @hier.add
+type level generator
+click @addnode.create
+wait 2
+expect node:LevelGenerator.type == LevelGeneratorNode
+click @hier:LevelGenerator
+click @hier.add
+type tile map
+click @addnode.create
+wait 2
+click @tile.tileset
+click @pick:textures/heights_zz.png
+wait 1
+dblclick @tile.size-x
+key cmd+a
+type 16
+key enter
+dblclick @tile.size-y
+key cmd+a
+type 16
+key enter
+click @hier:LevelGenerator
+click @hier.add
+type tile map
+click @addnode.create
+wait 2
+click @tile.tileset
+click @pick:textures/heights_zz.png
+wait 1
+dblclick @tile.size-x
+key cmd+a
+type 16
+key enter
+dblclick @tile.size-y
+key cmd+a
+type 16
+key enter
+click @hier:LevelGenerator
+click @hier.add
+type tile map
+click @addnode.create
+wait 2
+click @tile.tileset
+click @pick:textures/heights_zz.png
+wait 1
+dblclick @tile.size-x
+key cmd+a
+type 16
+key enter
+dblclick @tile.size-y
+key cmd+a
+type 16
+key enter
+click @hier:LevelGenerator
+click @hier.add
+type tile map
+click @addnode.create
+wait 2
+expect node:TileMap.parent == LevelGenerator
+expect node:TileMap2.parent == LevelGenerator
+expect node:TileMap3.parent == LevelGenerator
+expect node:TileMap4.parent == LevelGenerator
+click @hier:LevelGenerator
+wait 1
+click @insp.levelgen.file
+click @pick:levels/heights_zz.levelgen.json
+wait 2
+expect node:LevelGenerator.prop.generator == levels/heights_zz.levelgen.json
+
+# The generator: a Height Output from the add menu's Outputs, fed the blur.
+click @insp.levelgen.open
+wait 5
+expect lge.open == true
+expect lge.nodes == 3
+rclick @lge.canvas+260,60
+click @ctx:lge-add:height_output
+wait 2
+expect lge.nodes == 4
+drag @lge.out:3 @lge.in:4:0
+wait 3
+expect lge.input:4:0 == 3
+expect lge.errors == 0
+expect lge.text contains "type": "height_output"
+expect lge.text contains "levels": 3
+screenshot added
+# Four levels, then three again (the fourth's settings kept, unused).
+dblclick @lge.param:levels
+key cmd+a
+type 4
+key enter
+wait 2
+expect lge.text contains "levels": 4
+screenshot four_levels
+wait 1
+click @lge.node:4
+wait 1
+dblclick @lge.param:levels
+key cmd+a
+type 3
+key enter
+wait 2
+expect lge.text contains "levels": 3
+# Custom thresholds: level 1 from 0.4.
+click @lge.param:thresholds
+click @pick:custom
+wait 1
+dblclick @lge.height-min:1
+key cmd+a
+type 0.4
+key enter
+wait 2
+expect lge.text contains "thresholds": "custom"
+expect lge.text contains "min": 0.4
+# The tileset, then each level's map and terrain.
+click @lge.tileset
+click @pick:textures/heights_zz.png
+wait 2
+click @lge.height-terrain:0
+click @pick:Terrain: Grass
+wait 1
+click @lge.height-layer:1
+type TileMap2
+key enter
+click @lge.height-terrain:1
+click @pick:Terrain: Hill
+wait 1
+click @lge.height-cliff-terrain:1
+click @pick:Terrain: Cliff
+wait 1
+click @lge.height-solid:1
+click @lge.height-layer:2
+type TileMap3
+key enter
+click @lge.height-terrain:2
+click @pick:Terrain: Peak
+wait 1
+click @lge.height-cliff-terrain:2
+click @pick:Terrain: Cliff
+wait 1
+click @lge.walls
+type TileMap4
+key enter
+wait 3
+expect lge.errors == 0
+expect lge.text contains "layer": "TileMap2"
+expect lge.text contains "terrain": "Hill"
+expect lge.text contains "cliff_terrain": "Cliff"
+expect lge.text contains "solid": true
+expect lge.text contains "walls": "TileMap4"
+click @lge.node:4
+wait 2
+screenshot levels_and_preview
+key cmd+s
+wait 1
+expect file:levels/heights_zz.levelgen.json contains "type": "height_output"
+expect file:levels/heights_zz.levelgen.json contains "tileset": "textures/heights_zz.png"
+expect file:levels/heights_zz.levelgen.json contains "layer": "TileMap3"
+click @lge.close
+wait 2
+expect lge.open == false
+
+# The Inspector's Level Parameters list the height output's; Generate Now
+# fills the four maps.
+click @hier:LevelGenerator
+wait 2
+click @insp.levelgen.generate
+wait 3
+expect log contains Generated heights_zz.levelgen.json into TileMap
+expect node:TileMap.tiles == 1440
+expect node:TileMap2.tiles >= 100
+expect node:TileMap3.tiles >= 20
+expect node:TileMap4.tiles >= 20
+# (A big viewport to look at it.)
+click @menu:View
+click @menu:View/Workspaces
+click @menu:Workspaces/Level Design
+wait 3
+key escape
+wait 2
+screenshot generated

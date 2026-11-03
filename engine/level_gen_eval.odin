@@ -153,6 +153,7 @@ Gen_NeededNodes :: proc(g: ^Gen_Graph) -> int {
 	for &n in g.nodes {
 		if n.kind == .Tile_Output && (n.layer != "" || Gen_WritesComponents(&n)) do visit(g, n.id, &seen)
 		if n.kind == .Entity_Output && n.component != "" do visit(g, n.id, &seen)
+		if n.kind == .Height_Output do visit(g, n.id, &seen)
 	}
 	return len(seen)
 }
@@ -229,7 +230,7 @@ gen_key :: proc(ev: ^Gen_Eval, id: int) -> u64 {
 		if def := Gen_FindCustomKind(n.custom); def != nil do h = gen_mix(h, u64(uintptr(rawptr(def.eval))))
 	case .WFC:
 		h = gen_wfc_key(h, n)
-	case .Constant, .Noise, .Random_Fill, .Gradient, .Border, .Rect, .Rooms, .Walker, .Lines, .Rectangles, .Circles, .Threshold, .Invert, .Remap, .Blur, .Cellular, .Dilate, .Erode, .Combine, .Scatter, .Poisson_Scatter, .Surface, .Flood_Fill, .Regions, .Connect_Regions, .Path, .Check, .Tile_Output, .Entity_Output:
+	case .Constant, .Noise, .Random_Fill, .Gradient, .Border, .Rect, .Rooms, .Walker, .Lines, .Rectangles, .Circles, .Threshold, .Invert, .Remap, .Blur, .Cellular, .Dilate, .Erode, .Combine, .Scatter, .Poisson_Scatter, .Surface, .Flood_Fill, .Regions, .Connect_Regions, .Path, .Check, .Tile_Output, .Entity_Output, .Height_Output:
 	}
 	ev.keys[id] = h
 	return h
@@ -364,7 +365,7 @@ gen_compute :: proc(ev: ^Gen_Eval, n: ^Gen_Node, out: Gen_Grid) -> bool {
 			ev.err = fmt.tprintf("node %d (%s): %s", n.id, n.custom, e)
 			return false
 		}
-	case .Tile_Output, .Entity_Output:
+	case .Tile_Output, .Entity_Output, .Height_Output:
 		src := gen_input(ev, n, 0) or_return
 		copy(out.v, src.v) // (the tiles / entities come from Gen_Tiles / Gen_Entities: its grid is its input's)
 	case .Rooms:
@@ -620,11 +621,15 @@ gen_generate :: proc(ev: ^Gen_Eval, allocator: runtime.Allocator, apron := 0) ->
 	r.components = make([dynamic]Gen_Layer_Component, allocator)
 	r.size = mid
 	r.origin = ev.origin + apron
-	if main == nil || !Gen_WritesComponents(main) { // (else the main map's tiles stay)
+	if main == nil || (main.kind != .Height_Output && !Gen_WritesComponents(main)) { // (else the main map's tiles stay; a height output's: below)
 		r.tiles, _, err = gen_tiles(ev, 0, allocator)
 		if err == "" do r.tiles = crop(r.tiles, ev.size.x, apron, mid, allocator)
 	}
 	if err == "" do for &n in g.nodes {
+		if n.kind == .Height_Output {
+			if err = gen_heights_generate(ev, &n, &r, apron, mid, allocator); err != "" do break
+			continue
+		}
 		if n.kind != .Tile_Output do continue
 		if Gen_WritesComponents(&n) {
 			grid, ok := gen_eval(ev, n.id)

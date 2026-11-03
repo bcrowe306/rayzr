@@ -70,6 +70,7 @@ Gen_Kind :: enum {
 	// Output
 	Tile_Output,
 	Entity_Output, // a component on every point (cells >= 0.5)
+	Height_Output, // a height map cut into levels, each into its own TileMap (#171; level_gen_heights.odin)
 }
 
 Gen_Param_Def :: struct {
@@ -254,6 +255,14 @@ GEN_KINDS := [Gen_Kind]Gen_Kind_Info{
 	.Entity_Output = {"entity_output", "Entity Output", {"in"}, {
 		{name = "max", default_ = 0, doc = "At most this many (0 = every point)", integer = true},
 	}, "Puts its component (a .component.json) on every point of its input (cells >= 0.5): enemies, pickups, the player's start."},
+	.Height_Output = {"height_output", "Height Output", {"in"}, {
+		{name = "levels", default_ = 3, doc = "How many heights (1-16): level 0 the ground, each one above into its own TileMap", integer = true},
+		{name = "fill", default_ = 0, choices = GEN_HEIGHT_FILLS, doc = "stack: a cell at level k fills levels 0..k (a plateau sits on the ground below); only: just level k's map"},
+		{name = "thresholds", default_ = 0, choices = GEN_HEIGHT_THRESHOLDS, doc = "even: level k from k / levels up; custom: each level's own From value"},
+		{name = "walls_tile", default_ = 0, doc = "The tile the Walls map gets on the edges (and cliff faces) of solid levels", integer = true},
+		{name = "tile_w", default_ = 16, doc = "Tile width in the tileset (pixels): the tile picker and previews", integer = true},
+		{name = "tile_h", default_ = 16, doc = "Tile height in the tileset (pixels)", integer = true},
+	}, "A height map (0..1: noise, a blur...) cut into levels, each written into its own TileMap - with stack, a plateau on the ground below. Each level's tiles, or a terrain auto-tiled at its edges; a cliff face below its edges; solid levels' edges into a Walls map (cliff walls)."},
 }
 
 // A tile rule: cells with min <= value <= max get one of `tiles`.
@@ -285,7 +294,8 @@ Gen_Node :: struct {
 	patterns: [dynamic]Gen_Pattern_Rule, // Tile_Output: after the rules
 	component: string, // Entity_Output: what it places (the graph's allocator)
 	tileset: string, // Tile_Output: the tileset image its tiles index (the tile picker, previews; the graph's allocator)
-	layer:   string, // Tile_Output: the TileMap it fills, by name, next to the main one ("": the main one; the graph's allocator)
+	layer:   string, // Tile_Output: the TileMap it fills, by name, next to the main one ("": the main one); Height_Output: its walls' TileMap ("walls"; "": none) (the graph's allocator)
+	heights: [dynamic]Gen_Height_Level, // Height_Output: each level's map and tiles (the graph's allocator)
 	script: string, // Script: its .lua file (the graph's allocator)
 	custom: string, // Custom: the registered kind's name (the graph's allocator)
 	sample: Gen_WFC_Sample, // WFC: the sample it learns from (the graph's allocator)
@@ -397,6 +407,7 @@ gen_node_free :: proc(g: ^Gen_Graph, n: ^Gen_Node) {
 	n.sample = {}
 	delete(n.wang)
 	n.wang = nil
+	gen_heights_free(n, g.allocator)
 }
 
 // (a node's text, owned by the graph)
@@ -552,6 +563,7 @@ Gen_GraphParse :: proc(data: []u8, allocator := context.allocator) -> (g: Gen_Gr
 			}
 		}
 		if kind == .WFC do gen_wfc_parse(&n, obj, allocator)
+		if kind == .Height_Output do gen_heights_parse(&n, obj, allocator)
 		if pats, pok := obj["patterns"].(json.Array); pok && kind == .Tile_Output {
 			n.patterns = make([dynamic]Gen_Pattern_Rule, allocator)
 			for pv in pats {
@@ -666,6 +678,7 @@ Gen_GraphSerialize :: proc(g: ^Gen_Graph, allocator := context.allocator) -> str
 			}
 		}
 		if n.kind == .WFC do gen_wfc_serialize(&w, &n)
+		if n.kind == .Height_Output do gen_heights_serialize(&w, &n)
 		if n.kind == .Entity_Output {
 			strings.write_string(&w.sb, ", \"component\": ")
 			Json_String(&w, n.component)
@@ -733,6 +746,7 @@ Gen_AddNode :: proc(g: ^Gen_Graph, kind: Gen_Kind, pos: [2]f32, custom := "") ->
 		append(&n.rules, r)
 	}
 	if kind == .WFC do Gen_WFCResizeSample(g, &n, {GEN_WFC_SAMPLE_DEFAULT, GEN_WFC_SAMPLE_DEFAULT})
+	if kind == .Height_Output do Gen_HeightsEnsure(g, &n)
 	append(&g.nodes, n)
 	return &g.nodes[len(g.nodes) - 1]
 }
@@ -745,11 +759,13 @@ Gen_DuplicateNode :: proc(g: ^Gen_Graph, id: int, offset := [2]f32{30, 30}) -> ^
 	n := Gen_AddNode(g, copied.kind, copied.pos + offset)
 	newId := n.id
 	Gen_NodeClearRules(n, g.allocator)
+	gen_heights_free(n, g.allocator) // (Gen_AddNode's defaults)
 	n^ = copied
 	n.id, n.pos, n.inputs = newId, copied.pos + offset, {}
 	n.rules, n.patterns = nil, nil
 	n.component, n.script, n.custom, n.tileset, n.layer = "", "", "", "", ""
 	n.sample, n.wang = {}, nil
+	n.heights = gen_heights_copy(copied.heights[:], g.allocator)
 	if copied.sample.w > 0 {
 		n.sample = {copied.sample.w, copied.sample.h, make([dynamic]i32, g.allocator)}
 		append(&n.sample.cells, ..copied.sample.cells[:])
@@ -903,11 +919,13 @@ Gen_Connect :: proc(g: ^Gen_Graph, dst: int, port: int, src: int) -> bool {
 }
 
 // Gen_OutputNode: the node whose grid is the graph's result (by default the
-// last tile output that writes tiles, else the last tile output).
+// last tile output that writes tiles, else the last tile output, else the
+// last height output).
 Gen_OutputNode :: proc(g: ^Gen_Graph) -> ^Gen_Node {
 	if g.output != 0 do if n := Gen_FindNode(g, g.output); n != nil do return n
 	#reverse for &n in g.nodes do if n.kind == .Tile_Output && !Gen_WritesComponents(&n) do return &n
 	#reverse for &n in g.nodes do if n.kind == .Tile_Output do return &n
+	#reverse for &n in g.nodes do if n.kind == .Height_Output do return &n
 	return &g.nodes[len(g.nodes) - 1] if len(g.nodes) > 0 else nil
 }
 
@@ -1218,7 +1236,7 @@ Gen_LoadTerrains :: proc(g: ^Gen_Graph, ctx: ^GameContext) {
 	gen_tilesets_clear(g)
 	if ctx == nil || ctx.game == nil do return
 	for &n in g.nodes {
-		if n.kind != .Tile_Output || n.tileset == "" || n.tileset in g.tilesets do continue
+		if (n.kind != .Tile_Output && n.kind != .Height_Output) || n.tileset == "" || n.tileset in g.tilesets do continue
 		if text, ok := AssetManager_ReadFileString(&ctx.game.assetManager, Terrain_SidecarPath(n.tileset), context.temp_allocator); ok do Gen_SetTerrainSource(g, n.tileset, text)
 	}
 }

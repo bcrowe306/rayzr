@@ -1,0 +1,10 @@
+{"format": 1, "size": [80, 45], "seed": 5, "nodes": [
+  {"id": 1, "type": "noise", "params": {"type": "perlin", "scale": 16, "octaves": 3, "persistence": 0.5}},
+  {"id": 2, "type": "remap", "inputs": {"in": 1}, "params": {"from_min": 0.3, "from_max": 0.7, "to_min": 0, "to_max": 1}},
+  {"id": 3, "type": "blur", "inputs": {"in": 2}, "params": {"radius": 1}},
+  {"id": 4, "type": "height_output", "inputs": {"in": 3}, "params": {"levels": 3, "fill": "stack", "thresholds": "even", "walls_tile": 0, "tile_w": 16, "tile_h": 16},
+   "heights": [{"min": 0, "layer": "", "tiles": [], "terrain": "Grass"},
+               {"min": 0.333, "layer": "Hills", "tiles": [], "terrain": "Hill", "cliff_terrain": "Cliff", "solid": true},
+               {"min": 0.667, "layer": "Peaks", "tiles": [], "terrain": "Peak", "cliff_terrain": "Cliff", "solid": true}],
+   "tileset": "textures/heights.png", "walls": "Walls"}
+]}

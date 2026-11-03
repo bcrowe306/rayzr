@@ -102,6 +102,8 @@ lge: struct {
 	tilesFor:  [2]int,  // (node, rule) tilesBuf belongs to ({-1, -1}: none)
 	layerBuf:  [64]u8,  // the layer name being typed in
 	layerFor:  int,     // the node layerBuf belongs to (0: none)
+	nameBuf:   [64]u8,  // a height output's map name being typed in (a level's, or the walls')
+	nameFor:   [2]int,  // (node, level; -1: the walls) nameBuf belongs to ({0, 0}: none)
 	wfcBrush:  i32,     // the tile a WFC node's sample is painted with (-1: the eraser)
 }
 
@@ -605,6 +607,10 @@ lge_grid_pixels :: proc(g: ^e.Gen_Graph, n: ^e.Gen_Node, grid: e.Gen_Grid, pixel
 		for t, i in e.Gen_TilesOf(n, grid, g.seed, context.temp_allocator) do pixels[i] = lge_tile_color(t) if t >= 0 else {}
 		return
 	}
+	if n.kind == .Height_Output {
+		lge_height_pixels(n, grid, pixels)
+		return
+	}
 	for v, i in grid.v {
 		c := u8(clamp(v, 0, 1) * 255)
 		pixels[i] = {c, c, c, 255}
@@ -645,7 +651,7 @@ lge_refresh :: proc(state: ^EditorState) {
 			en, ok := lge.cache.entries[n.id]
 			if !ok do continue
 			tex, have := lge.thumbs[n.id]
-			if have && lge.thumbKeys[n.id] == en.key && n.kind != .Tile_Output && n.kind != .WFC && tex.width == i32(en.grid.w) && tex.height == i32(en.grid.h) do continue
+			if have && lge.thumbKeys[n.id] == en.key && n.kind != .Tile_Output && n.kind != .WFC && n.kind != .Height_Output && tex.width == i32(en.grid.w) && tex.height == i32(en.grid.h) do continue
 			// (A tile output with its tileset: drawn with its tiles. A WFC
 			// node's tile ids: with the tileset of the output it feeds.)
 			pixels: []rl.Color
@@ -989,8 +995,8 @@ lge_canvas :: proc(state: ^EditorState) {
 		sel := n.id in lge.sel
 		imgui.DrawList_AddRectFilled(dl, mn, mx, col_u32(UI_BG_RAISED), 6)
 		head := [2]f32{mx.x, mn.y + 24 * lge.zoom}
-		hcol := UI_ACCENT if n.kind == .Tile_Output else ui_line(0.12)
-		imgui.DrawList_AddRectFilled(dl, mn, head, col_u32(hcol if n.kind != .Tile_Output else ui_accent(0.35)), 6, imgui.DrawFlags_RoundCornersTop)
+		isOut := n.kind == .Tile_Output || n.kind == .Height_Output
+		imgui.DrawList_AddRectFilled(dl, mn, head, col_u32(ui_accent(0.35) if isOut else ui_line(0.12)), 6, imgui.DrawFlags_RoundCornersTop)
 		border := UI_ACCENT if sel else (UI_DANGER if n.id in lge.errors else (UI_WARNING if n.id in lge.unsafe else ui_line(0.2)))
 		imgui.DrawList_AddRect(dl, mn, mx, col_u32(border), 6, imgui.DrawFlags(0), 2 if sel else 1)
 		if lge.zoom > 0.5 {
@@ -1206,7 +1212,7 @@ lge_add_menu :: proc(state: ^EditorState) {
 		{"Generators", {.Constant, .Noise, .Random_Fill, .Gradient, .Border, .Rect, .Rooms, .Walker, .Lines, .Rectangles, .Circles, .WFC}},
 		{"Modifiers", {.Threshold, .Invert, .Remap, .Blur, .Cellular, .Dilate, .Erode, .Combine, .Scatter, .Poisson_Scatter, .Surface}},
 		{"Playable", {.Flood_Fill, .Regions, .Connect_Regions, .Path, .Check}},
-		{"Output", {.Tile_Output, .Entity_Output}},
+		{"Output", {.Tile_Output, .Entity_Output, .Height_Output}},
 	}
 	// Every entry, with the index where each group starts ("Your Own": a Lua
 	// script, and the types registered from Odin).
@@ -1375,6 +1381,7 @@ lge_side :: proc(state: ^EditorState) {
 				lge_tile_output(state, n)
 				lge_rules(state, n)
 			}
+			if n.kind == .Height_Output do lge_height_output(state, n)
 			if n.kind == .Entity_Output {
 				imgui.SeparatorText("Component")
 				files := make([dynamic]string, context.temp_allocator)
@@ -1572,6 +1579,179 @@ lge_tile_output :: proc(state: ^EditorState, n: ^e.Gen_Node) {
 		UI_EndProps()
 	}
 	if !comps && n.tileset != "" && lge_tileset(state, n.tileset) == nil do imgui.TextColored(UI_WARNING, "Can't read the tileset image")
+}
+
+// lge_height_output: a height output's tileset, walls map and levels - each
+// level's map, tiles or terrain, cliff face and whether its edges are solid
+// (#171, height layers).
+@(private = "file")
+lge_height_output :: proc(state: ^EditorState, n: ^e.Gen_Node) {
+	g := &lge.graph
+	e.Gen_HeightsEnsure(g, n) // (a level added by Levels: its settings)
+	imgui.SeparatorText("Tiles")
+	if UI_BeginProps("##lge_heights") {
+		UI_PropLabel("Tileset")
+		imgui.SetNextItemWidth(imgui.GetContentRegionAvail().x - 34)
+		if path, ok := asset_picker("lge.tileset", n.tileset, Editor_ListProjectFiles(state, "", TEXTURE_EXTS)); ok {
+			lge_change()
+			e.Gen_SetTileset(g, n, path)
+			lge.scriptsStale = true // (its terrains read)
+		}
+		Drive_Item("lge.tileset")
+		UI_Tooltip("The image the levels' tile numbers count in (tile_w x tile_h each), and whose terrains (Tile Map tab > Terrains) draw their edges")
+		imgui.SameLine(0, 4)
+		tm := cast(^e.TileMapNode)state.selectedNode if state.selectedNode != nil && state.selectedNode.typeId == e.TileMapNode else nil
+		imgui.BeginDisabled(tm == nil || tm.tilesetPath == "")
+		if UI_IconButton(ICON_FA_TABLE_CELLS_LARGE, "lge.tileset-from-map", "Use the tileset and tile size of the TileMap selected in the scene", size = 26) {
+			lge_change()
+			e.Gen_SetTileset(g, n, tm.tilesetPath)
+			lge.scriptsStale = true
+			e.Gen_SetParam(n, "tile_w", f64(tm.tileSize.x))
+			e.Gen_SetParam(n, "tile_h", f64(tm.tileSize.y))
+		}
+		imgui.EndDisabled()
+		UI_PropLabel("Walls")
+		if name, ok := lge_name_field(n, -1, n.layer, "no walls", "lge.walls"); ok {
+			lge_change()
+			e.Gen_SetLayer(g, n, name)
+		}
+		UI_Tooltip("The TileMap (by name, next to the main one) the edges of Solid levels go into, as walls_tile: make it Solid for cliff walls (and hide it, or give walls_tile a see-through tile). Empty: no walls")
+		UI_EndProps()
+	}
+	if n.tileset != "" && lge_tileset(state, n.tileset) == nil do imgui.TextColored(UI_WARNING, "Can't read the tileset image")
+	imgui.SeparatorText("Levels")
+	UI_DimTextWrapped("Level 0 is the ground; each level above goes into its own TileMap (empty: the main one). Tiles, or a terrain drawn with edges where the height drops below the level; a cliff face below those edges.")
+	custom := int(e.Gen_Param(n, "thresholds")) == 1
+	count := e.Gen_HeightCount(n)
+	mins := e.Gen_HeightThresholds(n)
+	for k in 0 ..< count {
+		hl := &n.heights[k]
+		imgui.PushIDInt(i32(k))
+		defer imgui.PopID()
+		from := fmt.tprintf("from %.2f", mins[k]) if k > 0 else "the ground"
+		imgui.TextUnformatted(fmt.ctprintf("Level %d  (%s)", k, from))
+		if !UI_BeginProps("##lge_level") do continue
+		if k > 0 && custom {
+			UI_PropLabel("From")
+			imgui.SetNextItemWidth(-1)
+			imgui.DragFloat("##min", &hl.min, 0.005, 0, 1, "%.3f")
+			lge_undo_on_activate()
+			Drive_Item(fmt.tprintf("lge.height-min:%d", k))
+			UI_Tooltip("The lowest value at this level (never below the level under it)")
+		}
+		UI_PropLabel("Map")
+		if name, ok := lge_name_field(n, k, hl.layer, "the main TileMap", fmt.tprintf("lge.height-layer:%d", k)); ok {
+			lge_change()
+			e.Gen_HeightSetText(g, &hl.layer, name)
+		}
+		UI_Tooltip("The TileMap this level fills, by name, next to the main one (its sibling). Empty: the main TileMap. Levels naming the same map are laid over each other")
+		UI_PropLabel("Tiles")
+		imgui.SetNextItemWidth(-1)
+		if name, ok := lge_terrain_combo(state, n, hl.terrain, "Tiles (no terrain)", fmt.tprintf("lge.height-terrain:%d", k)); ok {
+			lge_change()
+			e.Gen_HeightSetText(g, &hl.terrain, name)
+		}
+		UI_Tooltip("Tiles (one picked per cell), or a terrain of the tileset: auto-tiled, its edges where the height drops below this level")
+		if hl.terrain == "" {
+			UI_PropLabel("")
+			lge_rule_tiles(state, n, &hl.tiles, fmt.tprintf("lge.height-pick:%d", k))
+		}
+		if k > 0 {
+			UI_PropLabel("Cliff")
+			imgui.SetNextItemWidth(-1)
+			if name, ok := lge_terrain_combo(state, n, hl.cliff_terrain, "Tiles (no terrain)", fmt.tprintf("lge.height-cliff-terrain:%d", k)); ok {
+				lge_change()
+				e.Gen_HeightSetText(g, &hl.cliff_terrain, name)
+			}
+			UI_Tooltip("The cliff face (top-down): the cells just south of this level's edges - tiles, or a terrain (auto-tiled along the face). No tiles: no face")
+			if hl.cliff_terrain == "" {
+				UI_PropLabel("")
+				lge_rule_tiles(state, n, &hl.cliff, fmt.tprintf("lge.height-cliff-pick:%d", k))
+			}
+			UI_PropLabel("Solid")
+			solid := hl.solid
+			if imgui.Checkbox("##solid", &solid) {
+				lge_change()
+				hl.solid = solid
+			}
+			Drive_Item(fmt.tprintf("lge.height-solid:%d", k))
+			UI_Tooltip("Its edges (and cliff face) go into the Walls map as walls_tile: cliff walls")
+		}
+		UI_EndProps()
+	}
+	if n.layer == "" do for k in 1 ..< count do if n.heights[k].solid {
+		imgui.TextColored(UI_WARNING, "Name the Walls map for the solid levels' walls")
+		break
+	}
+}
+
+// lge_name_field: a map name typed in (kept in its own buffer until Enter
+// or leaving the field); ok when it changed.
+@(private = "file")
+lge_name_field :: proc(n: ^e.Gen_Node, slot: int, cur, hint, driveId: string) -> (name: string, ok: bool) {
+	key := [2]int{n.id, slot}
+	local: [64]u8
+	buf := lge.nameBuf[:] if lge.nameFor == key else local[:]
+	if lge.nameFor != key do copy(local[:63], cur)
+	imgui.SetNextItemWidth(-1)
+	entered := imgui.InputTextWithHint(fmt.ctprintf("##%s", driveId), strings.clone_to_cstring(hint, context.temp_allocator), cstring(raw_data(buf)), len(buf), {.EnterReturnsTrue})
+	if imgui.IsItemActivated() {
+		lge.nameBuf = local
+		lge.nameFor = key
+	}
+	if entered || imgui.IsItemDeactivatedAfterEdit() {
+		name = strings.trim_space(string(cstring(raw_data(buf))))
+		ok = name != cur
+		name = strings.clone(name, context.temp_allocator)
+	}
+	if imgui.IsItemDeactivated() && lge.nameFor == key do lge.nameFor = {}
+	Drive_Item(driveId)
+	return
+}
+
+// lge_terrain_combo: none (tiles) or a terrain of the node's tileset; the
+// name picked ("": none) when it changed.
+@(private = "file")
+lge_terrain_combo :: proc(state: ^EditorState, n: ^e.Gen_Node, cur, none, driveId: string) -> (name: string, ok: bool) {
+	terrains := Editor_Terrains(state, n.tileset)
+	names := make([dynamic]string, context.temp_allocator)
+	append(&names, none)
+	at := 0
+	if terrains != nil do for t, k in terrains.terrains {
+		append(&names, fmt.tprintf("Terrain: %s", t.name))
+		if t.name == cur do at = k + 1
+	}
+	if cur != "" && at == 0 {
+		append(&names, fmt.tprintf("Terrain: %s (missing)", cur))
+		at = len(names) - 1
+	}
+	v, changed := UI_Combo(driveId, at, names[:])
+	if !changed || v == at do return "", false
+	if v > 0 && terrains != nil && v - 1 < len(terrains.terrains) do return terrains.terrains[v - 1].name, true
+	return "", true
+}
+
+// lge_height_pixels: a height output's preview - each level a shade (the
+// ground dark, the top light), its edges darker, cliff faces brown.
+@(private = "file")
+lge_height_pixels :: proc(n: ^e.Gen_Node, grid: e.Gen_Grid, pixels: []rl.Color) {
+	lv := e.Gen_HeightLevelsOf(n, grid, context.temp_allocator)
+	count := e.Gen_HeightCount(n)
+	w, h := grid.w, grid.h
+	at :: proc(lv: []u8, w, h, x, y: int, def: u8) -> u8 {return lv[y * w + x] if x >= 0 && y >= 0 && x < w && y < h else def}
+	for l, i in lv {
+		x, y := i % w, i / w
+		f := f32(l) / f32(max(count - 1, 1))
+		c := rl.ColorFromHSV(130 - 90 * f, 0.35, 0.3 + 0.65 * f)
+		edge := false
+		for d in ([4][2]int{{1, 0}, {-1, 0}, {0, 1}, {0, -1}}) do if at(lv, w, h, x + d.x, y + d.y, l) < l do edge = true
+		if at(lv, w, h, x, y - 1, l) > l {
+			c = rl.ColorFromHSV(28, 0.55, 0.3 + 0.5 * f) // (a face: the level above's)
+		} else if edge {
+			c = {u8(f32(c.r) * 0.55), u8(f32(c.g) * 0.55), u8(f32(c.b) * 0.55), 255}
+		}
+		pixels[i] = c
+	}
 }
 
 // lge_wfc_output: the tile output a WFC node feeds (its tileset paints the
