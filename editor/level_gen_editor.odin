@@ -20,8 +20,12 @@ import imgui "lib/imgui"
 //   canvas     the nodes, each with a thumbnail of its grid; drag a node by
 //              its title; drag from an output (the dot on the right) onto an
 //              input (left) to connect; right-click an input to disconnect;
-//              right-click the canvas to add a node, a node to duplicate /
-//              delete / make it the output; Delete removes the selection;
+//              right-click the canvas to add a node (type to search), a node
+//              to duplicate / delete / make it the output; Shift- or
+//              Cmd-click and a box on the empty canvas select several;
+//              Delete removes the selection; Ctrl/Cmd+C / V / D copy, paste
+//              (at the mouse, into any generator) and duplicate; comment
+//              frames (titled, coloured) move the nodes inside them;
 //              wheel pans, Ctrl/Cmd+wheel zooms, F frames everything.
 //   side       the level's size, seed (dice: a new one) and output; the
 //              selected node's parameters and (tile output) rules; a large
@@ -55,7 +59,24 @@ lge: struct {
 	dirty:     bool,
 	undo:      [dynamic]string, // the graph's text before each change (heap)
 	redo:      [dynamic]string,
-	selected:  int, // node id (0 none)
+	selected:  int, // node id (0 none): the one the side panel shows
+	sel:       map[int]bool, // every selected node (holds `selected`)
+	clickAdd:  bool, // the node click held Shift / Cmd (adds to the selection)
+	boxing:    bool, // a selection box is being dragged on the empty canvas
+	boxFrom:   [2]f32, // where it started (world)
+	frameSel:  int, // the selected frame (index + 1; 0 none)
+	frameDrag: int, // the frame being moved (index + 1)
+	frameSize: int, // the frame being resized (index + 1)
+	frameUndo: bool,
+	frameNodes: [dynamic]int, // the nodes the moved frame carries
+	titleBuf:  [128]u8, // the frame title being typed in
+	titleFor:  int, // the frame (index + 1) titleBuf belongs to
+	mouseWorld: [2]f32, // the mouse on the canvas (world), for Paste
+	mouseOnCanvas: bool,
+	centreWorld: [2]f32, // the canvas's middle (world): Paste from the toolbar
+	searchBuf: [64]u8, // the add menu's search
+	searchFocus: bool,
+	colorUndo: bool, // a frame's colour pick recorded its undo step
 	dragNode:  int,
 	dragUndo:  bool,
 	linkFrom:  int, // output being dragged from (node id)
@@ -80,6 +101,12 @@ lge: struct {
 	layerBuf:  [64]u8,  // the layer name being typed in
 	layerFor:  int,     // the node layerBuf belongs to (0: none)
 }
+
+// The node clipboard, shared by every generator opened in this editor
+// session (the system clipboard holds the same text, so a paste works in
+// the next session or another editor too).
+@(private = "file")
+lgeClip: string
 
 // LevelGenEditor_Open shows a generator file (project-relative).
 LevelGenEditor_Open :: proc(state: ^EditorState, rel: string) {
@@ -106,7 +133,7 @@ LevelGenEditor_Open :: proc(state: ^EditorState, rel: string) {
 	lge.path = strings.clone(rel)
 	lge.loaded, lge.open, lge.dirty = true, true, false
 	lge.zoom, lge.frame = 1, true
-	lge.selected = 0
+	lge_select(0)
 	lge.scriptsStale = true
 	lge.version += 1
 	imgui.SetWindowFocusStr(LEVEL_GEN_WINDOW)
@@ -259,6 +286,10 @@ LevelGenEditor_Shutdown :: proc() {
 	delete(lge.thumbKeys)
 	delete(lge.errors)
 	delete(lge.tilesets)
+	delete(lge.sel)
+	delete(lge.frameNodes)
+	delete(lgeClip)
+	lgeClip = ""
 	if lge.cache.entries != nil do e.Gen_CacheDestroy(&lge.cache)
 	lge = {}
 }
@@ -300,7 +331,7 @@ lge_restore :: proc(from, to: ^[dynamic]string) {
 	}
 	e.Gen_GraphDestroy(&lge.graph)
 	lge.graph = g
-	if e.Gen_FindNode(&lge.graph, lge.selected) == nil do lge.selected = 0
+	lge_prune_selection()
 	lge.scriptsStale = true
 	lge.dirty = true
 	lge.version += 1
@@ -324,6 +355,187 @@ lge_save :: proc(state: ^EditorState) -> bool {
 lge_undo_on_activate :: proc() {
 	if imgui.IsItemActivated() do lge_change()
 	if imgui.IsItemEdited() do lge_edited()
+}
+
+// lge_commit: an edit made after taking the graph's text (`before`, heap) -
+// for edits that may turn out to change nothing (then: delete it instead).
+@(private = "file")
+lge_commit :: proc(before: string) {
+	append(&lge.undo, before)
+	for s in lge.redo do delete(s)
+	clear(&lge.redo)
+	lge_edited()
+}
+
+// --- selection, clipboard, frames --------------------------------------------------------
+
+// lge_select: just this node (0: nothing); a frame's selection goes.
+@(private = "file")
+lge_select :: proc(id: int) {
+	clear(&lge.sel)
+	lge.selected = id
+	if id != 0 do lge.sel[id] = true
+	lge.frameSel = 0
+}
+
+// lge_select_add: another node, now the one the side panel shows.
+@(private = "file")
+lge_select_add :: proc(id: int) {
+	lge.sel[id] = true
+	lge.selected = id
+	lge.frameSel = 0
+}
+
+// lge_select_toggle: Shift / Cmd+click - in or out of the selection.
+@(private = "file")
+lge_select_toggle :: proc(id: int) {
+	if id not_in lge.sel {
+		lge_select_add(id)
+		return
+	}
+	delete_key(&lge.sel, id)
+	if lge.selected == id {
+		lge.selected = 0
+		for other in lge.sel do lge.selected = other
+	}
+}
+
+// lge_selection: the selected node ids in the graph's order (temp).
+@(private = "file")
+lge_selection :: proc() -> []int {
+	ids := make([dynamic]int, context.temp_allocator)
+	for n in lge.graph.nodes do if n.id in lge.sel do append(&ids, n.id)
+	return ids[:]
+}
+
+// lge_prune_selection: nodes and frames gone (undo, a delete) leave it.
+@(private = "file")
+lge_prune_selection :: proc() {
+	gone := make([dynamic]int, context.temp_allocator)
+	for id in lge.sel do if e.Gen_FindNode(&lge.graph, id) == nil do append(&gone, id)
+	for id in gone do delete_key(&lge.sel, id)
+	if lge.selected != 0 && lge.selected not_in lge.sel {
+		lge.selected = 0
+		for other in lge.sel do lge.selected = other
+	}
+	if lge.frameSel > len(lge.graph.frames) do lge.frameSel = 0
+	lge.frameDrag, lge.frameSize, lge.titleFor = 0, 0, 0
+}
+
+// lge_node_size: a node's box in world units (its height follows its inputs).
+@(private = "file")
+lge_node_size :: proc(n: ^e.Gen_Node) -> [2]f32 {
+	rows := max(len(e.Gen_NodeInfo(n).inputs), 1)
+	return {LGE_NODE_W, 28 + f32(rows) * 20 + LGE_THUMB + 12}
+}
+
+// lge_copy puts the selected nodes on the clipboard (links between them
+// kept).
+@(private = "file")
+lge_copy :: proc(state: ^EditorState) {
+	ids := lge_selection()
+	if len(ids) == 0 do return
+	text := e.Gen_CopyNodes(&lge.graph, ids)
+	if text == "" do return
+	delete(lgeClip)
+	lgeClip = text
+	imgui.SetClipboardText(strings.clone_to_cstring(text, context.temp_allocator))
+	Editor_Log(state, .Info, "Copied %d node%s", len(ids), "" if len(ids) == 1 else "s")
+}
+
+// lge_clip_text: nodes to paste - the system clipboard's when it holds
+// some (copied in another editor or session), else this session's.
+@(private = "file")
+lge_clip_text :: proc() -> string {
+	if c := imgui.GetClipboardText(); c != nil && e.Gen_IsNodesClip(string(c)) do return string(c)
+	return lgeClip
+}
+
+// lge_paste_text adds nodes from clipboard text with their top-left at
+// `at` (world) and selects them; one undo step.
+@(private = "file")
+lge_paste_text :: proc(state: ^EditorState, text: string, at: [2]f32) -> bool {
+	if text == "" do return false
+	before := e.Gen_GraphSerialize(&lge.graph)
+	ids, err := e.Gen_PasteNodes(&lge.graph, text, at, context.temp_allocator)
+	if err != "" {
+		delete(before)
+		Editor_Log(state, .Warn, "Level Generator: can't paste: %s", err)
+		return false
+	}
+	lge_commit(before)
+	lge_select(0)
+	for id in ids do lge_select_add(id)
+	lge.scriptsStale = true // (pasted script nodes' files)
+	return true
+}
+
+// lge_paste: at the mouse when it's on the canvas, else the canvas's middle.
+@(private = "file")
+lge_paste :: proc(state: ^EditorState, at: Maybe([2]f32) = nil) {
+	pos := at.? or_else (lge.mouseWorld if lge.mouseOnCanvas else lge.centreWorld)
+	lge_paste_text(state, lge_clip_text(), pos)
+}
+
+// lge_duplicate copies the selection beside itself (the clipboard is left
+// alone).
+@(private = "file")
+lge_duplicate :: proc(state: ^EditorState) {
+	ids := lge_selection()
+	if len(ids) == 0 do return
+	text := e.Gen_CopyNodes(&lge.graph, ids, context.temp_allocator)
+	lo := e.Gen_FindNode(&lge.graph, ids[0]).pos
+	for id in ids do lo = {min(lo.x, e.Gen_FindNode(&lge.graph, id).pos.x), min(lo.y, e.Gen_FindNode(&lge.graph, id).pos.y)}
+	lge_paste_text(state, text, lo + {30, 30})
+}
+
+// lge_delete_selection removes the selected frame, else the selected nodes.
+@(private = "file")
+lge_delete_selection :: proc() {
+	if i := lge.frameSel - 1; i >= 0 && i < len(lge.graph.frames) {
+		lge_change()
+		e.Gen_RemoveFrame(&lge.graph, i)
+		lge.frameSel = 0
+		return
+	}
+	ids := lge_selection()
+	if len(ids) == 0 do return
+	lge_change()
+	for id in ids do e.Gen_RemoveNode(&lge.graph, id)
+	lge_select(0)
+}
+
+// lge_add_frame: a frame around the selected nodes (`aroundSelection`), else an empty one at
+// `at` (world); selected, for its title and colour in the side panel.
+@(private = "file")
+lge_add_frame :: proc(at: [2]f32, aroundSelection := true) {
+	ids := lge_selection() if aroundSelection else nil
+	pos, size := at, [2]f32{320, 200}
+	if len(ids) > 0 {
+		n0 := e.Gen_FindNode(&lge.graph, ids[0])
+		lo, hi := n0.pos, n0.pos + lge_node_size(n0)
+		for id in ids {
+			n := e.Gen_FindNode(&lge.graph, id)
+			lo = {min(lo.x, n.pos.x), min(lo.y, n.pos.y)}
+			hi = {max(hi.x, n.pos.x + lge_node_size(n).x), max(hi.y, n.pos.y + lge_node_size(n).y)}
+		}
+		// (Room for the title above the nodes.)
+		pos, size = lo - {20, 44}, hi - lo + {40, 64}
+	}
+	lge_change()
+	e.Gen_AddFrame(&lge.graph, pos, size)
+	lge_select(0)
+	lge.frameSel = len(lge.graph.frames)
+}
+
+// lge_frame_nodes: the nodes inside a frame (their middle in its box).
+@(private = "file")
+lge_frame_nodes :: proc(f: e.Gen_Frame, into: ^[dynamic]int) {
+	clear(into)
+	for &n in lge.graph.nodes {
+		c := n.pos + lge_node_size(&n) * 0.5
+		if c.x >= f.pos.x && c.x <= f.pos.x + f.size.x && c.y >= f.pos.y && c.y <= f.pos.y + f.size.y do append(into, n.id)
+	}
 }
 
 // --- previews ---------------------------------------------------------------------------
@@ -562,10 +774,13 @@ lge_keys :: proc(state: ^EditorState) {
 		else do lge_restore(&lge.undo, &lge.redo)
 	}
 	if io.WantTextInput do return
-	if (imgui.IsKeyPressed(.Delete) || imgui.IsKeyPressed(.Backspace)) && lge.selected != 0 {
-		lge_change()
-		e.Gen_RemoveNode(&lge.graph, lge.selected)
-		lge.selected = 0
+	if imgui.IsKeyPressed(.Delete) || imgui.IsKeyPressed(.Backspace) do lge_delete_selection()
+	if cmd && imgui.IsKeyPressed(.C) do lge_copy(state)
+	if cmd && imgui.IsKeyPressed(.V) do lge_paste(state)
+	if cmd && imgui.IsKeyPressed(.D) do lge_duplicate(state)
+	if cmd && imgui.IsKeyPressed(.A) {
+		lge_select(0)
+		for n in lge.graph.nodes do lge_select_add(n.id)
 	}
 }
 
@@ -580,6 +795,16 @@ lge_toolbar :: proc(state: ^EditorState) {
 	imgui.BeginDisabled(len(lge.redo) == 0)
 	if UI_IconButton(ICON_FA_ROTATE_RIGHT, "lge.redo", "Redo (Ctrl/Cmd+Shift+Z)", size = 26) do lge_restore(&lge.redo, &lge.undo)
 	imgui.EndDisabled()
+	imgui.SameLine(0, 10)
+	// The clipboard and frames (the canvas's menus and keys do the same).
+	imgui.BeginDisabled(len(lge.sel) == 0)
+	if UI_IconButton(ICON_FA_COPY, "lge.copy", "Copy the selected nodes and the links between them (Ctrl/Cmd+C) - paste them here or into another generator", size = 26) do lge_copy(state)
+	imgui.EndDisabled()
+	imgui.SameLine(0, 2)
+	// (Not disabled when empty: that would read the system clipboard every frame.)
+	if UI_IconButton(ICON_FA_PASTE, "lge.paste", "Paste copied nodes (Ctrl/Cmd+V: at the mouse) - new ids, the links between them kept", size = 26) do lge_paste(state)
+	imgui.SameLine(0, 2)
+	if UI_IconButton(ICON_FA_OBJECT_GROUP, "lge.frame", "Add a comment frame around the selected nodes (none selected: an empty one); drag its title to move the nodes inside, its corner to resize", size = 26) do lge_add_frame(lge.centreWorld - {160, 100})
 	imgui.SameLine(0, 10)
 	tm := state.selectedNode if state.selectedNode != nil && state.selectedNode.typeId == e.TileMapNode else nil
 	imgui.BeginDisabled(tm == nil)
@@ -680,6 +905,31 @@ lge_canvas :: proc(state: ^EditorState) {
 		}
 	}
 	if hovered && imgui.IsMouseDragging(.Middle) do lge.pan += {io.MouseDelta.x, io.MouseDelta.y}
+	// (Where Ctrl/Cmd+V and the toolbar's Paste put nodes.)
+	lge.mouseWorld = lge_to_world(origin, mouse)
+	lge.mouseOnCanvas = hovered
+	lge.centreWorld = lge_to_world(origin, origin + size * 0.5)
+
+	// Comment frames, under everything: a header to drag (carrying the nodes
+	// inside), a corner to resize.
+	hoverFrame, hoverFrameSize := 0, 0
+	for f, i in g.frames {
+		mn, mx := lge_to_screen(origin, f.pos), lge_to_screen(origin, f.pos + f.size)
+		head := [2]f32{mx.x, mn.y + 24 * lge.zoom}
+		c := f.color
+		imgui.DrawList_AddRectFilled(dl, mn, mx, col_u32({c.r, c.g, c.b, c.a * 0.14}), 6)
+		imgui.DrawList_AddRectFilled(dl, mn, head, col_u32({c.r, c.g, c.b, c.a * 0.6}), 6, imgui.DrawFlags_RoundCornersTop)
+		selF := lge.frameSel == i + 1
+		imgui.DrawList_AddRect(dl, mn, mx, col_u32(UI_ACCENT if selF else imgui.Vec4{c.r, c.g, c.b, c.a * 0.8}), 6, imgui.DrawFlags(0), 2 if selF else 1)
+		if lge.zoom > 0.4 do imgui.DrawList_AddTextImFontPtr(dl, GlobalFonts.small, 14 * lge.zoom, mn + {8, 4} * lge.zoom, col_u32(UI_TEXT), fmt.ctprintf("%s", f.title))
+		grip := mx - [2]f32{14, 14} * lge.zoom
+		imgui.DrawList_AddTriangleFilled(dl, {mx.x, grip.y}, mx, {grip.x, mx.y}, col_u32({c.r, c.g, c.b, 0.9}))
+		Drive_ItemRect(fmt.tprintf("lge.frame:%d", i), mn, head, inWindow = true)
+		Drive_ItemRect(fmt.tprintf("lge.frame-size:%d", i), grip, mx, inWindow = true)
+		if !hovered do continue
+		if mouse.x >= grip.x && mouse.x <= mx.x && mouse.y >= grip.y && mouse.y <= mx.y do hoverFrameSize = i + 1
+		else if mouse.x >= mn.x && mouse.x <= head.x && mouse.y >= mn.y && mouse.y <= head.y do hoverFrame = i + 1
+	}
 
 	// Links: from a node's output to the inputs reading it.
 	for &n in g.nodes {
@@ -702,7 +952,7 @@ lge_canvas :: proc(state: ^EditorState) {
 	for &n in g.nodes {
 		info := e.Gen_NodeInfo(&n)
 		mn, mx := lge_node_rect(origin, &n)
-		sel := n.id == lge.selected
+		sel := n.id in lge.sel
 		imgui.DrawList_AddRectFilled(dl, mn, mx, col_u32(UI_BG_RAISED), 6)
 		head := [2]f32{mx.x, mn.y + 24 * lge.zoom}
 		hcol := UI_ACCENT if n.kind == .Tile_Output else ui_line(0.12)
@@ -744,16 +994,71 @@ lge_canvas :: proc(state: ^EditorState) {
 		if hovered && mouse.x >= mn.x && mouse.x <= mx.x && mouse.y >= mn.y && mouse.y <= mx.y do hoverNode = n.id
 	}
 
-	// Mouse: links (from an output), moving, selecting, menus.
+	// Mouse: links (from an output), moving, selecting, menus. (Nodes are
+	// above frames: their clicks come first.)
 	if hovered && imgui.IsMouseClicked(.Left) {
+		additive := io.KeyShift || io.KeyCtrl || io.KeySuper
 		if hoverOut != 0 {
 			lge.linkFrom = hoverOut
 		} else if hoverNode != 0 {
-			lge.selected = hoverNode
-			lge.dragNode = hoverNode
+			// (A click on one of several selected keeps them, to drag them all;
+			// let go without dragging and it's the only one.)
+			if additive do lge_select_toggle(hoverNode)
+			else if hoverNode not_in lge.sel do lge_select(hoverNode)
+			else do lge.selected = hoverNode
+			lge.frameSel = 0
+			lge.clickAdd = additive
+			lge.dragNode = hoverNode if hoverNode in lge.sel else 0
 			lge.dragUndo = false
+		} else if hoverFrameSize != 0 {
+			lge_select(0)
+			lge.frameSel, lge.frameSize, lge.frameUndo = hoverFrameSize, hoverFrameSize, false
+		} else if hoverFrame != 0 {
+			lge_select(0)
+			lge.frameSel, lge.frameDrag, lge.frameUndo = hoverFrame, hoverFrame, false
+			lge_frame_nodes(g.frames[hoverFrame - 1], &lge.frameNodes)
 		} else {
-			lge.selected = 0
+			if !additive do lge_select(0)
+			lge.frameSel = 0
+			lge.boxing = true
+			lge.boxFrom = lge_to_world(origin, mouse)
+		}
+	}
+	// A box on the empty canvas selects the nodes it touches (Shift / Cmd:
+	// adds them).
+	if lge.boxing {
+		a := lge_to_screen(origin, lge.boxFrom)
+		lo, hi := [2]f32{min(a.x, mouse.x), min(a.y, mouse.y)}, [2]f32{max(a.x, mouse.x), max(a.y, mouse.y)}
+		if imgui.IsMouseDown(.Left) {
+			imgui.DrawList_AddRectFilled(dl, lo, hi, col_u32(ui_accent(0.12)))
+			imgui.DrawList_AddRect(dl, lo, hi, col_u32(UI_ACCENT))
+		} else {
+			lge.boxing = false
+			if hi.x - lo.x > 3 || hi.y - lo.y > 3 {
+				for &n in g.nodes {
+					mn, mx := lge_node_rect(origin, &n)
+					if mx.x >= lo.x && mn.x <= hi.x && mx.y >= lo.y && mn.y <= hi.y do lge_select_add(n.id)
+				}
+			}
+		}
+	}
+	if lge.frameDrag != 0 || lge.frameSize != 0 {
+		i := max(lge.frameDrag, lge.frameSize) - 1
+		if !imgui.IsMouseDown(.Left) || i >= len(g.frames) {
+			lge.frameDrag, lge.frameSize = 0, 0
+		} else if imgui.IsMouseDragging(.Left, 2) {
+			if !lge.frameUndo {
+				lge_change()
+				lge.frameUndo = true
+			}
+			d := [2]f32{io.MouseDelta.x, io.MouseDelta.y} / lge.zoom
+			f := &g.frames[i]
+			if lge.frameSize != 0 {
+				f.size = {max(f.size.x + d.x, 40), max(f.size.y + d.y, 40)}
+			} else {
+				f.pos += d
+				for id in lge.frameNodes do if n := e.Gen_FindNode(g, id); n != nil do n.pos += d
+			}
 		}
 	}
 	if lge.linkFrom != 0 {
@@ -785,9 +1090,10 @@ lge_canvas :: proc(state: ^EditorState) {
 					lge_change()
 					lge.dragUndo = true
 				}
-				if n := e.Gen_FindNode(g, lge.dragNode); n != nil do n.pos += [2]f32{io.MouseDelta.x, io.MouseDelta.y} / lge.zoom
+				for &n in g.nodes do if n.id in lge.sel do n.pos += [2]f32{io.MouseDelta.x, io.MouseDelta.y} / lge.zoom
 			}
 		} else {
+			if !lge.dragUndo && !lge.clickAdd do lge_select(lge.dragNode) // (a click: just this one)
 			lge.dragNode = 0
 		}
 	}
@@ -797,70 +1103,139 @@ lge_canvas :: proc(state: ^EditorState) {
 				lge_change()
 				n.inputs[hoverInPort] = 0
 			}
+		} else if hoverNode == 0 && (hoverFrame != 0 || hoverFrameSize != 0) {
+			lge_select(0)
+			lge.frameSel = max(hoverFrame, hoverFrameSize)
+			imgui.OpenPopup("##lge_frame_ctx")
 		} else {
 			lge.ctxNode = hoverNode
 			lge.ctxWorld = lge_to_world(origin, mouse)
-			if hoverNode != 0 do lge.selected = hoverNode
+			if hoverNode != 0 && hoverNode not_in lge.sel do lge_select(hoverNode)
+			else if hoverNode != 0 do lge.selected = hoverNode
+			if hoverNode == 0 {
+				lge.searchBuf = {}
+				lge.searchFocus = true
+			}
 			imgui.OpenPopup("##lge_ctx")
 		}
 	}
+	if imgui.BeginPopup("##lge_frame_ctx") {
+		if lge_menu(ICON_FA_TRASH, "Delete Frame", "lge-frame-delete") do lge_delete_selection()
+		UI_Tooltip("Removes the frame; the nodes in it stay")
+		imgui.EndPopup()
+	}
 	if imgui.BeginPopup("##lge_ctx") {
 		if lge.ctxNode != 0 {
-			if lge_menu(ICON_FA_COPY, "Duplicate", "lge-duplicate") {
-				lge_change()
-				if d := e.Gen_DuplicateNode(g, lge.ctxNode); d != nil do lge.selected = d.id
-			}
-			if lge_menu(ICON_FA_FLAG, "Use as Output", "lge-output", lge.ctxNode != outputId) {
+			many := len(lge.sel) > 1
+			if lge_menu(ICON_FA_COPY, "Copy", "lge-copy") do lge_copy(state)
+			UI_Tooltip("Copies the selected nodes and the links between them (Ctrl/Cmd+C); paste them here or in another generator")
+			if lge_menu(ICON_FA_CLONE, "Duplicate", "lge-duplicate") do lge_duplicate(state)
+			UI_Tooltip("A copy of the selected nodes beside them (Ctrl/Cmd+D)")
+			if lge_menu(ICON_FA_FLAG, "Use as Output", "lge-output", lge.ctxNode != outputId && !many) {
 				lge_change()
 				g.output = lge.ctxNode
 			}
-			if lge_menu(ICON_FA_TRASH, "Delete", "lge-delete") {
-				lge_change()
-				e.Gen_RemoveNode(g, lge.ctxNode)
-				lge.selected = 0
-			}
+			if lge_menu(ICON_FA_OBJECT_GROUP, "Frame Selection", "lge-frame-selection") do lge_add_frame(lge.ctxWorld)
+			UI_Tooltip("A comment frame around the selected nodes: dragging its title moves them together")
+			if lge_menu(ICON_FA_TRASH, "Delete", "lge-delete") do lge_delete_selection()
 		} else {
-			groups := [4]struct {
-				label: cstring,
-				kinds: []e.Gen_Kind,
-			}{
-				{"Generators", {.Constant, .Noise, .Random_Fill, .Gradient, .Border, .Rect, .Rooms, .Walker, .Lines, .Rectangles, .Circles}},
-				{"Modifiers", {.Threshold, .Invert, .Remap, .Blur, .Cellular, .Dilate, .Erode, .Combine, .Scatter, .Surface}},
-				{"Playable", {.Flood_Fill, .Regions, .Connect_Regions, .Path, .Check}},
-				{"Output", {.Tile_Output, .Entity_Output}},
-			}
-			for grp in groups {
-				imgui.SeparatorText(grp.label)
-				for k in grp.kinds {
-					info := e.GEN_KINDS[k]
-					if imgui.MenuItem(fmt.ctprintf("%s", info.label)) {
-						lge_change()
-						lge.selected = e.Gen_AddNode(g, k, lge.ctxWorld).id
-					}
-					Drive_Item(fmt.tprintf("ctx:lge-add:%s", info.name))
-					UI_Tooltip(info.doc)
-				}
-			}
-			// Your own: a Lua script, and the types registered from Odin.
-			imgui.SeparatorText("Your Own")
-			script := e.GEN_KINDS[.Script]
-			if imgui.MenuItem(fmt.ctprintf("%s", script.label)) {
-				lge_change()
-				lge.selected = e.Gen_AddNode(g, .Script, lge.ctxWorld).id
-			}
-			Drive_Item("ctx:lge-add:script")
-			UI_Tooltip(script.doc)
-			for def in e.Gen_CustomKinds() {
-				if imgui.MenuItem(fmt.ctprintf("%s", def.info.label if def.info.label != "" else def.info.name)) {
-					lge_change()
-					lge.selected = e.Gen_AddNode(g, .Custom, lge.ctxWorld, def.info.name).id
-				}
-				Drive_Item(fmt.tprintf("ctx:lge-add:%s", def.info.name))
-				if def.info.doc != "" do UI_Tooltip(def.info.doc)
-			}
+			lge_add_menu(state)
 		}
 		imgui.EndPopup()
 	}
+}
+
+// An entry of the add menu: a built-in kind, the Lua Script node, or a
+// type registered from Odin (Gen_RegisterNode).
+@(private = "file")
+Lge_Add :: struct {
+	label, name, doc: string,
+	kind:   e.Gen_Kind,
+	custom: string,
+}
+
+// lge_add_menu: the canvas's add menu - a search field on top (focused;
+// typing filters every kind by its label or name, Enter adds the first
+// match), the kinds by group while it's empty; Paste and Add Frame below.
+@(private = "file")
+lge_add_menu :: proc(state: ^EditorState) {
+	g := &lge.graph
+	groups := [4]struct {
+		label: string,
+		kinds: []e.Gen_Kind,
+	}{
+		{"Generators", {.Constant, .Noise, .Random_Fill, .Gradient, .Border, .Rect, .Rooms, .Walker, .Lines, .Rectangles, .Circles}},
+		{"Modifiers", {.Threshold, .Invert, .Remap, .Blur, .Cellular, .Dilate, .Erode, .Combine, .Scatter, .Surface}},
+		{"Playable", {.Flood_Fill, .Regions, .Connect_Regions, .Path, .Check}},
+		{"Output", {.Tile_Output, .Entity_Output}},
+	}
+	// Every entry, with the index where each group starts ("Your Own": a Lua
+	// script, and the types registered from Odin).
+	entries := make([dynamic]Lge_Add, context.temp_allocator)
+	starts: [5]int
+	for grp, gi in groups {
+		starts[gi] = len(entries)
+		for k in grp.kinds {
+			info := e.GEN_KINDS[k]
+			append(&entries, Lge_Add{info.label, info.name, info.doc, k, ""})
+		}
+	}
+	starts[4] = len(entries)
+	script := e.GEN_KINDS[.Script]
+	append(&entries, Lge_Add{script.label, script.name, script.doc, .Script, ""})
+	for def in e.Gen_CustomKinds() {
+		append(&entries, Lge_Add{def.info.label if def.info.label != "" else def.info.name, def.info.name, def.info.doc, .Custom, def.info.name})
+	}
+
+	if lge.searchFocus {
+		imgui.SetKeyboardFocusHere()
+		lge.searchFocus = false
+	}
+	imgui.SetNextItemWidth(240)
+	entered := imgui.InputTextWithHint("##lge_search", fmt.ctprintf("%s  Search nodes", ICON_FA_MAGNIFYING_GLASS), cstring(raw_data(lge.searchBuf[:])), len(lge.searchBuf), {.EnterReturnsTrue})
+	Drive_Item("lge.search")
+	UI_Tooltip("Type to filter the node types; Enter adds the first match")
+	filter := strings.to_lower(strings.trim_space(string(cstring(raw_data(lge.searchBuf[:])))), context.temp_allocator)
+
+	if filter != "" {
+		first := -1
+		for a, i in entries {
+			if !strings.contains(strings.to_lower(a.label, context.temp_allocator), filter) && !strings.contains(a.name, filter) do continue
+			if first < 0 do first = i
+			lge_add_item(a)
+		}
+		if first < 0 do UI_DimText("No node matches")
+		if entered && first >= 0 {
+			lge_add_node(entries[first])
+			imgui.CloseCurrentPopup()
+		}
+	} else {
+		for grp, gi in groups {
+			imgui.SeparatorText(strings.clone_to_cstring(grp.label, context.temp_allocator))
+			for a in entries[starts[gi]:starts[gi + 1]] do lge_add_item(a)
+		}
+		imgui.SeparatorText("Your Own")
+		for a in entries[starts[4]:] do lge_add_item(a)
+	}
+	imgui.Separator()
+	clip := lge_clip_text()
+	if lge_menu(ICON_FA_PASTE, "Paste", "lge-paste", clip != "") do lge_paste_text(state, clip, lge.ctxWorld)
+	UI_Tooltip("Pastes copied nodes here (Ctrl/Cmd+V), from this generator or another")
+	if lge_menu(ICON_FA_OBJECT_GROUP, "Add Frame", "lge-add-frame") do lge_add_frame(lge.ctxWorld, false)
+	UI_Tooltip("A comment frame: a title and a colour around nodes; dragging its title moves the nodes inside")
+}
+
+@(private = "file")
+lge_add_node :: proc(a: Lge_Add) {
+	lge_change()
+	lge_select(e.Gen_AddNode(&lge.graph, a.kind, lge.ctxWorld, a.custom).id)
+}
+
+@(private = "file")
+lge_add_item :: proc(a: Lge_Add) {
+	if imgui.MenuItem(fmt.ctprintf("%s", a.label)) do lge_add_node(a)
+	Drive_Item(fmt.tprintf("ctx:lge-add:%s", a.name))
+	if a.doc != "" do UI_Tooltip(a.doc)
 }
 
 @(private = "file")
@@ -910,6 +1285,8 @@ lge_side :: proc(state: ^EditorState) {
 		}
 		UI_EndProps()
 	}
+	if i := lge.frameSel - 1; i >= 0 && i < len(g.frames) do lge_frame_props(i)
+	if len(lge.sel) > 1 do UI_DimText(fmt.tprintf("%d nodes selected (this one below)", len(lge.sel)))
 	if n := e.Gen_FindNode(g, lge.selected); n != nil {
 		info := e.Gen_NodeInfo(n)
 		if UI_SectionHeader(fmt.tprintf("%s  (node %d)", info.label, n.id)) {
@@ -991,6 +1368,54 @@ lge_side :: proc(state: ^EditorState) {
 			UI_DimText("Nothing to preview.")
 		}
 	}
+}
+
+// lge_frame_props: the selected comment frame's title and colour.
+@(private = "file")
+lge_frame_props :: proc(i: int) {
+	g := &lge.graph
+	f := &g.frames[i]
+	if !UI_SectionHeader("Frame") do return
+	if UI_BeginProps("##lge_frame") {
+		UI_PropLabel("Title")
+		// (The title being typed keeps its own buffer until Enter or leaving.)
+		local: [128]u8
+		buf := lge.titleBuf[:] if lge.titleFor == i + 1 else local[:]
+		if lge.titleFor != i + 1 do copy(local[:127], f.title)
+		imgui.SetNextItemWidth(-1)
+		entered := imgui.InputTextWithHint("##lge_frame_title", "Comment", cstring(raw_data(buf)), len(buf), {.EnterReturnsTrue})
+		if imgui.IsItemActivated() {
+			lge.titleBuf = local
+			lge.titleFor = i + 1
+		}
+		if entered || imgui.IsItemDeactivatedAfterEdit() {
+			title := strings.trim_space(string(cstring(raw_data(buf))))
+			if title != f.title {
+				lge_change()
+				e.Gen_SetFrameTitle(g, f, title)
+			}
+		}
+		if imgui.IsItemDeactivated() && lge.titleFor == i + 1 do lge.titleFor = 0
+		Drive_Item("lge.frame-title")
+		UI_Tooltip("The frame's title, drawn in its header")
+		UI_PropLabel("Colour")
+		imgui.SetNextItemWidth(-1)
+		// (One undo step per pick: the first change records the graph.)
+		col := f.color
+		if imgui.ColorEdit4("##lge_frame_color", &col, {.AlphaBar}) {
+			if !lge.colorUndo do lge_change()
+			lge.colorUndo = true
+			f.color = col
+			lge_edited()
+		} else if !imgui.IsAnyItemActive() {
+			lge.colorUndo = false
+		}
+		Drive_Item("lge.frame-color")
+		UI_Tooltip("The frame's colour (its fill is a light tint of it)")
+		UI_EndProps()
+	}
+	if UI_Button(fmt.tprintf("%s  Delete Frame", ICON_FA_TRASH), "lge.frame-delete") do lge_delete_selection()
+	UI_Tooltip("Removes the frame (Delete); the nodes in it stay")
 }
 
 // lge_script_picker: a script node's .lua file - pick one, start a new one
@@ -1351,6 +1776,32 @@ LevelGenEditor_DriveQuery :: proc(q: string) -> (string, bool) {
 	case "lge.undo": return fmt.tprint(len(lge.undo)), true
 	case "lge.errors": return fmt.tprint(len(lge.errors)), true
 	case "lge.text": return e.Gen_GraphSerialize(&lge.graph, context.temp_allocator) if lge.loaded else "", true
+	case "lge.selection": return fmt.tprint(len(lge.sel)), true
+	case "lge.frames": return fmt.tprint(len(lge.graph.frames)), true
+	case "lge.frame-selected": return fmt.tprint(lge.frameSel - 1), true
+	}
+	if strings.has_prefix(q, "lge.pos:") {
+		// lge.pos:<node> -> its position on the canvas ("x,y")
+		id, _ := strconv.parse_int(q[len("lge.pos:"):])
+		n := e.Gen_FindNode(&lge.graph, id)
+		if n == nil do return "", true
+		return fmt.tprintf("%v,%v", n.pos.x, n.pos.y), true
+	}
+	if strings.has_prefix(q, "lge.frame:") {
+		// lge.frame:<index> -> "x,y" of the frame's top-left; lge.frame-title:<index>
+		i, _ := strconv.parse_int(q[len("lge.frame:"):])
+		if i < 0 || i >= len(lge.graph.frames) do return "", true
+		return fmt.tprintf("%v,%v", lge.graph.frames[i].pos.x, lge.graph.frames[i].pos.y), true
+	}
+	if strings.has_prefix(q, "lge.frame-title:") {
+		i, _ := strconv.parse_int(q[len("lge.frame-title:"):])
+		if i < 0 || i >= len(lge.graph.frames) do return "", true
+		return lge.graph.frames[i].title, true
+	}
+	if strings.has_prefix(q, "lge.frame-size:") {
+		i, _ := strconv.parse_int(q[len("lge.frame-size:"):])
+		if i < 0 || i >= len(lge.graph.frames) do return "", true
+		return fmt.tprintf("%v,%v", lge.graph.frames[i].size.x, lge.graph.frames[i].size.y), true
 	}
 	if strings.has_prefix(q, "lge.input:") {
 		// lge.input:<node>:<port> -> the node it reads (0 = none)

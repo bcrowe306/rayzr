@@ -268,11 +268,23 @@ Gen_Node :: struct {
 	pos:    [2]f32, // where the editor draws it
 }
 
+// A comment frame on the editor's canvas (#171): a titled, coloured box
+// around nodes. Only the editor reads it - moving it moves the nodes inside.
+Gen_Frame :: struct {
+	title: string, // (the graph's allocator)
+	color: [4]f32, // 0..1
+	pos:   [2]f32, // its top-left, in the canvas's units
+	size:  [2]f32,
+}
+
+GEN_FRAME_COLOR :: [4]f32{0.35, 0.55, 0.85, 1}
+
 Gen_Graph :: struct {
 	size:      [2]int,
 	seed:      u64,
 	output:    int, // the node whose grid is the result (0 = the last Tile_Output, else the last node)
 	nodes:     [dynamic]Gen_Node,
+	frames:    [dynamic]Gen_Frame, // the editor's comment frames (optional in the file)
 	scripts:   map[string]string, // Script nodes' sources by file (Gen_LoadScripts; the graph's allocator)
 	tilesets:  map[string]string, // tile outputs' tilesets' terrain files' text by image (Gen_LoadTerrains; the graph's allocator)
 	allocator: runtime.Allocator,
@@ -337,6 +349,9 @@ Gen_GraphDestroy :: proc(g: ^Gen_Graph) {
 	for &n in g.nodes do gen_node_free(g, &n)
 	delete(g.nodes)
 	g.nodes = nil
+	for &f in g.frames do gen_set_text(g, &f.title, "")
+	delete(g.frames)
+	g.frames = nil
 	gen_scripts_clear(g)
 	delete(g.scripts)
 	g.scripts = nil
@@ -396,6 +411,7 @@ Gen_RuleSetTerrain :: proc(g: ^Gen_Graph, r: ^Gen_Tile_Rule, name: string) {
 Gen_GraphParse :: proc(data: []u8, allocator := context.allocator) -> (g: Gen_Graph, err: string) {
 	g.allocator = allocator
 	g.nodes = make([dynamic]Gen_Node, allocator)
+	g.frames = make([dynamic]Gen_Frame, allocator)
 	g.size = {32, 24}
 	value, perr := json.parse(data, allocator = context.temp_allocator)
 	if perr != .None do return g, fmt.tprintf("not valid JSON (%v)", perr)
@@ -409,6 +425,30 @@ Gen_GraphParse :: proc(data: []u8, allocator := context.allocator) -> (g: Gen_Gr
 	}
 	if s, sok := json_number(root["seed"]); sok do g.seed = u64(s)
 	if o, ook := json_number(root["output"]); ook do g.output = int(o)
+	// (An optional key added within format 1: a file without it - every
+	// older one - has no frames, so there is nothing to migrate.)
+	if frames, fok := root["frames"].(json.Array); fok {
+		for fv in frames {
+			fo, isObj := fv.(json.Object)
+			if !isObj do continue
+			f := Gen_Frame{color = GEN_FRAME_COLOR, size = {300, 200}}
+			if t, tok := fo["title"].(json.String); tok && t != "" do f.title = strings.clone(string(t), allocator)
+			if pos, pok := fo["pos"].(json.Array); pok && len(pos) >= 2 {
+				f.pos.x, _ = json_number(pos[0])
+				f.pos.y, _ = json_number(pos[1])
+			}
+			if sz, sok := fo["size"].(json.Array); sok && len(sz) >= 2 {
+				f.size.x, _ = json_number(sz[0])
+				f.size.y, _ = json_number(sz[1])
+			}
+			f.size = {max(f.size.x, 40), max(f.size.y, 40)}
+			if c, cok := fo["color"].(json.Array); cok && len(c) >= 3 {
+				for i in 0 ..< min(len(c), 4) do f.color[i], _ = json_number(c[i])
+				if len(c) == 3 do f.color[3] = 1
+			}
+			append(&g.frames, f)
+		}
+	}
 	nodes, nok := root["nodes"].(json.Array)
 	if !nok do return g, ""
 	for v in nodes {
@@ -583,7 +623,28 @@ Gen_GraphSerialize :: proc(g: ^Gen_Graph, allocator := context.allocator) -> str
 		}
 		strings.write_byte(&w.sb, '}')
 	}
-	strings.write_string(&w.sb, "\n]}\n")
+	strings.write_string(&w.sb, "\n]")
+	// (Only when there are any: a graph without frames saves as before.)
+	if len(g.frames) > 0 {
+		strings.write_string(&w.sb, ", \"frames\": [")
+		for f, i in g.frames {
+			strings.write_string(&w.sb, "," if i > 0 else "")
+			strings.write_string(&w.sb, "\n  {\"title\": ")
+			Json_String(&w, f.title)
+			strings.write_string(&w.sb, ", \"pos\": ")
+			Json_Vec2(&w, f.pos)
+			strings.write_string(&w.sb, ", \"size\": ")
+			Json_Vec2(&w, f.size)
+			strings.write_string(&w.sb, ", \"color\": [")
+			for c, ci in f.color {
+				if ci > 0 do strings.write_string(&w.sb, ", ")
+				Json_Float(&w, c)
+			}
+			strings.write_string(&w.sb, "]}")
+		}
+		strings.write_string(&w.sb, "\n]")
+	}
+	strings.write_string(&w.sb, "}\n")
 	return strings.to_string(w.sb)
 }
 
@@ -666,6 +727,92 @@ Gen_RemoveNode :: proc(g: ^Gen_Graph, id: int) -> bool {
 		return true
 	}
 	return false
+}
+
+// GEN_CLIP_KEY marks clipboard text as level generator nodes (#171): the
+// editor pastes text only when it carries it.
+GEN_CLIP_KEY :: "rayzr_levelgen_nodes"
+
+// Gen_CopyNodes writes nodes as clipboard text: a .levelgen.json holding
+// only them (and the key above). Links between them are kept; links to
+// nodes left out are dropped. "" when none of `ids` is in the graph.
+Gen_CopyNodes :: proc(g: ^Gen_Graph, ids: []int, allocator := context.allocator) -> string {
+	// (Through the text: a deep copy for free, and Gen_RemoveNode already
+	// disconnects whatever read a node that isn't copied.)
+	c, err := Gen_GraphParse(transmute([]u8)Gen_GraphSerialize(g, context.temp_allocator), context.temp_allocator)
+	if err != "" do return ""
+	for i := len(c.nodes) - 1; i >= 0; i -= 1 {
+		keep := false
+		for id in ids do if c.nodes[i].id == id do keep = true
+		if !keep do Gen_RemoveNode(&c, c.nodes[i].id)
+	}
+	if len(c.nodes) == 0 do return ""
+	c.output = 0
+	clear(&c.frames)
+	text := Gen_GraphSerialize(&c, context.temp_allocator)
+	return fmt.aprintf("{{\"%s\": true, %s", GEN_CLIP_KEY, text[1:], allocator = allocator)
+}
+
+// Gen_IsNodesClip: the text is Gen_CopyNodes's.
+Gen_IsNodesClip :: proc(text: string) -> bool {
+	return strings.has_prefix(text, "{\"" + GEN_CLIP_KEY + "\"")
+}
+
+// Gen_PasteNodes adds the nodes of clipboard text (Gen_CopyNodes) to a
+// graph with new ids, their links kept, placed so the top-left of the group
+// is at `at`. Returns the new ids (allocator) or why it can't (an unknown -
+// unregistered - node type, not node text).
+Gen_PasteNodes :: proc(g: ^Gen_Graph, text: string, at: [2]f32, allocator := context.allocator) -> (ids: []int, err: string) {
+	if !Gen_IsNodesClip(text) do return nil, "not level generator nodes"
+	c, perr := Gen_GraphParse(transmute([]u8)text, g.allocator)
+	if perr != "" {
+		Gen_GraphDestroy(&c)
+		return nil, perr
+	}
+	defer Gen_GraphDestroy(&c)
+	if len(c.nodes) == 0 do return nil, "no nodes"
+	next := 1
+	for n in g.nodes do next = max(next, n.id + 1)
+	remap := make(map[int]int, context.temp_allocator)
+	lo := c.nodes[0].pos
+	for n in c.nodes {
+		remap[n.id] = next
+		next += 1
+		lo = {min(lo.x, n.pos.x), min(lo.y, n.pos.y)}
+	}
+	out := make([]int, len(c.nodes), allocator)
+	// The parsed nodes' text and rules are in the graph's allocator: they
+	// move over as they are (c is left with none to free).
+	for n, i in c.nodes {
+		m := n
+		m.id = remap[n.id]
+		for &src in m.inputs do src = remap[src] or_else 0
+		m.pos = at + (n.pos - lo)
+		append(&g.nodes, m)
+		out[i] = m.id
+	}
+	clear(&c.nodes)
+	return out, ""
+}
+
+// Gen_AddFrame adds a comment frame (titled "Comment", the default colour).
+Gen_AddFrame :: proc(g: ^Gen_Graph, pos, size: [2]f32, title := "Comment") -> ^Gen_Frame {
+	if g.frames == nil do g.frames = make([dynamic]Gen_Frame, g.allocator)
+	f := Gen_Frame{color = GEN_FRAME_COLOR, pos = pos, size = {max(size.x, 40), max(size.y, 40)}}
+	gen_set_text(g, &f.title, title)
+	append(&g.frames, f)
+	return &g.frames[len(g.frames) - 1]
+}
+
+// Gen_SetFrameTitle: the graph owns the text.
+Gen_SetFrameTitle :: proc(g: ^Gen_Graph, f: ^Gen_Frame, title: string) {gen_set_text(g, &f.title, title)}
+
+// Gen_RemoveFrame deletes a frame (by index); the nodes in it stay.
+Gen_RemoveFrame :: proc(g: ^Gen_Graph, i: int) -> bool {
+	if i < 0 || i >= len(g.frames) do return false
+	gen_set_text(g, &g.frames[i].title, "")
+	ordered_remove(&g.frames, i)
+	return true
 }
 
 // Gen_Reads: does node `id` read `src`, directly or through others?
