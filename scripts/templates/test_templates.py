@@ -52,8 +52,8 @@ Platforms (#329): the same tests play in the other runners too -
                 its own files folder (run-as; runner/android/main.odin), logcat is its log. An x86_64
                 emulator runs it through its ARM translation (API 30+ images; CI: 34)
 Tests with "audio_clock" check something timed by the audio clock against a
-frame (lip-sync): skipped on Android, where a slow emulator's frames fall
-behind its audio. Tests with a "golden" image or an "env" run on the desktop only; ones that
+frame (lip-sync): skipped on Android and the web, where the frames (a slow
+emulator, headless Chrome) fall behind the audio. Tests with a "golden" image or an "env" run on the desktop only; ones that
 quit (Engine.quit: "quits", also in "before") are skipped on the web, where
 quitting does nothing (saves still reach IndexedDB when a run ends).
 """
@@ -175,7 +175,7 @@ def pack(proj, out):
 
 class Web:
     """The web runner in headless Chrome (scripts/web/run_test.mjs)."""
-    skips = ("golden", "env", "quits")  # (Engine.quit does nothing on the web: a page can't close itself)
+    skips = ("golden", "env", "quits", "audio_clock")  # (Engine.quit does nothing on the web: a page can't close itself; headless Chrome's frames don't keep pace with its audio clock)
     notes = ()
 
     def __init__(self):

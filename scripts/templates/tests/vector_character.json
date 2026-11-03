@@ -740,6 +740,7 @@
  },
  {
   "name": "T talks: the mouth moves with the voice",
+  "audio_clock": true,
   "frames": 50,
   "scene": "scenes/stage1.scene.json",
   "input": [
