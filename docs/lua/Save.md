@@ -64,8 +64,10 @@ return Goal
 - The file is JSON in the player's user-data folder: macOS
   `~/Library/Application Support/<game>/`, Windows `%APPDATA%\<game>\`,
   Linux `~/.local/share/<game>/`. The default slot is `save.json`.
-- It's read the first time you use `Save`, and written by `Save.flush` and
-  when the game quits. Writes go to a temporary file first, so a crash
+- It's read the first time you use `Save`, and written by `Save.flush`,
+  when the game quits, and when it goes to the background (an Android app
+  leaving the screen, a browser tab hidden), where it may end without
+  quitting. Writes go to a temporary file first, so a crash
   mid-write keeps the old save.
 - `Save.slot(name)` returns the slot in use after the call, not the one
   before.

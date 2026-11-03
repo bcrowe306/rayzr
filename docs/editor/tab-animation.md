@@ -254,11 +254,12 @@ A coin that bobs and flashes, and plays a sound:
 3. Turn on **Loop**. Set the **fps** field to 12.
 4. Click **Add Track**, pick `Coin`, then `position`. A first key appears
    at frame 1.
-5. Drag in the ruler to frame 6. Select `Coin`: the tab stays on the player
-   (the pin chip shows). In the Inspector, change Position Y by -8, then
-   click the diamond after **Position** to key it.
-6. Scrub to frame 12 and click the diamond again after setting Y back to
-   the start value.
+5. A new animation has only as many frames as its keys, so make the next
+   keys from the first one: click the key and press **Cmd+D** (Ctrl+D) for
+   a copy one frame later. In the **key inspector** on the right set its
+   **Frame** to `6` and its **Value** to the same X with Y 8 less.
+6. With that key selected, **Cmd+D** again: **Frame** `12`, **Value** back
+   to the first key's.
 7. Right-click the key at frame 1 > **Easing** > `in_out_sine`. Do the same
    on frame 6. Press **Play**: the coin bobs smoothly.
 8. Click the pin chip to select the player again. **Add Track** >

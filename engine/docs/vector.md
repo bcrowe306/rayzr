@@ -405,7 +405,7 @@ hit exactly what's drawn (fills and outlines, holes left open).
   **Bounce** and **Density** set the material.
 - It's remade when the art changes - a new file, a frame, a morph, a cut -
   not every frame; moving the node only moves the body.
-- With the physics debug view on (Project Settings > Physics, or
+- With the physics debug view on (Project Settings > General > Physics, or
   `Physics.set_debug_draw(true)`) the pieces / loops are drawn over the art,
   in the editor too.
 

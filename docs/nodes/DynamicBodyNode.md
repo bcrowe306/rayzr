@@ -43,12 +43,12 @@ objects.
    moving bodies, for fast projectiles).
 6. Collision layers decide what it hits: each shape's **Category Layers**
    are the layers it is on, its **Mask Layers** the layers it collides
-   with. Name the layers in Project Settings > Physics.
+   with. Name the layers in Project Settings > General > Collision Layers.
 7. Press Simulate (or Play) to watch it fall.
 
 ## How it works
 
-- Gravity comes from Project Settings > Physics > **Gravity** (px/s², +y
+- Gravity comes from Project Settings > General > Physics > **Gravity** (px/s², +y
   is down), multiplied by the body's **Gravity Scale**: 0 floats, negative
   rises.
 - **Linear Velocity** is in px/s and **Angular Velocity** in degrees/s.

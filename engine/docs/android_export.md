@@ -13,7 +13,9 @@ Both hold the Android runner (the engine, raylib, Lua and Box2D built for
 Android: `lib/arm64-v8a/libmain.so`), your game's `game.rayzr` and the UI
 font. On first launch, and whenever the package changes, the runner copies
 the game out of the APK into the app's own storage. Save data lives there
-too, and Android removes it with the app.
+too, and Android removes it with the app. `Save` data is written when the
+app leaves the screen (Android ends background apps without a quit), as
+well as on `Save.flush()`.
 
 ## What you need
 

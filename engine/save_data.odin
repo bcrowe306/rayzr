@@ -288,6 +288,14 @@ Save_Flush :: proc(L: ^lua.State) -> bool {
 	return true
 }
 
+// Game_FlushSaves writes the game's save data now, when its Lua is up (on
+// quit, and when the app leaves the screen: Android's pause and the web
+// tab hiding, where the process may be killed without a quit, #378).
+Game_FlushSaves :: proc(game: ^Game) -> bool {
+	if game == nil || !game.scriptManager.isReady do return true
+	return Save_Flush(game.scriptManager.L)
+}
+
 // Save_Forget drops the in-memory data (the next use reads the file).
 Save_Forget :: proc(L: ^lua.State) {
 	if L == nil do return

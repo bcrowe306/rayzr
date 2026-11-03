@@ -41,8 +41,12 @@ wait 2
 # Reorder: drop on the top edge of a row = before it, bottom edge = after.
 drag @hier:Asteroid_Gamma @hier:Asteroid_Alpha+0,-9 12
 expect node:root.child-names == MainCamera,StarfieldEmitter,PlayerShip,Asteroid_Delta,PatrolDroneAlpha,Asteroid_Gamma,Asteroid_Alpha,Asteroid_Beta
-drag @hier:Asteroid_Delta @hier:Asteroid_Beta+0,9 12
-expect node:root.child-names == MainCamera,StarfieldEmitter,PlayerShip,PatrolDroneAlpha,Asteroid_Gamma,Asteroid_Alpha,Asteroid_Beta,Asteroid_Delta
+# (Onto a row well inside the panel: the tree shows about 7 rows, so the
+# last one, Asteroid_Beta, is cut off at the bottom and its bottom edge is
+# outside the panel, #381.)
+drag @hier:Asteroid_Delta @hier:PatrolDroneAlpha+0,9 12
+expect node:root.child-names == MainCamera,StarfieldEmitter,PlayerShip,PatrolDroneAlpha,Asteroid_Delta,Asteroid_Gamma,Asteroid_Alpha,Asteroid_Beta
+screenshot reordered
 expect node:Asteroid_Delta.parent == root
 key ctrl+z
 expect node:root.child-names == MainCamera,StarfieldEmitter,PlayerShip,Asteroid_Delta,PatrolDroneAlpha,Asteroid_Gamma,Asteroid_Alpha,Asteroid_Beta

@@ -71,6 +71,15 @@ main_update :: proc "c" () -> bool {
 	return true
 }
 
+// main_flush_saves: the tab is hiding (it may be closed or discarded
+// without a quit): the save data goes to /save before the page syncs it to
+// IndexedDB (#378).
+@(export)
+main_flush_saves :: proc "c" () {
+	context = web_context()
+	e.Runner_FlushSaves()
+}
+
 // main_resize: the canvas changed size (the page follows the window).
 @(export)
 main_resize :: proc "c" (w, h: c.int) {

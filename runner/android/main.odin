@@ -64,6 +64,8 @@ rayzr_android_suspend :: proc "c" (on: c.int) {
 	context = runtime.default_context()
 	context.logger = {procedure = android_logger, lowest_level = .Info}
 	e.Mixer_Suspend(on != 0)
+	// Android ends background apps without a quit: write the saves now (#378).
+	if on != 0 do e.Runner_FlushSaves()
 	log.infof("[android] %s", "in the background: paused" if on != 0 else "back: resumed")
 }
 

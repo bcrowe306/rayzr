@@ -360,6 +360,19 @@ Runner_State :: struct {
 	inputEvents:        [dynamic]Input_Script_Event, // --input-script
 }
 
+// The running game (Runner_Start .. Runner_Stop), for the platform hooks
+// called outside a frame (Runner_FlushSaves).
+@(private = "file")
+runnerCurrent: ^Runner_State
+
+// Runner_FlushSaves writes the running game's save data now: the app went
+// to the background (Android's pause, the web tab hiding), where it can be
+// killed without quitting (#378). True when there was nothing to write.
+Runner_FlushSaves :: proc() -> bool {
+	if runnerCurrent == nil do return true
+	return Game_FlushSaves(runnerCurrent.game)
+}
+
 // Engine_RunProject opens a window and plays the project until it quits.
 // Returns a process exit code.
 Engine_RunProject :: proc(opts: Run_Options) -> int {
@@ -550,6 +563,7 @@ Runner_Start :: proc(opts: Run_Options) -> (^Runner_State, bool) {
 		rl.SetTargetFPS(0)
 		Tests_Start(game, opts.test)
 	}
+	runnerCurrent = rs
 	return rs, true
 }
 
@@ -715,6 +729,7 @@ Runner_FramesOver :: proc(opts: Run_Options, frameCount: int) -> bool {
 // Runner_Stop frees the game, its window and everything the runner made.
 Runner_Stop :: proc(rs: ^Runner_State) {
 	if rs == nil do return
+	if runnerCurrent == rs do runnerCurrent = nil
 	for ev in rs.inputEvents do if ev.kind == .Connect && ev.pad >= 0 do delete(ev.name)
 	delete(rs.inputEvents)
 	Pixel_Release()

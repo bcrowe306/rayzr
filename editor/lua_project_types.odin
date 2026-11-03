@@ -401,7 +401,7 @@ Lua_ProjectTypesText :: proc(state: ^EditorState) -> string {
 	alias(&sb, "Language", "Languages of the project's locale/ tables (Locale.set)", sorted_unique(&languages))
 	layers_ := make([dynamic]string, context.temp_allocator)
 	for n in state.projectConfig.collisionLayers do if n != "" do append(&layers_, n)
-	alias(&sb, "CollisionLayer", "Collision layer names (Project Settings > Physics)", sorted_unique(&layers_))
+	alias(&sb, "CollisionLayer", "Collision layer names (Project Settings > General > Collision Layers)", sorted_unique(&layers_))
 
 	// Custom events: what the project's scripts emit (connect / emit
 	// complete them).

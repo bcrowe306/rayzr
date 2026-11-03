@@ -196,8 +196,9 @@ On the web:
 - The page shows **Click to play** first: browsers only allow sound after
   a click or a key.
 - Saves go to the browser's storage, per site; they survive reloads.
-  They're written when your game calls `Save.flush()` - a tab is closed,
-  never quit - which is why Gem Clicker autosaves.
+  They're written when your game calls `Save.flush()` and when the tab is
+  hidden - a tab is closed, never quit, and a browser can drop a closing
+  tab's last write - which is why Gem Clicker autosaves.
 - `Engine.quit()` does nothing and returns `false` (with a warning): a
   page can't close itself. Use the result to do something else there:
   `if not Engine.quit() then Scene.change_scene("scenes/title.scene.json") end`.

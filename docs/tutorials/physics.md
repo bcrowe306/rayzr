@@ -130,7 +130,7 @@ Player.properties = {
 function Player:update(dt)
     local node = self.node
     local vx, vy = node:character_get_velocity()
-    -- Gravity: the project's (Project Settings > Physics) x this node's Gravity Scale.
+    -- Gravity: the project's (Project Settings > General > Physics) x this node's Gravity Scale.
     local _, gy = node:character_get_gravity()
     vy = vy + gy * dt
 
