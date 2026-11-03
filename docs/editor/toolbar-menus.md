@@ -14,7 +14,7 @@ one table, so the shortcut a menu shows is the shortcut that works, and the
 - Save, export, open another project, or change settings.
 - Turn viewport overlays on and off (grid, bounds, camera frames, lighting).
 - Find a command you don't know the shortcut for: open the palette with
-  Cmd+Shift+P (Ctrl+Shift+P) or F1 and type.
+  Cmd+Shift+P (Ctrl+Shift+P) and type.
 - For editing nodes, use the [Scene panel](scene-tree.md) and the
   [Inspector](inspector.md); for moving around the scene, the
   [viewport](viewport.md).
@@ -119,7 +119,7 @@ quick burst of nudges is one undo step.
 
 | Item | Shortcut | What it does |
 |---|---|---|
-| **Command Palette** | Cmd+Shift+P, F1 | Every command, searchable, recent ones first. |
+| **Command Palette** | Cmd+Shift+P | Every command, searchable, recent ones first. (F1 too, when no panel has focus.) |
 | **Grid** | Shift+G | Show the grid. |
 | **Bounds & Colliders** | | Outline every node and its shapes. |
 | **Camera Frames** | | Draw camera frames. |
@@ -176,7 +176,8 @@ commands to any menu.
 |---|---|---|
 | **Welcome** | | The Welcome window (recent projects, templates). |
 | **Scripting Reference** | | The Lua API. |
-| **Editor Manual** | | This manual, inside the editor. |
+| **Help for <panel>** | F1 | The manual's page for the panel you used last (F1: the one with focus). |
+| **Editor Manual** | | This manual, inside the editor: the list of pages. |
 | **Node Reference** | | Every node type. |
 | **Level Editor Reference / Shortcuts** | | The Level tab's help. |
 | **Keyboard Shortcuts** | Cmd+Shift+K | Every shortcut, from the same table. |
@@ -185,6 +186,16 @@ commands to any menu.
 | **Report a Bug...** | | Opens a bug report. |
 | **Open Crash Reports Folder** | | |
 | **About** | | The editor version (in the console). |
+
+**F1** opens this manual's page for the panel with focus: the Scene panel,
+Inspector, viewport (in [vector edit mode](vector-edit.md), that page),
+Assets and Preview, the toolbar, each bottom tab, and the windows such as
+the [Level Generator](level-generator.md), [Terrain Tiles](terrain-tiles.md)
+and the [Sprite Sheet Slicer](sprite-slicer.md). Two places keep F1 for
+their own help: the [Code tab](code.md) (the Scripting Reference for the
+symbol at the caret) and the [Level tab](level.md) (the Level Editor
+Reference); **Help > Help for Code Tab** / **Level Tab** opens their pages.
+A bottom tab's right-click menu has **Help** too.
 
 Shift+F1 opens the documentation for the selected node's type.
 
@@ -207,7 +218,7 @@ Try a change and see it in the game:
 6. Press **F9** to pause, then Shift+F9 to step one frame at a time.
 7. Click the colliders button to see the collision shapes in the running
    game, then press Shift+F5 to stop.
-8. Can't remember a command? Press F1, type `fit`, and pick
+8. Can't remember a command? Press Cmd+Shift+P, type `fit`, and pick
    **Fit Selection**.
 
 ## Tips

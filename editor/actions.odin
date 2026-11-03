@@ -98,6 +98,9 @@ add :: proc(a: Editor_Action) {
 Actions_Init :: proc() {
 	if len(GlobalActions) > 0 do return
 	// --- Global ---
+	// F1: the focused panel's manual page (before the palette, which F1 opens
+	// while no panel has focus; panel_help.odin).
+	add({id = "help.panel", category = "Help", label = "Help for This Panel", chords = k(ch(.F1)), scope = .Global, run = PanelHelp_Open, enabled = proc(s: ^EditorState) -> bool {return PanelHelp_Page() != ""}})
 	add({id = "palette.commands", category = "View", label = "Command Palette", chords = k(ch(.P, PS), ch(.F1)), scope = .Global, run = proc(s: ^EditorState) {Palette_Open(.Commands)}})
 	add({id = "palette.files", category = "View", label = "Go to File", chords = k(ch(.P, P)), scope = .Global, run = proc(s: ^EditorState) {Palette_Open(.Files)}})
 	add({id = "file.save", category = "File", label = "Save", chords = k(ch(.S, P)), scope = .Global, run = proc(s: ^EditorState) {

@@ -34,6 +34,7 @@ PropertyInspector_RenderWindow :: proc(state: ^EditorState) {
 	defer imgui.End()
 	inspectorOpen := imgui.Begin("Inspector###InspectorWindow")
 	Drive_Window("inspector") // (annotated docs screenshots)
+	PanelHelp_Mark("inspector")
 	Dock_Remember(.Right)
 	if !inspectorOpen do return
 	helpH: f32 = INSPECTOR_HELP_HEIGHT if state.showInspectorHelp else 0

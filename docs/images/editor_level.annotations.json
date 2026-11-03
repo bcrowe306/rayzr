@@ -1,0 +1,12 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "Game / Level tabs (Cmd+Shift+1 / 2)", "x": 92, "y": 76, "w": 173, "h": 23},
+    {"label": "Tools: B R E F I V M", "x": 146, "y": 36, "w": 30, "h": 30},
+    {"label": "The world's levels", "x": 28, "y": 179, "w": 163, "h": 26},
+    {"label": "Layers: click one to paint on it", "x": 1112, "y": 184, "w": 113, "h": 32},
+    {"label": "The active layer's palette", "x": 1109, "y": 520, "w": 153, "h": 28},
+    {"label": "Level Panel: world, level and the definitions", "x": 214, "y": 485, "w": 48, "h": 25}
+  ]
+}

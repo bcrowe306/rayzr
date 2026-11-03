@@ -1,0 +1,10 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "The region: drag on the image to draw it", "x": 634, "y": 276, "w": 228, "h": 232},
+    {"label": "Snap to Grid: columns, rows or cell size", "x": 242, "y": 352, "w": 95, "h": 25},
+    {"label": "Zoom (Cmd+wheel)", "x": 546, "y": 129, "w": 64, "h": 25},
+    {"label": "Apply to the node (one undo step)", "x": 242, "y": 647, "w": 120, "h": 25}
+  ]
+}

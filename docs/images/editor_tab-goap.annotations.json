@@ -1,0 +1,12 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "A goal: its conditions (green dot: an action can meet it)", "x": 235, "y": 540, "w": 121, "h": 38},
+    {"label": "An action that meets it: cost, target, conditions, effects", "x": 394, "y": 540, "w": 121, "h": 67},
+    {"label": "Add a goal or an action", "x": 227, "y": 652, "w": 61, "h": 25},
+    {"label": "What the selected action does", "x": 815, "y": 552, "w": 203, "h": 25},
+    {"label": "Its effects: what the planner links to conditions", "x": 689, "y": 963, "w": 66, "h": 25},
+    {"label": "World and target keys, and the sensors that fill them", "x": 343, "y": 463, "w": 148, "h": 25}
+  ]
+}

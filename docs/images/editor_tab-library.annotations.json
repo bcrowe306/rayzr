@@ -1,0 +1,10 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "The SVG shown (a selected Vector Shape's file)", "x": 296, "y": 225, "w": 320, "h": 25},
+    {"label": "Its symbols", "x": 624, "y": 230, "w": 58, "h": 15},
+    {"label": "Drag into the viewport, double-click to edit, right-click for more", "x": 486, "y": 400, "w": 96, "h": 96},
+    {"label": "Nodes in this scene drawing it", "x": 702, "y": 667, "w": 28, "h": 15}
+  ]
+}

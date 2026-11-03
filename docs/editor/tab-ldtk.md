@@ -5,7 +5,7 @@ node and sets how the game builds it. You pick the world and level, look
 through its layers, entities, fields and enums, and decide what the level
 turns into when it runs: what each entity spawns as, which IntGrid values
 collide, and how linked entities connect. The level's tiles and placements
-are edited in the [Level tab](../../engine/docs/level_editor.md) or in LDtk;
+are edited in the [Level tab](level.md) or in LDtk;
 this tab sets up the scene side.
 
 ![The LDtk tab](../images/editor_tab-ldtk.png)
@@ -23,7 +23,7 @@ this tab sets up the scene side.
 - **Checking what's in a level**: layer sizes and parallax, where each
   entity is placed, level field values, enums.
 - **Not** for painting tiles, placing entities or editing definitions: use
-  the [Level tab](../../engine/docs/level_editor.md) (or LDtk). For a simple
+  the [Level tab](level.md) (or LDtk). For a simple
   painted grid without LDtk, use a [Tile Map](tab-tilemap.md).
 
 ## What's in it
@@ -57,7 +57,7 @@ The node's name and its `.ldtk` file, then:
 | **IntGrid overlay** | Draws IntGrid values in their LDtk colours in the viewport. |
 | **Fit** | Frames the level (or the world's levels) in the viewport. |
 | **Reload** | Reads the `.ldtk` file again. |
-| **Edit in the Level tab** | Opens this file and level in the [Level tab](../../engine/docs/level_editor.md). |
+| **Edit in the Level tab** | Opens this file and level in the [Level tab](level.md). |
 | **Open in LDtk** | Opens the file with the computer's app for `.ldtk` files (LDtk, when it is installed). |
 | Size | The level's size in pixels; in World mode, how many levels are loaded. |
 

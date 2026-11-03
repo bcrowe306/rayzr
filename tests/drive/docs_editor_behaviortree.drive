@@ -1,0 +1,56 @@
+# Docs screenshot: the Behavior Tree tab (docs/editor/tab-behaviortree.md,
+# #45) - Selector(Sequence(Blackboard Compare, Log), Wait) built in the tab.
+wait 8
+key escape
+click @menu:View
+click @menu:View/Workspaces
+click @menu:Workspaces/Animation
+wait 3
+click @asset.new-scene
+wait 3
+click @hier.add
+type behavior tree
+click @addnode.create
+wait 3
+click @bottom:behaviortree
+wait 2
+click @btg.add-root
+rclick @btg.node:0
+click @btg.ctx.add
+click @btg.cat:Composite
+click @pick:Sequence
+rclick @btg.node:1
+click @btg.ctx.add
+click @btg.cat:Condition
+click @pick:Blackboard Compare
+click @btg.key
+key cmd+a
+type alert
+key enter
+click @btg.value
+key cmd+a
+type true
+key enter
+rclick @btg.node:1
+click @btg.ctx.add
+click @btg.cat:Action
+click @pick:Log
+click @btg.value
+key cmd+a
+type Intruder!
+key enter
+rclick @btg.node:0
+click @btg.ctx.add
+click @btg.cat:Action
+click @pick:Wait
+expect bt-tree == Selector(Sequence(Blackboard Compare,Log),Wait)
+click @btg.node:4
+wait 2
+annotate @btg.node:0 The root: a Selector tries its children left to right
+annotate @btg.node:1 Right-click a node: Add Child, Wrap In, Change To, Move, Delete
+annotate @btg.node:4 The selected node (drag a node onto another to move it)
+annotate @btg.number The selected node's settings, by kind
+annotate @btg.page:blackboard The tree's starting blackboard values
+screenshot editor_tab-behaviortree
+key f1
+expect noderef.page == editor/tab-behaviortree

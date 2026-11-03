@@ -1,0 +1,10 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "Next pattern after a pick", "x": 202, "y": 145, "w": 156, "h": 25},
+    {"label": "A pattern: click it, then its tiles", "x": 202, "y": 176, "w": 70, "h": 38},
+    {"label": "The tileset: click to add or remove a tile", "x": 678, "y": 176, "w": 32, "h": 32},
+    {"label": "Done (saved as you pick)", "x": 366, "y": 145, "w": 44, "h": 25}
+  ]
+}

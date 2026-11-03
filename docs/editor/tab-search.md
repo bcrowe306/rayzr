@@ -30,7 +30,7 @@ line around each one; click a match to open the script at that line.
   editor. It shows the Search tab and puts the cursor in the search box.
   When text is selected in the Code tab (on one line), it becomes the query.
 - The Code tab's right-click menu: **Find in Files**.
-- The command palette (Cmd+Shift+P (Ctrl+Shift+P) or F1): *Find in Files*.
+- The command palette (Cmd+Shift+P (Ctrl+Shift+P)): *Find in Files*.
 - The **Search** tab in the bottom panel.
 
 ### The search row

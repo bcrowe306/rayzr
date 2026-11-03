@@ -176,6 +176,7 @@ TerrainEditor_Render :: proc(state: ^EditorState) {
 	open := true
 	visible := imgui.Begin(fmt.ctprintf("%s  Terrain Tiles: %s###TerrainTiles", ICON_FA_TABLE_CELLS, t.name), &open, {})
 	defer imgui.End()
+	PanelHelp_Mark("terrain-tiles")
 	if !open do terrainWin.open = false
 	if !visible do return
 	Drive_Window("terrain")

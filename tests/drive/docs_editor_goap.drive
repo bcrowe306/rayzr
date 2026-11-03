@@ -1,0 +1,30 @@
+# Docs screenshot: the GOAP tab (docs/editor/tab-goap.md, #45) - the
+# lumberjack fixture's agent (copied in, as goap.drive does).
+exec cp tests/goap/project/scenes/goap_lumberjack.scene.json $PROJECT/scenes/
+exec cp tests/goap/project/scripts/goap_lumberjack.lua $PROJECT/scripts/
+wait 90
+click @menu:View
+click @menu:View/Workspaces
+click @menu:Workspaces/Animation
+wait 5
+dblclick @asset:scenes/goap_lumberjack.scene.json
+wait 10
+click @hier:Jack/GOAP
+wait 3
+click @bottom:goap
+wait 3
+expect goap-graph == GatherWood|PickUpAxe,ChopWood,PunchTree
+click @gg.canvas
+key f
+wait 2
+click @gg.action:ChopWood
+wait 2
+annotate @gg.goal:GatherWood A goal: its conditions (green dot: an action can meet it)
+annotate @gg.action:ChopWood An action that meets it: cost, target, conditions, effects
+annotate @gg.add-goal Add a goal or an action
+annotate @gg.kind What the selected action does
+annotate @gg.effect.add Its effects: what the planner links to conditions
+annotate @gg.page:keys World and target keys, and the sensors that fill them
+screenshot editor_tab-goap
+key f1
+expect noderef.page == editor/tab-goap

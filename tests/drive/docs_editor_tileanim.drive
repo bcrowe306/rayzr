@@ -1,0 +1,30 @@
+# Docs screenshot: the Tile Animation window (docs/editor/tile-animation.md, #45).
+wait 8
+key escape
+click @menu:View
+click @menu:View/Workspaces
+click @menu:Workspaces/Animation
+wait 3
+key escape
+key ctrl+a
+type tile map
+key enter
+wait 2
+click @tile.tileset
+click @pick:textures/Asteroid_1.png
+wait 2
+click @tile.palette:97
+click @tile.animate
+wait 1
+click @tile.palette:98
+click @tile.palette:99
+click @tile-anim.desync
+wait 2
+annotate @tile-anim.adding Add Frames: click tiles in the Tile Map tab
+annotate @tile-anim.desync Desync: copies out of step
+annotate @tile-anim.set-all Set every frame's time
+annotate @tile-anim.ms:1 A frame's time (ms)
+screenshot editor_tile-animation
+click @tile-anim.desync
+key f1
+expect noderef.page == editor/tile-animation

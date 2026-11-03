@@ -18,34 +18,36 @@ The editor is organized as an independent package (`editor/`) that imports and m
 
 ## 2. Editor Layout
 
-The [editor tour](../docs/editor/tour.md) maps the window. Each part has its
-own page in the editor manual (also in the editor: **Help > Editor Manual**,
-or right-click a bottom tab > **Help**):
+This file is the overview; the editor manual has a page per part of the
+editor - what it is for, when to use it, every control, a screenshot and a
+short walkthrough. The [editor tour](../docs/editor/tour.md) maps the window. In the
+editor, **F1** opens the page of the panel with focus, **Help > Help for
+<panel>** the last one's, a bottom tab's right-click menu its **Help**, and
+**Help > Editor Manual** the list (`editor/panel_help.odin`).
 
-- [Toolbar and menus](../docs/editor/toolbar-menus.md), [Scene tree](../docs/editor/scene-tree.md),
-  [Inspector](../docs/editor/inspector.md), [Viewport](../docs/editor/viewport.md),
-  [Assets](../docs/editor/assets.md), [Settings](../docs/editor/settings.md),
-  [Playtesting](../docs/editor/playtesting.md).
-- The bottom tabs: [Console](../docs/editor/tab-console.md), [Profiler](../docs/editor/tab-profiler.md),
-  [Game](../docs/editor/tab-game.md), [Animation](../docs/editor/tab-animation.md),
-  [Particles](../docs/editor/tab-particles.md), [LDtk](../docs/editor/tab-ldtk.md),
-  [Tile Map](../docs/editor/tab-tilemap.md), [State Machine](../docs/editor/tab-stategraph.md),
-  [Mixer](../docs/editor/tab-mixer.md), [Search](../docs/editor/tab-search.md), [Files](../docs/editor/tab-files.md).
+| Area | Pages |
+|---|---|
+| The main window | [Toolbar and menus](../docs/editor/toolbar-menus.md), [Scene tree](../docs/editor/scene-tree.md), [Inspector](../docs/editor/inspector.md), [Viewport](../docs/editor/viewport.md), [Vector edit mode](../docs/editor/vector-edit.md), [Assets](../docs/editor/assets.md), [Settings](../docs/editor/settings.md), [Playtesting](../docs/editor/playtesting.md) |
+| The root tabs | [Code tab](../docs/editor/code.md) (full reference: [CODE_EDITOR.md](CODE_EDITOR.md)), [Level tab](../docs/editor/level.md) |
+| Bottom tabs | [Console](../docs/editor/tab-console.md), [Profiler](../docs/editor/tab-profiler.md), [Game](../docs/editor/tab-game.md), [Animation](../docs/editor/tab-animation.md), [Particles](../docs/editor/tab-particles.md), [LDtk](../docs/editor/tab-ldtk.md), [Tile Map](../docs/editor/tab-tilemap.md), [State Machine](../docs/editor/tab-stategraph.md), [Behavior Tree](../docs/editor/tab-behaviortree.md), [GOAP](../docs/editor/tab-goap.md), [Mixer](../docs/editor/tab-mixer.md), [Library](../docs/editor/tab-library.md), [Search](../docs/editor/tab-search.md), [Files](../docs/editor/tab-files.md), [Tests](../docs/editor/tab-tests.md) |
+| Tool windows | [Level Generator](../docs/editor/level-generator.md), [Terrain Tiles](../docs/editor/terrain-tiles.md), [Tile Animation](../docs/editor/tile-animation.md), [Sprite Sheet Slicer](../docs/editor/sprite-slicer.md), [Atlas Region Editor](../docs/editor/atlas-region.md), [Generate Normal Map](../docs/editor/normal-map.md) |
 
-The rest of this manual covers features across the editor.
+The rest of this file covers features across the editor; where a page
+covers a part in full, its section here only links it.
 
 ---
 
 ## 3. Tools & Shortcuts
 
 Every command lives in one action table (`actions.odin`) that drives the
-keyboard, the menus, the **command palette** (Cmd+Shift+P or F1) and
+keyboard, the menus, the **command palette** (Cmd+Shift+P) and
 **Help > Keyboard Shortcuts** (Cmd+Shift+K), so any shortcut shown is the one
 that works. On macOS "Cmd" is the Command key; elsewhere it is Ctrl.
 
 | Shortcut | Action |
 | :--- | :--- |
-| **Cmd+Shift+P / F1** | Command palette (any action, fuzzy search, recent first) |
+| **Cmd+Shift+P** | Command palette (any action, fuzzy search, recent first) |
+| **F1** | The editor manual's page for the panel with focus |
 | **Cmd+P** | Go to file (scenes, scripts, components, assets; `>` for commands, `:` for a line) |
 | **Q / W / E / R / T** | Select / Move / Rotate / Scale / Pan tool (gizmos work in world space and snap to the grid) |
 | **Middle mouse / wheel** | Pan / zoom around the cursor (Cmd+= / Cmd+- / Cmd+0 too) |
@@ -75,6 +77,8 @@ Assets: drag textures, audio, components or scripts into the viewport.
 
 ### Welcome and new projects
 
+*Page: [toolbar-menus](../docs/editor/toolbar-menus.md).*
+
 The **Welcome** window opens at startup (untick *Show at startup* to stop
 it; **Help > Welcome** brings it back): recent projects, **Open
 Project...**, a few first steps, and **New Project** from a template:
@@ -98,6 +102,8 @@ templates are built by `scripts/templates/make_templates.py` and played by
 scene in the tree and viewport, the console).
 
 ### Workspaces
+
+*Page: [toolbar-menus](../docs/editor/toolbar-menus.md).*
 
 The bottom panel (Console, Game, Animation, ...) starts 100 px tall in
 the Default layout - drag its edge, or pick a workspace with a taller one.
@@ -128,62 +134,15 @@ for the clean look again. Saved in settings.ini (`show_tab_bars`).
 
 ### File menu
 
-New Scene / Script / Project, **Open Project** (recent projects and a
-folder browser; the editor reopens on the chosen project after asking about
-unsaved work), **Open File** (Cmd+P), **Save** (Cmd+S: the focused script or
-the scene), **Save As** (Cmd+Shift+S: scene, script, or a component as a new
-component), **Save All** (Cmd+Alt+S), **Revert**, **Export** (.rayzr package /
-standalone game), **Settings** (Cmd+,) and Quit.
+See [Toolbar and menus](../docs/editor/toolbar-menus.md#file-menu).
 
 ### Settings (Cmd+,)
 
-- **General** — Basic: UI scale, grid size and snapping, autosave, quit
-  confirmation. Keymap: every command with its shortcuts; record a new one,
-  clear it or reset it (conflicts are flagged). **Theme**: the presets
-  Default, Dark, Mid-day and Light, and every colour of the current theme
-  (backgrounds, text, accent, status colours, code background) - changes
-  preview live; Save keeps them, Cancel goes back.
-- **Code Editor** — font size, tab width, spaces vs tabs, auto-closing
-  brackets, format on save, the language server and its path.
-- **Project** — General (name, version, startup scene, icon, physics -
-  gravity and **Show Colliders**: whether the running game draws collision
-  shapes, joints and areas, on by default; the viewport always can - scenes),
-  **Input** (named actions and their key/mouse/gamepad bindings — scripts
-  call `Input.is_action_down("jump")`), **Video** (window, virtual
-  resolution, FPS, fullscreen, vsync, resizable, MSAA, high-DPI, sharp
-  pixels - the game draws at its virtual resolution and is scaled to fit
-  the window or, fullscreen, the whole screen at its own resolution, with
-  bars where the shapes differ; the mouse reads in game units), **Audio**
-  (master, music and sound-effect volumes) and **Export** (executable name,
-  output folder, targets, compression, font, which prebuilt runners exist).
-  **Globals**: global scripts - a Lua global name and a script each (an
-  invalid or repeated name is flagged). Each is loaded once, before any
-  scene, and every script can use it by that name (see `engine/SCRIPTING.md`).
-
-Editor settings are per user, in `~/.config/rayzr_editor/settings.ini` -
-`[general]`, `[code]`, `[theme]`, `[paths]`, `[recent_projects]` and `[keymap]`
-sections (an older `settings.json` is read once and replaced); project
-settings live in the project's `project.json`.
-
-The editor remembers folders in `[paths]`: where assets were last imported
-from (`import`), where the last `.rayzr` package or standalone game was
-exported (`export`) and where projects were last opened or created
-(`projects`). The next import, export, Output Folder **Browse...**, Open
-Project and the Welcome window's Location start there (a folder that no
-longer exists falls back to the default). **File > Export > .rayzr Package**
-asks for the folder to write `<project>.rayzr` into.
-
-Scenes and components are listed without their `.scene.json` /
-`.component.json` endings (Assets, scene tree, toolbar, status bar).
-
-
-**Video > pixel art**: Sharp Pixels, **Integer Scaling** (whole-number scale
-with bars), **Pixel Snap** (camera and sprites on whole game pixels) and
-**Smooth Camera** (with Pixel Snap: sub-pixel camera motion kept when
-scaling up; UI layers unshifted). Guide:
-[`engine/docs/pixel_perfect.md`](../engine/docs/pixel_perfect.md).
+Every tab and setting: [Settings](../docs/editor/settings.md).
 
 ### Inspector
+
+*Page: [inspector](../docs/editor/inspector.md).*
 
 **Node / Properties**: a node's Inspector has two tabs. **Node** is its own
 settings (Transform, its type's properties, Script, Signals...).
@@ -299,6 +258,8 @@ listed under **Levels** (double-click or drag to add a level).
 
 ### Asset folders, grid and usages
 
+*Page: [assets](../docs/editor/assets.md).*
+
 **Browsing**: with the Assets panel focused, the arrow keys select the next
 or previous asset (Up / Down; Left / Right too in the grid; Shift extends).
 The Preview panel follows: with **Autoplay** a sound plays, and an Aseprite
@@ -330,6 +291,8 @@ asset. Guide: [`engine/docs/import_settings.md`](../engine/docs/import_settings.
 
 ### Importing assets
 
+*Page: [assets](../docs/editor/assets.md).*
+
 The **+** at the top right of Assets imports with the system file dialog
 (**Import Assets...**, multi-select, or **Import Folder...**) and creates
 scenes and scripts; each folder's right-click menu has an Import item
@@ -353,70 +316,15 @@ before importing them, use the **File Browser**.
 
 ### File Browser
 
-The bottom panel's **Files** tab (also **View > File Browser**,
-Cmd/Ctrl+Shift+B) browses the files *outside* the project — asset packs,
-downloads, other projects — so you can preview them and load only the ones
-you want, without leaving the editor. Give the bottom panel some height (or
-use the Animation workspace) for a longer list; a sound previewing stops
-when you switch tabs. (The Assets panel shows what is already in the
-project.)
-
-- **Toolbar:** back / forward / up (Alt+Left, Alt+Right, Alt+Up or
-  Backspace), refresh, the folder's path (type a path and press Enter; a
-  file's path opens its folder with it selected; `~` is your home folder),
-  the star to bookmark the folder, then **Autoplay** (a selected sound or
-  animation plays straight away), **Loop** and the preview **volume** - all
-  on by default and remembered (settings.ini `[preview]`; the Assets'
-  Preview panel shares them).
-- **Sidebar:** bookmarks (right-click to remove), recent folders, and the
-  folder tree under Project, Home and the computer's root (each drive on
-  Windows). Folders are read when you open them, so big trees stay quick.
-  Bookmarks, recent folders and the last folder are the editor's (kept in
-  its settings), the same in every project.
-- **Files:** name, size and date; click to select, Cmd/Ctrl+click to add,
-  Shift+click for a range, double-click a folder to open it. The **arrow
-  keys** browse: Up / Down select the next file (Shift: extend; its preview
-  plays with Autoplay), Right or Enter opens a folder, Left or Backspace
-  goes up. Search filters
-  the folder; with **Sub-folders** on it looks through every folder below
-  (a few folders a frame: the editor keeps running). The type filter shows
-  images, audio, video, fonts or game assets only; the funnel menu sorts by
-  name, size, date or type and shows hidden files.
-- **Preview** of the selected file: images (PNG, JPG, BMP, TGA, GIF, QOI,
-  PSD, HDR; decoded in the background) fitted or 1:1, zoom with the wheel,
-  drag to pan, over a checkerboard; Aseprite files and animated GIFs play
-  their frames (Aseprite's own frame times; play / pause, the frame); SVGs; sounds (WAV, OGG, MP3, FLAC, QOA, XM, MOD) with play / pause, stop,
-  a seek bar and volume; fonts (a sample in the font); text files (scripts,
-  JSON, LDtk, shaders...; the first 64 KB). Size, date, dimensions,
-  duration and sample rate show above. Video files show their details only:
-  the engine has no video decoder yet. Playback stops when the selection
-  changes or the window closes. Previewing never writes to the project.
-- **Load into Project** (the bottom bar, or right-click > Load) imports the
-  selected files and folders through the importer above. **To:** is the
-  folder for each file's type, or one project folder you pick (then any
-  file type is copied, as it is when the importer doesn't know it). When a
-  *different* file already has the name: import beside it (`name_2.ext`),
-  replace it, or skip it. Right-click > **Load into Folder** picks a folder
-  for one load. Rows also drag onto the Assets panel or the viewport, like
-  files from the OS file manager.
+See [Files tab](../docs/editor/tab-files.md).
 
 ### Level Generator
 
-**Assets > + > New Level Generator** (or double-click a `.levelgen.json`)
-opens a procedural level graph: nodes with thumbnails on a canvas, links
-dragged from outputs to inputs, the right-click menu to add nodes, the
-selected node's parameters and tile rules in the side panel with a large
-preview, Save / Undo / Redo, **Apply to TileMap** (tiles and entities,
-into the TileMap selected in the scene; undoable) and **Apply to LDtk
-Layer** (the IntGrid layer picked in the Level tab). **Your Own** in the
-add menu: a Lua Script node (**New** writes a template and opens it in the
-Code tab; **Reload** after saving it) and node types registered from Odin.
-A **Level Generator** node makes levels in the game; its Inspector picks the
-generator, sets its **Level Parameters** for that node and **Generate Now**
-bakes one into the scene. Guide:
-[`engine/docs/level_generator.md`](../engine/docs/level_generator.md).
+See [Level Generator](../docs/editor/level-generator.md) (the window) and [`engine/docs/level_generator.md`](../engine/docs/level_generator.md) (the nodes).
 
 ### Scene tabs
+
+*Page: [viewport](../docs/editor/viewport.md).*
 
 Every scene you open (from Assets, the palette, Edit Component, ...) gets a
 tab above the viewport; component documents show a cubes icon.
@@ -436,63 +344,15 @@ open it again.
 
 ### Viewport
 
-**Fit** (Home) zooms to the whole scene; the zoom menu also has Fit Game
-View (Shift+Home: the camera's frame at the project resolution), Fit
-Selection (Shift+F) and fixed zoom levels.
-
-**Rulers & guides** (View, Cmd+Shift+R): rulers along the top and left edge
-show world coordinates and the mouse position. Drag from the left ruler for
-a vertical guide, from the top one for a horizontal guide; drag a guide to
-move it, back onto a ruler to remove it (View > Clear Guides removes all).
-Guides are saved with the scene and ignored by the game.
-
-**Smart snapping** (View, on by default): a moved selection's edges and
-centre snap to other nodes' edges / centres and to guides within a few
-pixels (a magenta line shows the match); otherwise grid snapping applies.
-
-**Pivot**: Alt + drag the move handle moves the node's pivot without moving
-what it shows - a sprite's or animation's origin, its children, a line's
-points and collision shapes stay where they are (it snaps to the node's own
-edges and centre).
-
-**Lock / hide**: Edit > Lock in Viewport (Cmd+L) makes a node and its
-children unpickable and unmovable in the viewport (still editable in the
-tree and Inspector); Hide in Editor (Cmd+Shift+H) hides them in the
-viewport only - the game still shows them. Both are on the scene tree's
-right-click menu and shown as icons on the row (click to clear), and saved
-with the scene.
-
-**Show All Colliders** (View) draws every collision shape even when the
-project turns physics debug drawing off.
-
-**Camera frame**: the current camera's frame (the camera button in the
-toolbar) is the project's virtual resolution - the size the game draws at -
-so Screen Layers (HUD) sit in the editor where they will in the game. With
-**Screen Fill: Expand**, a screen-shape picker appears next to it (16:9,
-16:10, 4:3, 21:9, phone portrait; remembered in settings.ini): the dashed
-outline is the frame on that screen, and edge-anchored HUD follows it.
+Navigation, tools, gizmos, overlays, drops and the context menu: [Viewport](../docs/editor/viewport.md); drawing vector art: [Vector edit mode](../docs/editor/vector-edit.md).
 
 ### Signals
 
-The Inspector's **Signals** section lists every event of the selected node
-(`timeout`, `body_entered`, `clicked`, ...). **+** connects one to a method on
-any node's script (a new script is created and attached if the target has
-none): the handler is written into the script, and the connection is saved
-on the node and called at runtime as `Target:method(value, source)`. The
-link button disconnects and removes the generated handler (asking first if
-you added code to it). See `engine/SCRIPTING.md`.
-
-The Scene panel's **Signals** tab lists every connection in the scene - the
-node and its event over the target and its method. Click one to select the
-node, double-click (or the code button) to open the method; a target that's
-gone, without a script or without the method shows in warning colours. The
-link button disconnects there too.
-
-The panel's other tabs: **Tree** (the nodes) and **Settings** - the scene's
-own settings (background, ambient light), which the Inspector points to
-(**Scene Settings...**) with nothing or the scene root selected.
+The Inspector's **Signals** section and the Scene panel's Signals view: [Inspector](../docs/editor/inspector.md), [Scene tree](../docs/editor/scene-tree.md).
 
 ### Sprite Sheet Slicer
+
+*Page: [sprite-slicer](../docs/editor/sprite-slicer.md).*
 
 **Tools > Sprite Sheet Slicer...** (also a texture's right-click menu and the
 AnimationPlayer Inspector) cuts a sheet into cells. **Slice by** *Cell
@@ -512,6 +372,8 @@ the default) or **1:1**, or Cmd+wheel (Ctrl+wheel) around the mouse; the
 wheel scrolls (Shift: sideways) and middle-drag pans when zoomed in.
 
 ### Animation timeline
+
+*Page: [tab-animation](../docs/editor/tab-animation.md).*
 
 The bottom panel's **Animation** tab edits the selected AnimationPlayer's
 animations; the Inspector shows only the player's own settings - Current,
@@ -617,6 +479,8 @@ for frames before / after and opacity) ghosts the neighbouring frames in the
 viewport.
 
 ### State machines
+
+*Page: [tab-stategraph](../docs/editor/tab-stategraph.md).*
 
 Guide with tutorials: [`engine/docs/state_machine.md`](../engine/docs/state_machine.md).
 
@@ -761,12 +625,7 @@ path and limit node (or drop a node from the Scene panel). In Simulate,
 
 ### Mixer
 
-Bottom panel > **Mixer**: the project's buses as a console - a strip per
-bus (effects chain with bypass and parameter popups, output, pan, fader +
-stereo meter, mute / solo, a dB field), **Master** pinned at the right,
-**+ Bus**. Changes apply live (Simulate; and the running game during
-Play, whose meters it shows) and save in project.json. A Sound / Music
-node's **Bus** picks its bus. Guide:
+The bus console: [Mixer tab](../docs/editor/tab-mixer.md); guide:
 [`engine/docs/audio_mixer.md`](../engine/docs/audio_mixer.md).
 
 A Sound Effect or Music node's **Audio** section in the Inspector has a
@@ -799,9 +658,7 @@ their **Progress** while editing and travel in Simulate / Play. Guide:
 
 ### Profiler: pools
 
-While the scene runs, the **Profiler** tab lists each node pool
-(`Pool.take`): taken, parked, made (and the cap). Guide:
-[`engine/docs/pooling.md`](../engine/docs/pooling.md).
+See [Profiler tab](../docs/editor/tab-profiler.md).
 
 ### Visibility notifiers
 
@@ -853,60 +710,15 @@ with the node (and its parents), like everything else drawn by it.
 
 ### Tile maps
 
-Add a **Tile Map** node: the bottom panel's **Tile Map** tab opens (the
-Inspector's *Edit in Tile Map Tab* button too). Its top row sets the
-tileset, tile size and map size; the toolbar below has the brush, eraser and
-flood fill, the picked tile, and the tile view's zoom and grid; under it the
-tileset's tiles are laid out as in the image - click one, then paint in the
-viewport (right button erases; one undo step per stroke). Turn on `solid`
-for colliders. The map size is the map's outline, not a limit: tiles can be
-painted outside it (they're saved and solid too), and shrinking the map
-never deletes tiles - grow it back and they're still there. A flood fill
-started inside the map stays inside it.
-
-The toolbar's **Components** layer paints components on the same grid:
-pick one from the project's components (cards with a picture), then the
-brush puts a linked instance of it on each cell - one per cell, centred; a
-component bigger than a cell takes its whole footprint (its drawn size in
-cells) and replaces what it covers. **Shift**-click places one off the grid;
-the eraser, the right button and flood fill work on this layer too. The
-instances are ordinary children of the tile map, saved with the scene:
-select one to nudge it or override its properties, and editing the
-component file updates every painted copy. Their colliders are their own
-(`solid` only builds colliders for tiles). Scripts:
-`map:tilemap_component_at(x, y)`, `map:tilemap_set_component(x, y, path)`,
-`map:tilemap_clear_component(x, y)` (0-based cells).
+See [Tile Map tab](../docs/editor/tab-tilemap.md), [Terrain Tiles](../docs/editor/terrain-tiles.md) and [Tile Animation](../docs/editor/tile-animation.md).
 
 ### LDtk levels
 
-The **Level** root tab (under the toolbar, next to **Game**; Cmd+Shift+2)
-edits LDtk projects in place: levels, IntGrid / Tiles / Auto layers (LDtk's
-rule engine), entities, definitions, terrains, animated tiles. Open a file
-from its start page, Assets > right-click > **Edit in Level Tab**, or an LDtk
-Level node's **Edit in Level Tab**. See `engine/docs/level_editor.md`.
-
-Import a `.ldtk` project and double-click it under **Levels** to add an
-LDtk level. The **LDtk** tab of the bottom panel (Inspector: *Layers,
-Entities, Collision...*) shows the selected level: pick the world and level
-(or **world mode**: every level of the world at its world position),
-preview parallax around the editor camera, overlay IntGrid values, and:
-
-- **Layers** - read-only list; hide (editor only) or solo a layer, hover to
-  outline it.
-- **Entities** - what each entity spawns as (Auto by name, a component, a
-  plain Node, nothing); **Create Component...** from its fields; the placed
-  instances (click to frame).
-- **Collision** - None / Solid / One-way / Trigger per IntGrid value, with
-  friction and bounce.
-- **Links** - rules for EntityRef fields (connect a signal to a method, or
-  parent one entity to the other) and the references in the level.
-- **Level Fields**, **Enums**, **World** (a mini-map: click a level to open it).
-
-The viewport shows entity placements and reference arrows while editing;
-colliders and entities are built when you Simulate or Play. See
-`engine/LDTK.md`.
+See [LDtk tab](../docs/editor/tab-ldtk.md) and [Level tab](../docs/editor/level.md).
 
 ### Playtesting
+
+*Page: [playtesting](../docs/editor/playtesting.md).*
 
 Play always runs what is in the editor. It saves every modified scene, rebuilds the game
 binary (`bin/rayzr`) if any engine/game source changed, then starts the game with
@@ -983,6 +795,8 @@ Folder**. A game crashing during Play prints its report's path in the
 Console. Details: [engine/docs/crash_reports.md](../engine/docs/crash_reports.md).
 
 ### Code tab (Lua scripts)
+
+*Page: [code](../docs/editor/code.md).*
 
 **Full reference: [`CODE_EDITOR.md`](CODE_EDITOR.md)** - every editing
 feature and shortcut of the Code tab.

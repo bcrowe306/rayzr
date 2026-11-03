@@ -222,6 +222,7 @@ MainMenu_Render :: proc(state: ^EditorState) -> f32 {
 		menu_action(state, "help.welcome")
 		menu_action(state, "help.reference")
 		menu_action(state, "help.editor_manual")
+		PanelHelp_MenuItem(state)
 		menu_action(state, "help.node_reference")
 		menu_action(state, "help.level_reference")
 		menu_action(state, "help.level_shortcuts")

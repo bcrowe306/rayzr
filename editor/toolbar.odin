@@ -27,6 +27,7 @@ Toolbar_Render :: proc(state: ^EditorState, width, height, posY: f32) {
 	}
 	defer imgui.End()
 	if !imgui.Begin("Toolbar###FixedToolbarWindow", nil, flags) do return
+	PanelHelp_Mark("level" if LevelEditor_Active() else "toolbar-menus") // (the Level tab's tools are here then)
 	Drive_Window("toolbar") // (annotated docs screenshots)
 	// The Level tab has its own tools (Play stays).
 	if LevelEditor_Active() {

@@ -304,6 +304,7 @@ PreviewPanel_Render :: proc(state: ^EditorState) {
 	defer imgui.End()
 	if !imgui.Begin("Preview###PreviewPanelWindow") do return
 	Drive_Window("preview") // (annotated docs screenshots)
+	PanelHelp_Mark("assets")
 
 	// Header: what is previewed, and a compact icon switcher (the preview
 	// follows the selection automatically).

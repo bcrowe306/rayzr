@@ -690,6 +690,7 @@ Code_Render :: proc(state: ^EditorState) {
 	visible := imgui.Begin(CODE_WINDOW, nil, {.NoScrollbar, .NoScrollWithMouse})
 	imgui.PopStyleVar()
 	cm.windowFocused = imgui.IsWindowFocused(imgui.FocusedFlags_RootAndChildWindows)
+	PanelHelp_Mark("code")
 	focusedNow := false
 	if visible {
 		code_tabs(state)

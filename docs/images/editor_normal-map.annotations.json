@@ -1,0 +1,10 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "Strength and Softness", "x": 342, "y": 215, "w": 454, "h": 25},
+    {"label": "Shape, Brightness, Invert", "x": 342, "y": 277, "w": 63, "h": 25},
+    {"label": "Lit preview: the light follows the mouse", "x": 569, "y": 308, "w": 211, "h": 226},
+    {"label": "Save <image>_n.png", "x": 342, "y": 540, "w": 152, "h": 25}
+  ]
+}

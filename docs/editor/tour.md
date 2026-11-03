@@ -25,7 +25,8 @@ tab in the middle), *Animation* (a tall timeline) and any you save; pick
 | **F7** | Simulate the scene inside the editor |
 | **Shift+F5** | Stop |
 | **Cmd+S** | Save the scene (Ctrl on Windows and Linux) |
-| **Cmd+Shift+P** or **F1** | The command palette: every action, searchable |
+| **Cmd+Shift+P** | The command palette: every action, searchable |
+| **F1** | This manual's page for the panel with focus (Help > Help for <panel>) |
 
 **Help > Keyboard Shortcuts** (Cmd+Shift+K) lists every shortcut, and
 **Settings** lets you change them.

@@ -592,6 +592,7 @@ LevelEditor_Render :: proc(state: ^EditorState, pos, size: [2]f32) {
 level_start_page :: proc(state: ^EditorState) {
 	L := &GlobalLevel
 	if imgui.Begin(LEVEL_CANVAS_WINDOW, nil, {}) {
+		PanelHelp_Mark("level") // (F1 here: the Level Editor Reference; Help menu: level.md)
 		imgui.Dummy({0, 16})
 		imgui.Indent(24)
 		imgui.PushFont(GlobalFonts.semibold)
@@ -800,6 +801,7 @@ level_levels_panel :: proc(state: ^EditorState) {
 	doc := L.doc
 	defer imgui.End()
 	if !imgui.Begin(LEVEL_LEVELS_WINDOW, nil, {}) do return
+	PanelHelp_Mark("level") // (F1 here: the Level Editor Reference; Help menu: level.md)
 	LevelRef_Panel("panel.levels")
 	UI_PanelTitle(ICON_FA_GLOBE, "Levels", fmt.tprintf("%d", len(doc.levels)))
 	UI_HeaderButtons(3)
@@ -1028,6 +1030,7 @@ level_layers_panel :: proc(state: ^EditorState) {
 	doc := L.doc
 	defer imgui.End()
 	if !imgui.Begin(LEVEL_LAYERS_WINDOW, nil, {}) do return
+	PanelHelp_Mark("level") // (F1 here: the Level Editor Reference; Help menu: level.md)
 	LevelRef_Panel("panel.layers")
 	UI_PanelTitle(ICON_FA_LAYER_GROUP, "Layers")
 	UI_HeaderButtons(3)
