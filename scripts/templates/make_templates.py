@@ -147,6 +147,106 @@ def grid_of(rows, width=None):
     return [r.ljust(width, ".") for r in rows]
 
 
+# --- game screens (#329) ---------------------------------------------------------
+# The templates that are small complete games share a title screen (Play,
+# the start Level, Settings with the volume, Quit), a pause menu and a
+# result screen (a win or a game over), all Text nodes run by
+# scripts/common/menu.lua, and the global Game (scripts/common/game.lua):
+# the run (level, score, lives) and the save data (settings, progress).
+
+PIXEL_STYLE = {"size": (320, 180), "big": 32, "small": 16, "step": 18, "item_w": 170, "item_h": 16}
+HD_STYLE = {"size": (1280, 720), "big": 96, "small": 48, "step": 64, "item_w": 640, "item_h": 56}
+
+
+def menu_text(name, value, pos, st, color, size=None, item=False):
+    n = text(name, value, pos, size=size or st["small"], align="Center", color=color, pivot=(0.5, 0.5))
+    if item:
+        n["tags"] = ["item"]
+    return n
+
+
+def menu(name, kind, children, st, selected, visible=True, pause=False):
+    n = {"type": "Node", "name": name, "layer": 7,
+         "script": {"path": "scripts/menu.lua", "properties": {"kind": kind, "item_width": st["item_w"],
+                                                                "item_height": st["item_h"], "selected": selected}},
+         "children": children}
+    if not visible:
+        n["visible"] = False
+    if pause:
+        n["pause_mode"] = "always"
+    return n
+
+
+def title_scene(game_name, st, color, selected, background, decor=(), level_word="Level"):
+    """The title screen: the name, the best score, the menu; the settings."""
+    w, h = st["size"]
+    k, step = h / 180, st["step"]
+    y0 = 88 * k
+    items = [("Play", "Play"), ("Level", level_word), ("Settings", "Settings"), ("Quit", "Quit")]
+    main = menu("Menu", "title", [
+        menu_text("Title", game_name, (w / 2, 36 * k), st, color, size=st["big"]),
+        menu_text("Best", "", (w / 2, 62 * k), st, color),
+    ] + [menu_text(n, l, (w / 2, y0 + i * step), st, color, item=True) for i, (n, l) in enumerate(items)], st, selected)
+    settings = menu("SettingsMenu", "settings", [
+        menu_text("Heading", "Settings", (w / 2, 50 * k), st, color, size=st["big"]),
+        menu_text("Volume", "Volume", (w / 2, 96 * k), st, color, item=True),
+        menu_text("Back", "Back", (w / 2, 96 * k + step), st, color, item=True),
+    ], st, selected, visible=False)
+    camera = {"type": "CameraNode", "name": "Camera", "position": [w / 2, h / 2], "properties": {"isCurrent": True}}
+    return scene("title", [camera] + list(decor) + [main, settings], background=background)
+
+
+def result_scene(st, color, selected, background, decor=()):
+    """After a win or a game over: the score, the best, Again / Title."""
+    w, h = st["size"]
+    k, step = h / 180, st["step"]
+    camera = {"type": "CameraNode", "name": "Camera", "position": [w / 2, h / 2], "properties": {"isCurrent": True}}
+    return scene("result", [camera] + list(decor) + [menu("Menu", "result", [
+        menu_text("Heading", "", (w / 2, 46 * k), st, color, size=st["big"]),
+        menu_text("Score", "", (w / 2, 78 * k), st, color),
+        menu_text("Best", "", (w / 2, 78 * k + step), st, color),
+        menu_text("Again", "Play again", (w / 2, 124 * k), st, color, item=True),
+        menu_text("Title", "Title screen", (w / 2, 124 * k + step), st, color, item=True),
+    ], st, selected)], background=background)
+
+
+def pause_menu(st, selected, shade="#14141ec8", color="#ffffffff"):
+    """The pause menu: Esc / P / Start (or the touch II button) opens it."""
+    w, h = st["size"]
+    k, step = h / 180, st["step"]
+    return menu("PauseMenu", "pause", [
+        {"type": "UIContainerNode", "name": "Shade", "layer": 7, "position": [0, 0],
+         "properties": {"size": [w, h], "drawBackground": True, "drawBorder": False, "showHeader": False,
+                        "backgroundColor": shade}},
+        menu_text("Heading", "Paused", (w / 2, 46 * k), st, color, size=st["big"]),
+        menu_text("Resume", "Resume", (w / 2, 84 * k), st, color, item=True),
+        menu_text("Restart", "Restart level", (w / 2, 84 * k + step), st, color, item=True),
+        menu_text("Title", "Title screen", (w / 2, 84 * k + 2 * step), st, color, item=True),
+    ], st, selected, visible=False, pause=True)
+
+
+GAME_ACTIONS = [action("confirm", "ENTER", "KP_ENTER", "SPACE", "pad:RIGHT_FACE_DOWN"),
+                action("pause", "ESCAPE", "P", "pad:MIDDLE_RIGHT")]
+GAME_GLOBALS = [{"name": "Game", "script": "scripts/game.lua"}]
+
+
+def game_scripts(t, levels, lives=3, score_name="Score", lower_is_better=False, level_word="Level"):
+    """scripts/game.lua (the global Game, with this game's levels) and menu.lua."""
+    cfg = "\n".join([
+        "-- This game (make_templates.py writes it): its levels, in order; the lives a",
+        "-- run starts with; what the score counts; whether a lower result is better;",
+        "-- what a level is called.",
+        "Game.LEVELS = { " + ", ".join(f'"{lv}"' for lv in levels) + " }",
+        f"Game.LIVES = {lives if lives else 'nil'}",
+        f'Game.SCORE_NAME = "{score_name}"',
+        f"Game.LOWER_IS_BETTER = {'true' if lower_is_better else 'false'}",
+        f'Game.LEVEL_WORD = "{level_word}"',
+    ])
+    with open(os.path.join(SCRIPTS, "common", "game.lua")) as f:
+        t.write("scripts/game.lua", f.read().replace("--$CONFIG$", cfg))
+    t.script("menu", src="common")
+
+
 class Template:
     def __init__(self, tid, name, description, icon, order):
         self.id = tid

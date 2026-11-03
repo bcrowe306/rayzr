@@ -4,7 +4,10 @@
 # export makes, from the command line (tests, CI):
 #
 #   scripts/package_android.sh <project-dir> <out-dir> [--name N] [--id com.x.y]
-#        [--version 1.0] [--code 1] [--no-aab]
+#        [--version 1.0] [--code 1] [--no-aab] [--runner libmain.so]
+#
+# --runner: another runner build (scripted play-throughs: one built with
+# RAYZR_TEST_HOOKS - scripts/templates/test_templates.py --android).
 #
 # Signed with the debug key (~/.android/debug.keystore, made when missing)
 # unless RAYZR_ANDROID_KEYSTORE is set (with RAYZR_ANDROID_KEY_ALIAS and
@@ -17,10 +20,11 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 ROOT="$PWD"
 proj="$1"; out="$2"; shift 2
-name=""; id=""; version="1.0"; code=1; aab=1
+name=""; id=""; version="1.0"; code=1; aab=1; so=""
 while [ $# -gt 0 ]; do case "$1" in
 	--name) name="$2"; shift 2 ;; --id) id="$2"; shift 2 ;; --version) version="$2"; shift 2 ;;
-	--code) code="$2"; shift 2 ;; --no-aab) aab=0; shift ;; *) echo "unknown option $1" >&2; exit 2 ;;
+	--code) code="$2"; shift 2 ;; --no-aab) aab=0; shift ;;
+	--runner) so="$2"; shift 2 ;; *) echo "unknown option $1" >&2; exit 2 ;;
 esac; done
 
 ANDROID_HOME="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/opt/homebrew/share/android-commandlinetools}}"
@@ -33,7 +37,7 @@ if [ -z "${JAVA_HOME:-}" ] || ! "$JAVA_HOME/bin/java" -version 2>&1 | grep -q -E
 	done
 fi
 export JAVA_HOME PATH="$JAVA_HOME/bin:$PATH"
-SO="$ROOT/bin/runners/android/libmain.so"
+SO="${so:-$ROOT/bin/runners/android/libmain.so}"
 [ -f "$SO" ] || { echo "No Android runner: scripts/build_android_runner.sh" >&2; exit 1; }
 
 cfgval() { python3 -I -c "import json,sys; print(json.load(open(sys.argv[1])).get(sys.argv[2], ''))" "$proj/project.json" "$1"; }

@@ -26,7 +26,8 @@
 var odinMemoryInterface = new odin.WasmMemoryInterface();
 odinMemoryInterface.setIntSize(4);
 var odinImports = odin.setupDefaultImports(odinMemoryInterface);
-var started = false, ready = false;
+var started = false, ready = false, ended = false;
+var testMode = new URLSearchParams(location.search).has("test");
 var statusEl = document.getElementById("status"), hintEl = document.getElementById("hint");
 var Module = {
   canvas: document.getElementById("canvas"),
@@ -57,6 +58,8 @@ var Module = {
       FS.mount(IDBFS, {}, "/save");
       await new Promise((ok) => FS.syncfs(true, () => ok()));
       ready = true;
+      // ?test: a scripted run (rayzrTest below) - no click, no key starts it.
+      if (testMode) { statusEl.textContent = "Test mode"; return; }
       statusEl.textContent = "Click to play";
       hintEl.textContent = "(or press any key)";
       // ?autostart: no click needed (kiosks, automated captures; audio may
@@ -68,19 +71,21 @@ var Module = {
     }
   },
 };
-function start() {
-  if (!ready || started) return;
+function start(test) {
+  if (!ready || started || (testMode && !test)) return;
   started = true;
   document.getElementById("start").remove();
   Module.canvas.focus();
-  try { Module._main_start(); } catch (err) { console.error("main_start:", err, err && err.stack); return; }
+  try { test ? Module._main_start_test() : Module._main_start(); } catch (err) { console.error("main_start:", err, err && err.stack); return; }
   const resize = () => Module._main_resize(window.innerWidth, window.innerHeight);
   window.addEventListener("resize", resize);
   resize();
   const frame = () => {
     let more = false;
     try { more = Module._main_update(); } catch (err) { console.error("main_update:", err, err && err.stack); }
-    if (more) requestAnimationFrame(frame);
+    if (more) { requestAnimationFrame(frame); return; }
+    // The game ended (Engine.quit, a test's last frame): its saves to IndexedDB.
+    FS.syncfs(false, () => { ended = true; });
   };
   requestAnimationFrame(frame);
   // Saves reach IndexedDB every couple of seconds and when the tab hides.
@@ -88,8 +93,17 @@ function start() {
   setInterval(sync, 2000);
   document.addEventListener("visibilitychange", () => { if (document.hidden) sync(); });
 }
-document.getElementById("start").addEventListener("click", start);
-window.addEventListener("keydown", start, { once: false });
+// rayzrTest(args): a scripted run (?test; scripts/templates/test_templates.py
+// --web): the runner's arguments, one a line, go to /test/args.txt - the
+// files they name are written into the file system first - and `ended`
+// turns true once the game is over and /save is in IndexedDB.
+function rayzrTest(args) {
+  try { FS.mkdir("/test"); } catch (err) {}
+  FS.writeFile("/test/args.txt", args.join("\n") + "\n");
+  start(true);
+}
+document.getElementById("start").addEventListener("click", () => start());
+window.addEventListener("keydown", () => start(), { once: false });
 </script>
 {{{ SCRIPT }}}
 </body>

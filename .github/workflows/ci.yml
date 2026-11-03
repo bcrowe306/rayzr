@@ -1,9 +1,12 @@
 # Builds the editor, the runner and the Play binary and runs the unit tests
 # on macOS (Apple silicon), Linux (x64) and Windows (x64); builds the web
 # runner (js_wasm32, as the release does - #224); smoke-tests the
-# runner and the packaged editor where there's an OpenGL context (macOS,
-# Linux under Xvfb). Editor drives (tests/drive) stay local: they're long
-# and need a real GPU session.
+# runner and the packaged editor on Linux under Xvfb. The templates'
+# scripted play-throughs (#329: scripts/templates/test_templates.py) run on
+# every platform: Linux (Xvfb), macOS (the runner's Metal-backed OpenGL),
+# Windows (Mesa's llvmpipe: scripts/ci/mesa_windows.sh), the web (the web
+# runner in headless Chrome) and Android (an emulator). Editor drives
+# (tests/drive) stay local: they're long and need a real GPU session.
 name: CI
 
 on:
@@ -38,6 +41,16 @@ jobs:
       - uses: mymindstorm/setup-emsdk@v14
       - run: scripts/build_web_runner.sh
       - run: test -s bin/runners/web/index.wasm && test -s bin/runners/web/index.js
+      # The templates played in the web runner (#329): headless Chrome (the
+      # image's google-chrome; WebGL 2 on SwiftShader), driven over the
+      # DevTools protocol by Node (22+: its WebSocket); each test's project
+      # packed by scripts/pack_rayzr.odin (the engine built natively: its deps).
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - run: scripts/ci/setup_deps.sh
+      - name: Template play-throughs (web)
+        run: CHROME="$(command -v google-chrome)" python3 scripts/templates/test_templates.py --web platformer shmup puzzle
 
   # The Android runner (linux_arm64 / android + the NDK), as release.yml
   # builds it; then a test app packaged and checked (APK + AAB). The runner
@@ -64,6 +77,44 @@ jobs:
       - run: scripts/package_android.sh templates/platformer /tmp/android_app
       - run: scripts/check_android_package.sh /tmp/android_app/platformer.apk com.rayzr.platformer /tmp/android_app/platformer.aab
 
+  # The templates played on Android (#329): an x86_64 emulator (KVM; API 30
+  # Google APIs - it runs arm64 apps through its ARM translation), each
+  # template packaged with a runner built with the test hooks (never shipped:
+  # runner/android/main.odin) and played by scripts/ci/android_playthroughs.sh.
+  android-playthroughs:
+    name: Template play-throughs (Android emulator)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+      - run: git submodule update --init --depth 1 ui odin_editor ldtk
+      - uses: laytan/setup-odin@v2
+        with:
+          release: ${{ env.ODIN_RELEASE }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: OUT=bin/runners/android-test scripts/build_android_runner.sh -define:RAYZR_TEST_HOOKS=true
+      # (Packing the projects runs the engine on this machine: Box2D, Clipper2.)
+      - run: scripts/ci/setup_deps.sh
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        with:
+          api-level: 30
+          target: google_apis
+          arch: x86_64
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          disable-animations: true
+          script: scripts/ci/android_playthroughs.sh platformer shmup puzzle
+
   build-test:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
@@ -71,7 +122,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # (macOS runners have no GPU: no OpenGL window, so the smoke tests run on Linux under Xvfb.)
+          # (The smoke tests run on Linux under Xvfb; the template play-throughs everywhere.)
           - { name: macOS arm64, os: macos-15, platform: macos, smoke: false }
           - { name: Linux x64, os: ubuntu-22.04, platform: linux, smoke: true }
           - { name: Windows x64, os: windows-2022, platform: windows, smoke: false }
@@ -107,6 +158,22 @@ jobs:
         run: |
           odin test engine -define:ODIN_TEST_THREADS=1 -define:ODIN_TEST_FAIL_ON_BAD_MEMORY=true $(scripts/odin_flags.sh)
           odin test ui -define:ODIN_TEST_THREADS=1 $(scripts/odin_flags.sh)
+
+      # The templates' scripted play-throughs (#329) - Linux plays them below
+      # (Templates, under Xvfb). macOS: the runner's own OpenGL (Metal
+      # underneath); Windows has no GPU driver: Mesa's llvmpipe next to a copy
+      # of the runner.
+      - name: Template play-throughs (macOS)
+        if: runner.os == 'macOS'
+        run: python3 scripts/templates/test_templates.py --runner bin/runners/macos/runner
+      - name: Template play-throughs (Windows, Mesa llvmpipe)
+        if: runner.os == 'Windows'
+        env:
+          GALLIUM_DRIVER: llvmpipe
+        run: |
+          scripts/ci/mesa_windows.sh bin/runners/windows/runner.exe "$RUNNER_TEMP/glrunner"
+          py=python3; command -v python3 > /dev/null || py=python
+          "$py" scripts/templates/test_templates.py --runner "$RUNNER_TEMP/glrunner/runner.exe"
 
       - name: Smoke test (the runner plays the demo project)
         if: matrix.smoke

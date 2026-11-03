@@ -18,15 +18,18 @@ import "core:fmt"
 import "core:log"
 import "core:os"
 import "core:path/filepath"
+import "core:strings"
 import e "../../engine"
 
 @(default_calling_convention = "c")
 foreign {
 	rayzr_android_internal_path :: proc() -> cstring --- // (android_glue.c)
+	rayzr_android_external_path :: proc() -> cstring ---
 	rayzr_android_read_asset :: proc(name: cstring, size: ^i64) -> [^]u8 ---
 	free :: proc(p: rawptr) ---
 	rayzr_android_install_hooks :: proc() ---
 	__android_log_write :: proc(prio: c.int, tag: cstring, text: cstring) -> c.int ---
+	umask :: proc(mask: c.uint) -> c.uint ---
 }
 
 ANDROID_LOG_INFO :: 4
@@ -80,5 +83,52 @@ main :: proc() {
 	if extract("fonts/OpenSans-Regular.ttf", font) do e.Runner_FontPath = font
 	log.infof("[android] starting %s", game)
 	e.Runner_AfterWindow = proc() {rayzr_android_install_hooks()}
+	when RAYZR_TEST_HOOKS do if test_run(game) do return
 	e.Engine_RunProject(e.Run_Options{projectPath = game, userDataDir = save})
+}
+
+// Scripted test runs (scripts/templates/test_templates.py --android; CI's
+// emulator job) - only in runners built with -define:RAYZR_TEST_HOOKS=true,
+// never in the runner games ship with. adb pushes rayzr_test/args.txt into
+// the app's external files folder: runner arguments, one a line (--frames,
+// --input-script, --dump-scene, --user-data, --scene, a game.rayzr), paths
+// relative to rayzr_test/. The file is used once (removed when read); when
+// the game is over rayzr_test/exit.txt holds its exit code (the harness also
+// takes the app's process ending as the end).
+RAYZR_TEST_HOOKS :: #config(RAYZR_TEST_HOOKS, false)
+
+@(private = "file")
+test_run :: proc(game: string) -> bool {
+	ext := string(rayzr_android_external_path())
+	if ext == "" do return false
+	dir, _ := filepath.join({ext, "rayzr_test"}, context.allocator)
+	argsPath, _ := filepath.join({dir, "args.txt"}, context.allocator)
+	text, err := os.read_entire_file(argsPath, context.allocator)
+	if err != nil {
+		if os.exists(argsPath) do log.errorf("[android] can't read %s: %v", argsPath, err)
+		return false
+	}
+	_ = os.remove(argsPath)
+	// (What the game writes - the dump, its saves - adb reads back: files
+	// the app makes are otherwise private to it.)
+	umask(0)
+	args := make([dynamic]string)
+	for line in strings.split_lines(string(text)) do if line != "" do append(&args, line)
+	opts := e.Engine_ParseRunArgs(args[:])
+	inDir :: proc(dir, p: string) -> string {
+		if p == "" || filepath.is_abs(p) do return p
+		joined, _ := filepath.join({dir, p}, context.allocator)
+		return joined
+	}
+	opts.projectPath = inDir(dir, opts.projectPath) if opts.projectPath != "" else game
+	opts.inputScript = inDir(dir, opts.inputScript)
+	opts.dumpScenePath = inDir(dir, opts.dumpScenePath)
+	opts.screenshotPath = inDir(dir, opts.screenshotPath)
+	opts.userDataDir = inDir(dir, opts.userDataDir)
+	log.infof("[android] test run: %v", args[:])
+	code := e.Engine_RunProject(opts)
+	exitPath, _ := filepath.join({dir, "exit.txt"}, context.allocator)
+	_ = os.write_entire_file(exitPath, transmute([]u8)fmt.tprintf("%d\n", code))
+	log.infof("[android] test run over: %d", code)
+	return true
 }

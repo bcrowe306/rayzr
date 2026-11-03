@@ -6,6 +6,8 @@
 #
 #   scripts/build_android_runner.sh            (deps are built once into bin/android_deps)
 #   scripts/build_android_runner.sh -define:RAYZR_RELEASE=1.2.3   (extra odin flags)
+#   OUT=dir scripts/build_android_runner.sh -define:RAYZR_TEST_HOOKS=true   (scripted test
+#        runs, never shipped: runner/android/main.odin; test_templates.py --android)
 #
 # Needs the Android NDK ($ANDROID_NDK_HOME, else the newest under
 # $ANDROID_HOME/ndk) and odin. Dependencies built with the NDK's clang:
