@@ -153,6 +153,7 @@ jobs:
         run: |
           mkdir -p bin
           ext=""; [ "$RUNNER_OS" = Windows ] && ext=.exe
+          if [ "$RUNNER_OS" = Windows ]; then scripts/odin_flags.sh; od -c bin/windows_link.rsp; odin build editor $(scripts/odin_flags.sh) -show-system-calls -out:bin/editor$ext 2>&1 | grep -v "unresolved external" | head -300 || true; fi # DEBUG(#330) temporary
           odin build editor $(scripts/odin_flags.sh) -out:bin/editor$ext
           odin build . $(scripts/odin_flags.sh) -out:bin/rayzr$ext
           scripts/build_runners.sh

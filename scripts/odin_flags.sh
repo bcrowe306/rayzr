@@ -23,7 +23,7 @@ case "$(uname -s)" in
 	MINGW*|MSYS*|CYGWIN*)
 		rsp="$(cd "$(dirname "$0")/.." && pwd)/bin/windows_link.rsp"
 		mkdir -p "$(dirname "$rsp")"
-		printf '/WHOLEARCHIVE:"%s"\n/NODEFAULTLIB:msvcrt.lib\n' "$(cygpath -w "$(odin root)/vendor/raylib/windows/raylib.lib")" > "$rsp.$$"
+		printf '/WHOLEARCHIVE:"%s"\n/NODEFAULTLIB:msvcrt.lib\n/DEFAULTLIB:libcmt.lib\n/DEFAULTLIB:libvcruntime.lib\n/DEFAULTLIB:libucrt.lib\n/VERBOSE:LIB\n' "$(cygpath -w "$(odin root)/vendor/raylib/windows/raylib.lib")" > "$rsp.$$"
 		mv -f "$rsp.$$" "$rsp" # (whole: builds run this in parallel)
 		echo "-extra-linker-flags:@$(cygpath -w "$rsp")" ;;
 	Darwin)
