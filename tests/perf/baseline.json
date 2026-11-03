@@ -1,0 +1,28 @@
+{
+  "about": "scripts/perf/perf.py --check: the targets (ms; a metric's most specific key wins, * = any template or bench) and each reference setup's recorded numbers (setups: written by --update-baseline from a Performance workflow report, on purpose). A number fails above its target, or above its baseline * (1 + margin) + slack. docs/contributing/performance.md",
+  "targets": {
+    "default": {
+      "templates.*.frame_p95": 16.7,
+      "templates.*.startup": 3000,
+      "editor.editor_startup_ms": 8000,
+      "editor.play_project_ms": 4000,
+      "editor.play_large_scene_ms": 4000,
+      "editor.demo_idle.frame_p95": 33.3,
+      "editor.sprites_idle.frame_p95": 33.3,
+      "editor.tiles_idle.frame_p95": 33.3,
+      "editor.particles_simulate.frame_p95": 33.3,
+      "editor.sprites_select.frame_p95": 50,
+      "editor.sprites_box_select.frame_p95": 50,
+      "editor.sprites_drag.frame_p95": 50,
+      "editor.sprites_all_selected.frame_p95": 50,
+      "editor.sprites_nudge_all.frame_p95": 100
+    },
+    "android-emulator-api34": {
+      "templates.*.frame_p95": 20,
+      "templates.*.startup": 6000
+    }
+  },
+  "margin": 0.25,
+  "slack_ms": {"frame": 1.0, "time": 250.0},
+  "setups": {}
+}
