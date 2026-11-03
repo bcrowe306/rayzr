@@ -21,7 +21,7 @@ import rlgl "vendor:raylib/rlgl"
 Run_Options :: struct {
 	projectPath:    string, // project directory or .rayzr package
 	screenshotPath: string, // save a screenshot after a few frames, then quit
-	maxFrames:      int,
+	maxFrames:      int,    // --frames N: quit after N frames (a capture on the last one)
 	hidden:         bool,
 	startScene:     string, // project-relative scene file to start in
 	dumpScenePath:  string, // write the running scene's JSON (tests)
@@ -531,7 +531,7 @@ Runner_Start :: proc(opts: Run_Options) -> (^Runner_State, bool) {
 		}
 	}
 
-	rs.targetCaptureFrame = max(25, opts.maxFrames) if opts.maxFrames > 0 else 30
+	rs.targetCaptureFrame = Runner_CaptureFrame(opts)
 	// Captures for tests step a fixed 1/60 s, so runs are comparable.
 	rs.fixedStep = opts.screenshotPath != "" || opts.dumpScenePath != "" || opts.inputScript != "" || opts.test != ""
 	if opts.inputScript != "" {
@@ -695,8 +695,21 @@ Runner_Frame :: proc(rs: ^Runner_State) -> bool {
 			log.infof("[Gameplay Screenshot] Saved gameplay capture to: %s", screenshotPath)
 			return false
 		}
+		if Runner_FramesOver(opts, rs.frameCount) do return false // (--frames alone, #358)
 	}
 	return true
+}
+
+// Runner_CaptureFrame: the frame --screenshot / --dump-scene capture on -
+// --frames N (as asked: #362), else 30.
+Runner_CaptureFrame :: proc(opts: Run_Options) -> int {
+	return opts.maxFrames if opts.maxFrames > 0 else 30
+}
+
+// Runner_FramesOver: --frames N ran its N frames - the runner exits (with or
+// without a capture, #358; not a benchmark, which counts its own).
+Runner_FramesOver :: proc(opts: Run_Options, frameCount: int) -> bool {
+	return opts.maxFrames > 0 && opts.benchFrames <= 0 && frameCount >= opts.maxFrames
 }
 
 // Runner_Stop frees the game, its window and everything the runner made.
