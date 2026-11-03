@@ -131,7 +131,7 @@ scene_tree :: proc(state: ^EditorState) {
 				imgui.Dummy({0, 6})
 				imgui.PushTextWrapPos(0)
 				imgui.PushStyleColorImVec4(.Text, UI_TEXT_FAINT)
-				imgui.TextWrapped("%s", fmt.ctprintf("This scene is empty. Add a node with %s (Cmd+A), or drag an image, component or level from Assets into the viewport.", ICON_FA_PLUS))
+				imgui.TextWrapped("%s", fmt.ctprintf("This scene is empty. Add a node with %s (" + CMD + "+A), or drag an image, component or level from Assets into the viewport.", ICON_FA_PLUS))
 				imgui.PopStyleColor()
 				imgui.PopTextWrapPos()
 				Drive_Item("hier.empty-hint")
@@ -149,9 +149,9 @@ scene_tree :: proc(state: ^EditorState) {
 			if imgui.IsItemClicked(.Left) do state.selectedNode = nil
 			if imgui.BeginPopupContextItem("##hier_empty_ctx") {
 				Editor_ClearSelection(state)
-				if hier_menu(ICON_FA_PLUS, "Add Node...", "add-node", true, "Cmd+A") do AddNodeDialog_Open()
-				if hier_menu(ICON_FA_PASTE, "Paste", "paste", Editor_HasClipboardNodes(), "Cmd+V") do Editor_PasteNodes(state)
-				if hier_menu(ICON_FA_CHECK, "Select All", "select-all", true, "Cmd+Shift+A") do Editor_SelectAllNodes(state)
+				if hier_menu(ICON_FA_PLUS, "Add Node...", "add-node", true, CMD + "+A") do AddNodeDialog_Open()
+				if hier_menu(ICON_FA_PASTE, "Paste", "paste", Editor_HasClipboardNodes(), CMD + "+V") do Editor_PasteNodes(state)
+				if hier_menu(ICON_FA_CHECK, "Select All", "select-all", true, CMD + "+Shift+A") do Editor_SelectAllNodes(state)
 				imgui.EndPopup()
 			}
 		}
@@ -473,7 +473,7 @@ Node_ContextMenu :: proc(state: ^EditorState, node: ^e.Node) {
 	multi := len(state.selection) > 1
 	UI_DimText(fmt.tprintf("%d nodes", len(state.selection)) if multi else node.name)
 	imgui.Separator()
-	if hier_menu(ICON_FA_PLUS, "Add Child...", "add-child", true, "Cmd+A") {
+	if hier_menu(ICON_FA_PLUS, "Add Child...", "add-child", true, CMD + "+A") {
 		state.selectedNode = node
 		AddNodeDialog_Open()
 	}
@@ -490,11 +490,11 @@ Node_ContextMenu :: proc(state: ^EditorState, node: ^e.Node) {
 		imgui.EndMenu()
 	}
 	imgui.Separator()
-	if hier_menu(ICON_FA_SCISSORS, "Cut", "cut", !isRoot, "Cmd+X") do Editor_CutSelection(state)
-	if hier_menu(ICON_FA_COPY, "Copy", "copy", !isRoot, "Cmd+C") do Editor_CopySelection(state)
-	if hier_menu(ICON_FA_PASTE, "Paste", "paste", Editor_HasClipboardNodes(), "Cmd+V") do Editor_PasteNodes(state)
+	if hier_menu(ICON_FA_SCISSORS, "Cut", "cut", !isRoot, CMD + "+X") do Editor_CutSelection(state)
+	if hier_menu(ICON_FA_COPY, "Copy", "copy", !isRoot, CMD + "+C") do Editor_CopySelection(state)
+	if hier_menu(ICON_FA_PASTE, "Paste", "paste", Editor_HasClipboardNodes(), CMD + "+V") do Editor_PasteNodes(state)
 	if hier_menu(ICON_FA_PASTE, "Paste as Child", "paste-child", Editor_HasClipboardNodes()) do Editor_PasteNodesInto(state, node)
-	if hier_menu(ICON_FA_CLONE, "Duplicate", "duplicate", !isRoot, "Cmd+D") do SceneHierarchy_DuplicateSelected(state)
+	if hier_menu(ICON_FA_CLONE, "Duplicate", "duplicate", !isRoot, CMD + "+D") do SceneHierarchy_DuplicateSelected(state)
 	if hier_menu(ICON_FA_PEN, "Rename", "rename", !isRoot && !locked && !multi, "F2") {
 		state.selectedNode = node
 		Editor_BeginRename(state)

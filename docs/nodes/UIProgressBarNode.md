@@ -17,7 +17,7 @@ proportion to its value and can show the percentage.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *UI Progress Bar*. It is 360 x 22, labelled
+1. **Add Node** (Cmd+A / Ctrl+A) > *UI Progress Bar*. It is 360 x 22, labelled
    "Progress", from 0 to 1 at 0.5.
 2. Put it under a [Screen Layer](ScreenLayerNode.md).
 3. In the Node tab's **Properties** section set **Min Value**, **Max

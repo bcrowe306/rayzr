@@ -19,7 +19,7 @@ player, a rhythm game's HUD or a debug overlay.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *UI Volume Meter*. It starts 120 x 320 px,
+1. **Add Node** (Cmd+A / Ctrl+A) > *UI Volume Meter*. It starts 120 x 320 px,
    vertical, with the label "VU".
 2. Put it under a [Screen Layer](ScreenLayerNode.md), or in a
    [UI Container](UIContainerNode.md) beside a fader.

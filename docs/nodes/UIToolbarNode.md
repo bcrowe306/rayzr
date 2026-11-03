@@ -16,7 +16,7 @@ photo mode, or a strategy game's command bar.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *UI Toolbar*. It starts 600 x 42 px with no
+1. **Add Node** (Cmd+A / Ctrl+A) > *UI Toolbar*. It starts 600 x 42 px with no
    buttons: an empty bar.
 2. Put it under a [Screen Layer](ScreenLayerNode.md), usually anchored to
    the top or bottom of the screen.

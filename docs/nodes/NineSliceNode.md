@@ -22,7 +22,7 @@ bars of any size.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *Nine Slice Sprite*. Until it has an image it
+1. **Add Node** (Cmd+A / Ctrl+A) > *Nine Slice Sprite*. Until it has an image it
    draws a faint rectangle where it will be.
 2. Pick the image in the Inspector's **Texture** section > **Texture**.
 3. In the Node tab's **Properties** section, set **Size** (the drawn width and height in pixels).

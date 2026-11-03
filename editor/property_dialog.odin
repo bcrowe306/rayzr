@@ -579,7 +579,7 @@ property_remove_render :: proc(state: ^EditorState) {
 		imgui.PopStyleColor()
 	}
 	if saved > 0 do UI_DimText(fmt.tprintf("%d node(s) in this scene have a value: it goes too.", saved))
-	UI_DimText("Undo (Cmd+Z) brings it back.")
+	UI_DimText("Undo (" + CMD + "+Z) brings it back.")
 	imgui.Dummy({0, 6})
 	if UI_Button("Cancel", "prop.remove-cancel", {100, 0}) {
 		pd.removeOpen = false

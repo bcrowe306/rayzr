@@ -26,7 +26,7 @@ fade out.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *Advanced Camera*. Place it where the shot
+1. **Add Node** (Cmd+A / Ctrl+A) > *Advanced Camera*. Place it where the shot
    should look when it has no target.
 2. In the Inspector's **Targets** section, pick the **Follow Target** (or
    drop a node from the Scene panel onto it). For a group, set **Follow

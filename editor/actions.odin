@@ -386,6 +386,10 @@ Action_RecentRank :: proc(id: string) -> int {
 	return -1
 }
 
+// CMD: the primary modifier's name in hints - "Cmd" on macOS, "Ctrl"
+// elsewhere (as Chord_Text names .Primary): "Undo (" + CMD + "+Z)" (#376).
+CMD :: "Cmd" when ODIN_OS == .Darwin else "Ctrl"
+
 // Chord_Text: "Cmd+Shift+P" (macOS) / "Ctrl+Shift+P" (`mac`: the macOS names
 // anywhere, for the docs - shortcuts_doc.odin).
 Chord_Text :: proc(c: Chord, allocator := context.temp_allocator, mac := ODIN_OS == .Darwin) -> string {
@@ -504,6 +508,11 @@ Actions_Dispatch :: proc(state: ^EditorState) {
 	best: ^Editor_Action
 	bestScore := -1
 	levelMode := LevelEditor_Active()
+	// Editing a Vector Shape's art (Edit Art): its keys first - Delete
+	// removes shapes / points, Esc ends a pen path then the mode, letters
+	// pick its tools - so the node's and the scene tools' keys (node.*,
+	// tool.*, F) wait (#372). Undo, saving and view keys still work.
+	vectorKeys := VectorDraw_OwnsKeys(state)
 	for &a in GlobalActions {
 		// The Level tab: only global commands (it has its own keys).
 		if levelMode && a.scope != .Global do continue
@@ -519,6 +528,7 @@ Actions_Dispatch :: proc(state: ^EditorState) {
 			if stateGraphFocused && strings.has_prefix(a.id, "node.") do continue // the graph's own Delete / copy
 			if behaviorTreeFocused && strings.has_prefix(a.id, "node.") do continue // (the Behavior Tree tab's too)
 			if goapGraphFocused && strings.has_prefix(a.id, "node.") do continue // (and the GOAP tab's)
+			if vectorKeys && (strings.has_prefix(a.id, "node.") || strings.has_prefix(a.id, "tool.") || a.id == "view.frame") do continue
 		case .Code:   if !codeFocus do continue
 		}
 		// While the find bar has focus, plain keys belong to its text field.

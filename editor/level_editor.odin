@@ -512,11 +512,11 @@ RootTabs_Render :: proc(state: ^EditorState, width, posY: f32) {
 		return pressed
 	}
 	if tab(fmt.tprintf("%s  Game", ICON_FA_GAMEPAD), "root.game", L.tab == .Game) do L.tab = .Game
-	UI_Tooltip("Scenes, nodes and scripts (Cmd+Shift+1)")
+	UI_Tooltip("Scenes, nodes and scripts (" + CMD + "+Shift+1)")
 	levelLabel := fmt.tprintf("%s  Level", ICON_FA_MAP)
 	if L.doc != nil do levelLabel = fmt.tprintf("%s  Level  -  %s%s", ICON_FA_MAP, filepath.base(L.rel), L.doc.modified ? "  " + ICON_FA_CIRCLE : "")
 	if tab(levelLabel, "root.level", L.tab == .Level) do L.tab = .Level
-	UI_Tooltip("Edit LDtk levels: worlds, layers, tiles, auto-tile rules, entities (Cmd+Shift+2)")
+	UI_Tooltip("Edit LDtk levels: worlds, layers, tiles, auto-tile rules, entities (" + CMD + "+Shift+2)")
 }
 
 // ----------------------------------------------------------------------------
@@ -1509,7 +1509,7 @@ level_layer_menu :: proc(state: ^EditorState, i: int, uid: int, visible: bool) -
 		e.Ldtk_Doc_Checkpoint(doc, L.level, "Layer Visibility")
 		e.Ldtk_Doc_SetLayerVisible(doc, L.level, i, !visible)
 	}
-	if ctx_item(ICON_FA_OBJECT_UNGROUP, "Select all", "Select everything in this layer (Cmd+A)") {
+	if ctx_item(ICON_FA_OBJECT_UNGROUP, "Select all", "Select everything in this layer (" + CMD + "+A)") {
 		L.layer = i
 		level_sync_palette()
 		e.Ldtk_Doc_SelectAll(doc, L.level, &L.sel, i)
@@ -1856,12 +1856,12 @@ LevelEditor_Toolbar :: proc(state: ^EditorState, width: f32, play: proc(state: ^
 	canUndo := L.doc != nil && e.Ldtk_Doc_CanUndo(L.doc)
 	canRedo := L.doc != nil && e.Ldtk_Doc_CanRedo(L.doc)
 	if !canUndo do imgui.BeginDisabled(true)
-	if UI_IconButton(ICON_FA_ROTATE_LEFT, "level.undo", "Undo (Cmd+Z)") do level_undo(state)
+	if UI_IconButton(ICON_FA_ROTATE_LEFT, "level.undo", "Undo (" + CMD + "+Z)") do level_undo(state)
 	level_tip("", "undo")
 	if !canUndo do imgui.EndDisabled()
 	imgui.SameLine()
 	if !canRedo do imgui.BeginDisabled(true)
-	if UI_IconButton(ICON_FA_ROTATE_RIGHT, "level.redo", "Redo (Cmd+Shift+Z)") do level_redo(state)
+	if UI_IconButton(ICON_FA_ROTATE_RIGHT, "level.redo", "Redo (" + CMD + "+Shift+Z)") do level_redo(state)
 	if !canRedo do imgui.EndDisabled()
 	play(state, width)
 	rightW: f32 = 7 * 32 + 76 + 40
@@ -1894,7 +1894,7 @@ LevelEditor_Toolbar :: proc(state: ^EditorState, width: f32, play: proc(state: ^
 	Drive_Item("level.zoom")
 	imgui.SameLine()
 	modified := L.doc != nil && L.doc.modified
-	if UI_IconButton(ICON_FA_FLOPPY_DISK, "level.save", "Save the level file (Cmd+S)", tint = UI_WARNING if modified else {}) do LevelEditor_Save(state)
+	if UI_IconButton(ICON_FA_FLOPPY_DISK, "level.save", "Save the level file (" + CMD + "+S)", tint = UI_WARNING if modified else {}) do LevelEditor_Save(state)
 }
 
 level_undo :: proc(state: ^EditorState) {

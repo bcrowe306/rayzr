@@ -592,8 +592,10 @@ prop_row_label :: proc(state: ^EditorState, node: ^e.Node, label: string, p: e.N
 	if imgui.IsItemHovered() do prop_help(state, node, p, true, imgui.IsItemHovered(TIP))
 }
 
-property_widget :: proc(state: ^EditorState, node: ^e.Node, p: e.Node_Property, readonly: bool) {
-	id := fmt.tprintf("insp.prop:%s", p.name)
+// idName: the row's drive id after "insp.prop:" (default: the property's
+// name; a collision shape's rows: "shape.<name>" - #364).
+property_widget :: proc(state: ^EditorState, node: ^e.Node, p: e.Node_Property, readonly: bool, idName := "") {
+	id := fmt.tprintf("insp.prop:%s", idName if idName != "" else p.name)
 	label := fmt.ctprintf("##%s", id)
 	if readonly do imgui.BeginDisabled(true)
 	defer if readonly do imgui.EndDisabled()
@@ -1090,12 +1092,19 @@ inspector_resources :: proc(state: ^EditorState, node: ^e.Node) {
 				}
 				imgui.SameLine(0, 4)
 				if UI_IconButton(ICON_FA_TRASH, fmt.tprintf("insp.shape%d.remove", i), "Remove shape", size = 26) do remove = i
+				own := e.Node_CollectProperties(node)
 				for p in e.Struct_CollectProperties(e.PhysicsShape, &shape) {
 					if p.name == "type" do continue
 					if !shape_prop_relevant(shape.type, p.name) do continue
 					if node.typeId == e.AreaNode && !area_shape_prop(p.name) do continue
 					UI_PropLabel(pretty_name(p.name))
-					property_widget(state, node, p, false)
+					// Drive ids (#364): "shape.<name>" (shape 1), "shape<n>.<name>"
+					// after it - apart from the node's own rows (a Character
+					// Mover's Radius). Shape 1's rows keep the plain
+					// "<name>" too where the node has no row of that name.
+					sid := fmt.tprintf("shape.%s", p.name) if i == 0 else fmt.tprintf("shape%d.%s", i + 1, p.name)
+					property_widget(state, node, p, false, sid)
+					if i == 0 && !shape_name_clashes(own, p.name) do Drive_Alias(fmt.tprintf("insp.prop:%s", sid), fmt.tprintf("insp.prop:%s", p.name))
 				}
 				UI_EndProps()
 			}
@@ -1127,6 +1136,14 @@ inspector_resources :: proc(state: ^EditorState, node: ^e.Node) {
 			append(shapes, s)
 		}
 	}
+}
+
+// shape_name_clashes: has the node a row of its own with a shape setting's
+// name (a Character Mover's radius)?
+@(private = "file")
+shape_name_clashes :: proc(own: []e.Node_Property, name: string) -> bool {
+	for p in own do if p.name == name do return true
+	return false
 }
 
 // area_shape_prop: does a shape setting do anything on an Area (#173)? Its

@@ -50,6 +50,19 @@ expect lge.text contains "iterations": 7
 click @lge.reseed
 expect lge.seed != 1
 
+# While a field is being typed in, Ctrl/Cmd+S and +Z are the field's, not
+# the window's (#373): nothing saved, the graph kept.
+expect lge.dirty == true
+dblclick @lge.param:iterations
+key ctrl+a
+type 9
+key ctrl+s
+key ctrl+z
+expect lge.dirty == true
+key escape
+wait 1
+expect lge.text contains "iterations": 7
+
 # Delete the blur (the window's own Delete, not the scene's).
 click @lge.node:6
 key delete
@@ -70,7 +83,18 @@ wait 3
 click @lge.apply
 wait 2
 expect log contains Generated new_level.levelgen.json into
+expect node:TileMap.tiles != 0
 screenshot applied
+# The window's Ctrl/Cmd+Z after Apply takes the Apply back (the scene's
+# step), not the graph's last edit (#373); Shift redoes it.
+key ctrl+z
+wait 2
+expect node:TileMap.tiles == 0
+expect lge.nodes == 5
+key ctrl+shift+z
+wait 2
+expect node:TileMap.tiles != 0
+expect lge.nodes == 5
 
 # #142 (phase 4): your own node - a Lua script from the template (opened in
 # the Code tab), computed with the rest.
@@ -83,3 +107,47 @@ wait 3
 expect file:levels/new_level_6.gen.lua contains return function(ctx)
 expect lge.errors == 0
 screenshot script
+
+# Another generator asked for while this one has unsaved changes asks
+# first, as a scene tab does (#373): Cancel stays; Don't Save opens it
+# without writing this one; Save writes it, then opens the other.
+exec cp $PROJECT/levels/new_level.levelgen.json $PROJECT/levels/other_zz.levelgen.json
+click @lge.frame
+wait 2
+expect lge.frames == 1
+expect lge.dirty == true
+key ctrl+p
+wait 2
+type other_zz
+wait 2
+key enter
+wait 3
+expect lge.switch-to == levels/other_zz.levelgen.json
+expect lge.path == levels/new_level.levelgen.json
+screenshot switch_prompt
+click @lge.switch-cancel
+wait 2
+expect lge.path == levels/new_level.levelgen.json
+expect lge.dirty == true
+key ctrl+p
+wait 2
+type other_zz
+wait 2
+key enter
+wait 3
+click @lge.switch-discard
+wait 3
+expect lge.path == levels/other_zz.levelgen.json
+expect file:levels/new_level.levelgen.json !contains "frames"
+click @lge.frame
+wait 2
+key ctrl+p
+wait 2
+type new_level.levelgen
+wait 2
+key enter
+wait 3
+click @lge.switch-save
+wait 3
+expect lge.path == levels/new_level.levelgen.json
+expect file:levels/other_zz.levelgen.json contains "frames"

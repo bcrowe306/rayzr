@@ -698,7 +698,11 @@ Code_Render :: proc(state: ^EditorState) {
 		if cm.active >= 0 && cm.active < len(cm.docs) {
 			code_find_bar(state, cm.docs[cm.active])
 			focusedNow = code_text_area(state, cm.docs[cm.active])
+			// (Fixed under the text: a drive never "scrolls it into view" -
+			// the wheel would scroll the text instead, off the screen: #376.)
+			driveNoScroll = true
 			code_status_line(state, cm.docs[cm.active])
+			driveNoScroll = false
 		}
 	}
 	imgui.End()
@@ -789,7 +793,7 @@ code_tabs :: proc(state: ^EditorState) {
 			if imgui.MenuItem(fmt.ctprintf("%s  Find Usages of This Script", ICON_FA_MAGNIFYING_GLASS)) do Asset_ShowUsages(state, doc.rel, false)
 			Drive_Item("ctx:script-usages")
 			imgui.Separator()
-			if imgui.MenuItem(fmt.ctprintf("%s  Close", ICON_FA_XMARK), "Cmd+W") do closeIdx = i
+			if imgui.MenuItem(fmt.ctprintf("%s  Close", ICON_FA_XMARK), CMD + "+W") do closeIdx = i
 			Drive_Item("ctx:close-tab")
 			if imgui.MenuItem(fmt.ctprintf("%s  %s", ICON_FA_THUMBTACK, "Unpin Tab" if doc.pinned else "Pin Tab")) {
 				doc.pinned = !doc.pinned
@@ -1380,7 +1384,7 @@ code_draw :: proc(doc: ^Code_Doc, winPos, winSize: imgui.Vec2, gutterW: f32, foc
 			Drive_ItemRect("code.lightbulb", rowMin, bmx, inWindow = true)
 			cm.bulbMin, cm.bulbMax = rowMin, bmx // clicks here are the bulb's, not the gutter's / text's
 			if point_in_rect(gutterMouse, rowMin, bmx) && imgui.IsWindowHovered(imgui.HoveredFlags_AllowWhenBlockedByActiveItem) {
-				UI_Tooltip("Code actions (Cmd+.)")
+				UI_Tooltip("Code actions (" + CMD + "+.)")
 				if imgui.IsMouseClicked(.Left) do Code_CmdCodeActions(code_state())
 			}
 		}
@@ -2048,6 +2052,11 @@ Code_DriveQuery :: proc(q: string) -> (string, bool) {
 		return doc.rel if doc != nil else "", true
 	case "code.text":
 		return buf.buffer_to_string(&doc.buffer, context.temp_allocator) if doc != nil else "", true
+	case "code.top-row":
+		// The display row at the top of the text area (its scroll).
+		cm := &GlobalCode
+		if doc == nil || cm.lineH <= 0 do return "", true
+		return fmt.tprint(int((cm.areaMin.y - cm.textOrigin.y) / cm.lineH + 0.5)), true
 	case "code.line":
 		if doc == nil do return "", true
 		return buf.buffer_line_str(&doc.buffer, doc.buffer.cursors[0].pos.line), true

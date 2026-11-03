@@ -18,7 +18,7 @@ compared.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *UI XY Plot*. It starts 380 x 180 px with the
+1. **Add Node** (Cmd+A / Ctrl+A) > *UI XY Plot*. It starts 380 x 180 px with the
    title "Signal vs Time", an X range of 0 to 10 and a Y range of -1.5 to
    1.5.
 2. Put it under a [Screen Layer](ScreenLayerNode.md) so it stays on screen.

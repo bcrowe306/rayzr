@@ -15,6 +15,31 @@ dblclick @slicer.rows
 key ctrl+a
 type 2
 key enter
+# #375: the grid changed after a click - Shift+click doesn't range from the
+# old grid's cell (7, outside a 2 x 1 grid): just the clicked cell.
+click @slicer.cell:7
+expect slicer-selection == 7
+dblclick @slicer.cols
+key ctrl+a
+type 2
+key enter
+dblclick @slicer.rows
+key ctrl+a
+type 1
+key enter
+expect slicer-selection == 
+hold shift
+click @slicer.cell:1
+release
+expect slicer-selection == 1
+dblclick @slicer.cols
+key ctrl+a
+type 4
+key enter
+dblclick @slicer.rows
+key ctrl+a
+type 2
+key enter
 click @slicer.cell:0
 hold shift
 click @slicer.cell:2

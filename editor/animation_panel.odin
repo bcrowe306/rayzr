@@ -568,7 +568,7 @@ animation_panel :: proc(state: ^EditorState, apn: ^e.AnimationPlayerNode) {
 	UI_IconButton(ICON_FA_HAND, "anim.drag", "Drag into a script: animation_play(\"name\") on this player", size = 26)
 	code_item_drag(.Animation, anim.name, apn)
 	imgui.SameLine(0, 2)
-	if UI_IconButton(ICON_FA_TRASH, "anim.delete-animation", "Delete animation (Cmd+Z brings it back)", size = 26) {
+	if UI_IconButton(ICON_FA_TRASH, "anim.delete-animation", "Delete animation (" + CMD + "+Z brings it back)", size = 26) {
 		preview_restore(state)
 		Editor_RecordUndo(state, "Delete animation")
 		name := strings.clone(anim.name, context.temp_allocator)
@@ -925,7 +925,7 @@ animation_panel :: proc(state: ^EditorState, apn: ^e.AnimationPlayerNode) {
 		what := "keys" if hasKeys else "frames"
 		any := hasSel || hasKeys
 		if !any do imgui.BeginDisabled(true)
-		if UI_IconButton(ICON_FA_COPY, "anim.copy", fmt.tprintf("Copy the selected %s (Cmd+C)", what), size = 20) {
+		if UI_IconButton(ICON_FA_COPY, "anim.copy", fmt.tprintf("Copy the selected %s (" + CMD + "+C)", what), size = 20) {
 			if hasKeys {
 				AnimKeys_Copy(state, anim)
 				panel.pasteKeys = true
@@ -935,7 +935,7 @@ animation_panel :: proc(state: ^EditorState, apn: ^e.AnimationPlayerNode) {
 		imgui.SameLine(0, 2)
 		canPasteAny := canPaste || (panel.pasteKeys && AnimKeys_CanPaste())
 		if !canPasteAny do imgui.BeginDisabled(true)
-		if UI_IconButton(ICON_FA_PASTE, "anim.paste", "Paste keys at the playhead (Cmd+V)" if panel.pasteKeys && AnimKeys_CanPaste() else "Paste frames after the selection, else at the end (Cmd+V)", size = 20) do paste_any(state, apn, anim)
+		if UI_IconButton(ICON_FA_PASTE, "anim.paste", "Paste keys at the playhead (" + CMD + "+V)" if panel.pasteKeys && AnimKeys_CanPaste() else "Paste frames after the selection, else at the end (" + CMD + "+V)", size = 20) do paste_any(state, apn, anim)
 		if !canPasteAny do imgui.EndDisabled()
 		imgui.SameLine(0, 2)
 		if !any do imgui.BeginDisabled(true)
@@ -1079,9 +1079,9 @@ animation_panel :: proc(state: ^EditorState, apn: ^e.AnimationPlayerNode) {
 		f := panel.anchor
 		UI_DimText(fmt.tprintf("%d frame(s) selected", len(panel.sel)))
 		imgui.Separator()
-		if imgui.MenuItem(fmt.ctprintf("%s  Copy", ICON_FA_COPY), "Cmd+C") do frames_copy(state, anim, panel.sel[:])
+		if imgui.MenuItem(fmt.ctprintf("%s  Copy", ICON_FA_COPY), CMD + "+C") do frames_copy(state, anim, panel.sel[:])
 		Drive_Item("anim.ctx-copy")
-		if imgui.MenuItem(fmt.ctprintf("%s  Paste After", ICON_FA_PASTE), "Cmd+V", false, !e.Frame_ClipEmpty(&frameClip)) do frames_paste(state, apn, anim)
+		if imgui.MenuItem(fmt.ctprintf("%s  Paste After", ICON_FA_PASTE), CMD + "+V", false, !e.Frame_ClipEmpty(&frameClip)) do frames_paste(state, apn, anim)
 		Drive_Item("anim.ctx-paste")
 		if imgui.MenuItem(fmt.ctprintf("%s  Delete", ICON_FA_TRASH), "Del") do frames_delete(state, apn, anim, slice.clone(panel.sel[:], context.temp_allocator))
 		Drive_Item("anim.ctx-delete")

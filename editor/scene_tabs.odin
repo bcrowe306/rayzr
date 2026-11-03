@@ -173,7 +173,7 @@ SceneTabs_Draw :: proc(state: ^EditorState) {
 				if imgui.IsMouseClicked(.Middle) do closeReq = s
 			}
 			if imgui.BeginPopupContextItem(fmt.ctprintf("##scenetab_ctx_%p", s)) {
-				if imgui.MenuItem("Close", "Cmd+W", false, canClose) do closeReq = s
+				if imgui.MenuItem("Close", CMD + "+W", false, canClose) do closeReq = s
 				Drive_Item("ctx:scenetab-close")
 				if imgui.MenuItem("Close Others", nil, false, canClose) {
 					for o in tabs.open do if o != s && !Editor_SceneIsModified(state, o) do defer_close(o)

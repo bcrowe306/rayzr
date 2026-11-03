@@ -20,7 +20,7 @@ ground and ledge checks, line of sight, laser beams, a gun's aim.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *Raycast Sensor*.
+1. **Add Node** (Cmd+A / Ctrl+A) > *Raycast Sensor*.
 2. Make it a child of the node it belongs to (the enemy, the turret), so
    it moves and turns with it. Its **Position** is where the ray starts.
 3. Set **Direction** (any length; it's normalised) and **Length** (px).

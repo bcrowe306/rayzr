@@ -26,7 +26,7 @@ turn nodes on and off at set moments.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *Animation Player*. Selecting it shows the
+1. **Add Node** (Cmd+A / Ctrl+A) > *Animation Player*. Selecting it shows the
    **Animation** tab in the bottom panel (or click **Open Animation
    Timeline** in the Inspector). **View > Workspaces > Animation** gives
    the tab more room.

@@ -20,7 +20,7 @@ another Music Streamer.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *Music Streamer*.
+1. **Add Node** (Cmd+A / Ctrl+A) > *Music Streamer*.
 2. In the Inspector's **Audio** section, pick the track in **Audio File**
    (the reset button next to it clears it).
 3. **Preview** plays it here, through its bus, at its volume and pitch,

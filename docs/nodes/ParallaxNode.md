@@ -21,7 +21,7 @@ hills move faster, the ground moves with the world.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *Parallax Background*.
+1. **Add Node** (Cmd+A / Ctrl+A) > *Parallax Background*.
 2. Pick the image in the Inspector's **Texture** section > **Texture**.
 3. In the Node tab's **Properties** section, set **Factor**: how much it follows the world as the
    camera moves, for X and Y. 1 moves with the world, 0 stays fixed on

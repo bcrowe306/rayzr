@@ -43,6 +43,7 @@ project instead of the demo project (the tutorials' drives,
 | `sound_preview.drive` | The Inspector's Preview on a Sound Effect node (Play / Stop; another selection stops it) and a Music node. |
 | `browse_previews.drive` | The File Browser's arrow keys (rows; Right / Left into and out of a folder), Autoplay (a sound plays on selection; off: it doesn't; saved) and Loop toggles, an Aseprite animation playing and paused; the Assets panel's arrow keys with a selected sound playing in the Preview panel. |
 | `camera_frame.drive` | A 640x360 virtual resolution: the camera frame and a top-right Screen Layer at (640, 0); Expand with the 4:3 preview shape (saved): the frame grows (dashed) and the layer follows to (640, -60). |
+| `screen_layer_zoom.drive` | A 640x360 project with the camera at Target Zoom 2: the frame shrinks at once, and a top-left Screen Layer's UI Progress Bar is drawn and picked at the frame's scale (180x11 world units at (160, 90)), as the game shows it (#360). |
 | `sound_effects.drive` | A Sound Effect with two sounds (the list's Add Sound; one imported), Random mode showing weights, the preview by mode and a row's own, Pitch Random set, reordered by dragging, one removed (saved as a single `audio` again). |
 | `properties_tab.drive` | The Inspector's Properties tab: a property added to a node with no script (one made; the node at the new default), a resource property with its class picked (then a resource picked in the Inspector), a rename in Edit, Remove (asks; undo restores). |
 | `ldtk_entity_icons.drive` | An LDtk level's entities drawn in the scene viewport (icons, else their boxes in their colour) with Draw Entity Tiles off. |
@@ -187,6 +188,12 @@ log <text> | quit
   `@insp.position.x`, `@insp.prop:gravityScale`, `@addnode:Texture Sprite`,
   `@asset:scenes/main.scene.json`, `@menu:Game/Simulate in Editor`, `@pick:<value>`,
   `@ctx:duplicate`, `@settings.save`, `@code.area`, `@code.tab:<file>`, `@code.completion:<label>`, ...).
+- `@insp.prop:<name>`: an Inspector property row (a vector's `.x` / `.y`). A
+  collision shape's rows are `@insp.prop:shape.<name>` (the first shape) and
+  `@insp.prop:shape<n>.<name>` (shape n, from 2), e.g. a Character Mover's
+  capsule `@insp.prop:shape.radius` beside the node's own `@insp.prop:radius`;
+  the first shape's rows also answer to `@insp.prop:<name>` when the node has no
+  row of that name.
 - `@node:<Name>`: a node's position on screen.
 - `@world:x,y`: a world position.
 - `x,y`: raw window pixels.
@@ -208,7 +215,7 @@ Queries:
 - `game` (running/stopped), `build`, `log`, `last-log`
 - `add-node-open`, `project-settings-open`, `item:<id>`
 - `file:<project path>`, `abs-file:<path>`
-- `code.open` (tab count), `code.file`, `code.text`, `code.line` (caret line), `code.cursor` (`line:col`),
+- `code.open` (tab count), `code.file`, `code.text`, `code.line` (caret line), `code.cursor` (`line:col`), `code.top-row` (the display row at the top of the text),
   `code.dirty`, `code.focused`, `code.lsp` (off/starting/ready/failed), `code.completion` (visible items,
   comma-separated), `code.signature`, `code.errors`, `code.diagnostics`, `code.diagnostic-messages`, `code.hover`
 - `code.overlays` (`ok <n>` when every overlay is inside the Code area and bounded), `code.update-ms` (last line-state pass), `code.token-bench` (`full=<ms> cached=<ms> tokenized=<n> lines=<n>`), `code.token-speedup`
@@ -223,7 +230,7 @@ Queries:
 - `insp-help-path` (the path the help pane shows), `insp-flash` (the row Show in Inspector lit)
 - `particle-preview` (on / off; `node:<Name>.particles` = an emitter's live particles)
 - `ref-section`, `ref-api` (the Scripting Reference window's section and API entry)
-- `bottom-tab` (the bottom panel tab shown: Console, Profiler, Game, Animation, Particles, Ldtk, Search, StateGraph)
+- `bottom-tab` (the bottom panel tab shown: Console, Output, Profiler, Animation, Game, Particles, Ldtk, Search, StateGraph, Mixer, Library, TileMap, Files, Tests, BehaviorTree, Goap)
 - `search-total`, `search-files` (find in files)
 - `smg-selected` (the graph's selected state / `transition N`), `smg-zoom`, `smg-pan`, `smg-ways` (live ways out: `idle:Min_Time, run:waiting, ...`); `node:<Name>.path-points` (a PathNode's point count); `mixer-buses` (`Master:+0.0,Music:-6.0,...`), `mixer-voices`
 - `remote-debug-draw` (the running game's last debug-draw reply)

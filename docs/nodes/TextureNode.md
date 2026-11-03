@@ -25,7 +25,7 @@ size, around its origin.
 ## Using it
 
 1. Drag an image from Assets into the viewport. This makes a Texture Sprite
-   where you drop it. Or use **Add Node** (Ctrl+A) > *Texture Sprite*, or
+   where you drop it. Or use **Add Node** (Cmd+A / Ctrl+A) > *Texture Sprite*, or
    right-click an image in Assets > **Add Sprite to Scene**.
 2. Pick the image in the Inspector's **Sprite** section > **Texture** (it
    lists the files under `textures/`). The section shows the image's

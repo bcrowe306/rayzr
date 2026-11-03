@@ -24,7 +24,7 @@ can also hold components - coins, enemies, spikes - one per cell.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *Tile Map*. The bottom panel switches to the
+1. **Add Node** (Cmd+A / Ctrl+A) > *Tile Map*. The bottom panel switches to the
    **Tile Map** tab (the Inspector's **Edit in Tile Map Tab** button opens
    it too).
 2. In the tab's top row, pick the **Tileset** image, set **Tile Size** (the

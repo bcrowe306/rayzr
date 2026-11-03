@@ -26,7 +26,7 @@ objects.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *Dynamic Physics Box*. It starts with a 64 x 64
+1. **Add Node** (Cmd+A / Ctrl+A) > *Dynamic Physics Box*. It starts with a 64 x 64
    box shape.
 2. Shape it: **Edit Shapes** in the viewport (or **Edit in Viewport** in
    the Inspector's **Collision Shapes**) to resize the box, or switch it to

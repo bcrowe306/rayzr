@@ -23,7 +23,7 @@ hitboxes and hurtboxes.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *Trigger Area*. It starts with a box shape.
+1. **Add Node** (Cmd+A / Ctrl+A) > *Trigger Area*. It starts with a box shape.
 2. Shape it: **Edit Shapes** in the viewport (or the Inspector's
    **Collision Shapes**) to resize the box, or switch it to a circle,
    capsule or polygon. An area can have several shapes; together they are

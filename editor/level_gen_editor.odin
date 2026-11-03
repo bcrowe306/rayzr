@@ -31,7 +31,12 @@ import imgui "lib/imgui"
 //              selected node's parameters and (tile output) rules; a large
 //              preview of the selected node's grid (else the output's).
 //   toolbar    Save (Ctrl/Cmd+S), Undo / Redo (Ctrl/Cmd+Z, Shift+Z),
-//              Apply to the selected TileMap (undoable, like any edit).
+//              Apply to the selected TileMap (undoable, like any edit:
+//              the window's undo steps back over it too - #373).
+//
+// Opening another generator with unsaved changes asks: Save / Don't Save /
+// Cancel (as a scene tab does). The window's keys wait while a field is
+// being typed in.
 //
 // After a change a background job evaluates a copy of the graph (#171):
 // each node once, and only the nodes the change reaches - the others come
@@ -98,6 +103,8 @@ lge: struct {
 	ctxWorld:  [2]f32,
 	ctxNode:   int,
 	closePrompt: bool,
+	switchTo:    string, // another generator asked for while this one has unsaved changes (heap; the prompt is open)
+	switchPrompt: bool,
 	tilesBuf:  [128]u8, // the tiles of the rule being typed in ("3, 4")
 	tilesFor:  [2]int,  // (node, rule) tilesBuf belongs to ({-1, -1}: none)
 	layerBuf:  [64]u8,  // the layer name being typed in
@@ -120,7 +127,15 @@ LevelGenEditor_Open :: proc(state: ^EditorState, rel: string) {
 		imgui.SetWindowFocusStr(LEVEL_GEN_WINDOW)
 		return
 	}
-	if lge.loaded && lge.dirty do lge_save(state) // (switching files keeps the edits)
+	if lge.loaded && lge.dirty {
+		// Unsaved changes: ask first (lge_switch_prompt), as a scene tab does.
+		delete(lge.switchTo)
+		lge.switchTo = strings.clone(rel)
+		lge.switchPrompt = true
+		lge.open = true
+		imgui.SetWindowFocusStr(LEVEL_GEN_WINDOW)
+		return
+	}
 	full, _ := filepath.join({state.projectPath, rel}, context.temp_allocator)
 	data, err := os.read_entire_file(full, context.temp_allocator)
 	if err != nil {
@@ -294,6 +309,7 @@ LevelGenEditor_Shutdown :: proc() {
 	delete(lge.sel)
 	delete(lge.frameNodes)
 	delete(lgeClip)
+	delete(lge.switchTo)
 	lgeClip = ""
 	if lge.cache.entries != nil do e.Gen_CacheDestroy(&lge.cache)
 	lge = {}
@@ -748,6 +764,7 @@ LevelGenEditor_Render :: proc(state: ^EditorState) {
 		else do lge.open = false
 	}
 	lge_close_prompt(state)
+	lge_switch_prompt(state)
 	if !visible do return
 	levelGenFocused = imgui.IsWindowFocused({.RootWindow, .ChildWindows})
 	Drive_Window("levelgen")
@@ -804,17 +821,108 @@ lge_close_prompt :: proc(state: ^EditorState) {
 	imgui.EndPopup()
 }
 
+// lge_switch_prompt: another generator was asked for while this one has
+// unsaved changes - Save / Don't Save / Cancel.
+@(private = "file")
+lge_switch_prompt :: proc(state: ^EditorState) {
+	if lge.switchPrompt {
+		imgui.OpenPopup("Unsaved Generator###LgeSwitch")
+		lge.switchPrompt = false
+	}
+	if !imgui.BeginPopupModal("Unsaved Generator###LgeSwitch", nil, {.NoTitleBar, .AlwaysAutoResize}) do return
+	Drive_Window("lge-switch")
+	UI_PanelTitle(ICON_FA_TRIANGLE_EXCLAMATION, fmt.tprintf("Save %s?", filepath.base(lge.path)))
+	UI_DimText(fmt.tprintf("before opening %s", filepath.base(lge.switchTo)))
+	imgui.Dummy({0, 4})
+	next := ""
+	if UI_PrimaryButton("Save", "lge.switch-save", {96, 0}) {
+		if lge_save(state) do next = lge.switchTo
+		imgui.CloseCurrentPopup()
+	}
+	imgui.SameLine()
+	if UI_Button("Don't Save", "lge.switch-discard", {96, 0}) {
+		Editor_Log(state, .Info, "Closed %s without saving", lge.path)
+		lge.dirty = false
+		next = lge.switchTo
+		imgui.CloseCurrentPopup()
+	}
+	imgui.SameLine()
+	cancel := UI_Button("Cancel", "lge.switch-cancel", {96, 0}) || imgui.IsKeyPressed(.Escape)
+	if cancel do imgui.CloseCurrentPopup()
+	imgui.EndPopup()
+	if next != "" || cancel {
+		rel := strings.clone(lge.switchTo, context.temp_allocator)
+		delete(lge.switchTo)
+		lge.switchTo = ""
+		if next != "" do LevelGenEditor_Open(state, rel)
+	}
+}
+
+// LGE_APPLIED: an undo-stack entry for Apply to TileMap (the scene's undo
+// holds the step; the window's Undo / Redo steps over it there - #373).
+@(private = "file")
+LGE_APPLIED :: "\x00applied"
+@(private = "file")
+LGE_APPLY_LABEL :: "Generate level"
+
+// lge_undo / lge_redo: the window's Undo / Redo - the graph's steps, and
+// Apply to TileMap's in the scene in the order they were made.
+@(private = "file")
+lge_undo :: proc(state: ^EditorState) {lge_step(state, &lge.undo, &lge.redo, true)}
+
+@(private = "file")
+lge_redo :: proc(state: ^EditorState) {lge_step(state, &lge.redo, &lge.undo, false)}
+
+@(private = "file")
+lge_step :: proc(state: ^EditorState, from, to: ^[dynamic]string, undo: bool) {
+	if len(from) == 0 do return
+	if from[len(from) - 1] != LGE_APPLIED {
+		lge_restore(from, to)
+		return
+	}
+	delete(pop(from))
+	if lge_scene_next_label(state, state.undoStack[:] if undo else state.redoStack[:]) != LGE_APPLY_LABEL {
+		// The scene moved on since (another edit): its own Undo takes it.
+		Editor_Log(state, .Warn, "Level Generator: the scene was edited after Apply to TileMap - %s it with the scene's Edit > %s", "undo" if undo else "redo", "Undo" if undo else "Redo")
+		return
+	}
+	append(to, strings.clone(LGE_APPLIED))
+	if undo do Editor_Undo(state)
+	else do Editor_Redo(state)
+}
+
+// lge_scene_next_label: the label of the step the scene's Undo (Redo) would
+// take next (undo_redo's rule: the active scene's steps and file steps).
+@(private = "file")
+lge_scene_next_label :: proc(state: ^EditorState, stack: []Undo_Entry) -> string {
+	#reverse for en in stack {
+		if en.kind == .Scene && en.scene != state.activeScene do continue
+		return en.label
+	}
+	return ""
+}
+
+// lge_applied: Apply to TileMap made a scene step - an entry in the
+// window's undo too.
+@(private = "file")
+lge_applied :: proc() {
+	append(&lge.undo, strings.clone(LGE_APPLIED))
+	for t in lge.redo do delete(t)
+	clear(&lge.redo)
+}
+
 @(private = "file")
 lge_keys :: proc(state: ^EditorState) {
 	if !imgui.IsWindowFocused({.RootWindow, .ChildWindows}) do return
 	io := imgui.GetIO()
+	// Typing in a field (or dragging one): its keys, not the window's.
+	if io.WantTextInput || imgui.IsAnyItemActive() do return
 	cmd := io.KeyCtrl || io.KeySuper
 	if cmd && imgui.IsKeyPressed(.S) do lge_save(state)
 	if cmd && imgui.IsKeyPressed(.Z) {
-		if io.KeyShift do lge_restore(&lge.redo, &lge.undo)
-		else do lge_restore(&lge.undo, &lge.redo)
+		if io.KeyShift do lge_redo(state)
+		else do lge_undo(state)
 	}
-	if io.WantTextInput do return
 	if imgui.IsKeyPressed(.Delete) || imgui.IsKeyPressed(.Backspace) do lge_delete_selection()
 	if cmd && imgui.IsKeyPressed(.C) do lge_copy(state)
 	if cmd && imgui.IsKeyPressed(.V) do lge_paste(state)
@@ -830,11 +938,11 @@ lge_toolbar :: proc(state: ^EditorState) {
 	if UI_IconButton(ICON_FA_FLOPPY_DISK, "lge.save", "Save (Ctrl/Cmd+S)", lge.dirty, 26) do lge_save(state)
 	imgui.SameLine(0, 2)
 	imgui.BeginDisabled(len(lge.undo) == 0)
-	if UI_IconButton(ICON_FA_ROTATE_LEFT, "lge.undo", "Undo (Ctrl/Cmd+Z)", size = 26) do lge_restore(&lge.undo, &lge.redo)
+	if UI_IconButton(ICON_FA_ROTATE_LEFT, "lge.undo", "Undo (Ctrl/Cmd+Z)", size = 26) do lge_undo(state)
 	imgui.EndDisabled()
 	imgui.SameLine(0, 2)
 	imgui.BeginDisabled(len(lge.redo) == 0)
-	if UI_IconButton(ICON_FA_ROTATE_RIGHT, "lge.redo", "Redo (Ctrl/Cmd+Shift+Z)", size = 26) do lge_restore(&lge.redo, &lge.undo)
+	if UI_IconButton(ICON_FA_ROTATE_RIGHT, "lge.redo", "Redo (Ctrl/Cmd+Shift+Z)", size = 26) do lge_redo(state)
 	imgui.EndDisabled()
 	imgui.SameLine(0, 10)
 	// The clipboard and frames (the canvas's menus and keys do the same).
@@ -850,10 +958,11 @@ lge_toolbar :: proc(state: ^EditorState) {
 	tm := state.selectedNode if state.selectedNode != nil && state.selectedNode.typeId == e.TileMapNode else nil
 	imgui.BeginDisabled(tm == nil)
 	if UI_Button(fmt.tprintf("%s  Apply to TileMap", ICON_FA_TABLE_CELLS), "lge.apply") && tm != nil {
-		Editor_RecordUndo(state, "Generate level")
+		Editor_RecordUndo(state, LGE_APPLY_LABEL)
 		if err := e.Gen_ApplyTileMap(&lge.graph, cast(^e.TileMapNode)tm, 0, &state.game.gameContext, state.activeScene); err != "" {
 			Editor_Log(state, .Error, "Level Generator: %s", err)
 		} else {
+			lge_applied() // (the window's Ctrl/Cmd+Z takes it back too)
 			Editor_Log(state, .Info, "Generated %s into %s (seed %d)", filepath.base(lge.path), tm.name, lge.graph.seed)
 		}
 	}
@@ -2253,6 +2362,7 @@ LevelGenEditor_DriveQuery :: proc(q: string) -> (string, bool) {
 	case "lge.selected": return fmt.tprint(lge.selected), true
 	case "lge.seed": return fmt.tprint(lge.graph.seed), true
 	case "lge.undo": return fmt.tprint(len(lge.undo)), true
+	case "lge.switch-to": return lge.switchTo, true // (the generator the unsaved-changes prompt is for)
 	case "lge.errors": return fmt.tprint(len(lge.errors)), true
 	case "lge.text": return e.Gen_GraphSerialize(&lge.graph, context.temp_allocator) if lge.loaded else "", true
 	case "lge.selection": return fmt.tprint(len(lge.sel)), true

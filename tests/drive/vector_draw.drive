@@ -44,6 +44,37 @@ screenshot node_edit
 click @vd.tool:select
 drag @node:VectorShape+0,-40 @node:VectorShape+40,-40
 expect file:art/vectorshape.svg contains <path
+
+# Keys go to the art first (#372): Esc ends a pen path in progress (the
+# mode stays); the scene's keys (W, F, arrows) don't switch the scene tool
+# or nudge the node; Delete removes the selected shape, not the node.
+expect tool == select
+click @vd.tool:pen
+click @node:VectorShape+-80,120
+click @node:VectorShape+-20,130
+expect vd.pen == 1
+key escape
+expect vd.active == true
+expect vd.pen == -1
+expect vd.shapes == 2
+expect selected == VectorShape
+key w
+expect tool == select
+key f
+expect vd.tool == Gradient
+expect tool == select
+expect node:VectorShape.position == 640.0,352.0
+key left
+key up
+expect node:VectorShape.position == 640.0,352.0
+click @vd.tool:select
+click @node:VectorShape+-50,125
+expect vd.shape == 1
+key delete
+expect vd.shapes == 1
+expect node:VectorShape.exists == true
+expect vd.active == true
+screenshot keys_to_art
 key escape
 expect vd.active == false
 screenshot done

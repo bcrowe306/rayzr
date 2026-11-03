@@ -21,7 +21,7 @@ puts the default back.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *UI Slider*. It is 360 x 28, labelled "Value",
+1. **Add Node** (Cmd+A / Ctrl+A) > *UI Slider*. It is 360 x 28, labelled "Value",
    from 0 to 1 at 0.5.
 2. Put it under a [Screen Layer](ScreenLayerNode.md) or in a
    [UI Container](UIContainerNode.md).

@@ -17,8 +17,10 @@ bottomTabRequest: Maybe(BottomTab) // select this tab next frame
 
 // Following the selection (Settings > General: Bottom Panel Follows
 // Selection): an AnimationPlayer shows the Animation tab, a particle emitter
-// Particles, an LDtk level LDtk, a Tile Map the Tile Map tab; selecting something else returns to the tab
-// shown before. Picking a tab by hand stops the return.
+// Particles, an LDtk level LDtk, a Tile Map the Tile Map tab, a State
+// Machine, Behavior Tree or GOAP node its tab (bottom_tab_for); selecting
+// something else returns to the tab shown before. Picking a tab by hand
+// stops the return.
 @(private = "file")
 follow: struct {
 	lastSel: ^e.Node,

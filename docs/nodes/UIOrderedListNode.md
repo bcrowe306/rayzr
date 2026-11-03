@@ -20,7 +20,7 @@ steps, a recipe, a high-score table's places.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *UI Numbered List*. It starts 320 x 220 px with
+1. **Add Node** (Cmd+A / Ctrl+A) > *UI Numbered List*. It starts 320 x 220 px with
    no rows.
 2. Put it under a [Screen Layer](ScreenLayerNode.md), or in a
    [UI Container](UIContainerNode.md).

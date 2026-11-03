@@ -25,7 +25,7 @@ each other, and a script can turn a bone (aim an arm at the mouse).
 ## Using it
 
 1. Copy the export into the project (for example `characters/hero/`).
-2. **Add Node** (Ctrl+A) > *Skeleton*.
+2. **Add Node** (Cmd+A / Ctrl+A) > *Skeleton*.
 3. Inspector > **Skeleton** > **File**: pick the `.json`. The list shows
    Spine exports with an `.atlas` next to them and DragonBones `_ske.json`
    files. Set **Atlas** only when it isn't next to the file with the usual

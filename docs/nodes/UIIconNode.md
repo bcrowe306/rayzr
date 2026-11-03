@@ -16,7 +16,7 @@ don't need an image file for small HUD and menu symbols.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *UI Icon*. It starts 28 x 28 px with no icon,
+1. **Add Node** (Cmd+A / Ctrl+A) > *UI Icon*. It starts 28 x 28 px with no icon,
    so it draws nothing yet.
 2. Put it under a [Screen Layer](ScreenLayerNode.md), or in a
    [UI Container](UIContainerNode.md) next to a [Label](UILabelNode.md).

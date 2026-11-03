@@ -17,7 +17,7 @@ when the player presses Enter.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *UI Text Input*. It is 360 x 28, labelled
+1. **Add Node** (Cmd+A / Ctrl+A) > *UI Text Input*. It is 360 x 28, labelled
    "Input", with the placeholder "Enter text...".
 2. Put it under a [Screen Layer](ScreenLayerNode.md) or in a
    [UI Container](UIContainerNode.md).

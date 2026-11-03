@@ -21,7 +21,7 @@ inventories are built from containers.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *UI Container*. It starts as a 320 x 240 panel
+1. **Add Node** (Cmd+A / Ctrl+A) > *UI Container*. It starts as a 320 x 240 panel
    with the title "Panel", a header, a background and a border.
 2. Put it under a [Screen Layer](ScreenLayerNode.md) so it stays on screen.
 3. With the container selected, add UI nodes (Add Node > UI & Interface):

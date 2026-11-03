@@ -573,6 +573,34 @@ Goap_SetString :: proc(g: ^GoapNode, s: ^string, value: string) {
 	s^ = strings.clone(value, g.allocator) if value != "" else ""
 }
 
+// Goap_RenameKeyRefs: what uses the key `from` - goals' and actions'
+// conditions (their key and compared-with key), effects, action targets and
+// sensors - uses `to` instead (the caller renames the key itself). How
+// many it changed.
+Goap_RenameKeyRefs :: proc(g: ^GoapNode, from, to: string) -> int {
+	if from == "" || from == to do return 0
+	n := 0
+	ren :: proc(g: ^GoapNode, s: ^string, from, to: string, n: ^int) {
+		if s^ != from do return
+		Goap_SetString(g, s, to)
+		n^ += 1
+	}
+	conds :: proc(g: ^GoapNode, list: ^[dynamic]Goap_Condition, from, to: string, n: ^int) {
+		for &c in list {
+			ren(g, &c.key, from, to, n)
+			ren(g, &c.refKey, from, to, n)
+		}
+	}
+	for &goal in g.goals do conds(g, &goal.conditions, from, to, &n)
+	for &a in g.actions {
+		conds(g, &a.conditions, from, to, &n)
+		for &ef in a.effects do ren(g, &ef.key, from, to, &n)
+		ren(g, &a.target, from, to, &n)
+	}
+	for &s in g.sensors do ren(g, &s.key, from, to, &n)
+	return n
+}
+
 Goap_AddGoal :: proc(g: ^GoapNode, name: string) -> int {
 	append(&g.goals, Goap_Goal{name = strings.clone(name, g.allocator), baseCost = 1, conditions = make([dynamic]Goap_Condition, g.allocator)})
 	return len(g.goals) - 1

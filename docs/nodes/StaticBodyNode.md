@@ -23,7 +23,7 @@ Use it for the ground, walls, ceilings, ledges and any solid scenery.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *Static Platform*. It starts with a 256 x 32
+1. **Add Node** (Cmd+A / Ctrl+A) > *Static Platform*. It starts with a 256 x 32
    box shape.
 2. Shape it: **Edit Shapes** in the viewport (or **Edit in Viewport** in
    the Inspector's **Collision Shapes**) to resize the box, or switch it to

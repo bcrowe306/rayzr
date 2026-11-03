@@ -22,7 +22,7 @@ the emitter makes new ones to replace them.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *Particle Emitter*. It starts emitting at once:
+1. **Add Node** (Cmd+A / Ctrl+A) > *Particle Emitter*. It starts emitting at once:
    every emitter runs in the viewport while you edit, so each change shows
    straight away.
 2. Selecting it shows the **Particles** tab in the bottom panel (or click

@@ -16,7 +16,7 @@ down to turn it. It fits audio-style settings in little space.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *UI Knob*. It is 64 x 80, labelled "Volume",
+1. **Add Node** (Cmd+A / Ctrl+A) > *UI Knob*. It is 64 x 80, labelled "Volume",
    from 0 to 100 at 50.
 2. Put it under a [Screen Layer](ScreenLayerNode.md) or in a
    [UI Container](UIContainerNode.md) (a horizontal one for a row of

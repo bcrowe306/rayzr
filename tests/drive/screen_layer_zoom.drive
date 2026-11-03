@@ -1,0 +1,59 @@
+# #360: with a zoomed camera the viewport shows a Screen Layer's HUD as the
+# game does - a 640x360 project, Zoom 2 (a 320x180 frame at (160, 90)), a
+# top-left layer with a UI Progress Bar: drawn (and picked) at half size
+# from the frame's corner, not at world size.
+wait 5
+key ctrl+comma
+click @settings.tab:project
+click @settings.page:Video
+dblclick @settings.virtual-res+-50,0
+key cmd+a
+type 640
+key enter
+dblclick @settings.virtual-res+50,0
+key cmd+a
+type 360
+key enter
+click @settings.save
+wait 3
+expect file:project.json contains "virtual_width": 640
+click @asset.new-scene
+wait 5
+click @hier.add
+click @addnode.search
+type screen layer
+wait 2
+click @addnode.create
+wait 3
+click @hier.add
+click @addnode.search
+type ui progress bar
+wait 2
+click @addnode.create
+wait 3
+expect node:UIProgressBar.parent == ScreenLayer
+# At the layer's origin: the frame's top-left.
+dblclick @insp.position.x
+key cmd+a
+type 0
+key enter
+dblclick @insp.position.y
+key cmd+a
+type 0
+key enter
+expect node:UIProgressBar.position == 0.0,0.0
+click @hier:Camera
+dblclick @insp.prop:targetZoom
+key cmd+a
+type 2
+key enter
+wait 3
+expect node:ScreenLayer.global == 160.0,90.0
+click @hier:ScreenLayer/UIProgressBar
+wait 2
+# 360x22 in the game's frame: 180x11 world units at Zoom 2 (it was
+# 360x22, overflowing the frame).
+expect selected-bounds == 160,90,340,101
+key shift+home
+wait 3
+screenshot hud_zoom2

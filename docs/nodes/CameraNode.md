@@ -24,7 +24,7 @@ shows the world through one camera, its current camera.
 
 ## Using it
 
-1. A new scene starts with a camera. To add another, **Add Node** (Ctrl+A)
+1. A new scene starts with a camera. To add another, **Add Node** (Cmd+A / Ctrl+A)
    > *Camera 2D*. Keep **Is Current** on for only one camera per scene.
 2. Place it: with no follow target, the game starts looking at the
    camera's position. The viewport draws its frame (yellow for the current

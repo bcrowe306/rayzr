@@ -559,6 +559,32 @@ gg_text :: proc(state: ^EditorState, g: ^e.GoapNode, id: string, s: ^string, hin
 	Drive_Item(id)
 }
 
+// gg_key_name: a key's name field. A rename, when the field is left, is
+// followed by what uses the key - conditions, effects, targets, sensors -
+// in the same undo step (#374).
+@(private = "file")
+ggRenameFrom: string // the name when the field became active (heap)
+
+@(private = "file")
+gg_key_name :: proc(state: ^EditorState, g: ^e.GoapNode, i: int) {
+	k := &g.keys[i]
+	gg_text(state, g, fmt.tprintf("gg.key.name:%d", i), &k.name)
+	if imgui.IsItemActivated() {
+		delete(ggRenameFrom)
+		ggRenameFrom = strings.clone(k.name)
+	}
+	if imgui.IsItemDeactivated() {
+		// (Not when another key still has the old name: its uses stay.)
+		shared := false
+		for o, j in g.keys do if j != i && o.name == ggRenameFrom do shared = true
+		if !shared && ggRenameFrom != k.name {
+			if n := e.Goap_RenameKeyRefs(g, ggRenameFrom, k.name); n > 0 do Editor_Log(state, .Info, "Renamed GOAP key %s to %s (%d use%s)", ggRenameFrom, k.name, n, "" if n == 1 else "s")
+		}
+		delete(ggRenameFrom)
+		ggRenameFrom = ""
+	}
+}
+
 // gg_key_combo: one of the agent's keys (targets: target keys only).
 @(private = "file")
 gg_key_combo :: proc(state: ^EditorState, g: ^e.GoapNode, id: string, s: ^string, targets: bool, allowNone := false, w: f32 = -1) {
@@ -890,7 +916,7 @@ gg_keys_page :: proc(state: ^EditorState, g: ^e.GoapNode) {
 			imgui.PushIDInt(i32(i))
 			imgui.TableNextRow()
 			imgui.TableNextColumn()
-			gg_text(state, g, fmt.tprintf("gg.key.name:%d", i), &k.name)
+			gg_key_name(state, g, i)
 			imgui.TableNextColumn()
 			kind := i32(1 if k.target else 0)
 			imgui.SetNextItemWidth(-1)
