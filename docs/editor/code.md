@@ -36,6 +36,19 @@ The Code tab exists while a script is open. Open one by:
 
 **Cmd+2** focuses the Code tab again, **Cmd+1** the Viewport.
 
+### New Script
+
+**New Script...** (the Inspector, the scene tree's menu, the **+** in
+Assets, the command palette) opens a dialog: the file name under
+`scripts/` (a taken name gets `_2`) and a template, with a preview of the
+script it writes. The templates: **Empty**, **Resource Class**,
+**Platformer Character**, **Top-Down Character**, **Enemy Patrol**, **UI
+Menu**, **Pickup**, **Door / Trigger**, **Accessibility Menu** and
+**Controls Menu (rebinding)**. Opened from a node, the script is named
+after the node and attached to it, and the template made for its type is
+picked first and starred. Up / Down pick a template, Enter (or a
+double-click) creates it.
+
 ## What's in it
 
 On macOS the shortcuts use **Cmd**; on Windows and Linux read **Ctrl**.
@@ -158,6 +171,46 @@ entries that need the language server are greyed out until it's ready.
 Every command is also in the command palette (**Cmd+Shift+P**) and can be
 rebound in Settings > General > Keymap.
 
+**Cmd+S** writes the file, and scripts running in Simulate (or the game
+started with Play) reload it.
+
+### Snippets
+
+Type `ready`, `update`, `connect`, `properties`, `tween`, `on` or `method`
+at the start of a statement and press **Tab**: it expands, and Tab moves
+through its placeholders. See the
+[scripting guide](../../engine/SCRIPTING.md).
+
+### Scripting Reference
+
+**F1** on an engine name (or **Help > Scripting Reference**) opens the
+**Scripting Reference** window: `engine/SCRIPTING.md` by section, with a
+**Search** box, rendered with its headings, tables and highlighted Lua.
+Opened on a symbol, a card on top shows the function's signature,
+description, example and parameters, and the section that covers it is
+shown below.
+
+## Files the editor writes for Lua
+
+**Lua tooling files.** The editor writes the engine API definitions to
+`<project>/.rayzr/definitions/` (refreshed when the editor's copy changes)
+and a `.luarc.json` pointing at them. So `lua-language-server` knows every
+engine type, in the Code tab and in VS Code or any LuaLS editor opening the
+project folder. A `.luarc.json` you wrote yourself is left alone. Hidden
+files and folders (`.rayzr/`, `.luarc.json`) are never packaged into games.
+The language server comes with the editor; Settings > Code Editor can
+point at another one.
+
+**Project types.** Next to them the editor writes
+`.rayzr/definitions/project_types.lua` from your project: `InputAction`
+(a misspelled action is an error, and names complete inside the quotes),
+`SceneName`, `NodeName`, `NodeTag`, `ScenePath` / `TexturePath` /
+`AudioPath` / `ComponentPath` / `LevelPath` / `ScriptPath`, animation,
+state machine, save and locale names, LDtk entity / level / layer / enum
+names, and a class per script with its exported properties (so
+`self.speed` is a number). It is rewritten half a second after saves,
+imports, renames and settings changes.
+
 ## Walkthrough
 
 Make the ship turn faster and check the change:
@@ -184,8 +237,9 @@ Make the ship turn faster and check the change:
 - A script changed outside the editor reloads by itself when you have no
   unsaved edits; otherwise a bar asks **Reload** or **Keep Mine**.
 - Every save keeps a copy: tab menu > **Local History...** restores one.
-- Drag a node from the Scene panel, or an asset, into a script to insert a
-  reference to it.
+- Drag a node from the Scene panel, an asset, an Inspector property or
+  event, an input action or an animation into a script to insert code that
+  uses it: see [Inspector > Drag into a script](inspector.md#drag-into-a-script).
 - Full reference (every command, the language server, refactoring,
   debugging): [Code editor](../../editor/CODE_EDITOR.md). Related:
   [Node in Lua](../lua/Node.md), [Playtesting](playtesting.md),

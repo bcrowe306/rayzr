@@ -41,6 +41,10 @@ including a theme you were previewing. Changes made to `project.json`
 outside the editor are picked up each time the dialog opens. The project's
 folder is shown next to the title.
 
+The dialog is modal, so **F1** can't open this page while it's open: the
+**?** at the right of its header does. The page shows over the dialog;
+**Esc** or its **x** closes it and leaves Settings open.
+
 ### General > Basic
 
 | Option | What it does |
@@ -239,7 +243,7 @@ settings. **Use Presets** turns the ticked targets into presets. Then:
 
 **Save and Export** (or **Save and Export All** with several presets) at
 the bottom saves the settings and exports everything. See
-[Playtesting](playtesting.md) for what an export writes, and
+[Export](export.md) for what an export writes and how presets work, and
 [web export](../../engine/docs/web_export.md) and
 [Android export](../../engine/docs/android_export.md).
 
@@ -274,7 +278,8 @@ game (see the Accessibility Menu script template and
 
 ### Plugins
 
-Changes here apply at once (no Save needed).
+Changes here apply at once (no Save needed). More about plugins, the
+trust prompt and **Tools > New Plugin...**: [Plugins](plugins.md).
 
 - **This project's plugins**: allowed, blocked or not yet allowed, with
   **Allow** / **Block**.

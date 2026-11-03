@@ -14,6 +14,7 @@ type rotation_speed
 # (the mouse off Assets: no tooltip)
 move 640,420
 wait 3
+annotate @window:code The Code tab, docked next to the Viewport (Cmd+2)
 annotate @code.tab:scripts/player_ship.lua Open scripts, one tab each (right-click for more)
 annotate @code.crumb:0 Breadcrumbs: the function around the caret
 annotate @code.find-input Find (Cmd+F): case, word, regex, replace

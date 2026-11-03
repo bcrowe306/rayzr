@@ -770,6 +770,16 @@ New Shader). Every `uniform` of the shader is a parameter; hints after `//`
 (`color`, `range 0 1`, `default 0.5`) shape the Inspector; `time` is set
 automatically. Saving a shader reloads it.
 
+In the editor, the **Material** section of a drawable node's Inspector is
+closed until the node has a material. **Shader** picks *None*, a built-in
+or a project shader; **Blend** the blend mode. With no shader picked, **New
+Shader...** writes a documented template to `shaders/<node_name>.fs` and
+applies it. The parameters are generated from the shader's uniforms -
+sliders for ranges, colour pickers for `color`, a picker of project images
+for textures - and each has a reset arrow back to the shader's default
+once edited. A project shader has **Edit Shader** (opens it in the Code
+tab). Dropping a shader from Assets onto a node in the viewport applies it.
+
 ```lua
 function Enemy:on_hit()
     self.node:set_shader("builtin:flash")

@@ -81,8 +81,12 @@ At the right end of a row:
 | Right-click empty space | **Add Node...**, **Paste**, **Select All**. |
 
 Moving or renaming a node keeps it where it is in the world, and keeps
-scripts pointing at it: node properties update, and `get_node(...)` paths
-in scripts are offered for update.
+scripts pointing at it: node properties update, and the
+`self.node:get_node("...")`, `self.node:get_child("...")` and
+`Scene.find_node("...")` calls that pointed at it are offered for update.
+Scripts open in the Code tab are edited in place (one undo step); others
+are changed on disk. Pasting nodes into another scene also keeps their
+world position.
 
 ### The node menu
 
@@ -151,20 +155,22 @@ opens this tab too):
 
 ### Scene tabs
 
-Each scene you open gets a tab above the viewport. A cubes icon marks a
-component, a puzzle piece a custom node type.
+Each scene you open - from Assets, Go to File, **Edit Component** - gets a
+tab above the viewport. A cubes icon marks a component, a puzzle piece a
+custom node type.
 
 | Action | What it does |
 |---|---|
 | Click a tab | Switch to it. Each tab keeps its own view, selection and undo history. |
 | Drag a tab | Reorder. The arrow at the left lists every tab. |
 | Dot on a tab | Unsaved changes (hover for the file). |
-| **x**, middle-click, Cmd+W | Close it. With unsaved changes it asks: **Save**, **Don't Save**, **Cancel**. The last tab can't be closed. |
+| **x**, middle-click, Cmd+W | Close it. With unsaved changes it asks: **Save**, **Don't Save**, **Cancel**. Closing unloads the scene and frees its undo history; opening it again loads the file. The last tab can't be closed. |
 | Ctrl+Tab / Ctrl+Shift+Tab | Next / previous tab (also Ctrl+PageDown / PageUp, Cmd+Opt+Right / Left). |
 | Right-click a tab | **Close**, **Close Others** (ones with unsaved changes stay open), **Copy Path**. |
 
-You can't switch tabs while simulating. The open tabs come back the next
-time you open the project.
+You can't switch tabs while simulating. The open tabs and the active one
+come back the next time you open the project (they are kept in
+`.rayzr/open_scenes.json`).
 
 ## Walkthrough
 

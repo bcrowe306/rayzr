@@ -1,0 +1,9 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "Back to the page before", "x": 72, "y": 95, "w": 26, "h": 26},
+    {"label": "Every node, by category", "x": 102, "y": 95, "w": 26, "h": 26},
+    {"label": "The page: links open other pages here", "x": 502, "y": 3545, "w": 28, "h": 15}
+  ]
+}

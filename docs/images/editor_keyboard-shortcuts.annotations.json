@@ -1,0 +1,8 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "Filter by command or key", "x": 342, "y": 129, "w": 595, "h": 25},
+    {"label": "Command, shortcut(s), where it works", "x": 330, "y": 94, "w": 620, "h": 560}
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "Type to filter (> commands, : a line)", "x": 328, "y": 97, "w": 623, "h": 25}
+  ]
+}

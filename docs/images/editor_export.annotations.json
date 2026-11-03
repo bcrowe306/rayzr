@@ -1,0 +1,10 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "The selected preset: its own name, folder, version, window...", "x": 636, "y": 155, "w": 445, "h": 25},
+    {"label": "Include / Exclude: file patterns, one per line", "x": 636, "y": 448, "w": 445, "h": 54},
+    {"label": "Save and Export This Preset", "x": 636, "y": 543, "w": 179, "h": 25},
+    {"label": "Save and Export (All): every preset", "x": 374, "y": 584, "w": 120, "h": 25}
+  ]
+}
