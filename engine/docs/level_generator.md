@@ -76,9 +76,13 @@ A generator is computed node by node, each node once: the heavy nodes
 (cellular automaton, blur, dilate / erode, noise, random fill) share their
 rows among a few worker threads on big enough grids, and work on flat rows
 - the automaton on bytes with a border of cells all round, blur as two
-sliding sums (any radius costs the same), noise from a precomputed lattice.
-A 256 x 256 cave with noise, blur and scatter takes about 1.5 ms in an
-optimized build (`scripts/bench.sh engine`, `bench_level_gen`).
+sliding sums (any radius costs the same), value noise from a precomputed
+lattice. A 256 x 256 cave with noise, blur and scatter takes about 1.5 ms
+in an optimized build (`scripts/bench.sh engine`, `bench_level_gen`). On
+256 x 256 cells, 4 octaves of noise take about 0.3 ms (value), 0.5 ms
+(Perlin) and 0.8 ms (Simplex); a Poisson scatter with radius 4 over the
+whole level about 2 ms (it runs on one thread: each point depends on the
+ones before it).
 
 Builds without optimization (`task editor:build`, `task run`) are about 8x
 slower at this kind of work: to play-test, use **`task editor:run:fast`**
@@ -152,7 +156,7 @@ is an error.
 | Type | Parameters | |
 |---|---|---|
 | `constant` | `value` (1) | The same value everywhere. |
-| `noise` | `scale` (16), `octaves` (3), `persistence` (0.5), `seed` (0) | Smooth value noise (fBm), 0..1. |
+| `noise` | `type`: `value` (default), `perlin`, `simplex`; `scale` (16), `octaves` (3), `persistence` (0.5), `seed` (0) | Smooth noise (fBm), 0..1 - the types below. |
 | `random_fill` | `density` (0.45), `seed` (0) | Each cell 1 with that chance, else 0. |
 | `gradient` | `direction`: `horizontal` (0 left .. 1 right), `vertical` (0 top .. 1 bottom), `radial` (1 centre .. 0 corners) | A ramp. |
 | `border` | `width` (1) | 1 within that many cells of the edge. |
@@ -162,6 +166,16 @@ is an error.
 | `lines` | `count` (6), `min_length` (6), `max_length` (20), `thickness` (1), `direction`: `horizontal`, `vertical`, `both` (each line one or the other; default), `any` (any angle), `seed` (0) | Random lines: platforms, ledges, walls, cracks. Each fits inside the level (one longer than it is clipped). |
 | `rectangles` | `count` (5), `min_size` (4), `max_size` (12), `thickness` (1), `filled` (false), `seed` (0) | Random rectangles, outlines `thickness` cells wide or filled: rooms, ruins, crates. Each side's length is picked in the range. |
 | `circles` | `count` (5), `min_radius` (3), `max_radius` (8), `thickness` (1), `filled` (false), `seed` (0) | Random rings or discs: craters, arenas, pools. A cell is in when its centre is within radius + 0.5 of the circle's. |
+
+**Noise types.** `value` blends random numbers at the corners of a grid:
+soft blobs, the original type (a file without `type` gets it, and the same
+seed still gives the same level). `perlin` blends gradients instead:
+smoother hills and caves with fewer flat patches. `simplex` is gradient
+noise on a triangle grid: like Perlin with fewer grid-aligned features and
+a little more contrast. All three use the same `scale`, `octaves` and
+`persistence`. Perlin and Simplex depend only on a cell's position and the
+seed (each octave shuffles its own table from the node's seed), never on
+the level's size: a bigger level has the same noise where the two overlap.
 
 The shape nodes draw 1 on the shape and 0 elsewhere (overlapping shapes
 merge). Mix them with the rest: `combine` (max) adds ledges to a cave,
@@ -179,6 +193,7 @@ merge). Mix them with the rest: `combine` (max) adds ledges to a cave,
 | `dilate` / `erode` | `iterations` (1) | Grow / shrink solid areas a cell at a time. |
 | `combine` | `op`: `add`, `subtract`, `multiply`, `min`, `max`, `mask` (a where b is solid), `average` | Two grids into one. |
 | `scatter` | `chance` (0.05), `spacing` (4), `seed` (0) | Random points (1), at least `spacing` cells apart - on the input's solid cells when it is connected, anywhere otherwise. |
+| `poisson_scatter` | `radius` (4), `attempts` (30), `seed` (0); input `mask` | Evenly spaced random points (1): every two at least `radius` cells apart (centre to centre), filling the space without clumps or gaps - on the mask's solid cells when it is connected, anywhere otherwise. See Poisson scatter under [Placing things](#placing-things). |
 | `surface` | `side`: `top` (empty cells with solid below: ground to stand on), `bottom` (solid above: ceilings), `any` | Empty cells against the input's solid ones. |
 
 **Your own** (see [Your own nodes](#your-own-nodes))
@@ -263,6 +278,22 @@ coins on the ground:
 {"id": 8, "type": "entity_output", "inputs": {"in": 7}, "params": {"max": 20},
  "component": "components/coin.component.json"}
 ```
+
+**Poisson scatter.** `scatter` keeps random points that are far enough
+from those before them, so it leaves clumps and empty stretches;
+`poisson_scatter` places points evenly (Bridson's Poisson-disc algorithm):
+every two at least `radius` apart, and no cell farther than `2 * radius`
+from a point. Trees in a forest, rocks on a field, enemies across a cave
+floor:
+
+```json
+{"id": 9, "type": "poisson_scatter", "inputs": {"mask": 6}, "params": {"radius": 8}},
+{"id": 10, "type": "entity_output", "inputs": {"in": 9}, "component": "components/tree.component.json"}
+```
+
+`attempts` is how many cells it tries around each point before moving on:
+fewer leaves the points sparser and is quicker. A mask in separate parts
+gets points in each.
 
 Generating into a TileMap places them as its children at their cells'
 centres (tagged `levelgen`); generating again replaces them. Scripts get

@@ -1165,7 +1165,7 @@ lge_add_menu :: proc(state: ^EditorState) {
 		kinds: []e.Gen_Kind,
 	}{
 		{"Generators", {.Constant, .Noise, .Random_Fill, .Gradient, .Border, .Rect, .Rooms, .Walker, .Lines, .Rectangles, .Circles}},
-		{"Modifiers", {.Threshold, .Invert, .Remap, .Blur, .Cellular, .Dilate, .Erode, .Combine, .Scatter, .Surface}},
+		{"Modifiers", {.Threshold, .Invert, .Remap, .Blur, .Cellular, .Dilate, .Erode, .Combine, .Scatter, .Poisson_Scatter, .Surface}},
 		{"Playable", {.Flood_Fill, .Regions, .Connect_Regions, .Path, .Check}},
 		{"Output", {.Tile_Output, .Entity_Output}},
 	}

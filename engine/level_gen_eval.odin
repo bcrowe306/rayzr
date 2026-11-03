@@ -152,7 +152,7 @@ gen_key :: proc(ev: ^Gen_Eval, id: int) -> u64 {
 	case .Custom:
 		h = gen_mix(h, hash.fnv64a(transmute([]u8)n.custom))
 		if def := Gen_FindCustomKind(n.custom); def != nil do h = gen_mix(h, u64(uintptr(rawptr(def.eval))))
-	case .Constant, .Noise, .Random_Fill, .Gradient, .Border, .Rect, .Rooms, .Walker, .Lines, .Rectangles, .Circles, .Threshold, .Invert, .Remap, .Blur, .Cellular, .Dilate, .Erode, .Combine, .Scatter, .Surface, .Flood_Fill, .Regions, .Connect_Regions, .Path, .Check, .Tile_Output, .Entity_Output:
+	case .Constant, .Noise, .Random_Fill, .Gradient, .Border, .Rect, .Rooms, .Walker, .Lines, .Rectangles, .Circles, .Threshold, .Invert, .Remap, .Blur, .Cellular, .Dilate, .Erode, .Combine, .Scatter, .Poisson_Scatter, .Surface, .Flood_Fill, .Regions, .Connect_Regions, .Path, .Check, .Tile_Output, .Entity_Output:
 	}
 	ev.keys[id] = h
 	return h
@@ -204,7 +204,12 @@ gen_compute :: proc(ev: ^Gen_Eval, n: ^Gen_Node, out: Gen_Grid) -> bool {
 	case .Constant:
 		slice.fill(out.v, f32(p(n, "value")))
 	case .Noise:
-		gen_noise(out, max(f32(p(n, "scale")), 0.5), clamp(int(p(n, "octaves")), 1, 8), f32(p(n, "persistence")), nodeSeed)
+		scale, octaves, persistence := max(f32(p(n, "scale")), 0.5), clamp(int(p(n, "octaves")), 1, 8), f32(p(n, "persistence"))
+		switch int(p(n, "type")) {
+		case 1: gen_gradient_noise(out, {0, 0}, scale, octaves, persistence, nodeSeed, false)
+		case 2: gen_gradient_noise(out, {0, 0}, scale, octaves, persistence, nodeSeed, true)
+		case: gen_noise(out, scale, octaves, persistence, nodeSeed)
+		}
 	case .Random_Fill:
 		job := Gen_Fill_Job{out, f32(p(n, "density")), nodeSeed}
 		gen_parallel(h, w, &job, proc(data: rawptr, y0, y1: int) {
@@ -304,6 +309,9 @@ gen_compute :: proc(ev: ^Gen_Eval, n: ^Gen_Node, out: Gen_Grid) -> bool {
 	case .Scatter:
 		src := gen_input(ev, n, 0) or_return
 		gen_scatter(src, out, n.inputs[0] != 0, f32(p(n, "chance")), clamp(int(p(n, "spacing")), 0, 256), nodeSeed)
+	case .Poisson_Scatter:
+		src := gen_input(ev, n, 0) or_return
+		gen_poisson(src, out, n.inputs[0] != 0, clamp(f32(p(n, "radius")), 1, 256), clamp(int(p(n, "attempts")), 1, 100), nodeSeed)
 	case .Surface:
 		src := gen_input(ev, n, 0) or_return
 		gen_surface(src, out, int(p(n, "side")))

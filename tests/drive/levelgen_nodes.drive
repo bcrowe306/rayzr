@@ -1,0 +1,40 @@
+# #171: the noise node's types (Perlin, Simplex) and the Poisson Scatter
+# node - added from the canvas menu, previewed, saved.
+wait 5
+click @asset.add
+click @ctx:add-new-levelgen
+wait 3
+expect lge.open == true
+rclick @lge.canvas
+click @ctx:lge-add:noise
+wait 3
+expect lge.nodes == 6
+screenshot noise_value
+click @lge.param:type
+click @pick:perlin
+wait 3
+expect lge.errors == 0
+screenshot noise_perlin
+click @lge.param:type
+click @pick:simplex
+wait 3
+expect lge.errors == 0
+screenshot noise_simplex
+rclick @lge.canvas+-150,190
+click @ctx:lge-add:poisson_scatter
+wait 3
+expect lge.nodes == 7
+expect lge.errors == 0
+screenshot poisson_r4
+dblclick @lge.param:radius
+key ctrl+a
+type 2.5
+key enter
+wait 3
+expect lge.errors == 0
+screenshot poisson_r2_5
+key ctrl+s
+wait 1
+expect file:levels/new_level.levelgen.json contains "type": "simplex"
+expect file:levels/new_level.levelgen.json contains "type": "poisson_scatter"
+expect file:levels/new_level.levelgen.json contains "radius": 2.5

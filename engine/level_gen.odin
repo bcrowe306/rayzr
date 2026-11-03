@@ -55,6 +55,7 @@ Gen_Kind :: enum {
 	Erode,
 	Combine,
 	Scatter, // spaced random points (on the input's solid cells, if connected)
+	Poisson_Scatter, // evenly spaced points: Poisson-disc (#171; level_gen_nodes.odin)
 	Surface, // empty cells next to solid ones (ground to stand on)
 	// Playable levels (#171; level_gen_regions.odin)
 	Flood_Fill,      // the cells reachable from a start cell
@@ -95,11 +96,12 @@ GEN_LINE_DIRS := []string{"horizontal", "vertical", "both", "any"}
 GEN_KINDS := [Gen_Kind]Gen_Kind_Info{
 	.Constant = {"constant", "Constant", {}, {{name = "value", default_ = 1, doc = "Every cell's value"}}, "The same value everywhere."},
 	.Noise = {"noise", "Noise", {}, {
+		{name = "type", default_ = 0, choices = GEN_NOISE_TYPES, doc = "value: soft blobs (the original); perlin: smooth gradient noise; simplex: gradient noise with fewer grid-aligned features"},
 		{name = "scale", default_ = 16, doc = "Size of the features (cells)"},
 		{name = "octaves", default_ = 3, doc = "Layers of detail (1-8)", integer = true},
 		{name = "persistence", default_ = 0.5, doc = "How much each finer layer adds"},
 		{name = "seed", default_ = 0, doc = "Added to the graph's seed", integer = true},
-	}, "Smooth value noise (fBm), 0..1: hills, islands, caves before a threshold."},
+	}, "Smooth noise (fBm) - value, Perlin or Simplex - 0..1: hills, islands, caves before a threshold."},
 	.Random_Fill = {"random_fill", "Random Fill", {}, {
 		{name = "density", default_ = 0.45, doc = "Fraction of cells set to 1"},
 		{name = "seed", default_ = 0, doc = "Added to the graph's seed", integer = true},
@@ -218,6 +220,11 @@ GEN_KINDS := [Gen_Kind]Gen_Kind_Info{
 		{name = "spacing", default_ = 4, doc = "At least this many cells between points", integer = true},
 		{name = "seed", default_ = 0, doc = "Added to the graph's seed", integer = true},
 	}, "Random points (1) spaced apart - on the input's solid cells when it is connected, anywhere otherwise. Feed an entity output."},
+	.Poisson_Scatter = {"poisson_scatter", "Poisson Scatter", {"mask"}, {
+		{name = "radius", default_ = 4, doc = "Every two points at least this far apart (cells, 1-256)"},
+		{name = "attempts", default_ = 30, doc = "Tries around each point before it gives up (1-100): fewer, sparser and quicker", integer = true},
+		{name = "seed", default_ = 0, doc = "Added to the graph's seed", integer = true},
+	}, "Evenly spaced random points (1): every two at least `radius` apart, filling the space without clumps or gaps (Poisson-disc, Bridson's algorithm) - on the mask's solid cells when it is connected, anywhere otherwise. Feed an entity output."},
 	.Surface = {"surface", "Surface", {"in"}, {
 		{name = "side", default_ = 0, choices = GEN_SURFACE_SIDES, doc = "top: empty cells with solid below (ground to stand on), bottom: with solid above (ceilings), any: next to solid"},
 	}, "Empty cells against the input's solid ones: where things stand, hang or cling."},
