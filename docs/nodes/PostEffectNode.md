@@ -5,7 +5,8 @@ shader applied to the whole screen and its parameters. Built-in shaders:
 `builtin:vignette` (the default), `builtin:crt`, `builtin:pixelate`,
 `builtin:chromatic`, `builtin:grayscale`, `builtin:wave`, `builtin:flash`,
 `builtin:dissolve`, `builtin:outline`, `builtin:passthrough` - or a `.fs`
-fragment shader of your own.
+fragment shader of your own. In the editor, post effects show in the
+viewport while the toolbar's lighting preview (the sun button) is on.
 
 Several post effects chain in tree order; disable one (its enabled toggle)
 to skip it. A hit flash, for example:

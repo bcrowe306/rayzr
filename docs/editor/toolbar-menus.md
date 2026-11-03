@@ -82,7 +82,7 @@ While a build runs, the red button cancels the build.
 |---|---|---|
 | **New Scene** | Cmd+N | A new scene, added to the project. |
 | **New Script** | | A new Lua script. |
-| **New Project...** | | A new project from a template. |
+| **New Project...** | | A new, empty project in the folder you type. For a template, use the [Welcome window](welcome.md). |
 | **Open Project...** | Cmd+Shift+O | Open another project folder (asks about unsaved work first). |
 | **Open Recent** | | Projects you opened before. |
 | **Open File...** | Cmd+P | Go to any scene, script, component or asset by name (`>` for commands, `:` for a line). |
@@ -91,7 +91,7 @@ While a build runs, the red button cancels the build.
 | **Save All (Scenes and Scripts)** | Cmd+Opt+S | Every open scene and script. |
 | **Revert Scene** | | Throw away unsaved changes to the scene (only when it has some). |
 | **Export > .rayzr Package** | | A portable package of the project. |
-| **Export > Standalone Game** | | A game you can run without the editor. |
+| **Export > Standalone Game** | | A game you can run without the editor ([Export](export.md)). |
 | **Export > Open Web Export in Browser** | | After a web export. |
 | **Settings...** | Cmd+, | Editor settings (general, keymap, theme, code editor) and project settings. |
 | **Quit** | Cmd+Q | Asks about unsaved scenes and scripts first. |
@@ -140,7 +140,7 @@ quick burst of nudges is one undo step.
 | **Fit Selection** | Shift+F | Zoom to the selected nodes. |
 | **Focus Viewport / Code Editor / Console** | Cmd+1 / Cmd+2 / Cmd+J | Move the keyboard focus. |
 | **Bottom Panel** | | Tick or untick each bottom panel tab (at least one stays). |
-| **Workspaces** | | *Default*, *Level Design*, *Scripting*, *Animation* and layouts you saved; **Save Workspace As...**, **Delete Workspace**. |
+| **Workspaces** | | *Default*, *Level Design*, *Scripting*, *Animation* and layouts you saved; **Save Workspace As...**, **Delete Workspace** (see [Workspaces](welcome.md#workspaces)). |
 | **Show Tab Bars** | | Give every docked window its tab. |
 | **Reset Layout** | | Back to the Default layout. |
 
@@ -153,7 +153,7 @@ commands to any menu.
 |---|---|---|
 | **Select / Move / Rotate / Scale / Pan** | Q / W / E / R / T | The transform tools. |
 | **Sprite Sheet Slicer...** | | Cut a sprite sheet into frames. |
-| **New Plugin...** | | Start an editor plugin. |
+| **New Plugin...** | | Start an editor plugin ([Plugins](plugins.md)). |
 
 ### Game menu
 
@@ -174,14 +174,14 @@ commands to any menu.
 
 | Item | Shortcut | What it does |
 |---|---|---|
-| **Welcome** | | The Welcome window (recent projects, templates). |
+| **Welcome** | | The [Welcome window](welcome.md) (recent projects, templates). |
 | **Scripting Reference** | | The Lua API. |
 | **Help for <panel>** | F1 | The manual's page for the panel you used last (F1: the one with focus). |
 | **Editor Manual** | | This manual, inside the editor: the list of pages. |
-| **Node Reference** | | Every node type. |
+| **Node Reference** | | Every node type, in the [Node Reference window](node-reference.md). |
 | **Level Editor Reference / Shortcuts** | | The Level tab's help. |
-| **Keyboard Shortcuts** | Cmd+Shift+K | Every shortcut, from the same table. |
-| **Command Palette** | Cmd+Shift+P | |
+| **Keyboard Shortcuts** | Cmd+Shift+K | Every shortcut, from the same table ([Keyboard Shortcuts](keyboard-shortcuts.md)). |
+| **Command Palette** | Cmd+Shift+P | The [command palette](command-palette.md). |
 | **Check for Updates** | | |
 | **Report a Bug...** | | Opens a bug report. |
 | **Open Crash Reports Folder** | | |
@@ -190,8 +190,10 @@ commands to any menu.
 **F1** opens this manual's page for the panel with focus: the Scene panel,
 Inspector, viewport (in [vector edit mode](vector-edit.md), that page),
 Assets and Preview, the toolbar, each bottom tab, and the windows such as
+the [Welcome window](welcome.md), [Keyboard Shortcuts](keyboard-shortcuts.md),
 the [Level Generator](level-generator.md), [Terrain Tiles](terrain-tiles.md)
-and the [Sprite Sheet Slicer](sprite-slicer.md). Two places keep F1 for
+and the [Sprite Sheet Slicer](sprite-slicer.md). The Settings dialog
+blocks F1: its header's **?** opens [its page](settings.md). Two places keep F1 for
 their own help: the [Code tab](code.md) (the Scripting Reference for the
 symbol at the caret) and the [Level tab](level.md) (the Level Editor
 Reference); **Help > Help for Code Tab** / **Level Tab** opens their pages.

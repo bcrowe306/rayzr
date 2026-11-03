@@ -72,7 +72,8 @@ Scene**.
    rebuilt first when an engine source file changed; the build's output
    streams into the Console, and Stop cancels it.
 3. Runs it with your project (and, for F6, the scene) and links it to the
-   editor. The game's output appears in the [Console](tab-console.md),
+   editor (`--project <dir> --editor-link`, plus `--scene <file>` for
+   F6). The game's output appears in the [Console](tab-console.md),
    marked `[game]`; lines with "error" or "warn" are shown as errors or
    warnings, and script errors are underlined in the Code tab.
 
@@ -83,6 +84,14 @@ While the game runs:
 - **Edited scripts and images** reload by themselves.
 - **Breakpoints** set in the Code tab stop the game on their line; the
   [Game tab](tab-game.md) shows the call stack, locals and watches.
+  Click a line number to set one (a red dot) and right-click it for a
+  condition (it stops only when the Lua expression is true). Breakpoints
+  set before Play are sent when the game starts, and you can add or remove
+  them while it runs. Then **Continue** (F8), **Step Over** (F10), **Step
+  Into** (F11) and **Step Out** (Shift+F11).
+- The [Console](tab-console.md)'s **Lua** line runs in the game: an
+  expression shows its value (`Scene.find_node("Player").position`), a
+  statement runs (`GameState.score = 100`).
 
 Plugins can stop Play from starting (the console says why).
 
@@ -97,9 +106,10 @@ Once the game is linked:
   Path**. The crosshair button **picks**: click a node in the game window
   and it is selected here.
 - The **Inspector** shows the selected game node's live properties, *Live
-  in the game*: drag numbers and vectors, tick check boxes, pick colours
-  and enum values, type text and press Enter - each change goes to the
-  game at once.
+  in the game*: drag numbers and vectors (double-click one to type it),
+  tick check boxes, pick colours and enum values, type text and press
+  Enter - each change goes to the game at once. Its script's exported
+  values are listed too (`script.speed`).
 - The selected node is outlined in the game window.
 - **Apply to Scene** copies the node's current values (transform and
   properties, not script values) into the node with the same path in the
@@ -144,28 +154,8 @@ Debugging with breakpoints also needs Play.
 
 ### Export
 
-| Item | What it does |
-|---|---|
-| **File > Export > .rayzr Package** | Asks for a folder and writes `<project>.rayzr` there - the whole project in one file (modified scenes are saved first; textures set to QOI or Atlas are converted). The toolbar's box icon does the same. |
-| **File > Export > Standalone Game** | Saves everything and exports each export preset (or each ticked target) with the settings in Project Settings > **Export**: a folder per preset with the game: on Windows and Linux one executable with the game inside it. |
-| **File > Export > Open Web Export in Browser** | Serves the last web export from a small local web server and opens it in your browser. |
-
-What a standalone export writes, per platform:
-
-| Platform | Folder contents |
-|---|---|
-| Windows | `<Name>.exe`, the game and the UI font inside it. With the preset's **Single File** off: `<Name>.exe`, `game.rayzr`, `fonts/` |
-| macOS | `<Name>.app` - signed, and notarized when a Developer ID and notary profile are set |
-| Linux | `<Name>`, one executable with the game inside (for stores and archives), and `<Name>.AppDir`, plus an `.AppImage` when `appimagetool` is installed |
-| Web | `index.html` with the runner and `game.rayzr` |
-
-A single-file game writes its UI font to the system's temp folder the first
-time it runs. `THIRD_PARTY_NOTICES.txt` is always next to the game, because
-the engine's licenses ask for it.
-
-Runners for each platform come with the editor (`runners/<platform>/`).
-Settings > Project > Export shows which are ready. All settings:
-[Settings](settings.md).
+To make a game players run without the editor - **File > Export** and the
+export presets - see [Export](export.md).
 
 **Run an exported package**: exported `.rayzr` files next to the project
 folder are listed under **Packages** in [Assets](assets.md); right-click

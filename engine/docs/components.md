@@ -41,6 +41,12 @@ values that instance overrides.
 - Every node in the file gets a **uid** when the file is written. It's how
   instances refer to the node, so renaming or moving the node inside the
   component doesn't lose the overrides instances made to it.
+- **New Component...** makes one from scratch (Assets **+**, the
+  Components section's or a component's right-click menu, or the command
+  palette): a **Name** and a **Root node** type - a Kinematic Body for an
+  enemy, an Area for a pickup, a plain Node to group. **Create** writes
+  `components/<name>.component.json` (a taken name gets the next free one,
+  `Enemy_2`) and opens it in its own tab to build.
 
 ## Placing instances
 
@@ -71,6 +77,9 @@ inside an instance, that node is selected in the document.
   is kept.
 - **Undo** after saving puts the file back and refreshes the instances
   again.
+- **Save As** (Cmd+Shift+S) writes the document as a new component under
+  the name you type (`<name>_copy` is offered; a taken name gets the next
+  free one) and opens it. The file you opened stays as it was saved.
 
 ## Instances and overrides
 

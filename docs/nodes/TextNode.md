@@ -73,7 +73,10 @@ show a translation, and can type itself out letter by letter.
   shown as typed. A `[color]` overrides **Color**.
 - **Localized**: **Text** is a key of the CSV tables in `locale/`; the node
   shows the current language's text (see the scripting guide's
-  [Text, dialogue and localization](../../engine/SCRIPTING.md)).
+  [Text, dialogue and localization](../../engine/SCRIPTING.md)). The game
+  starts in the language set in **Project Settings > Project > General >
+  Language** (empty: the first language in `locale/*.csv`); scripts switch
+  with `Locale.set`.
 - Typewriter: with **Reveal Speed** above 0, characters appear one by one
   (markup tags don't count). `set_text` and `text_restart()` start it
   again.

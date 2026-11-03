@@ -368,11 +368,14 @@ Action_Checked :: proc(state: ^EditorState, a: ^Editor_Action) -> bool {
 Action_Run :: proc(state: ^EditorState, a: ^Editor_Action) -> bool {
 	if a == nil || !Action_Enabled(state, a) do return false
 	e.Crash_Note(fmt.tprintf("action %s", a.id)) // (a crash report's recent lines)
-	for id, i in recentActions {
-		if id == a.id {ordered_remove(&recentActions, i); break}
+	// (Opening the palette isn't a command to offer in it.)
+	if !strings.has_prefix(a.id, "palette.") {
+		for id, i in recentActions {
+			if id == a.id {ordered_remove(&recentActions, i); break}
+		}
+		inject_at(&recentActions, 0, a.id)
+		if len(recentActions) > 12 do pop(&recentActions)
 	}
-	inject_at(&recentActions, 0, a.id)
-	if len(recentActions) > 12 do pop(&recentActions)
 	if a.plugin != nil do PluginAPI_ActionRun(state, a)
 	else do a.run(state)
 	return true
@@ -383,13 +386,14 @@ Action_RecentRank :: proc(id: string) -> int {
 	return -1
 }
 
-// Chord_Text: "Cmd+Shift+P" (macOS) / "Ctrl+Shift+P".
-Chord_Text :: proc(c: Chord, allocator := context.temp_allocator) -> string {
+// Chord_Text: "Cmd+Shift+P" (macOS) / "Ctrl+Shift+P" (`mac`: the macOS names
+// anywhere, for the docs - shortcuts_doc.odin).
+Chord_Text :: proc(c: Chord, allocator := context.temp_allocator, mac := ODIN_OS == .Darwin) -> string {
 	if c.key == .None do return ""
 	sb := strings.builder_make(allocator)
 	if .Ctrl in c.mods do strings.write_string(&sb, "Ctrl+")
-	if .Primary in c.mods do strings.write_string(&sb, "Cmd+" if ODIN_OS == .Darwin else "Ctrl+")
-	if .Alt in c.mods do strings.write_string(&sb, "Opt+" if ODIN_OS == .Darwin else "Alt+")
+	if .Primary in c.mods do strings.write_string(&sb, "Cmd+" if mac else "Ctrl+")
+	if .Alt in c.mods do strings.write_string(&sb, "Opt+" if mac else "Alt+")
 	if .Shift in c.mods do strings.write_string(&sb, "Shift+")
 	strings.write_string(&sb, key_text(c.key))
 	return strings.to_string(sb)
@@ -410,6 +414,8 @@ key_text :: proc(k: imgui.Key) -> string {
 	case .RightArrow: return "Right"
 	case .Slash: return "/"
 	case .Comma: return ","
+	case .Period: return "."
+	case .Backslash: return "\\"
 	case .Equal: return "="
 	case .Minus: return "-"
 	case .LeftBracket: return "["
@@ -555,9 +561,20 @@ Shortcuts_Render :: proc(state: ^EditorState) {
 	center := imgui.GetMainViewport().WorkPos + imgui.GetMainViewport().WorkSize * 0.5
 	imgui.SetNextWindowPos(center, .FirstUseEver, {0.5, 0.5})
 	if imgui.Begin("Keyboard Shortcuts###ShortcutsWindow", &showShortcutsWindow, {.NoCollapse, .NoDocking}) {
+		PanelHelp_Mark("keyboard-shortcuts")
+		Drive_Window("shortcuts") // (annotated docs screenshots)
+		{
+			// (The title bar's close button, for drives.)
+			wp, ws := imgui.GetWindowPos(), imgui.GetWindowSize()
+			st := imgui.GetStyle()
+			fs := imgui.GetFontSize()
+			x := wp.x + ws.x - st.FramePadding.x - fs
+			Drive_ItemRect("shortcuts.close", {x, wp.y + st.FramePadding.y}, {x + fs, wp.y + st.FramePadding.y + fs})
+		}
 		@(static) filter: [128]u8
 		imgui.SetNextItemWidth(-1)
 		imgui.InputTextWithHint("##sc_filter", "Filter", cstring(raw_data(filter[:])), len(filter), {})
+		Drive_Item("shortcuts.filter")
 		q := strings.to_lower(string(cstring(raw_data(filter[:]))), context.temp_allocator)
 		if imgui.BeginTable("##shortcuts", 3, imgui.TableFlags_SizingStretchProp | imgui.TableFlags_RowBg) {
 			imgui.TableSetupColumn("Command", {.WidthStretch}, 0.5)

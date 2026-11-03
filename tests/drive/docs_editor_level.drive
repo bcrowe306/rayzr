@@ -11,10 +11,10 @@ click @level.fit
 wait 3
 annotate @root.level Game / Level tabs (Cmd+Shift+1 / 2)
 annotate @level.tool.Brush Tools: B R E F I V M
-annotate @level.pick:Level_0 The world's levels
-annotate @level.layer:Ground Layers: click one to paint on it
-annotate @level.value:1 The active layer's palette
-annotate @level.tab:World Level Panel: world, level and the definitions
+annotate @window:level-levels Levels: the world's levels
+annotate @window:level-canvas Canvas: paint and place in the active level
+annotate @window:level-layers Layers, and the active layer's palette
+annotate @window:level-panel Level Panel: world, level and the definitions
 screenshot editor_level
 click @menu:Help
 click @menu:Help/Help for This Panel

@@ -55,6 +55,10 @@ Every property is documented in the [node reference](../../docs/generated/nodes.
 **Cmd+A** (or **+** in the Scene panel) opens **Add Node**: type to search,
 pick a node, **Create**. It is added under the selected node.
 
+Every node type has its own icon, in Add Node, the Scene panel and the
+Inspector. Empty places say what to do: an empty scene in the tree and the
+viewport, an empty Console.
+
 ## Tabs and modes
 
 - **Game / Level** (top left) switch between the scene editor and the

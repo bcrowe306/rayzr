@@ -49,6 +49,7 @@ Settings_State :: struct {
 	pickDevice: e.InputDeviceType,
 	pickFilter: [32]u8,
 	promptFamily: int, // the pad whose button prompts are shown (PROMPT_FAMILIES)
+	help:       bool, // the header's ? : settings.md over the dialog (it blocks F1)
 }
 
 @(private = "file")
@@ -113,6 +114,7 @@ Settings_Open :: proc(state: ^EditorState, tab: Settings_Tab = .General) {
 	st.open = true
 	st.action = 0
 	st.listening = false
+	st.help = false
 }
 
 // ProjectSettingsDialog_Open opens Settings on the Project tab.
@@ -191,6 +193,12 @@ ProjectSettingsDialog_Render :: proc(state: ^EditorState) {
 	UI_PanelTitle(ICON_FA_GEAR, "Settings")
 	imgui.SameLine(0, UI_SPACE)
 	UI_DimText(state.projectPath)
+	// The dialog is modal, so F1 can't reach the manual: its page from here.
+	UI_HeaderButtons(1)
+	if UI_HeaderButton(ICON_FA_CIRCLE_QUESTION, "settings.help", "Help: every tab and setting (the editor manual's Settings page)") {
+		NodeReference_OpenEditor("settings")
+		st.help = true
+	}
 	imgui.Dummy({0, 4})
 
 	bodyH := imgui.GetContentRegionAvail().y - 46
@@ -227,13 +235,14 @@ ProjectSettingsDialog_Render :: proc(state: ^EditorState) {
 
 	imgui.SetCursorPosY(imgui.GetWindowHeight() - 16 - 32)
 	imgui.SetCursorPosX(imgui.GetWindowWidth() - 18 - 120 - 96 - UI_SPACE)
-	if UI_Button("Cancel", "settings.cancel", {96, 32}) || (imgui.IsKeyPressed(.Escape) && st.recording == "" && !st.listening) {
+	if UI_Button("Cancel", "settings.cancel", {96, 32}) || (imgui.IsKeyPressed(.Escape) && st.recording == "" && !st.listening && !st.help) {
 		state.showProjectSettings = false
 		Theme_Apply(GlobalSettings.theme) // drop a previewed theme
 		imgui.CloseCurrentPopup()
 	}
 	imgui.SameLine(0, UI_SPACE)
 	if UI_PrimaryButton("Save", "settings.save", {120, 32}) do settings_save(state)
+	if st.help do st.help = NodeReference_RenderModal(state)
 	imgui.EndPopup()
 }
 

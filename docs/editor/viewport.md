@@ -139,6 +139,10 @@ outline (its convex hull). Grid snapping applies, and with it rotation
 snaps to 15°. Every drag is one undo step. Press **Esc** or click the
 button again to stop.
 
+Changing a shape's **Type** in the Inspector keeps its footprint (a box
+becomes a polygon with the same corners). Shapes are in the node's own
+units: they scale with the node and its parents, like everything it draws.
+
 Other nodes have their own handles while selected: a Path's points and
 curve handles, and a Tile Map's painting tools (see the
 [Tile Map tab](tab-tilemap.md)).

@@ -35,6 +35,8 @@ PANEL_HELP_PAGES := [?]struct {
 	{"atlas-region", "Atlas Region Editor"},
 	{"normal-map", "Generate Normal Map"},
 	{"toolbar-menus", "Toolbar and Menus"},
+	{"welcome", "Welcome"},
+	{"keyboard-shortcuts", "Keyboard Shortcuts"},
 }
 
 @(private = "file")

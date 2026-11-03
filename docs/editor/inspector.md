@@ -51,14 +51,19 @@ only its name.
 - **Properties (N)**: your properties, from the node's script. **Add
   Property** opens a dialog: name, type (number, integer, boolean, text,
   resource, node, choice, range, vector, colour, assets, list, curve,
-  gradient), default, limits, label, help and group. It previews the Lua
-  line and writes it into the script's `properties` table. A node without
-  a script gets one made for it. The script is shared: the dialog says how
-  many nodes use it.
+  gradient), default, **Range** (min, max and a **Slider** toggle), label,
+  help and group. A **choice** takes its **Values**; a **list** picks what
+  it is a list **Of**; a **resource** picks its **Class** from the
+  project's resource classes and how instances share it (**Copies**). It
+  previews the Lua line and writes it into the script's `properties` table.
+  A node without a script gets one made for it. The script is shared: the
+  dialog says how many nodes use it.
 
 Right-click a property's name in the Properties tab for **Edit Property...**
-(a rename keeps each node's value) and **Remove Property...** (it shows the
-script lines and nodes that use it; undo brings it back).
+(the same dialog; a rename keeps each node's value, and nodes still at the
+old default take the new one) and **Remove Property...** (it shows the
+script lines that use `self.<name>` and the nodes with a value; undo brings
+it back).
 
 ### Instance
 
@@ -74,7 +79,7 @@ Not shown for the scene root.
 | Field | What it does |
 |---|---|
 | **Position** | X and Y, relative to the parent. |
-| **Origin** | Nodes that draw an image or a box only. The point of the image at the node's position, as a fraction of its size: **0.5, 0.5** is the centre (the default), **0, 0** the top-left. Hover for the value in pixels. **Presets** picks a corner, an edge's middle or the centre. |
+| **Origin** | Nodes that draw an image or a box only. The point of the image at the node's position, as a fraction of its size: **0.5, 0.5** is the centre (the default, and what the reset button restores), **0, 0** the top-left, **0.5, 1** the bottom centre. It is also the point the node rotates and scales around. Hover for the value in pixels. **Presets** picks a corner, an edge's middle or the centre. Alt-drag the move handle in the [viewport](viewport.md) to move it while the image stays put. Scripts: `node:set_property("origin", 0.5, 1)`. |
 | **Rotation** | Degrees. |
 | **Scale** | X and Y. Linked by default: changing one scales the other by the same ratio. |
 | **Layer** | Layer 1 (back) to Layer 8 (UI). |
@@ -128,7 +133,9 @@ while running. They are read-only and not saved.
 
 - **Tags**: type a tag and press Enter, or pick one used in the scene from
   the list. Click a tag to remove it. Scripts use `has_tag` and
-  `Scene.find_by_tag`; the Scene panel filters with `#tag`.
+  `Scene.find_by_tag`; the Scene panel filters with `#tag`. The project's
+  generated Lua types list every tag in use (`NodeTag`), so tag names
+  complete in scripts.
 - **Material**: the node's **Shader** and **Blend** mode. A shader's texture
   parameter takes a project image, or `viewport:<name>` for a
   [Viewport](../nodes/ViewportNode.md)'s picture.
@@ -195,15 +202,41 @@ key or to remove one.
   `self.node:get_property("rotation")`. Hold **Shift** when you drop for a
   write with the current value: `self.node:set_property("rotation", 45)`.
   The node is `self.node` when the script is its own, otherwise a
-  `get_node("...")` path to it.
-- **An event** from the Signals section inserts a `connect` call with its
-  handler.
-- **A node** from the Scene panel inserts a typed reference:
+  `self.node:get_node("<relative path>")` path to it (or `Scene.find_node`).
+- **An event** from the Signals section inserts
+  `<node>:connect("timeout", function(value, source) ... end)` with the
+  cursor in the handler.
+- **A node** from the Scene panel inserts a reference typed for the
+  language server (its class, so its own methods complete). On an empty
+  line it becomes a declaration:
 
 ```lua
 ---@type CharacterMoverNode
 local player = self.node:get_node("../Player")
 ```
+
+Dropped into an assignment (`self.body = `), the `---@type` line goes
+above it; anywhere else (an argument) it gets an inline cast,
+`self.node:get_node("../Player") --[[@as CharacterMoverNode]]`. Plain
+`Node`s get no annotation. Dropped inside the script's `properties` table,
+it adds a node property instead. Dropped onto a method's line
+(`function Enemy:on_hit(...)`), it offers the node's events: the one you
+pick is connected in `ready()` (made if missing) to call that method.
+
+- **An input action** from the chips in the Preview panel's **Script** view
+  ([Assets](assets.md#the-preview-panel)) inserts
+  `Input.is_action_pressed("jump")` (Shift: `is_action_down`).
+- **An animation**: the hand next to the [Animation tab](tab-animation.md)'s
+  picker inserts `<player>:animation_play("walk")`.
+- **An asset** from Assets inserts its path; with **Cmd** held it becomes
+  an exported asset property; with **Alt** held, code that uses it: a
+  sound `Audio.play_sound(...)`, a scene `Scene.change_scene(...)`, a
+  texture `self.node:set_texture(...)`.
+
+In a script, **Cmd+click** a node path - the string in
+`self.node:get_node("...")`, `get_child("...")` or `Scene.find_node("...")` -
+to select that node and centre the view on it; Cmd+click anything else goes
+to its definition.
 
 ## Walkthrough
 
@@ -232,6 +265,10 @@ Make a timer that spawns enemies:
 - An edit to a component instance is an override; right-click the
   property to **Apply to Component** for every instance.
 - Scale fields start linked; position fields start unlinked.
+- Scenes saved before **Origin** existed keep their look: older Animation
+  Players load with their origin at the top-left (**0, 0**).
+- In the viewport, clicking picks the node drawn on top, so the draw order
+  fields also decide what a click selects.
 - With nothing selected (or the scene root), **Scene Settings...** opens
   the Scene panel's Settings tab.
 - While the game runs, pick **Remote** in the Scene panel: the Inspector

@@ -8,6 +8,8 @@ Android app. On the way it covers the project settings an export uses
 export presets, what goes into an export, testing an exported game,
 putting a web export online, signing for Android, and the warnings
 unsigned games get on macOS and Windows. It takes about twenty minutes.
+Every control used here is listed in the editor manual's
+[Export](../editor/export.md) page.
 
 [Download the finished project](exporting/) to compare, or to start from
 the end: unzip it and open the folder with **File > Open Project...**. It
@@ -232,8 +234,8 @@ an emulator: [Android export](../../engine/docs/android_export.md).
 
 - The finished project is in the [download](exporting/).
 - Every Export option: [Settings](../editor/settings.md) (Project >
-  Export); what each platform's export writes:
-  [Playtesting](../editor/playtesting.md).
+  Export); presets, runners and what each platform's export writes:
+  [Export](../editor/export.md).
 - [Web export](../../engine/docs/web_export.md),
   [Android export](../../engine/docs/android_export.md),
   [crash reports](../../engine/docs/crash_reports.md).

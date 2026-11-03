@@ -1,0 +1,10 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "This project's plugins: Allow / Block", "x": 403, "y": 129, "w": 44, "h": 25},
+    {"label": "Rescan, and the user plugins folder", "x": 455, "y": 129, "w": 74, "h": 25},
+    {"label": "Every plugin, with its state", "x": 207, "y": 184, "w": 205, "h": 21},
+    {"label": "Enabled, Reload, Open Folder", "x": 424, "y": 250, "w": 73, "h": 25}
+  ]
+}

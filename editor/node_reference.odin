@@ -58,6 +58,7 @@ nodeRef: struct {
 	history:  [dynamic]string,
 	textures: map[string]rl.Texture2D, // screenshots by path
 	scrollUp: bool,
+	modalFrame: i32, // last frame shown over a modal dialog (NodeReference_RenderModal)
 }
 
 // NodeReference_Open shows a node type's page ("" = the index).
@@ -172,7 +173,7 @@ NodeReference_Markdown :: proc(typeName: string, allocator := context.allocator)
 	root, entries := node_ref_entries()
 	sb := strings.builder_make(allocator)
 	if typeName == INDEX_PAGE {
-		strings.write_string(&sb, "# Nodes\n\nEvery node type, by category. Add one with **Add Node** (Ctrl+A); every node also has the Transform properties (position, rotation, scale, layer...).\n")
+		fmt.sbprintf(&sb, "# Nodes\n\nEvery node type, by category. Add one with **Add Node** (%s); every node also has the Transform properties (position, rotation, scale, layer...).\n", Chord_Text({.A, P}))
 		cat := ""
 		for en in entries {
 			if en.category != cat {
@@ -320,6 +321,7 @@ node_ref_image :: proc(url: string) -> ^rl.Texture2D {
 
 NodeReference_Render :: proc(state: ^EditorState) {
 	if !nodeRef.open do return
+	if nodeRef.modalFrame > 0 && imgui.GetFrameCount() - nodeRef.modalFrame <= 1 do return // shown over a modal dialog instead
 	imgui.SetNextWindowSize({620, 720}, .FirstUseEver)
 	visible := imgui.Begin(fmt.ctprintf("%s  Node Reference###NodeReference", ICON_FA_BOOK), &nodeRef.open)
 	defer imgui.End()
@@ -332,6 +334,43 @@ NodeReference_Render :: proc(state: ^EditorState) {
 		Drive_ItemRect("noderef.close", {x, wp.y + st.FramePadding.y}, {x + fs, wp.y + st.FramePadding.y + fs})
 	}
 	if !visible do return
+	// (No PanelHelp_Mark: Help > Help for <panel> stays the panel you read about.)
+	Drive_Window("noderef") // (annotated docs screenshots)
+	node_ref_contents()
+}
+
+// NodeReference_RenderModal: the viewer as a popup over the modal dialog
+// being drawn (Settings), which blocks other windows; called inside it.
+// Returns false once closed (its close button, Esc).
+NodeReference_RenderModal :: proc(state: ^EditorState) -> bool {
+	if !nodeRef.open do return false
+	title := fmt.ctprintf("%s  Node Reference###NodeReferenceModal", ICON_FA_BOOK)
+	if !imgui.IsPopupOpen(title) do imgui.OpenPopup(title)
+	io := imgui.GetIO()
+	imgui.SetNextWindowSize({620, min(720, io.DisplaySize.y - 80)}, .Appearing)
+	imgui.SetNextWindowPos({io.DisplaySize.x * 0.5, io.DisplaySize.y * 0.5}, .Appearing, {0.5, 0.5})
+	if !imgui.BeginPopupModal(title, &nodeRef.open, {}) do return false
+	nodeRef.modalFrame = imgui.GetFrameCount()
+	{
+		// (The title bar's close button, for drives.)
+		wp, ws := imgui.GetWindowPos(), imgui.GetWindowSize()
+		st := imgui.GetStyle()
+		fs := imgui.GetFontSize()
+		x := wp.x + ws.x - st.FramePadding.x - fs
+		Drive_ItemRect("noderef.close", {x, wp.y + st.FramePadding.y}, {x + fs, wp.y + st.FramePadding.y + fs})
+	}
+	if imgui.IsKeyPressed(.Escape) {
+		nodeRef.open = false
+		imgui.CloseCurrentPopup()
+	}
+	node_ref_contents()
+	imgui.EndPopup()
+	return nodeRef.open
+}
+
+// node_ref_contents: the viewer's toolbar and page (window or popup).
+@(private = "file")
+node_ref_contents :: proc() {
 	if UI_IconButton(ICON_FA_ARROW_LEFT, "noderef.back", "Back", size = 26) && len(nodeRef.history) > 0 {
 		prev := pop(&nodeRef.history)
 		node_ref_show(prev)
