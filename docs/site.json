@@ -7,6 +7,7 @@
         { "file": "docs/index.md", "slug": "" },
         { "file": "docs/getting-started/installation.md", "slug": "getting-started/installation" },
         { "file": "docs/getting-started/first-game.md", "slug": "getting-started/first-game" },
+        { "file": "docs/getting-started/vector-character.md", "slug": "getting-started/vector-character" },
         { "generated": "templates", "file": "templates/README.md", "slug": "getting-started/templates", "label": "Templates" }
       ]
     },

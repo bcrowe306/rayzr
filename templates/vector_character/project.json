@@ -1,0 +1,92 @@
+{
+ "name": "Vector Character",
+ "version": "0.1.0",
+ "initial_scene": "scenes/pip.scene.json",
+ "window": {
+  "title": "Vector Character",
+  "width": 1280,
+  "height": 720,
+  "virtual_width": 1280,
+  "virtual_height": 720,
+  "target_fps": 60
+ },
+ "video": {
+  "fullscreen": false,
+  "vsync": true,
+  "resizable": true,
+  "msaa": false,
+  "high_dpi": false,
+  "sharp_scaling": false,
+  "integer_scaling": false,
+  "pixel_snap": false,
+  "smooth_camera": false
+ },
+ "audio": {
+  "master_volume": 1,
+  "music_volume": 1,
+  "sfx_volume": 1
+ },
+ "physics": {
+  "gravity": [
+   0,
+   900
+  ],
+  "debug_draw": false
+ },
+ "input": {
+  "actions": [
+   {
+    "name": "move_left",
+    "bindings": [
+     {
+      "key": "A"
+     },
+     {
+      "key": "LEFT"
+     },
+     {
+      "button": "LEFT_FACE_LEFT"
+     },
+     {
+      "axis": "LEFT_X",
+      "positive": false,
+      "deadzone": 0.3
+     }
+    ]
+   },
+   {
+    "name": "move_right",
+    "bindings": [
+     {
+      "key": "D"
+     },
+     {
+      "key": "RIGHT"
+     },
+     {
+      "button": "LEFT_FACE_RIGHT"
+     },
+     {
+      "axis": "LEFT_X",
+      "positive": true,
+      "deadzone": 0.3
+     }
+    ]
+   },
+   {
+    "name": "talk",
+    "bindings": [
+     {
+      "key": "T"
+     },
+     {
+      "button": "RIGHT_FACE_DOWN"
+     }
+    ]
+   }
+  ]
+ },
+ "scenes": [
+  "scenes/pip.scene.json"
+ ]
+}

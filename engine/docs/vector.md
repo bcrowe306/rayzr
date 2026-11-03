@@ -13,8 +13,8 @@ in milestones:
 | M3 | Characters: symbols and instances, part swapping, lip-sync, timeline keys | **done** |
 | M5 | Shape tweens and trim paths, filters and line scaling, vector skinning on skeletons and warps | **done** |
 | M6 | Boolean path operations, carving, collision from shapes, path queries | **done** |
-| M4 | Drawing tools in the editor | |
-| M7 | Crisp text, Adobe Animate import, a sample character | |
+| M4 | Drawing tools in the editor: pen, shapes, pencil and brush, paint bucket, fill and stroke, swatches; symbols and the Library tab | **done** |
+| M7 | Crisp text, Adobe Animate import, a sample character | crisp text and the sample character (the **Vector Character** template) done; Animate import to come |
 
 ## Vector art from SVG files
 
@@ -139,6 +139,12 @@ colour and line width of new shapes.
 Build a character the way Flash animators did: draw it in layers (or
 groups) in your vector app, then animate the layers as parts.
 
+The **Vector Character** template (Pip) puts all of this together: one SVG
+cut into parts on a Skeleton, swap sets for the eyes and mouth, a Lip Sync
+node and a script. The tutorial
+[Drawing and animating a vector character](../../docs/getting-started/vector-character.md)
+builds it step by step.
+
 ### Symbols
 
 Every named group of an SVG - an Inkscape layer (its label), an
@@ -190,7 +196,9 @@ original back.
 
 A symbol whose child groups are alternatives - mouth shapes, hands, eyes
 open / closed - shows one at a time with **Frame**: the child group's
-index (-1 shows them all). The Inspector lists the frames by name. The
+index (-1 shows the ones that aren't hidden in the file). The Inspector
+lists the frames by name. Hide every frame but the first in your vector app
+(a hidden layer in Inkscape) and the file looks right as a whole. The
 box the node's origin sits in is the symbol's (all frames together), so
 swapping never makes the part jump.
 
@@ -450,8 +458,8 @@ of shapes or polygons (`Vector_ShapesBoolean`, `Vector_PolysBoolean`),
 offsets (grow / shrink), outline stroke to fill (`Vector_StrokeOutline`),
 simplify, flatten, the covered area of a drawing (`Vector_ShapesArea`:
 fill rules, strokes, clip paths), cutting a drawing (`Vector_ShapesCut`),
-convex decomposition - all on Clipper2, also in the web build. The Boolean
-buttons in the editor come with M4's drawing tools.
+convex decomposition - all on Clipper2, also in the web build. The editor
+has no Boolean buttons yet.
 
 ## Using it with presets
 
@@ -645,6 +653,12 @@ The benchmark: `tests/vector/project`, scene `scenes/bench.scene.json`
   Explode into Parts and its undo.
 - `scenes/symbols.scene.json` (golden): symbols alone, brightness, a
   colour offset, swaps from Lua, a mouth's nine frames.
+- The **Vector Character** template (`templates/vector_character`, built by
+  `scripts/templates/make_templates.py`): `scripts/templates/test_templates.py
+  vector_character` walks and talks it in the runner, and
+  `tests/drive/vector_character.drive` opens its scene in the editor (the
+  parts on the rig, Bend with, the frames, the Lip Sync node, Simulate) and
+  takes the tutorial's screenshots.
 - `scripts/web/test_project.sh tests/vector/project out.png`: the same scene
   in the web runner (headless Chrome).
 
@@ -668,6 +682,7 @@ The benchmark: `tests/vector/project`, scene `scenes/bench.scene.json`
   in a half-transparent group show through each other).
 - The Paint Bucket doesn't close small gaps between lines yet (Flash's gap
   size). Layer locks are kept while drawing only (not saved in the file).
-- Hidden layers (`display:none`) aren't imported, so keep swap frames
-  visible in the file; a whole-file instance draws every frame at once
-  (explode it, or pick the symbol).
+- Hidden groups (`display:none`, Inkscape's hidden layers) are kept as swap
+  frames: drawn only when a Vector Shape picks them as its Symbol or Frame.
+  A whole-file instance leaves them out, and other hidden elements aren't
+  imported.
