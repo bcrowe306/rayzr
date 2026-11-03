@@ -46,7 +46,7 @@ Platforms (#329): the same tests play in the other runners too -
                 scripts/build_android_runner.sh -define:RAYZR_TEST_HOOKS=true) and
                 installed (debuggable); a run is the app started with its arguments in
                 its own files folder (run-as; runner/android/main.odin), logcat is its log. An x86_64
-                emulator runs it through its ARM translation (API 30+ images)
+                emulator runs it through its ARM translation (API 30+ images; CI: 34)
 Tests with a "golden" image or an "env" run on the desktop only; ones that
 quit (Engine.quit: "quits", also in "before") are skipped on the web, where
 quitting does nothing (saves still reach IndexedDB when a run ends).

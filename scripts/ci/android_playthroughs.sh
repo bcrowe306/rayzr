@@ -8,7 +8,7 @@
 #   scripts/ci/android_playthroughs.sh platformer shmup puzzle
 #
 # The CI emulator is x86_64 (the only kind with KVM on the runners): it runs
-# the arm64 runner through its ARM translation (API 30+ Google APIs images) -
+# the arm64 runner through its ARM translation (API 30+ Google APIs images; 30's misses instructions the runner uses: CI runs 34) -
 # checked first, so a missing translation fails here, saying so.
 set -euo pipefail
 cd "$(dirname "$0")/../.."
@@ -17,7 +17,7 @@ abis="$(adb shell getprop ro.product.cpu.abilist | tr -d '\r')"
 echo "emulator ABIs: $abis"
 case ",$abis," in
 	*,arm64-v8a,*) ;;
-	*) echo "::error::the emulator can't run arm64 apps (ABIs: $abis) - an API 30+ x86_64 google_apis image translates them"; exit 1 ;;
+	*) echo "::error::the emulator can't run arm64 apps (ABIs: $abis) - an API 34 x86_64 google_apis image translates them"; exit 1 ;;
 esac
 adb shell settings put global stay_on_while_plugged_in 7 || true
 adb shell input keyevent 82 || true

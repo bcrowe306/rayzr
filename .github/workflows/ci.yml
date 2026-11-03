@@ -78,7 +78,7 @@ jobs:
       - run: scripts/package_android.sh templates/platformer /tmp/android_app
       - run: scripts/check_android_package.sh /tmp/android_app/platformer.apk com.rayzr.platformer /tmp/android_app/platformer.aab
 
-  # The templates played on Android (#329): an x86_64 emulator (KVM; API 30
+  # The templates played on Android (#329): an x86_64 emulator (KVM; API 34
   # Google APIs - it runs arm64 apps through its ARM translation), each
   # template packaged with a runner built with the test hooks (never shipped:
   # runner/android/main.odin) and played by scripts/ci/android_playthroughs.sh.
@@ -109,7 +109,9 @@ jobs:
           sudo udevadm trigger --name-match=kvm
       - uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:
-          api-level: 30
+          # (API 34: API 30's ARM translation, ndk_translation 0.2.2, stops the
+          # runner with SIGILL - "Undefined instruction" on an AdvSIMD scalar FCVTZS.)
+          api-level: 34
           target: google_apis
           arch: x86_64
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
