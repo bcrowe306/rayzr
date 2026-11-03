@@ -21,14 +21,18 @@ ODIN_ROOT="$(odin root)"
 command -v emcc >/dev/null || { echo "emcc not found: brew install emscripten (or source emsdk_env.sh)"; exit 1; }
 mkdir -p "$DEPS" "$BUILD" "$OUT"
 
-fetch() { # url dir
+fetch() { # url dir [mirror]: the mirror when the url can't be reached
 	[ -d "$DEPS/$2" ] && return
 	echo "Downloading $1"
-	curl -sL -o "$DEPS/$2.tgz" "$1"
+	if ! curl -fsSL --retry 2 --connect-timeout 15 -o "$DEPS/$2.tgz" "$1"; then
+		[ -n "${3:-}" ] || { echo "could not download $1" >&2; exit 1; }
+		echo "Downloading $3 (the mirror)"
+		curl -fsSL --retry 2 --connect-timeout 15 -o "$DEPS/$2.tgz" "$3"
+	fi
 	tar -xzf "$DEPS/$2.tgz" -C "$DEPS"
 }
 fetch https://github.com/raysan5/raylib/archive/refs/tags/5.5.tar.gz raylib-5.5
-fetch https://www.lua.org/ftp/lua-5.4.7.tar.gz lua-5.4.7
+fetch https://www.lua.org/ftp/lua-5.4.7.tar.gz lua-5.4.7 https://www.tecgraf.puc-rio.br/lua/ftp/lua-5.4.7.tar.gz # (CI runners sometimes can't reach lua.org)
 fetch https://github.com/erincatto/box2d/archive/refs/tags/v3.1.1.tar.gz box2d-3.1.1
 
 if [ ! -f "$DEPS/raylib-5.5/src/libraylib.a" ]; then
