@@ -74,6 +74,12 @@ and **Ctrl+Z** undoes it. Press **Esc** or **Done** to finish.
 | **Select** | V | Click a shape to select it, and drag to move it. **Delete** removes it. |
 | **Nodes** | A | Shows a shape's anchors and their Bézier handles. Drag an anchor to move it with its handles. Drag a handle to bend the curve: the opposite handle turns with it, or hold **Alt** to move just this one. **Double-click** a segment to add an anchor there without changing the shape. **Alt+click** an anchor to remove it. **Right-click** an anchor to make it **Smooth**, **Symmetric** or **Corner**. |
 | **Pen** | P | Click to place a corner; click and drag to place a smooth anchor with its handles. Click the first anchor to close the shape, which then gets the fill colour. **Enter**, **Esc** or a double-click ends an open path. |
+| **Rectangle** | R | Drag one out. **Shift** makes a square and **Alt** draws from the centre. The toolbar sets the corner radius. |
+| **Ellipse** | O | Drag one out. **Shift** makes a circle and **Alt** draws from the centre. |
+| **Polygon** | | Drag one out. The toolbar sets the number of sides. |
+| **Star** | | Drag one out. The toolbar sets the number of points and the inner radius. |
+
+Shapes become ordinary paths: edit their corners with the node tool.
 
 The toolbar's two colour swatches and the width field set the fill, line
 colour and line width of new shapes.
@@ -604,9 +610,8 @@ The benchmark: `tests/vector/project`, scene `scenes/bench.scene.json`
 - SVG text, images, filters, masks, patterns and markers aren't imported
   (see above); group opacity is applied to each shape (overlapping shapes
   in a half-transparent group show through each other).
-- The editor's drawing tools are the selection, node and pen tools; shapes
-  (rectangles, ellipses, stars), the brush and paint bucket, and snapping
-  come next (#267).
+- The editor's drawing tools are the selection, node, pen and shape tools;
+  the brush and paint bucket, and snapping, come next (#267).
 - Hidden layers (`display:none`) aren't imported, so keep swap frames
   visible in the file; a whole-file instance draws every frame at once
   (explode it, or pick the symbol).

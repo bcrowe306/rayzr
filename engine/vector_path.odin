@@ -268,6 +268,46 @@ Vector_Rect :: proc(p: ^Vector_Path, min, max: [2]f32) {
 	Vector_Close(p)
 }
 
+// Vector_RoundRect adds a closed rectangle with rounded corners (radius
+// clamped to half the shorter side; 0: square corners).
+Vector_RoundRect :: proc(p: ^Vector_Path, min, max: [2]f32, radius: f32) {
+	r := clamp(radius, 0, 0.5 * math.min(max.x - min.x, max.y - min.y))
+	if r <= 0 {
+		Vector_Rect(p, min, max)
+		return
+	}
+	K :: 0.5522847498
+	k := r * (1 - K)
+	Vector_MoveTo(p, {min.x + r, min.y})
+	Vector_LineTo(p, {max.x - r, min.y})
+	Vector_CubicTo(p, {max.x - k, min.y}, {max.x, min.y + k}, {max.x, min.y + r})
+	Vector_LineTo(p, {max.x, max.y - r})
+	Vector_CubicTo(p, {max.x, max.y - k}, {max.x - k, max.y}, {max.x - r, max.y})
+	Vector_LineTo(p, {min.x + r, max.y})
+	Vector_CubicTo(p, {min.x + k, max.y}, {min.x, max.y - k}, {min.x, max.y - r})
+	Vector_LineTo(p, {min.x, min.y + r})
+	Vector_CubicTo(p, {min.x, min.y + k}, {min.x + k, min.y}, {min.x + r, min.y})
+	Vector_Close(p)
+}
+
+// Vector_Polygon adds a closed regular polygon (`sides` >= 3) fitting the
+// ellipse c, r, its first corner straight up; a star when `inner` (0..1:
+// the inner corners' radius, a fraction of the outer) is above 0 - then
+// `sides` is its number of points.
+Vector_Polygon :: proc(p: ^Vector_Path, c, r: [2]f32, sides: int, inner: f32 = 0) {
+	n := math.max(sides, 3)
+	star := inner > 0
+	count := n * 2 if star else n
+	for i in 0 ..< count {
+		a := -math.PI * 0.5 + f32(i) * 2 * math.PI / f32(count)
+		rr := r * (inner if star && i % 2 == 1 else 1)
+		pt := c + [2]f32{math.cos(a) * rr.x, math.sin(a) * rr.y}
+		if i == 0 do Vector_MoveTo(p, pt)
+		else do Vector_LineTo(p, pt)
+	}
+	Vector_Close(p)
+}
+
 // --- flattening ---------------------------------------------------------------------
 
 // Vector_Contour: a flattened subpath (closed: the last point joins the first).

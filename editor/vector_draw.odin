@@ -37,6 +37,10 @@ Vector_Tool :: enum {
 	Select,
 	Node,
 	Pen,
+	Rect,
+	Ellipse,
+	Polygon,
+	Star,
 }
 
 @(private = "file")
@@ -47,6 +51,7 @@ Vd_Drag :: enum {
 	In,
 	Out,
 	Pen,
+	Draw, // dragging out a shape tool's shape
 }
 
 @(private = "file")
@@ -68,6 +73,11 @@ vd: struct {
 	backedUp: map[string]bool, // files whose .bak was written this session
 	askFor:   ^e.VectorShapeNode, // the lossy-file question is open for it
 	menu:     int, // the anchor the right-click menu is for
+	start:    [2]f32, // a shape tool's drag start (document units)
+	radius:   f32,    // Rectangle: corner radius
+	sides:    i32,    // Polygon
+	points:   i32,    // Star
+	inner:    f32,    // Star: inner radius (fraction)
 }
 
 VectorDraw_IsActive :: proc(state: ^EditorState) -> bool {
@@ -95,6 +105,7 @@ VectorDraw_Enter :: proc(state: ^EditorState, v: ^e.VectorShapeNode) {
 @(private = "file")
 vectordraw_start :: proc(state: ^EditorState, v: ^e.VectorShapeNode) {
 	if vd.fill == {} do vd.fill, vd.stroke, vd.width = {255, 255, 255, 255}, {20, 20, 20, 255}, 2
+	if vd.sides == 0 do vd.sides, vd.points, vd.inner = 5, 5, 0.5
 	vd.active, vd.node, vd.shape, vd.anchor, vd.drag, vd.penShape = true, v, -1, -1, .None, -1
 	if vd.backedUp == nil do vd.backedUp = make(map[string]bool)
 	Editor_Log(state, .Info, "Drawing in %s: V select, A nodes, P pen; Esc when done", v.name)
@@ -189,6 +200,8 @@ Viewport_VectorDraw :: proc(state: ^EditorState, dl: ^imgui.DrawList, mouseScree
 		if imgui.IsKeyPressed(.V, false) do vectordraw_set_tool(state, .Select)
 		if imgui.IsKeyPressed(.A, false) && !io.KeyCtrl && !io.KeySuper do vectordraw_set_tool(state, .Node)
 		if imgui.IsKeyPressed(.P, false) do vectordraw_set_tool(state, .Pen)
+		if imgui.IsKeyPressed(.R, false) do vectordraw_set_tool(state, .Rect)
+		if imgui.IsKeyPressed(.O, false) do vectordraw_set_tool(state, .Ellipse)
 		if imgui.IsKeyPressed(.Escape, false) || imgui.IsKeyPressed(.Enter, false) {
 			if vd.penShape >= 0 do pen_finish(state)
 			else if imgui.IsKeyPressed(.Escape, false) {vectordraw_exit(state); return true}
@@ -214,6 +227,7 @@ Viewport_VectorDraw :: proc(state: ^EditorState, dl: ^imgui.DrawList, mouseScree
 	case .Select: tool_select(state, dl, r, mouse, tol)
 	case .Node:   tool_node(state, dl, r, mouse, tol)
 	case .Pen:    tool_pen(state, dl, r, mouse, tol)
+	case .Rect, .Ellipse, .Polygon, .Star: tool_shape(state, dl, r, mouse, tol)
 	}
 	anchor_menu(state, r)
 	return true
@@ -229,10 +243,14 @@ vectordraw_set_tool :: proc(state: ^EditorState, t: Vector_Tool) {
 vectordraw_toolbar :: proc(state: ^EditorState) {
 	imgui.SetCursorScreenPos(state.viewportPos + {10, 10})
 	imgui.BeginGroup()
-	tools := [3]struct {t: Vector_Tool, icon, id, tip: string}{
+	tools := [7]struct {t: Vector_Tool, icon, id, tip: string}{
 		{.Select, ICON_FA_ARROW_POINTER, "vd.tool:select", "Select (V): click a shape, drag to move it"},
 		{.Node, ICON_FA_BEZIER_CURVE, "vd.tool:node", "Nodes (A): drag anchors and handles; double-click a segment to add one"},
 		{.Pen, ICON_FA_PEN, "vd.tool:pen", "Pen (P): click for corners, drag for curves; click the first point to close"},
+		{.Rect, ICON_FA_SQUARE, "vd.tool:rect", "Rectangle (R): drag one out (Shift: a square, Alt: from the centre); its corner radius is beside the colours"},
+		{.Ellipse, ICON_FA_CIRCLE, "vd.tool:ellipse", "Ellipse (O): drag one out (Shift: a circle, Alt: from the centre)"},
+		{.Polygon, ICON_FA_DRAW_POLYGON, "vd.tool:polygon", "Polygon: drag one out (its number of sides is beside the colours)"},
+		{.Star, ICON_FA_STAR, "vd.tool:star", "Star: drag one out (its points and inner radius are beside the colours)"},
 	}
 	for t, i in tools {
 		if i > 0 do imgui.SameLine(0, 4)
@@ -253,6 +271,30 @@ vectordraw_toolbar :: proc(state: ^EditorState) {
 	imgui.DragFloat("##vdwidth", &vd.width, 0.1, 0, 64, "%.1f px")
 	Drive_Item("vd.width")
 	UI_Tooltip("Line width of new shapes")
+	// The shape tool's settings.
+	#partial switch vd.tool {
+	case .Rect:
+		imgui.SameLine(0, 8)
+		imgui.SetNextItemWidth(70)
+		imgui.DragFloat("##vdradius", &vd.radius, 0.5, 0, 500, "r %.0f")
+		Drive_Item("vd.radius")
+		UI_Tooltip("Corner radius of new rectangles")
+	case .Polygon:
+		imgui.SameLine(0, 8)
+		imgui.SetNextItemWidth(70)
+		imgui.DragInt("##vdsides", &vd.sides, 0.1, 3, 32, "%d sides")
+		Drive_Item("vd.sides")
+	case .Star:
+		imgui.SameLine(0, 8)
+		imgui.SetNextItemWidth(70)
+		imgui.DragInt("##vdpoints", &vd.points, 0.1, 3, 32, "%d points")
+		Drive_Item("vd.points")
+		imgui.SameLine(0, 4)
+		imgui.SetNextItemWidth(70)
+		imgui.DragFloat("##vdinner", &vd.inner, 0.01, 0.05, 0.95, "inner %.2f")
+		Drive_Item("vd.inner")
+		UI_Tooltip("Inner corners' radius, a fraction of the outer")
+	}
 	imgui.SameLine(0, 12)
 	if UI_Button(fmt.tprintf("%s  Done", ICON_FA_CHECK), "vd.done") do vectordraw_exit(state)
 	UI_Tooltip("Stop drawing (Esc)")
@@ -540,7 +582,7 @@ tool_node :: proc(state: ^EditorState, dl: ^imgui.DrawList, r: ^e.Vector_Resourc
 								}
 							}
 						}
-					case .None, .Shape, .Pen:
+					case .None, .Shape, .Pen, .Draw:
 					}
 					e.Vector_ResourceEdited(r)
 					vd.moved = true
@@ -810,6 +852,68 @@ pen_finish :: proc(state: ^EditorState) {
 		edit_commit(state, r, "Pen")
 	}
 	vd.drag = .None
+}
+
+// --- Rectangle, Ellipse, Polygon, Star ------------------------------------------------
+
+// tool_shape: drag out a shape (Shift: square / circle / regular, Alt: from
+// the centre); it is an ordinary path from then on.
+@(private = "file")
+tool_shape :: proc(state: ^EditorState, dl: ^imgui.DrawList, r: ^e.Vector_Resource, mouse: [2]f32, tol: f32) {
+	v := vd.node
+	res := r
+	if !state.viewportHovered && vd.drag == .None do return
+	imgui.SetMouseCursor(.Arrow)
+	io := imgui.GetIO()
+	if imgui.IsMouseClicked(.Left) {
+		q := mouse
+		if res == nil {
+			res = vectordraw_new_file(state, v)
+			if res == nil do return
+			q = world_to_doc(v, Viewport_ScreenToWorld(state, mouse_screen()))
+		}
+		edit_begin(res)
+		context.allocator = e.Vector_EditAllocator(&res.doc)
+		s: e.Vector_Shape
+		e.Vector_Path_Init(&s.path)
+		s.style = e.Vector_Style{fill = vd.fill.a > 0, fillColor = vd.fill, stroke = vd.width > 0, strokeColor = vd.stroke, strokeWidth = vd.width, join = .Miter, miterLimit = 4, opacity = 1}
+		group := -1
+		if g := e.Vector_ResourceGroup(res, v.group); g >= 0 do group = g
+		vd.shape = e.Vector_DocInsertShape(&res.doc, s, group)
+		vd.anchor, vd.drag, vd.start = -1, .Draw, q
+		return
+	}
+	if vd.drag != .Draw || res == nil || vd.shape < 0 || vd.shape >= len(res.doc.shapes) do return
+	a, b := vd.start, mouse
+	if io.KeyShift {
+		// Square / circle / a regular polygon: the larger side both ways.
+		d := b - a
+		m := max(abs(d.x), abs(d.y))
+		b = a + {m if d.x >= 0 else -m, m if d.y >= 0 else -m}
+	}
+	if io.KeyAlt do a = a - (b - a) // (from the centre)
+	lo, hi := [2]f32{min(a.x, b.x), min(a.y, b.y)}, [2]f32{max(a.x, b.x), max(a.y, b.y)}
+	p := &res.doc.shapes[vd.shape].path
+	e.Vector_Path_Clear(p)
+	centre, radii := (lo + hi) * 0.5, (hi - lo) * 0.5
+	#partial switch vd.tool {
+	case .Rect:    e.Vector_RoundRect(p, lo, hi, vd.radius)
+	case .Ellipse: e.Vector_Ellipse(p, centre, radii)
+	case .Polygon: e.Vector_Polygon(p, centre, radii, int(vd.sides))
+	case .Star:    e.Vector_Polygon(p, centre, radii, int(vd.points), clamp(vd.inner, 0.05, 0.95))
+	}
+	e.Vector_ResourceEdited(res)
+	if !imgui.IsMouseDown(.Left) {
+		vd.drag = .None
+		if hi.x - lo.x < tol && hi.y - lo.y < tol {
+			// A click, not a drag: nothing drawn.
+			e.Vector_DocRemoveShape(&res.doc, vd.shape)
+			vd.shape = -1
+			e.Vector_ResourceEdited(res)
+			return
+		}
+		vectordraw_save(state, res, "Draw shape")
+	}
 }
 
 // --- the lossy-file question --------------------------------------------------
