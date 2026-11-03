@@ -82,3 +82,22 @@ test_vector_edit_layers :: proc(t: ^testing.T) {
 	at := Vector_DocInsertShape(&doc, doc.shapes[0], added)
 	testing.expect(t, at == len(doc.shapes) - 1 && doc.groups[added].count == 1, "a shape into it")
 }
+
+// #269: shapes made into a symbol (a group) keep their order and every
+// group's range stays right; its path names it for a Vector Shape.
+@(test)
+test_vector_edit_make_symbol :: proc(t: ^testing.T) {
+	SVG :: `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><g id="layer"><path d="M0 0 L1 0"/><path d="M2 2 L3 2"/><path d="M4 4 L5 4"/></g><path d="M9 9 L8 9"/></svg>`
+	doc: Vector_Doc
+	defer Vector_Doc_Destroy(&doc)
+	testing.expect(t, Vector_LoadSVG(SVG, &doc), "loads")
+	layer := 0
+	g := Vector_DocMakeGroup(&doc, {2, 0}, Vector_DocGroupNameFree(&doc, "layer"), layer)
+	testing.expect_value(t, doc.groups[g].name, "layer 2")
+	testing.expect(t, doc.groups[g].parent == layer && doc.groups[g].count == 2 && doc.groups[g].first == 1, "the new group holds the two")
+	testing.expect(t, doc.groups[layer].count == 3 && doc.shapes[0].path.pts[0] == {2, 2}, "still in the layer; the other shape first")
+	testing.expect(t, doc.shapes[1].path.pts[0] == {0, 0} && doc.shapes[2].path.pts[0] == {4, 4}, "in their order")
+	testing.expect(t, doc.shapes[3].path.pts[0] == {9, 9}, "the shape outside unchanged")
+	res := Vector_Resource{doc = doc}
+	testing.expect_value(t, Vector_GroupPath(&res, g), "layer/layer 2")
+}

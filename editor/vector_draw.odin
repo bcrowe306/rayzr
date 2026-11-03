@@ -59,6 +59,7 @@ Vd_Drag :: enum {
 	Pen,
 	Draw, // dragging out a shape tool's shape
 	Freehand, // the Pencil / Brush collecting samples
+	Box,      // the Select tool's selection box
 	GradA,    // the Gradient tool's handles: a linear gradient's start / a radial's centre
 	GradB,    //   its end / its radius
 }
@@ -98,6 +99,11 @@ vd: struct {
 	locked:   map[int]bool,  // layers that can't be picked (editor only)
 	snapped:  [2]f32,        // the anchor the last snap went to (shown), when snappedOn
 	snappedOn: bool,
+	sel:      [dynamic]int, // the selected shapes (vd.shape among them); one = vd.shape alone
+	askSymbol: bool,        // the Convert to Symbol dialog is open
+	symbolBuf: [64]u8,
+	lastOffset: [2]f32, // the symbol's offset last frame (keep_symbol_in_place)
+	offsetKnown: bool,
 }
 
 VectorDraw_IsActive :: proc(state: ^EditorState) -> bool {
@@ -128,6 +134,7 @@ vectordraw_start :: proc(state: ^EditorState, v: ^e.VectorShapeNode) {
 	if vd.sides == 0 do vd.sides, vd.points, vd.inner, vd.smooth, vd.brush = 5, 5, 0.5, 50, 12
 	vd.active, vd.node, vd.shape, vd.anchor, vd.drag, vd.penShape = true, v, -1, -1, .None, -1
 	vd.alloc = context.allocator
+	vd.offsetKnown = false
 	vd.layer = -1
 	if vd.locked == nil do vd.locked = make(map[int]bool)
 	clear(&vd.locked)
@@ -233,11 +240,43 @@ vd_snap :: proc(state: ^EditorState, r: ^e.Vector_Resource, q: [2]f32, skip := -
 // shape_locked: the shape is in a hidden or locked layer (not picked).
 @(private = "file")
 shape_locked :: proc(r: ^e.Vector_Resource, i: int) -> bool {
+	if lo, hi := vd_scope(r); i < lo || i >= hi do return true // (editing one symbol: only its shapes)
 	for g, gi in r.doc.groups {
 		if g.parent != -1 || i < g.first || i >= g.first + g.count do continue
 		return g.hidden || vd.locked[gi]
 	}
 	return false
+}
+
+// vd_scope: the shapes being edited [lo, hi) - the symbol the node shows
+// (edit in place), else the whole file.
+@(private = "file")
+vd_scope :: proc(r: ^e.Vector_Resource) -> (lo, hi: int) {
+	if g := e.Vector_ResourceGroup(r, vd.node.group); g >= 0 do return r.doc.groups[g].first, r.doc.groups[g].first + r.doc.groups[g].count
+	return 0, len(r.doc.shapes)
+}
+
+// vd_selection: the selected shapes (vd.shape and the rest of vd.sel).
+@(private = "file")
+vd_selection :: proc(r: ^e.Vector_Resource) -> []int {
+	if r == nil || vd.shape < 0 || vd.shape >= len(r.doc.shapes) do return nil
+	inSel := false
+	for i in vd.sel do if i == vd.shape do inSel = true
+	if !inSel {
+		clear(&vd.sel)
+		append(&vd.sel, vd.shape)
+	}
+	out := make([dynamic]int, context.temp_allocator)
+	for i in vd.sel do if i >= 0 && i < len(r.doc.shapes) do append(&out, i)
+	return out[:]
+}
+
+@(private = "file")
+vd_select_only :: proc(i: int) {
+	if vd.sel == nil do vd.sel = make([dynamic]int, vd.alloc)
+	clear(&vd.sel)
+	vd.shape, vd.anchor = i, -1
+	if i >= 0 do append(&vd.sel, i)
 }
 
 // vd_target_group: where new shapes go - the chosen layer, else the symbol
@@ -264,9 +303,11 @@ Viewport_DrawVectorEditFocus :: proc(state: ^EditorState, view: rl.Rectangle) {
 Viewport_VectorDraw :: proc(state: ^EditorState, dl: ^imgui.DrawList, mouseScreen, mouseWorld: [2]f32) -> bool {
 	vectordraw_ask(state)
 	if !VectorDraw_IsActive(state) do return false
+	convert_dialog(state)
+	keep_symbol_in_place(state)
 	v := vd.node
 	io := imgui.GetIO()
-	if vd.drag == .None do vd.offset = vd_offset(v)
+	vd.offset = vd_offset(v) // (kept in place above: the mapping follows it)
 	mouse := world_to_doc(v, mouseWorld)
 	tol := 6 * doc_per_px(state, v)
 	vectordraw_toolbar(state)
@@ -288,6 +329,7 @@ Viewport_VectorDraw :: proc(state: ^EditorState, dl: ^imgui.DrawList, mouseScree
 		if imgui.IsKeyPressed(.K, false) do vectordraw_set_tool(state, .Bucket)
 		if imgui.IsKeyPressed(.I, false) do vectordraw_set_tool(state, .Eyedropper)
 		if imgui.IsKeyPressed(.F, false) do vectordraw_set_tool(state, .Gradient)
+		if imgui.IsKeyPressed(.F8, false) && len(vd_selection(r)) > 0 do convert_open(r)
 		if imgui.IsKeyPressed(.Escape, false) || imgui.IsKeyPressed(.Enter, false) {
 			if vd.penShape >= 0 do pen_finish(state)
 			else if imgui.IsKeyPressed(.Escape, false) {vectordraw_exit(state); return true}
@@ -309,16 +351,30 @@ Viewport_VectorDraw :: proc(state: ^EditorState, dl: ^imgui.DrawList, mouseScree
 			if vd.tool == .Node && vd.anchor >= 0 do anchor_delete(state, r, vd.shape, vd.anchor)
 			else {
 				edit_begin(r)
-				e.Vector_DocRemoveShape(&r.doc, vd.shape)
-				vd.shape, vd.anchor = -1, -1
-				edit_commit(state, r, "Delete shape")
+				sel := vd_selection(r)
+				// (Highest first: the indices below stay right.)
+				for k := len(sel) - 1; k >= 0; k -= 1 {
+					top := k
+					for j in 0 ..< k do if sel[j] > sel[top] do top = j
+					sel[k], sel[top] = sel[top], sel[k]
+				}
+				for k := len(sel) - 1; k >= 0; k -= 1 do e.Vector_DocRemoveShape(&r.doc, sel[k])
+				vd_select_only(-1)
+				edit_commit(state, r, "Delete shapes")
 			}
 		}
 	}
 
 	// Every shape faintly; the selected one bright, with its anchors in Node mode.
 	if r != nil {
-		for &s, i in r.doc.shapes do draw_path_outline(state, dl, v, &s.path, col_u32(UI_ACCENT if i == vd.shape else ui_line(0.35)), 2 if i == vd.shape else 1)
+		lo, hi := vd_scope(r)
+		sel := vd_selection(r)
+		for &s, i in r.doc.shapes[lo:hi] {
+			k := lo + i
+			on := false
+			for x in sel do if x == k do on = true
+			draw_path_outline(state, dl, v, &s.path, col_u32(UI_ACCENT if on else ui_line(0.35)), 2 if on else 1)
+		}
 	}
 	Drive_ItemRect("vd.canvas", state.viewportPos, state.viewportPos + state.viewportSize, inWindow = true)
 
@@ -369,7 +425,7 @@ vectordraw_toolbar :: proc(state: ^EditorState) {
 		if i > 0 do imgui.SameLine(0, 4)
 		if UI_IconButton(t.icon, t.id, t.tip, vd.tool == t.t, 28) do vectordraw_set_tool(state, t.t)
 	}
-	imgui.SameLine(0, 12)
+	// (Second row: the colours, the tool's settings, the actions.)
 	colour :: proc(label, id: cstring, c: ^[4]u8, tip: string) {
 		f := [4]f32{f32(c[0]) / 255, f32(c[1]) / 255, f32(c[2]) / 255, f32(c[3]) / 255}
 		if imgui.ColorEdit4(label, &f, {.NoInputs, .AlphaBar}) do c^ = {u8(f[0] * 255 + 0.5), u8(f[1] * 255 + 0.5), u8(f[2] * 255 + 0.5), u8(f[3] * 255 + 0.5)}
@@ -422,6 +478,19 @@ vectordraw_toolbar :: proc(state: ^EditorState) {
 		UI_Tooltip("Inner corners' radius, a fraction of the outer")
 	}
 	imgui.SameLine(0, 12)
+	r := e.VectorShapeNode_Asset(vd.node)
+	if n := len(vd_selection(r)); n > 0 {
+		imgui.SameLine(0, 8)
+		if UI_Button(fmt.tprintf("%s  To Symbol", ICON_FA_CUBE), "vd.convert") do convert_open(r)
+		UI_Tooltip(fmt.tprintf("Convert to Symbol (F8): the %d selected shape(s) become a named group of the file, and a Vector Shape showing it goes where they are", n))
+	}
+	// Editing one symbol: where (file > symbol).
+	if vd.node.group != "" {
+		imgui.SameLine(0, 12)
+		UI_DimText(fmt.tprintf("%s  >  %s", filepath.base(vd.node.file), vd.node.group))
+		Drive_Item("vd.breadcrumb")
+	}
+	imgui.SameLine(0, 12)
 	if UI_Button(fmt.tprintf("%s  Done", ICON_FA_CHECK), "vd.done") do vectordraw_exit(state)
 	UI_Tooltip("Stop drawing (Esc)")
 	imgui.EndGroup()
@@ -437,6 +506,33 @@ edit_begin :: proc(r: ^e.Vector_Resource) {e.Vector_ResourceEditBegin(r)}
 edit_commit :: proc(state: ^EditorState, r: ^e.Vector_Resource, label: string) {
 	e.Vector_ResourceEdited(r)
 	vectordraw_save(state, r, label)
+}
+
+// keep_symbol_in_place: drawing into a symbol (or undoing that) can change
+// its box, where its origin sits - the art would jump under the mouse. Each
+// frame the node being drawn in moves by as much the other way.
+@(private = "file")
+keep_symbol_in_place :: proc(state: ^EditorState) {
+	v := vd.node
+	if v == nil || v.group == "" || state.activeScene == nil do return
+	off := vd_offset(v)
+	if !vd.offsetKnown {
+		vd.lastOffset, vd.offsetKnown = off, true
+		return
+	}
+	d := vd.lastOffset - off
+	if d.x * d.x + d.y * d.y < 1e-6 do return
+	// (Where the art's point at the new origin was drawn: the new position.)
+	a := v.globalRotation * math.RAD_PER_DEG
+	c, s := math.cos(a), math.sin(a)
+	l := d * v.globalScale
+	world := v.globalPosition + {l.x * c - l.y * s, l.x * s + l.y * c}
+	par := e.GetParent(state.activeScene.manager, &v.node)
+	v.position = Editor_WorldToLocal(par, world) if par != nil else world
+	e.Node_SetGlobalPositions(state.activeScene.manager, state.activeScene.rootNode)
+	state.nextVersion += 1 // (the scene changed: saved with it)
+	state.sceneVersion[state.activeScene] = state.nextVersion
+	vd.lastOffset = off
 }
 
 @(private = "file")
@@ -503,26 +599,66 @@ project_file_exists :: proc(state: ^EditorState, rel: string) -> bool {
 @(private = "file")
 tool_select :: proc(state: ^EditorState, dl: ^imgui.DrawList, r: ^e.Vector_Resource, mouse: [2]f32, tol: f32) {
 	if r == nil || !state.viewportHovered && vd.drag == .None do return
+	io := imgui.GetIO()
 	if vd_clicked() {
-		vd.shape = shape_at(r, mouse, tol)
-		vd.anchor = -1
-		if vd.shape >= 0 {
+		hit := shape_at(r, mouse, tol)
+		sel := vd_selection(r)
+		inSel := false
+		for x in sel do if x == hit do inSel = true
+		switch {
+		case hit >= 0 && io.KeyShift:
+			// Shift: added to / taken from the selection.
+			if inSel {
+				for x, k in vd.sel do if x == hit {ordered_remove(&vd.sel, k); break}
+				vd.shape = vd.sel[len(vd.sel) - 1] if len(vd.sel) > 0 else -1
+			} else {
+				append(&vd.sel, hit)
+				vd.shape = hit
+			}
+			vd.anchor = -1
+		case hit >= 0:
+			if !inSel do vd_select_only(hit)
+			else do vd.shape = hit
 			vd.drag, vd.last, vd.moved = .Shape, mouse, false
 			edit_begin(r)
+		case:
+			// Empty space: a selection box.
+			if !io.KeyShift do vd_select_only(-1)
+			vd.drag, vd.start = .Box, mouse
 		}
 	}
-	if vd.drag == .Shape {
+	switch vd.drag {
+	case .Shape:
 		if imgui.IsMouseDown(.Left) {
 			if d := mouse - vd.last; d != {} {
-				e.Vector_PathMove(&r.doc.shapes[vd.shape].path, d)
+				for i in vd_selection(r) do e.Vector_PathMove(&r.doc.shapes[i].path, d)
 				e.Vector_ResourceEdited(r)
 				vd.moved = true
 			}
 			vd.last = mouse
 		} else {
-			if vd.moved do vectordraw_save(state, r, "Move shape")
+			if vd.moved do vectordraw_save(state, r, "Move shapes")
 			vd.drag = .None
 		}
+	case .Box:
+		a, b := doc_to_screen(state, vd.node, vd.start), doc_to_screen(state, vd.node, mouse)
+		imgui.DrawList_AddRectFilled(dl, {min(a.x, b.x), min(a.y, b.y)}, {max(a.x, b.x), max(a.y, b.y)}, col_u32(ui_accent(0.12)))
+		imgui.DrawList_AddRect(dl, {min(a.x, b.x), min(a.y, b.y)}, {max(a.x, b.x), max(a.y, b.y)}, col_u32(UI_ACCENT))
+		if !imgui.IsMouseDown(.Left) {
+			// Shapes wholly inside the box.
+			lo, hi := [2]f32{min(vd.start.x, mouse.x), min(vd.start.y, mouse.y)}, [2]f32{max(vd.start.x, mouse.x), max(vd.start.y, mouse.y)}
+			for i in 0 ..< len(r.doc.shapes) {
+				if shape_locked(r, i) do continue
+				bb := e.Vector_ShapesBounds(r.doc.shapes[i:i + 1], false)
+				if bb[0] >= lo.x && bb[1] >= lo.y && bb[2] <= hi.x && bb[3] <= hi.y {
+					if vd.sel == nil do vd.sel = make([dynamic]int, vd.alloc)
+					append(&vd.sel, i)
+					vd.shape = i
+				}
+			}
+			vd.drag = .None
+		}
+	case .None, .Anchor, .In, .Out, .Pen, .Draw, .Freehand, .GradA, .GradB:
 	}
 }
 
@@ -711,7 +847,7 @@ tool_node :: proc(state: ^EditorState, dl: ^imgui.DrawList, r: ^e.Vector_Resourc
 								}
 							}
 						}
-					case .None, .Shape, .Pen, .Draw, .Freehand, .GradA, .GradB:
+					case .None, .Shape, .Pen, .Draw, .Freehand, .GradA, .GradB, .Box:
 					}
 					e.Vector_ResourceEdited(r)
 					vd.moved = true
@@ -1408,6 +1544,80 @@ vd_move_shape :: proc(state: ^EditorState, r: ^e.Vector_Resource, dir: int) {
 	}
 }
 
+// --- Convert to Symbol ----------------------------------------------------------------
+
+@(private = "file")
+convert_open :: proc(r: ^e.Vector_Resource) {
+	if r == nil do return
+	vd.askSymbol = true
+	vd.symbolBuf = {}
+	copy(vd.symbolBuf[:63], e.Vector_DocGroupNameFree(&r.doc, "Symbol"))
+}
+
+// convert_dialog: the symbol's name; OK makes the group and its instance.
+@(private = "file")
+convert_dialog :: proc(state: ^EditorState) {
+	if !vd.askSymbol do return
+	if !imgui.IsPopupOpen("Convert to Symbol###vd_convert") do imgui.OpenPopup("Convert to Symbol###vd_convert")
+	center := imgui.GetMainViewport().WorkPos + imgui.GetMainViewport().WorkSize * 0.5
+	imgui.SetNextWindowPos(center, .Always, {0.5, 0.5})
+	if !imgui.BeginPopupModal("Convert to Symbol###vd_convert", nil, {.AlwaysAutoResize}) do return
+	defer imgui.EndPopup()
+	imgui.TextUnformatted("Name")
+	if imgui.IsWindowAppearing() do imgui.SetKeyboardFocusHere()
+	imgui.SetNextItemWidth(260)
+	enter := imgui.InputText("##vdsymname", cstring(raw_data(vd.symbolBuf[:])), len(vd.symbolBuf), {.EnterReturnsTrue, .AutoSelectAll})
+	Drive_Item("vd.convert.name")
+	if enter || UI_PrimaryButton("Convert", "vd.convert.ok") {
+		name := strings.trim_space(string(cstring(raw_data(vd.symbolBuf[:]))))
+		if name != "" do convert_to_symbol(state, name)
+		vd.askSymbol = false
+		imgui.CloseCurrentPopup()
+	}
+	imgui.SameLine()
+	if UI_Button("Cancel", "vd.convert.cancel") || imgui.IsKeyPressed(.Escape, false) {
+		vd.askSymbol = false
+		imgui.CloseCurrentPopup()
+	}
+}
+
+// convert_to_symbol: the selected shapes into a new group (a symbol) where
+// the first of them is, and a Vector Shape drawing it placed so it covers
+// them exactly (the drawing node keeps drawing them too).
+@(private = "file")
+convert_to_symbol :: proc(state: ^EditorState, name: string) {
+	v := vd.node
+	r := e.VectorShapeNode_Asset(v)
+	sel := vd_selection(r)
+	if r == nil || len(sel) == 0 || state.activeScene == nil do return
+	edit_begin(r)
+	clean := e.Vector_DocGroupNameFree(&r.doc, name)
+	parent := e.Vector_DocShapeGroup(&r.doc, sel[0])
+	g := e.Vector_DocMakeGroup(&r.doc, sel, clean, parent)
+	vd_select_only(-1)
+	edit_commit(state, r, "Convert to Symbol")
+	// The instance: same parent, rotation and scale; its own origin box.
+	Editor_RecordUndo(state, fmt.tprintf("Convert to Symbol %s", clean))
+	mgr := state.activeScene.manager
+	scene := state.activeScene
+	par := e.GetParent(mgr, &v.node)
+	inst := cast(^e.VectorShapeNode)e.Node_CreateByTypeName(scene, "VectorShapeNode", par)
+	if inst == nil do return
+	inst.name = strings.clone(Editor_UniqueChildName(state, par, clean), inst.allocator)
+	inst.file = strings.clone(v.file, inst.allocator)
+	inst.group = strings.clone(e.Vector_GroupPath(r, g), inst.allocator)
+	inst.gameContext = v.gameContext
+	inst.rotation, inst.scale = v.rotation, v.scale
+	e.ProcessNodeQueues(mgr, &state.game.gameContext)
+	boxMin, boxSize := e.Vector_PartBox(r, g)
+	offB := -boxMin - e.Node_OriginPx(inst, boxSize)
+	// Where the original draws the box's origin point, the instance's position goes.
+	world := doc_to_world(v, -offB)
+	inst.position = Editor_WorldToLocal(par, world) if par != nil else world
+	e.Node_SetGlobalPositions(mgr, scene.rootNode)
+	Editor_Log(state, .Info, "Made symbol %s and placed %s", clean, inst.name)
+}
+
 // --- the lossy-file question --------------------------------------------------
 
 @(private = "file")
@@ -1480,6 +1690,12 @@ VectorDraw_DriveQuery :: proc(state: ^EditorState, q: string) -> (string, bool) 
 	case "vd.file":   return vd.node.file if vd.node != nil else "", true
 	case "vd.shape":  return fmt.tprint(vd.shape), true
 	case "vd.layer":  return fmt.tprint(vd.layer), true
+	case "vd.selected": return fmt.tprint(len(vd_selection(r))), true
+	case "vd.scope":
+		if r == nil do return "0", true
+		lo, hi := vd_scope(r)
+		return fmt.tprint(hi - lo), true
+	case "vd.groups": return fmt.tprint(len(r.doc.groups) if r != nil else 0), true
 	case "vd.stops":
 		if p := grad_paint(r); p != nil do return fmt.tprint(p.stopCount), true
 		return "0", true

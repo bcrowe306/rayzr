@@ -1,5 +1,6 @@
 package engine
 
+import "core:fmt"
 import "core:math"
 import "core:math/linalg"
 import os "osx"
@@ -318,4 +319,36 @@ Vector_DocMoveShape :: proc(doc: ^Vector_Doc, i, dir: int) -> int {
 	if Vector_DocShapeGroup(doc, i) != Vector_DocShapeGroup(doc, j) do return i
 	doc.shapes[i], doc.shapes[j] = doc.shapes[j], doc.shapes[i]
 	return j
+}
+
+// --- symbols ---------------------------------------------------------------------------
+
+// Vector_DocMakeGroup moves shapes into a new group named `name` inside
+// `parent` (-1: top level) - a symbol - in their drawing order, after the
+// parent's other shapes; the group's index.
+Vector_DocMakeGroup :: proc(doc: ^Vector_Doc, indices: []int, name: string, parent := -1) -> int {
+	order := make([dynamic]int, 0, len(indices), context.temp_allocator)
+	for i in indices do if i >= 0 && i < len(doc.shapes) do append(&order, i)
+	for i in 1 ..< len(order) {
+		for j := i; j > 0 && order[j] < order[j - 1]; j -= 1 do order[j], order[j - 1] = order[j - 1], order[j]
+	}
+	moved := make([dynamic]Vector_Shape, 0, len(order), context.temp_allocator)
+	for i in order do append(&moved, doc.shapes[i])
+	for k := len(order) - 1; k >= 0; k -= 1 do Vector_DocRemoveShape(doc, order[k])
+	g := Vector_DocAddGroup(doc, name, parent)
+	for s in moved do Vector_DocInsertShape(doc, s, g)
+	return g
+}
+
+// Vector_DocGroupNameFree: `base`, or base 2, base 3... - a name no group has.
+Vector_DocGroupNameFree :: proc(doc: ^Vector_Doc, base: string, allocator := context.temp_allocator) -> string {
+	taken :: proc(doc: ^Vector_Doc, n: string) -> bool {
+		for g in doc.groups do if g.name == n do return true
+		return false
+	}
+	if !taken(doc, base) do return strings.clone(base, allocator)
+	for i := 2; ; i += 1 {
+		n := fmt.tprintf("%s %d", base, i)
+		if !taken(doc, n) do return strings.clone(n, allocator)
+	}
 }
