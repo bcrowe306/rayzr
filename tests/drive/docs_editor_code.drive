@@ -1,0 +1,25 @@
+# Docs screenshot: the Code tab (docs/editor/code.md, #45). (F1 there is the
+# Scripting Reference for the symbol; Help > Help for Code Tab its page.)
+wait 5
+key escape
+dblclick @asset:scripts/player_ship.lua
+wait 5
+wait-until code.lsp == ready timeout=600
+key ctrl+g
+type 30
+key enter
+wait 3
+key cmd+f
+type rotation_speed
+# (the mouse off Assets: no tooltip)
+move 640,420
+wait 3
+annotate @code.tab:scripts/player_ship.lua Open scripts, one tab each (right-click for more)
+annotate @code.crumb:0 Breadcrumbs: the function around the caret
+annotate @code.find-input Find (Cmd+F): case, word, regex, replace
+annotate @code.save Save, line and column, problems, language server
+screenshot editor_code
+key escape
+click @menu:Help
+click @menu:Help/Help for This Panel
+expect noderef.page == editor/code

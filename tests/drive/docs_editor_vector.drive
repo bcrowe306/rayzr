@@ -1,0 +1,28 @@
+# Docs screenshot: vector edit mode (docs/editor/vector-edit.md, #45) - an
+# ellipse with a radial gradient and a rectangle drawn with Edit Art.
+wait 5
+key escape
+click @hier.add
+type vector
+click @addnode.create
+wait 2
+click @insp.vec.draw
+wait 2
+click @vd.tool:ellipse
+drag @node:VectorShape+-60,-90 @node:VectorShape+60,30
+click @vd.style.fill.kind
+click @pick:Radial gradient
+click @vd.tool:rect
+drag @node:VectorShape+-40,30 @node:VectorShape+40,140
+click @vd.tool:select
+drag @node:VectorShape+-90,-110 @node:VectorShape+90,160
+wait 3
+annotate @vd.tool:pen Tools: select, nodes, pen, shapes, pencil, brush, bucket, eyedropper, gradient
+annotate @vd.def.fillColor Fill, line colour and width of new shapes
+annotate @vd.convert Selected shapes to a symbol (F8)
+annotate @vd.done Done (Esc)
+annotate @vd.style.for Layers and the shape's fill / stroke in the Inspector
+screenshot editor_vector-edit
+click @window:viewport
+key f1
+expect noderef.page == editor/vector-edit

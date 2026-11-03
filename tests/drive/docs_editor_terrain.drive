@@ -1,0 +1,31 @@
+# Docs screenshot: the Terrain Tiles window (docs/editor/terrain-tiles.md, #45).
+wait 8
+key escape
+click @menu:View
+click @menu:View/Workspaces
+click @menu:Workspaces/Animation
+wait 3
+key escape
+key ctrl+a
+type tile map
+key enter
+wait 2
+click @tile.tileset
+click @pick:textures/Tiles.png
+wait 2
+click @tile.layer:Terrains
+click @tile.terrain-new
+click @tile.terrain-edit:0
+wait 2
+click @terrain.pattern:46
+click @terrain.tile:26
+click @terrain.pattern:0
+click @terrain.tile:1
+wait 2
+annotate @terrain.advance Next pattern after a pick
+annotate @terrain.pattern:0 A pattern: click it, then its tiles
+annotate @terrain.tile:1 The tileset: click to add or remove a tile
+annotate @terrain.done Done (saved as you pick)
+screenshot editor_terrain-tiles
+key f1
+expect noderef.page == editor/terrain-tiles

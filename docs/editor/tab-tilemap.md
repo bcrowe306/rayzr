@@ -58,6 +58,7 @@ Each change is one undo step. You can also right-click an image in
 | **Erase** (eraser) | Left button clears cells. |
 | **Fill** (paint bucket) | Left click flood-fills the connected cells that hold the same tile as the clicked one. |
 | *Tile N of M* | The picked tile and how many the tileset has. On the Components layer: the picked component and how many are on the map. |
+| Film button | Animate the picked tile: opens the [Tile Animation](tile-animation.md) window (its frames and their times; every Tile Map on the tileset plays it). |
 | **-** / **+** | Smaller / bigger tiles in the tile list (25% to 800%). The number between them is the zoom. |
 | Grid button | Tiles touching, with lines between them. Off: tiles spaced apart. |
 
@@ -110,8 +111,8 @@ next to the tileset image (`textures/Tiles.png` ->
 | **New Terrain** | Add a terrain to the tileset. |
 | Terrain card | Click to paint with it (its full tile shows). |
 | Name | Rename it (Enter). |
-| **Blob (47)** / **Edges (16)** | Blob: 47 patterns from all 8 neighbours (a corner counts when both sides next to it are the terrain). Edges: 16 patterns from the 4 sides. |
-| **Edit Tiles** | The **Terrain Tiles** window: the patterns (a 3 x 3 picture each: green the cell, blue the neighbours of the same terrain) and the tileset. Click a pattern, then its tile(s) in the tileset (again to remove one); **Next pattern after a pick** moves on by itself. A pattern with several tiles picks one per cell; right-click a pattern to clear it. Saved as you pick. |
+| **Blob (47)** / **Edges (16)** / **Hex (64)** | Blob: 47 patterns from all 8 neighbours (a corner counts when both sides next to it are the terrain). Edges: 16 patterns from the 4 sides. Hex: 64 patterns from a hex cell's 6 neighbours. |
+| **Edit Tiles** | The [Terrain Tiles](terrain-tiles.md) window: the patterns (a 3 x 3 picture each: green the cell, blue the neighbours of the same terrain) and the tileset. Click a pattern, then its tile(s) in the tileset (again to remove one); **Next pattern after a pick** moves on by itself. A pattern with several tiles picks one per cell; right-click a pattern to clear it. Saved as you pick. |
 | Delete | Remove the terrain (tiles already painted stay). |
 
 A pattern without a tile uses the same pattern without its corners, then

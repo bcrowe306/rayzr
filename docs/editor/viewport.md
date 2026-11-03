@@ -13,6 +13,8 @@ camera's frame, guides.
 - Place and arrange nodes by eye.
 - Check what the game's camera will see.
 - Edit a physics body's collision shapes with handles.
+- Draw and edit vector art on a Vector Shape: double-click it for
+  [vector edit mode](vector-edit.md).
 - Add images, sounds, components and levels by dragging them in.
 - Try the scene with **Simulate** (F7) without leaving the editor.
 - For exact values use the [Inspector](inspector.md); to find a node by
@@ -141,6 +143,14 @@ Other nodes have their own handles while selected: a Path's points and
 curve handles, and a Tile Map's painting tools (see the
 [Tile Map tab](tab-tilemap.md)).
 
+### Drawing vector art
+
+Double-click a selected **Vector Shape** (or click **Edit Art** in the
+Inspector) to draw in it: the rest of the scene dims and the Vector toolbar
+takes over the viewport's mouse, with select, node, pen, shape, pencil,
+brush, bucket, eyedropper and gradient tools. **Esc** or **Done** goes back.
+See [Vector edit mode](vector-edit.md).
+
 ### Dropping assets
 
 Drag from the Assets panel into the viewport. The new node lands where you
@@ -158,6 +168,7 @@ drop it (several selected assets land in a row).
 | Script | Attached to the node under the mouse (else the selected one). |
 | Shader | Applied to the node under the mouse (else the selected one). |
 | Level generator | Opens the Level Generator. |
+| A symbol from the [Library tab](tab-library.md) | A Vector Shape drawing it. |
 
 You can also drop files from your computer's file browser onto the
 viewport: they are imported into the project, and images, sounds,
@@ -169,7 +180,8 @@ them.
 The scene viewport has no context menu: right-click a node in the
 [Scene panel](scene-tree.md) for its actions. In the viewport, right-click
 removes a polygon point while editing shapes and erases while painting
-tiles.
+tiles. In vector edit mode, right-clicking an anchor (Nodes tool) makes it
+**Smooth**, **Symmetric** or **Corner**.
 
 ### Simulate
 
@@ -205,6 +217,7 @@ Lay out a row of platforms:
 - Each scene tab keeps its own view position and zoom.
 - An empty scene shows a hint: Cmd+A adds a node, or drop assets in.
 - More: [toolbar and menus](toolbar-menus.md),
+  [vector edit mode](vector-edit.md),
   [Scene panel](scene-tree.md), [Inspector](inspector.md),
   [CameraNode](../nodes/CameraNode.md),
   [StaticBodyNode](../nodes/StaticBodyNode.md),

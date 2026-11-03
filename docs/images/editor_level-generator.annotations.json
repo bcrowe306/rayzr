@@ -1,0 +1,12 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "Save, Undo, Redo, Copy, Paste, Frame", "x": 132, "y": 99, "w": 26, "h": 26},
+    {"label": "Canvas: drag outputs onto inputs, right-click to add nodes", "x": 132, "y": 131, "w": 716, "h": 543},
+    {"label": "A node: its grid as a thumbnail (selected: its settings at the side)", "x": 337, "y": 273, "w": 134, "h": 19},
+    {"label": "Output dot: drag onto an input to connect", "x": 639, "y": 346, "w": 8, "h": 8},
+    {"label": "New seed: same seed, same level", "x": 1108, "y": 207, "w": 26, "h": 26},
+    {"label": "Apply to TileMap: writes into the selected Tile Map", "x": 316, "y": 99, "w": 123, "h": 25}
+  ]
+}

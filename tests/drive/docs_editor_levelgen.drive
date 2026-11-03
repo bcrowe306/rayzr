@@ -1,0 +1,21 @@
+# Docs screenshot: the Level Generator window (docs/editor/level-generator.md,
+# #45) - the template cave with a node selected; F1 opens its page.
+wait 8
+key escape
+click @asset.add
+click @ctx:add-new-levelgen
+wait 3
+expect lge.open == true
+expect lge.nodes == 5
+click @lge.node:2
+wait 3
+expect lge.errors == 0
+annotate @lge.save Save, Undo, Redo, Copy, Paste, Frame
+annotate @lge.canvas Canvas: drag outputs onto inputs, right-click to add nodes
+annotate @lge.node:2 A node: its grid as a thumbnail (selected: its settings at the side)
+annotate @lge.out:4 Output dot: drag onto an input to connect
+annotate @lge.reseed New seed: same seed, same level
+annotate @lge.apply Apply to TileMap: writes into the selected Tile Map
+screenshot editor_level-generator
+key f1
+expect noderef.page == editor/level-generator

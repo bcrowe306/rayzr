@@ -1,0 +1,10 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "Slice by grid or by cell size", "x": 366, "y": 205, "w": 145, "h": 25},
+    {"label": "Picked cells, numbered in play order", "x": 615, "y": 180, "w": 85, "h": 172},
+    {"label": "Make an animation of the picked cells", "x": 337, "y": 494, "w": 174, "h": 25},
+    {"label": "Create an Animation Player with the animations", "x": 272, "y": 624, "w": 239, "h": 25}
+  ]
+}

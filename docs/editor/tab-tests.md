@@ -6,6 +6,8 @@ and check what happened. Each test runs in the game runner, hidden, with
 its own save folder, so your saves and the scene you're editing are never
 touched. For writing tests, read [Test](../lua/Test.md).
 
+![The Tests tab](../images/editor_tab-tests.png)
+
 ## When to use it
 
 - **Catching regressions**: the jump still clears the gap, the door still
@@ -29,7 +31,7 @@ touched. For writing tests, read [Test](../lua/Test.md).
   check (passed), a cross (failed) or a skip mark, and the frames and
   milliseconds it took.
 - Under a failed test, its failures: the line and the message. Double-click
-  one to open that line in the Code tab; double-click a test to open where
+  one to open that line in the [Code tab](code.md); double-click a test to open where
   it's defined. Select a test to see a Lua error's whole traceback.
 
 ## Recording
@@ -45,6 +47,7 @@ scene you started in and plays the input back, frame by frame.
 - Run the tests before you commit: a test that ran before and fails now
   points at what just broke.
 - Failures also go to the Console, with the file and line.
-- Tests save files as you edited them first (scenes and scripts), like Play.
+- Running tests saves your modified scenes and scripts first (Play saves
+  only scenes).
 - Replays are exact at 60 frames a second; a game whose logic depends on
   the real time between frames can drift a little from what you saw.

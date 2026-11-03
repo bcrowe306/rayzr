@@ -1,0 +1,35 @@
+# Docs screenshot: the Sprite Sheet Slicer (docs/editor/sprite-slicer.md, #45).
+wait 8
+key escape
+click @menu:Tools
+click @menu:Tools/Sprite Sheet Slicer...
+wait 2
+click @slicer.texture
+click @pick:textures/Asteroid_2.png
+wait 2
+dblclick @slicer.cols
+key ctrl+a
+type 4
+key enter
+dblclick @slicer.rows
+key ctrl+a
+type 2
+key enter
+wait 1
+click @slicer.cell:0
+hold shift
+click @slicer.cell:2
+release
+click @slicer.name
+type spin
+key enter
+click @slicer.add
+wait 2
+annotate @slicer.mode Slice by grid or by cell size
+annotate @slicer.cell:1 Picked cells, numbered in play order
+annotate @slicer.add Make an animation of the picked cells
+annotate @slicer.create Create an Animation Player with the animations
+screenshot editor_sprite-slicer
+click @slicer.cell:3
+key f1
+expect noderef.page == editor/sprite-slicer

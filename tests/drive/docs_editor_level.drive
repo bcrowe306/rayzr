@@ -1,0 +1,21 @@
+# Docs screenshot: the Level tab (docs/editor/level.md, #45) on the demo
+# project's HighForest.ldtk.
+wait 5
+key escape
+click @root.level
+wait 3
+click @level.open:levels/HighForest.ldtk
+wait 10
+click @level.layer:Ground
+click @level.fit
+wait 3
+annotate @root.level Game / Level tabs (Cmd+Shift+1 / 2)
+annotate @level.tool.Brush Tools: B R E F I V M
+annotate @level.pick:Level_0 The world's levels
+annotate @level.layer:Ground Layers: click one to paint on it
+annotate @level.value:1 The active layer's palette
+annotate @level.tab:World Level Panel: world, level and the definitions
+screenshot editor_level
+click @menu:Help
+click @menu:Help/Help for This Panel
+expect noderef.page == editor/level

@@ -1,0 +1,25 @@
+# Docs screenshot: the Atlas Region Editor (docs/editor/atlas-region.md, #45).
+wait 8
+key escape
+click @asset.new-scene
+wait 3
+click @hier.add
+type atlas
+click @addnode.create
+wait 3
+click @insp.texture
+click @pick:textures/Asteroid_2.png
+wait 2
+click @insp.atlas.edit
+wait 2
+click @atlas.grid_snap
+wait 1
+drag @atlas.canvas+-150,-150 @atlas.canvas+100,100
+wait 2
+annotate @atlas.region_rect The region: drag on the image to draw it
+annotate @atlas.grid_snap Snap to Grid: columns, rows or cell size
+annotate @atlas.zoom Zoom (Cmd+wheel)
+annotate @atlas.apply Apply to the node (one undo step)
+screenshot editor_atlas-region
+key f1
+expect noderef.page == editor/atlas-region

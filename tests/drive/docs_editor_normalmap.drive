@@ -1,0 +1,16 @@
+# Docs screenshot: Generate Normal Map (docs/editor/normal-map.md, #45).
+wait 8
+key escape
+rclick @asset:textures/Asteroid_4.png
+click @ctx:normal-map
+wait 5
+# (The mouse over the preview holds the light still: else it circles.)
+hover @normal-gen.preview+20,-20
+wait 2
+annotate @normal-gen.strength Strength and Softness
+annotate @normal-gen.shape Shape, Brightness, Invert
+annotate @normal-gen.preview Lit preview: the light follows the mouse
+annotate @normal-gen.save Save <image>_n.png
+screenshot editor_normal-map
+key f1
+expect noderef.page == editor/normal-map

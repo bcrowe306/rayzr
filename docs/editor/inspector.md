@@ -98,7 +98,8 @@ What comes next depends on the node's type. Some examples:
 | **Animation** | Frame animations | The frames. |
 | **Audio** | Sound, Music | The sounds or the track. |
 | **Timer** | Timer | Duration, Auto Start, Loop. |
-| **LDtk Level** | LDtk Level | The level; **Edit in Level Tab**, **Open in LDtk**. |
+| **LDtk Level** | LDtk Level | The level; **Edit in Level Tab** (the [Level tab](level.md)), **Open in LDtk**. |
+| **Vector** | Vector Shape | The SVG **File** (the pen button opens it in your vector app); **Edit Art** / **Done Drawing** ([vector edit mode](vector-edit.md): while drawing, the file's layers and the fill / stroke of the selected shape show here); **Symbol**, **Frame**, **Morph to**; **Explode into Parts**, **Make Animated Symbol**. Under a Skeleton: **Bend with**. |
 | **Collision Shapes** | Static, Dynamic, Area, Character Mover | Each shape's type and size; **Add Shape**, a bin to remove one, **Edit in Viewport**. |
 | **Follow** | Camera | **Follow Target**: pick a node, or drop one from the Scene panel. |
 | **Animation Player** | Animation Player | The **Current** animation, a **Play** / **Stop** preview, the list of animations, **Slice a Sprite Sheet...**. **Open Animation Timeline** opens the bottom panel's Animation tab. |

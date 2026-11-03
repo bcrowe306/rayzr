@@ -1,0 +1,39 @@
+# Docs screenshots: the Library tab (pip.svg's symbols) and the Tests tab
+# (a run with one failure) - docs/editor/tab-library.md, tab-tests.md (#45).
+# drive: copy templates/vector_character/art art
+# drive: copy tests/drive/fixtures/game_tests/tests tests
+wait 5
+key escape
+click @bottom:library
+# (a taller bottom panel: the splitter above its tabs, dragged up)
+drag 640,592 640,330
+wait 3
+click @library.file
+click @pick:art/pip.svg
+wait 5
+drag @library.symbol:arm_front @viewport+0,0 20
+wait 3
+annotate @library.file The SVG shown (a selected Vector Shape's file)
+annotate @library.count Its symbols
+annotate @library.symbol:mouth Drag into the viewport, double-click to edit, right-click for more
+annotate @library.uses:arm_front Nodes in this scene drawing it
+screenshot editor_tab-library
+click @bottom:library
+wait 1
+key f1
+expect noderef.page == editor/tab-library
+click @noderef.close
+wait 1
+click @bottom:tests
+wait 3
+click @tests.run-all
+wait-until log contains Tests: 1 passed, 1 failed timeout=1800
+wait 3
+annotate @tests.run-all Run All / Run Failed
+annotate @tests.filter Filter by file or test name
+annotate @tests.run-file:tests/demo_test.lua Run one file's tests
+annotate @tests.row:test_ship_is_there A test: status, run, frames and time
+annotate @tests.failure:test_fails_on_purpose:0 A failure: double-click opens the line
+screenshot editor_tab-tests
+key f1
+expect noderef.page == editor/tab-tests

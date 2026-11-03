@@ -1,0 +1,11 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "Run All / Run Failed", "x": 270, "y": 371, "w": 73, "h": 25},
+    {"label": "Filter by file or test name", "x": 488, "y": 371, "w": 200, "h": 25},
+    {"label": "Run one file's tests", "x": 400, "y": 413, "w": 22, "h": 22},
+    {"label": "A test: status, run, frames and time", "x": 337, "y": 446, "w": 677, "h": 21},
+    {"label": "A failure: double-click opens the line", "x": 314, "y": 493, "w": 700, "h": 21}
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "Tools: select, nodes, pen, shapes, pencil, brush, bucket, eyedropper, gradient", "x": 332, "y": 144, "w": 28, "h": 28},
+    {"label": "Fill, line colour and width of new shapes", "x": 268, "y": 178, "w": 25, "h": 25},
+    {"label": "Selected shapes to a symbol (F8)", "x": 394, "y": 178, "w": 91, "h": 25},
+    {"label": "Done (Esc)", "x": 497, "y": 178, "w": 65, "h": 25},
+    {"label": "Layers and the shape's fill / stroke in the Inspector", "x": 1037, "y": 449, "w": 81, "h": 15}
+  ]
+}

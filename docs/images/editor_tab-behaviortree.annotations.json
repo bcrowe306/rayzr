@@ -1,0 +1,11 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "The root: a Selector tries its children left to right", "x": 400, "y": 510, "w": 110, "h": 35},
+    {"label": "Right-click a node: Add Child, Wrap In, Change To, Move, Delete", "x": 338, "y": 574, "w": 110, "h": 35},
+    {"label": "The selected node (drag a node onto another to move it)", "x": 524, "y": 574, "w": 110, "h": 35},
+    {"label": "The selected node's settings, by kind", "x": 825, "y": 573, "w": 203, "h": 25},
+    {"label": "The tree's starting blackboard values", "x": 286, "y": 463, "w": 112, "h": 25}
+  ]
+}
