@@ -19,7 +19,8 @@ package engine
 // the generator's size, clamped beyond it), rectangle (absolute cells),
 // threshold, invert, remap, combine, blur, cellular, dilate, erode, scatter
 // (in a chunk it keeps the candidates no closer one comes before - local,
-// the same spacing), surface, tile output, entity output (`max`: per chunk).
+// the same spacing), surface, tile output, entity output (`max`: per chunk),
+// height output (its edges and faces: 1 cell, 2 with a cliff terrain).
 //
 // Not chunk-safe - they look at the whole level, or its edges: border, rooms
 // & corridors, walker, random lines / rectangles / circles, Wave Function
@@ -34,7 +35,7 @@ package engine
 // chunk as in the whole level (given its inputs do, and the apron).
 Gen_KindChunkSafe :: proc(kind: Gen_Kind) -> bool {
 	switch kind {
-	case .Constant, .Noise, .Random_Fill, .Gradient, .Rect, .Threshold, .Invert, .Remap, .Blur, .Cellular, .Dilate, .Erode, .Combine, .Scatter, .Surface, .Tile_Output, .Entity_Output:
+	case .Constant, .Noise, .Random_Fill, .Gradient, .Rect, .Threshold, .Invert, .Remap, .Blur, .Cellular, .Dilate, .Erode, .Combine, .Scatter, .Surface, .Tile_Output, .Entity_Output, .Height_Output:
 		return true
 	case .Border, .Rooms, .Walker, .Lines, .Rectangles, .Circles, .WFC, .Poisson_Scatter, .Flood_Fill, .Regions, .Connect_Regions, .Path, .Check, .Script, .Custom:
 		return false
@@ -51,6 +52,7 @@ Gen_NodeChunkReach :: proc(n: ^Gen_Node) -> int {
 	case .Dilate, .Erode: return clamp(int(Gen_Param(n, "iterations")), 0, 64)
 	case .Scatter: return max(clamp(int(Gen_Param(n, "spacing")), 0, 256) - 1, 0)
 	case .Surface, .Tile_Output: return 1 // (the 3 x 3 around: terrains, pattern rules)
+	case .Height_Output: return Gen_HeightReach(n) // (edges; a cliff terrain's faces: 2)
 	}
 	return 0
 }
@@ -86,7 +88,7 @@ Gen_ChunkInfo :: proc(g: ^Gen_Graph, allocator := context.allocator) -> Gen_Chun
 	main := Gen_OutputNode(g)
 	if main != nil do info.apron = visit(&st, main.id)
 	for &n in g.nodes {
-		if (n.kind == .Tile_Output && (n.layer != "" || Gen_WritesComponents(&n))) || (n.kind == .Entity_Output && n.component != "") {
+		if (n.kind == .Tile_Output && (n.layer != "" || Gen_WritesComponents(&n))) || (n.kind == .Entity_Output && n.component != "") || n.kind == .Height_Output {
 			info.apron = max(info.apron, visit(&st, n.id))
 		}
 	}

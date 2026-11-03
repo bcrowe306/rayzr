@@ -8,8 +8,8 @@ TileMap. The same generator and **seed** always give the same level, on
 every platform - so a seed is a level you can share, replay or test.
 
 So far (#142, #171): the generator file, the nodes (terrain, caves, rooms
-and corridors, walkers, Wave Function Collapse), placing entities, TileMap, component-layer and
-LDtk output, your own nodes (Lua or Odin), the **Level Generator** node
+and corridors, walkers, Wave Function Collapse), placing entities, TileMap, component-layer,
+height-layer and LDtk output, your own nodes (Lua or Odin), the **Level Generator** node
 that makes levels in the game (with progress for a loading bar and
 navigation baked again), the Lua module and the **Level Generator** window
 in the editor.
@@ -275,6 +275,7 @@ from one that writes tiles. Unlike an **entity output** (a component on
 points, at the cells' centres), this one follows the layer's one-per-cell
 footprints, as painting by hand does.
 | `entity_output` | `max` (0 = all), `component` | Its component (a `.component.json`) on every point of its input (cells >= 0.5) - `max` of them picked by the seed. A graph can have several (enemies, coins, the player's start). |
+| `height_output` | `levels` (3), `fill`: `stack` / `only`, `thresholds`: `even` / `custom`, `walls_tile` (0), `tile_w`, `tile_h` (16); and `heights`, `tileset`, `walls` | A height map cut into levels, each into its own TileMap: plateaus with auto-tiled edges and cliff faces (below, **Height layers**). |
 
 ## Playable levels
 
@@ -375,6 +376,60 @@ crossing.)
 tiles, contradictions and retries cost more. Each cell's possible tiles are
 a bitset, the next cell is the one with the fewest left (a heap), and a
 change spreads to the neighbours with a stack.
+
+## Height layers
+
+A **Height Output** (add menu > Output) turns a height map - any grid of
+0..1 values: noise, a blur of it, a gradient, rectangles combined - into
+stacked TileMaps, for top-down plateaus, hills and mountains. Its value is
+cut into **levels** heights: evenly (`thresholds` `even`: level k from
+k / levels up), or at each level's own **From** value (`custom`; never
+below the level under it). Level 0 is the ground.
+
+Each level is written into its own TileMap - its **Map**, by name, next to
+the main one (its sibling, as a tile output's layer; empty: the main map).
+With **fill** `stack` (the default) a cell at level k fills levels 0..k:
+a plateau sits on the ground below it, so a lower map is never holed under
+a higher one. With `only` a cell fills just its own level's map. Levels
+naming the same map are laid over each other (the higher on top), so all
+of them in the main map also works: one map, the top level's tile in each
+cell. A new node's levels all fill the main map, level k with tile k.
+
+Each level's **Tiles** are tiles (one picked per cell by the seed) or a
+**terrain** of the output's **Tileset** (its terrain sets: Tile Map tab >
+Terrains, a 47-tile blob or a 16-tile edge set). A terrain is auto-tiled
+with a cell's neighbours counting as the terrain when they are at that
+level *or higher*: a level's edges are drawn where the height drops below
+it, never against the ground above it. Cells beyond the level count as
+every level (a plateau runs on past the edge).
+
+**Cliff** (levels 1 and up): the cliff face of a top-down view - tiles, or
+a terrain (an edge set gives the face's ends and middle), for the cells
+just south of the level's edges: below the level, with the cell to the
+north at it. The face goes into the level's own map, over the ground. No
+cliff tiles: no face.
+
+**Solid** (levels 1 and up) with a **Walls** map named on the node: the
+level's edge cells (a neighbour below it, corners too) and its face go
+into the Walls TileMap as `walls_tile` - make that map Solid for cliff
+walls (and hide it, or give it a see-through tile). The walls map is
+written only when a level is solid.
+
+```json
+{"id": 4, "type": "height_output", "inputs": {"in": 3},
+ "params": {"levels": 3, "fill": "stack", "thresholds": "even", "walls_tile": 0},
+ "tileset": "textures/heights.png", "walls": "Walls",
+ "heights": [{"min": 0, "layer": "", "tiles": [], "terrain": "Grass"},
+             {"min": 0.333, "layer": "Hills", "tiles": [], "terrain": "Hill", "cliff_terrain": "Cliff", "solid": true},
+             {"min": 0.667, "layer": "Peaks", "tiles": [], "terrain": "Peak", "cliff_terrain": "Cliff", "solid": true}]}
+```
+
+The scene: the Level Generator's TileMap (the ground) with **Hills**,
+**Peaks** and a Solid, hidden **Walls** TileMap next to it (draw order:
+their Z Index). The preview shows the levels as shades, edges darker and
+cliff faces brown. A height output is chunk-safe (its edges read one cell
+around, two with a cliff terrain: the apron), so it works in a chunked,
+endless level. `tests/levelgen_heights/` is a complete project.
 
 ## Placing things
 
@@ -556,12 +611,12 @@ generator gives every cell the value it has in one big level: no seams.
 Each chunk is made with an apron of extra cells around it - what the
 neighbourhood nodes need to see past its edge (blur's radius, cellular's
 iterations, dilate / erode's, scatter's spacing, surface and the tile
-output's one cell, added up along each path to an output) - and only the
-middle is kept.
+output's one cell, the height output's one - two with a cliff terrain -
+added up along each path to an output) - and only the middle is kept.
 
 | Chunk-safe | Not chunk-safe (they look at the whole level or its edges) |
 |---|---|
-| constant, noise (every type), random fill, gradient (across the generator's size; past it 0 or 1), rectangle (at its cells), threshold, invert, remap, combine, blur, cellular, dilate, erode, scatter, surface, tile output, entity output | border, rooms & corridors, walker, random lines / rectangles / circles, Wave Function Collapse, Poisson scatter, flood fill, regions, connect regions, path, check, Lua Script and Odin nodes |
+| constant, noise (every type), random fill, gradient (across the generator's size; past it 0 or 1), rectangle (at its cells), threshold, invert, remap, combine, blur, cellular, dilate, erode, scatter, surface, tile output, entity output, height output | border, rooms & corridors, walker, random lines / rectangles / circles, Wave Function Collapse, Poisson scatter, flood fill, regions, connect regions, path, check, Lua Script and Odin nodes |
 
 Nodes that aren't chunk-safe still run: in each chunk on its own, with the
 chunk's own seed (each chunk a different dungeon, always the same one), so
