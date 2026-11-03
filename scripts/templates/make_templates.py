@@ -123,16 +123,18 @@ def with_touch(sc, size, stick=("move_left", "move_right", "move_up", "move_down
     vw, vh = size
     k = vh / 720
     kids = sc["root"]["children"]
-    left, right, up, down = stick
-    kids.append({"type": "ScreenLayerNode", "name": "TouchLeft", "properties": {"anchor": "BottomLeft"}, "children": [
-        {"type": "TouchJoystickNode", "name": "TouchStick", "position": [vw * 0.25, -vh * 0.3],
-         "properties": {"radius": 70 * k, "knobRadius": 30 * k, "floating": True, "area": [vw * 0.5, vh * 0.6],
-                        "actionLeft": left, "actionRight": right, "actionUp": up, "actionDown": down}}]})
+    if stick:  # (None: no joystick - a game played by tapping)
+        left, right, up, down = stick
+        kids.append({"type": "ScreenLayerNode", "name": "TouchLeft", "properties": {"anchor": "BottomLeft"}, "children": [
+            {"type": "TouchJoystickNode", "name": "TouchStick", "position": [vw * 0.25, -vh * 0.3],
+             "properties": {"radius": 70 * k, "knobRadius": 30 * k, "floating": True, "area": [vw * 0.5, vh * 0.6],
+                            "actionLeft": left, "actionRight": right, "actionUp": up, "actionDown": down}}]})
     places = [(-110, -110), (-240, -80), (-110, -240), (-240, -210)]
-    kids.append({"type": "ScreenLayerNode", "name": "TouchRight", "properties": {"anchor": "BottomRight"}, "children": [
-        {"type": "TouchButtonNode", "name": "Touch" + act.split(",")[0].title().replace("_", ""), "position": [x * k, y * k],
-         "properties": {"radius": 52 * k, "action": act, "label": lab, "fontSize": max(36 * k, 12)}}
-        for (act, lab), (x, y) in zip(buttons, places)]})
+    if buttons:
+        kids.append({"type": "ScreenLayerNode", "name": "TouchRight", "properties": {"anchor": "BottomRight"}, "children": [
+            {"type": "TouchButtonNode", "name": "Touch" + act.split(",")[0].title().replace("_", ""), "position": [x * k, y * k],
+             "properties": {"radius": 52 * k, "action": act, "label": lab, "fontSize": max(36 * k, 12)}}
+            for (act, lab), (x, y) in zip(buttons, places)]})
     if pause:
         kids.append({"type": "ScreenLayerNode", "name": "TouchTop", "properties": {"anchor": "TopRight"}, "children": [
             {"type": "TouchButtonNode", "name": "TouchPause", "position": [-60 * k, 60 * k],
@@ -1003,35 +1005,57 @@ def visual_novel():
 
 # --- dungeon (isometric) ------------------------------------------------------------
 
-# The room, as text: one character a cell, rows are grid y, columns grid x
+# The rooms, as text: one character a cell, rows are grid y, columns grid x
 # (x runs down-right on screen, y down-left). The back walls are made from
 # the edges: x = 0 and y = 0.
-#   . floor   # inner wall (on the cell's upper-right edge)   C chest   D door (top wall)
-#   W window (top wall)   w window (left wall)   P pillar   b barrel   B barrels
-#   k crates   t table   p woodpile   @ the hero
-DUNGEON_ROOM = [
-    "...W..D...",
-    ".p......b.",
-    "..........",
-    "...P..P...",
-    "w.........",
-    "......@...",
-    ".###....C.",
-    ".......t..",
-    ".B.P......",
-    "........k.",
+#   . floor   # inner wall (on the cell's upper-right edge)   C chest   o a hole (no floor: falls in)
+#   D door (top wall)   d door (left wall)   W window (top wall)   w window (left wall)
+#   P pillar   b barrel   B barrels   k crates   t table   p woodpile   @ the hero
+DUNGEON_ROOMS = [
+    # (room, seconds to get out)
+    ([
+        "...W..D...",
+        ".p......b.",
+        "..........",
+        "...P..P...",
+        "w.........",
+        "....o.@...",
+        ".###....C.",
+        ".......t..",
+        ".B.P..oo..",
+        "........k.",
+    ], 60),
+    ([
+        "...W......",
+        "..C.......",
+        "....oo....",
+        ".P..oo..P.",
+        "w.........",
+        "d...oo....",
+        "..........",
+        ".###...b..",
+        "....@.....",
+        "..k....B..",
+    ], 50),
+    ([
+        "..W....D..",
+        "......o...",
+        "..oo..o.b.",
+        "..oo......",
+        "w.....oo..",
+        ".P....oo.C",
+        "..........",
+        ".oo.......",
+        ".oo..@..P.",
+        "......t...",
+    ], 45),
 ]
 
+DUNGEON_ACTIONS = MOVE_ACTIONS + [action("interact", "E", "ENTER", "SPACE", "pad:RIGHT_FACE_DOWN")]
 
-def dungeon():
-    t = Template("dungeon", "Isometric Dungeon",
-                 "Explore a small isometric dungeon: click to walk (path finding round the walls) or use WASD, "
-                 "walk behind pillars and walls, open the chest for the key, unlock the door.", "dungeon", 6)
-    t.begin()
-    t.art("iso-dungeon/tiles.png", "textures/dungeon.png")
-    t.art("iso-dungeon/hero.png", "textures/hero.png")
-    t.license("Isometric Miniature Dungeon")
-    rows = DUNGEON_ROOM
+
+def dungeon_room(rows, name, room, seconds, style, ink, selected):
+    """A room (a scene): the maps, the hero, the HUD, the pause menu."""
     H, W = len(rows), len(rows[0])
     CW, CH = 128, 64      # the diamond cell
     TILE = [128, 144]     # the tile images (taller: walls, pillars)
@@ -1039,7 +1063,7 @@ def dungeon():
     ORIGIN = (0, 0)
     FLOOR, FLOOR_VARIANTS = 0, [0, 0, 0, 0, 0, 1, 0]
     WALL_LEFT, WALL_TOP, CORNER_BACK = 9, 10, 14   # (stoneWall_E / _S, stoneWallCorner_S)
-    DOOR_TOP, WINDOW_LEFT, WINDOW_TOP = 18, 25, 26
+    DOOR_LEFT, DOOR_TOP, WINDOW_LEFT, WINDOW_TOP = 17, 18, 25, 26
     PROPS = {"P": 45, "b": 40, "B": 41, "k": 44, "t": 46, "p": 47, "C": 34}
 
     def center(x, y):
@@ -1058,11 +1082,13 @@ def dungeon():
             elif y == 0:
                 walls[y][x] = {"D": DOOR_TOP, "W": WINDOW_TOP}.get(ch, WALL_TOP)
             elif x == 0:
-                walls[y][x] = WINDOW_LEFT if ch == "w" else WALL_LEFT
+                walls[y][x] = {"d": DOOR_LEFT, "w": WINDOW_LEFT}.get(ch, WALL_LEFT)
             elif ch == "#":
                 walls[y][x] = WALL_TOP
             elif ch in PROPS:
                 props[y][x] = PROPS[ch]
+            elif ch == "o":
+                floor[y][x] = -1
             elif ch == "@":
                 hero = (x, y)
 
@@ -1085,7 +1111,8 @@ def dungeon():
     children = [
         {"type": "CameraNode", "name": "Camera", "position": [hx, hy], "follow": "../World/Hero",
          "properties": {"isCurrent": True, "followMode": "SingleTarget", "dragType": "SmoothDamp"}},
-        {"type": "Node", "name": "Dungeon", "script": {"path": "scripts/dungeon.lua"}},
+        {"type": "Node", "name": "Dungeon", "script": {"path": "scripts/dungeon.lua",
+                                                       "properties": {"room": room, "time_limit": seconds}}},
         imap("Floor", floor, 1),
         walk,
         {"type": "Node", "name": "Cursor", "layer": 1, "script": {"path": "scripts/cursor.lua"}},
@@ -1105,19 +1132,45 @@ def dungeon():
                                  "navMap": "../../../Walk", "moveParent": True, "avoidance": False}},
              ]},
         ]},
-        text("Title", "Find the key, open the door", (16, 12), size=32, color="#e9dcc2ff", layer=7),
+        text("RoomText", "", (16, 12), size=32, color=ink, layer=7),
         text("KeyIcon", "Key: no", (16, 52), size=32, color="#f5d76eff", layer=7),
+        text("Time", "", (16, 92), size=32, color=ink, layer=7),
+        text("Lives", "", (1264, 12), size=32, align="Right", pivot=(1, 0), color=ink, layer=7),
         text("Hint", "", (640, 640), size=32, align="Center", pivot=(0.5, 0), color="#ffffffff", layer=7),
-        text("Message", "", (640, 90), size=48, align="Center", pivot=(0.5, 0.5), color="#ffffffff", layer=7),
-        text("Help", "Click to walk   WASD / arrows walk   E open", (1264, 690), size=32, align="Right",
+        text("Message", "", (640, 120), size=48, align="Center", pivot=(0.5, 0.5), color="#ffffffff", layer=7),
+        text("Help", "Click to walk   WASD / arrows walk   E open   Esc pause", (1264, 690), size=32, align="Right",
              pivot=(1, 1), color="#ffffff99", layer=7),
+        pause_menu(style, selected),
     ]
-    t.json("scenes/dungeon.scene.json", scene("dungeon", children, background=(24, 20, 26, 255)))
-    t.json("project.json", project("Isometric Dungeon", ["scenes/dungeon.scene.json"], MOVE_ACTIONS + [
-        action("interact", "E", "ENTER", "SPACE", "pad:RIGHT_FACE_DOWN"),
-    ], virtual=(1280, 720), gravity=(0, 0), pixel=False))
+    return with_touch(scene(name, children, background=(24, 20, 26, 255)), style["size"], stick=None, buttons=(),
+                      pause="pause")
+
+
+def dungeon():
+    t = Template("dungeon", "Isometric Dungeon",
+                 "Escape three isometric rooms against the clock: click to walk (path finding round the walls) or "
+                 "use WASD, find each room's key, open its door, mind the holes. A title screen, settings, a pause "
+                 "menu, saved progress.", "dungeon", 6)
+    t.begin()
+    t.art("iso-dungeon/tiles.png", "textures/dungeon.png")
+    t.art("iso-dungeon/hero.png", "textures/hero.png")
+    t.license("Isometric Miniature Dungeon")
+    # A small game (#329): three rooms, each with its chest's key and its
+    # door, and a time limit; a hole costs a life (three a game), the clock
+    # running out ends it. The furthest room and the most time to spare are
+    # saved; the title, a pause menu, the result screen.
+    ink, red, dark = "#e9dcc2ff", "#e74c3cff", (24, 20, 26, 255)
+    levels = [f"scenes/room{i + 1}.scene.json" for i in range(len(DUNGEON_ROOMS))]
+    for i, (rows, seconds) in enumerate(DUNGEON_ROOMS):
+        t.json(levels[i], dungeon_room(rows, f"room{i + 1}", i + 1, seconds, HD_STYLE, ink, red))
+    t.json("scenes/title.scene.json", title_scene("Isometric Dungeon", HD_STYLE, ink, red, dark, level_word="Room"))
+    t.json("scenes/result.scene.json", result_scene(HD_STYLE, ink, red, dark))
+    t.json("project.json", project("Isometric Dungeon", ["scenes/title.scene.json"] + levels + ["scenes/result.scene.json"],
+                                   DUNGEON_ACTIONS + GAME_ACTIONS, virtual=(1280, 720), gravity=(0, 0), pixel=False,
+                                   globals_=GAME_GLOBALS))
     for s_ in ("dungeon", "hero", "cursor"):
         t.script(s_)
+    game_scripts(t, levels, lives=3, score_name="Time to spare", level_word="Room")
     with open(os.path.join(SCRIPTS, "dungeon", "README.md")) as f:
         t.write("README.md", f.read())
     return t

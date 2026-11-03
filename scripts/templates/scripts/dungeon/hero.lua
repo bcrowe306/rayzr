@@ -2,7 +2,8 @@
 -- cell: the agent walks there round the walls. WASD / arrows / a gamepad
 -- walk along the grid's axes (W: up-right, D: down-right, S: down-left,
 -- A: up-left - two at once go straight up, right, down or left). The
--- sprite faces where it goes (8 directions) and runs while moving.
+-- sprite faces where it goes (8 directions) and runs while moving. A hole
+-- in the floor: he falls in (fall; the dungeon decides what happens).
 
 ---@class Hero : ScriptInstanceBase
 local Hero = {}
@@ -36,7 +37,29 @@ function Hero:walk_to(cx, cy, arrived)
     self.pathing = true
 end
 
+-- stop: stands still (out of time, out of the room).
+function Hero:stop()
+    self.stopped = true
+    self.agent:nav_stop()
+    self.pathing, self.arrived = false, nil
+    self.sprite:animation_play("idle_" .. self.facing)
+end
+
+-- fall: into a hole - he sinks and shrinks out of sight.
+function Hero:fall()
+    self:stop()
+    self.falling = 0
+end
+
 function Hero:update(dt)
+    if self.falling then
+        self.falling = math.min(1, self.falling + dt * 1.5)
+        local k = 1 - self.falling
+        self.sprite:set_scale(k, k)
+        self.sprite:set_position(0, 24 * self.falling)
+        return
+    end
+    if self.stopped then return end
     -- The keys: along the diamond grid's axes.
     local ix = (Input.is_action_down("move_right") and 1 or 0) - (Input.is_action_down("move_left") and 1 or 0)
     local iy = (Input.is_action_down("move_down") and 1 or 0) - (Input.is_action_down("move_up") and 1 or 0)

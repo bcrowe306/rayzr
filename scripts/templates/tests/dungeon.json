@@ -1,8 +1,451 @@
 [
  {
+  "name": "play-through: the title's Play starts room 1 (three lives, the clock running)",
+  "frames": 90,
+  "input": [
+   "10 ENTER tap"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "room1"
+   ],
+   [
+    "RoomText",
+    "text",
+    "==",
+    "Room 1 / 3"
+   ],
+   [
+    "Lives",
+    "text",
+    "==",
+    "Lives 3"
+   ],
+   [
+    "Time",
+    "text",
+    "==",
+    "Time 59"
+   ]
+  ]
+ },
+ {
+  "name": "play-through: from the title, room 1 played through (click the chest, then the door) goes on to room 2 (reached and saved)",
+  "frames": 440,
+  "input": [
+   "10 ENTER tap",
+   "40 mouse 704 456 click",
+   "180 mouse 960 140 click"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "room2"
+   ],
+   [
+    "RoomText",
+    "text",
+    "==",
+    "Room 2 / 3"
+   ],
+   [
+    "KeyIcon",
+    "text",
+    "==",
+    "Key: no"
+   ],
+   [
+    "@file:save.json",
+    "progress.unlocked",
+    "==",
+    2
+   ]
+  ]
+ },
+ {
+  "name": "play-through: from the title, walking into the hole three times is game over",
+  "frames": 560,
+  "input": [
+   "10 ENTER tap",
+   "40 A down"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "result"
+   ],
+   [
+    "Heading",
+    "text",
+    "==",
+    "Game over"
+   ],
+   [
+    "Again",
+    "text",
+    "contains",
+    "Retry room 1"
+   ]
+  ]
+ },
+ {
+  "name": "play-through: room 2 played through (round the holes, the door in the left wall)",
+  "frames": 420,
+  "scene": "scenes/room2.scene.json",
+  "input": [
+   "10 mouse 960 72 click",
+   "215 mouse 321 391 click"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "room3"
+   ],
+   [
+    "@file:save.json",
+    "progress.unlocked",
+    "==",
+    3
+   ]
+  ]
+ },
+ {
+  "name": "play-through: room 3 played through wins the game (the time to spare, a new best)",
+  "frames": 480,
+  "scene": "scenes/room3.scene.json",
+  "input": [
+   "10 mouse 1088 392 click",
+   "230 mouse 898 167 click"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "result"
+   ],
+   [
+    "Heading",
+    "text",
+    "==",
+    "You win!"
+   ],
+   [
+    "Score",
+    "text",
+    "contains",
+    "Time to spare"
+   ],
+   [
+    "Best",
+    "text",
+    "==",
+    "New best!"
+   ],
+   [
+    "@file:save.json",
+    "progress.best",
+    ">",
+    30
+   ]
+  ]
+ },
+ {
+  "name": "the clock running out is game over",
+  "frames": 330,
+  "scene": "scenes/room1.scene.json",
+  "patch": {
+   "Dungeon": {
+    "script.time_limit": 2
+   }
+  },
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "result"
+   ],
+   [
+    "Heading",
+    "text",
+    "==",
+    "Game over"
+   ]
+  ]
+ },
+ {
+  "name": "the clock: out of time stops the hero",
+  "frames": 180,
+  "scene": "scenes/room1.scene.json",
+  "patch": {
+   "Dungeon": {
+    "script.time_limit": 2
+   }
+  },
+  "input": [
+   "150 D down"
+  ],
+  "expect": [
+   [
+    "Message",
+    "text",
+    "==",
+    "Out of time!"
+   ],
+   [
+    "Time",
+    "text",
+    "==",
+    "Time 0"
+   ],
+   [
+    "Hero",
+    "x",
+    "==",
+    128
+   ]
+  ]
+ },
+ {
+  "name": "a hole costs a life: the room starts again",
+  "frames": 200,
+  "scene": "scenes/room1.scene.json",
+  "input": [
+   "10 A down",
+   "60 A up"
+  ],
+  "expect": [
+   [
+    "Lives",
+    "text",
+    "==",
+    "Lives 2"
+   ],
+   [
+    "Hero",
+    "x",
+    "==",
+    128
+   ],
+   [
+    "KeyIcon",
+    "text",
+    "==",
+    "Key: no"
+   ]
+  ]
+ },
+ {
+  "name": "play-through: the result screen's Retry plays the room again",
+  "frames": 60,
+  "scene": "scenes/result.scene.json",
+  "input": [
+   "10 ENTER tap"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "room1"
+   ],
+   [
+    "Lives",
+    "text",
+    "==",
+    "Lives 3"
+   ]
+  ]
+ },
+ {
+  "name": "play-through: the room reached survives a restart - the title starts at room 2",
+  "frames": 60,
+  "before": [
+   {
+    "frames": 420,
+    "input": [
+     "10 ENTER tap",
+     "40 mouse 704 456 click",
+     "180 mouse 960 140 click"
+    ]
+   }
+  ],
+  "input": [
+   "10 ENTER tap"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "room2"
+   ],
+   [
+    "@file:save.json",
+    "progress.unlocked",
+    "==",
+    2
+   ]
+  ]
+ },
+ {
+  "name": "play-through: the volume set in Settings survives a restart",
+  "frames": 60,
+  "before": [
+   {
+    "frames": 120,
+    "input": [
+     "10 DOWN tap",
+     "20 DOWN tap",
+     "30 ENTER tap",
+     "45 LEFT tap",
+     "55 LEFT tap",
+     "65 LEFT tap",
+     "75 DOWN tap",
+     "85 ENTER tap"
+    ]
+   }
+  ],
+  "input": [
+   "10 DOWN tap",
+   "20 DOWN tap",
+   "30 ENTER tap"
+  ],
+  "expect": [
+   [
+    "Volume",
+    "text",
+    "==",
+    "Volume  < 50% >"
+   ],
+   [
+    "@file:save.json",
+    "settings.volume",
+    "==",
+    0.5
+   ]
+  ]
+ },
+ {
+  "name": "play-through: Quit on the title ends the game",
+  "frames": 120,
+  "quits": true,
+  "input": [
+   "10 UP tap",
+   "20 ENTER tap"
+  ]
+ },
+ {
+  "name": "pause: Esc pauses; Title screen goes back to the title",
+  "frames": 130,
+  "scene": "scenes/room1.scene.json",
+  "input": [
+   "20 ESCAPE tap",
+   "25 RIGHT down",
+   "40 DOWN tap",
+   "50 DOWN tap",
+   "60 ENTER tap"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "title"
+   ]
+  ]
+ },
+ {
+  "name": "pause: the clock stops; Resume plays on",
+  "frames": 200,
+  "scene": "scenes/room1.scene.json",
+  "input": [
+   "20 ESCAPE tap",
+   "130 ENTER tap",
+   "140 D down"
+  ],
+  "expect": [
+   [
+    "PauseMenu",
+    "visible",
+    "==",
+    false
+   ],
+   [
+    "Hero",
+    "x",
+    ">",
+    140
+   ],
+   [
+    "Time",
+    "text",
+    "==",
+    "Time 59"
+   ]
+  ]
+ },
+ {
+  "name": "touch: tapping Play on the title starts room 1",
+  "frames": 60,
+  "input": [
+   "10 touch1 640 352 tap"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "room1"
+   ]
+  ]
+ },
+ {
+  "name": "touch: the pause button pauses",
+  "frames": 60,
+  "scene": "scenes/room1.scene.json",
+  "input": [
+   "20 touch1 1220 60 tap"
+  ],
+  "expect": [
+   [
+    "PauseMenu",
+    "visible",
+    "==",
+    true
+   ]
+  ]
+ },
+ {
+  "name": "touch: a tap on the chest walks there and opens it",
+  "frames": 160,
+  "scene": "scenes/room1.scene.json",
+  "input": [
+   "10 touch1 704 456 tap"
+  ],
+  "expect": [
+   [
+    "KeyIcon",
+    "text",
+    "==",
+    "Key: yes"
+   ]
+  ]
+ },
+ {
   "name": "keys walk along the grid (D: down-right)",
   "frames": 50,
-  "scene": "scenes/dungeon.scene.json",
+  "scene": "scenes/room1.scene.json",
   "input": [
    "10 D down",
    "40 D up"
@@ -25,7 +468,7 @@
  {
   "name": "keys: W + D go straight right",
   "frames": 50,
-  "scene": "scenes/dungeon.scene.json",
+  "scene": "scenes/room1.scene.json",
   "input": [
    "10 D down",
    "10 W down",
@@ -56,7 +499,7 @@
  {
   "name": "click a cell: the hero walks there",
   "frames": 120,
-  "scene": "scenes/dungeon.scene.json",
+  "scene": "scenes/room1.scene.json",
   "input": [
    "20 mouse 768 424 click"
   ],
@@ -90,7 +533,7 @@
  {
   "name": "the back wall stops the keys (the hero slides along it)",
   "frames": 120,
-  "scene": "scenes/dungeon.scene.json",
+  "scene": "scenes/room1.scene.json",
   "patch": {
    "Hero": {
     "position": [
@@ -121,7 +564,7 @@
  {
   "name": "door: locked without the key",
   "frames": 40,
-  "scene": "scenes/dungeon.scene.json",
+  "scene": "scenes/room1.scene.json",
   "patch": {
    "Hero": {
     "position": [
@@ -155,9 +598,9 @@
   ]
  },
  {
-  "name": "chest gives the key; clicking the door walks there and opens it",
+  "name": "chest gives the key; clicking the door walks there and opens it - on to room 2",
   "frames": 330,
-  "scene": "scenes/dungeon.scene.json",
+  "scene": "scenes/room1.scene.json",
   "patch": {
    "Hero": {
     "position": [
@@ -178,16 +621,16 @@
   ],
   "expect": [
    [
-    "KeyIcon",
-    "text",
+    "@scene",
+    "name",
     "==",
-    "Key: yes"
+    "room2"
    ],
    [
-    "Message",
-    "text",
-    "contains",
-    "escaped"
+    "@file:save.json",
+    "progress.unlocked",
+    "==",
+    2
    ]
   ]
  }

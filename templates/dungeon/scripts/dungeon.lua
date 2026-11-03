@@ -1,11 +1,24 @@
--- The dungeon: which cells can be walked on, what a click does, the chest
--- and the door. The maps are isometric (diamond cells): Floor, then Walls
--- and Props (Y Sort on, so the hero walks behind them), and Walk - an
--- invisible map of the cells the hero may stand on, made here from the
--- others (the hero's Navigation Agent finds its paths in it).
+-- A room of the dungeon: which cells can be walked on, what a click does,
+-- the chest and the door, the holes and the clock. The maps are isometric
+-- (diamond cells): Floor, then Walls and Props (Y Sort on, so the hero
+-- walks behind them), and Walk - an invisible map of the cells the hero may
+-- stand on, made here from the others (the hero's Navigation Agent finds
+-- its paths in it).
+--
+-- The game (Game, scripts/game.lua): the chest's key opens the door - the
+-- next room (saved as reached), or the result screen after the last; the
+-- seconds left are added to the score. A hole in the floor (a cell with
+-- no Floor tile - off the edge too) costs a life
+-- (the room starts again; none left: game over); the clock running out
+-- ends the game.
 
 ---@class Dungeon : ScriptInstanceBase
 local Dungeon = {}
+
+Dungeon.properties = {
+    room       = { type = "int", default = 1, min = 1, label = "Room" },          -- this scene's place in Game.LEVELS
+    time_limit = { type = "float", default = 60, min = 1, label = "Time Limit" }, -- seconds to get out
+}
 
 -- Tile numbers in textures/dungeon.png (8 a row).
 local CHEST_CLOSED = { [32] = true, [33] = true, [34] = true, [35] = true }
@@ -21,7 +34,14 @@ function Dungeon:ready()
     self.hero = Scene.find_node("Hero"):get_script()
     self.message = Scene.find_node("Message")
     self.hint = Scene.find_node("Hint")
+    self.time_text = Scene.find_node("Time")
+    self.run = Game:ensure_run(self.room)
+    self.time_left = self.time_limit
+    self.done = false -- out (or lost): the room takes no more input
+    Scene.find_node("RoomText").text = string.format("Room %d / %d", self.room, #Game.LEVELS)
+    Scene.find_node("Lives").text = string.format("Lives %d", self.run.lives)
     self:build_walk()
+    self:show_time()
 end
 
 -- build_walk: the floor's cells without a wall or a prop on them (a
@@ -75,6 +95,7 @@ end
 
 -- use: open the chest (the key), open the door (with the key: out).
 function Dungeon:use(what, cx, cy)
+    if self.done then return end
     if what == "chest" then
         local t = self.props:tilemap_get_tile(cx, cy)
         self.props:tilemap_set_tile(cx, cy, t + CHEST_OPEN_OF)
@@ -88,14 +109,30 @@ function Dungeon:use(what, cx, cy)
         end
         local t = self.walls:tilemap_get_tile(cx, cy)
         self.walls:tilemap_set_tile(cx, cy, t + DOOR_OPEN_OF)
-        self.done = true
-        self:say("The door opens. You escaped!", 1e9)
+        local last = self.room >= #Game.LEVELS
+        self:say(last and "The door opens. You escaped!" or "The door opens...", 1e9)
+        Game:add_score(math.ceil(self.time_left))
+        -- A moment to see it, then the next room (or the result).
+        self:finish(1.2, function() Game:level_done(self.room) end)
     end
+end
+
+-- finish: the room is over; `after` runs `delay` seconds later.
+function Dungeon:finish(delay, after)
+    self.done = true
+    self.hint.text = ""
+    self.after, self.after_time = after, delay
 end
 
 function Dungeon:say(text, time)
     self.message.text = text
     self.message_time = time or 2.5
+end
+
+function Dungeon:show_time()
+    local t = math.max(0, math.ceil(self.time_left))
+    self.time_text.text = string.format("Time %d", t)
+    self.time_text:set_property("color", t <= 10 and "#ff6b5bff" or "#e9dcc2ff")
 end
 
 function Dungeon:update(dt)
@@ -106,11 +143,39 @@ function Dungeon:update(dt)
             self.message_time = nil
         end
     end
-    -- E next to the chest or the door uses it.
+    if self.after then
+        self.after_time = self.after_time - dt
+        if self.after_time <= 0 then
+            local after = self.after
+            self.after = nil
+            after()
+        end
+        return
+    end
+    if self.done then return end
+    -- The clock.
+    self.time_left = self.time_left - dt
+    self:show_time()
+    if self.time_left <= 0 then
+        self.hero:stop()
+        self:say("Out of time!", 1e9)
+        self:finish(1.5, function() Game:finish(false) end)
+        return
+    end
     local hx, hy = self.hero:cell()
+    -- A hole (no floor): the hero falls - a life; the room starts again (none left: game over).
+    if self.floor:tilemap_get_tile(hx, hy) < 0 then
+        self.hero:fall()
+        self:say("Aaargh!", 1e9)
+        self:finish(1.2, function()
+            if Game:lose_life() then Scene.reload() end
+        end)
+        return
+    end
+    -- E next to the chest or the door uses it.
     local what, cx, cy = self:next_to(hx, hy)
-    self.hint.text = (what and not self.done) and ("E: open the " .. what) or ""
-    if what and not self.done and Input.is_action_pressed("interact") then self:use(what, cx, cy) end
+    self.hint.text = what and ("E: open the " .. what) or ""
+    if what and Input.is_action_pressed("interact") then self:use(what, cx, cy) end
 end
 
 return Dungeon

@@ -12,7 +12,7 @@ Character's art was drawn for Rayzr.
 | [Shoot 'em up](shmup/README.md) | Fly through three stages of enemies: pooled bullets, explosions, three lives; a title, settings, a pause menu, a saved high score |
 | [Puzzle (Sokoban)](puzzle/README.md) | Push every crate onto a target: three levels typed as text, move limits, undo; a title, settings, a pause menu, saved progress |
 | [Visual Novel](visual_novel/README.md) | A branching story: characters, backgrounds, choices, three endings; save slots, a backlog, auto and skip |
-| [Isometric Dungeon](dungeon/README.md) | Click to walk (path finding) or WASD in an isometric room; walk behind pillars and walls; a chest, a key, a door |
+| [Isometric Dungeon](dungeon/README.md) | Three isometric rooms against the clock: click to walk (path finding) or WASD, behind pillars and walls; each room's key and door, holes, three lives; a title, settings, a pause menu, saved progress |
 | [Hex Island](hex/README.md) | A hex-grid island: click a hex to walk there hex by hex round water and trees, step with the keys, pick every flower |
 | [Vector Character](vector_character/README.md) | Pip, a vector-art character rigged with bones: walk left and right, talk with lip-sync, blink |
 | [Platformer Adventure](adventure/README.md) (sample) | The platformer grown into a small game: two levels routed by their doors, three lives, a game over; a title, settings, a pause menu, saved progress |
