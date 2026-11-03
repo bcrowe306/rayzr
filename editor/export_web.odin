@@ -62,14 +62,20 @@ export_web :: proc(state: ^EditorState, cfg: ^e.ProjectConfig, runner, rayzr, di
 	return strings.clone(dir, context.temp_allocator), true
 }
 
-// web_page: the runner's page with the game's title (and favicon).
-@(private = "file")
+// web_page: the runner's page with the game's title (and favicon). The
+// favicon link goes before </head>: emcc minifies the page (<meta
+// charset=utf-8>, no quotes), so no attribute spelling is matched (#368).
 web_page :: proc(html: string, cfg: ^e.ProjectConfig, name: string) -> string {
 	title := cfg.windowTitle if cfg.windowTitle != "" else (cfg.name if cfg.name != "" else name)
 	esc, _ := strings.replace_all(title, "<", "&lt;", context.temp_allocator)
 	out, _ := strings.replace(html, "<title>Game</title>", fmt.tprintf("<title>%s</title>", esc), 1, context.temp_allocator)
 	if cfg.icon != "" {
-		out, _ = strings.replace(out, "<meta charset=\"utf-8\">", "<meta charset=\"utf-8\">\n<link rel=\"icon\" href=\"favicon.png\">", 1, context.temp_allocator)
+		LINK :: "<link rel=\"icon\" href=\"favicon.png\">"
+		if i := strings.index(out, "</head>"); i >= 0 {
+			out = strings.concatenate({out[:i], LINK, out[i:]}, context.temp_allocator)
+		} else {
+			out = strings.concatenate({LINK, out}, context.temp_allocator)
+		}
 	}
 	return out
 }
