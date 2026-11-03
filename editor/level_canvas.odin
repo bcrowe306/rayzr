@@ -70,6 +70,7 @@ LevelCanvas_Render :: proc(state: ^EditorState) {
 		if !imgui.Begin("##LevelZenCanvas", nil, {.NoTitleBar, .NoResize, .NoScrollbar, .NoCollapse, .NoDocking, .NoMove, .NoSavedSettings, .NoScrollWithMouse}) do return
 	} else if !imgui.Begin(LEVEL_CANVAS_WINDOW, nil, {.NoScrollbar, .NoScrollWithMouse}) do return
 	PanelHelp_Mark("level") // (Help menu: level.md; F1 is the Level Editor Reference)
+	Drive_Window("level-canvas") // (annotated docs screenshots)
 	driveNoScroll = true
 	defer driveNoScroll = false
 	LevelRef_Panel(LEVEL_TOOL_INFO[GlobalLevel.tool].topic) // F1 over the canvas: the current tool

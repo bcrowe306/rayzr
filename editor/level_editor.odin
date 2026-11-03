@@ -802,6 +802,7 @@ level_levels_panel :: proc(state: ^EditorState) {
 	defer imgui.End()
 	if !imgui.Begin(LEVEL_LEVELS_WINDOW, nil, {}) do return
 	PanelHelp_Mark("level") // (F1 here: the Level Editor Reference; Help menu: level.md)
+	Drive_Window("level-levels") // (annotated docs screenshots)
 	LevelRef_Panel("panel.levels")
 	UI_PanelTitle(ICON_FA_GLOBE, "Levels", fmt.tprintf("%d", len(doc.levels)))
 	UI_HeaderButtons(3)
@@ -1031,6 +1032,7 @@ level_layers_panel :: proc(state: ^EditorState) {
 	defer imgui.End()
 	if !imgui.Begin(LEVEL_LAYERS_WINDOW, nil, {}) do return
 	PanelHelp_Mark("level") // (F1 here: the Level Editor Reference; Help menu: level.md)
+	Drive_Window("level-layers") // (annotated docs screenshots)
 	LevelRef_Panel("panel.layers")
 	UI_PanelTitle(ICON_FA_LAYER_GROUP, "Layers")
 	UI_HeaderButtons(3)
@@ -1543,6 +1545,8 @@ level_bottom_panel :: proc(state: ^EditorState) {
 	L := &GlobalLevel
 	defer imgui.End()
 	if !imgui.Begin(LEVEL_PANEL_WINDOW, nil, {}) do return
+	PanelHelp_Mark("level") // (F1 here: the Level Editor Reference; Help menu: level.md)
+	Drive_Window("level-panel") // (annotated docs screenshots)
 	// a newly selected entity shows its values
 	if L.selEntity != nil && L.selEntity != L.lastSel do L.panelRequest = .Level
 	L.lastSel = L.selEntity
