@@ -174,7 +174,7 @@ Vector_DocShapes :: proc(doc: ^Vector_Doc, part: int) -> []Vector_Shape {
 
 // vector_doc_visible: the parts with hidden groups inside get their shapes
 // without them (copies sharing the paths; made again after a rescale).
-@(private = "file")
+@(private)
 vector_doc_visible :: proc(doc: ^Vector_Doc) {
 	doc.visible = nil
 	any := false

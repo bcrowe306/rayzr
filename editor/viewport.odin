@@ -242,6 +242,7 @@ Viewport_RenderOffscreen :: proc(state: ^EditorState) {
 	if state.showCameraBounds {
 		Viewport_DrawCameraBounds(state)
 	}
+	Viewport_DrawVectorEditFocus(state, e.Camera2D_ViewRect(cam, state.viewportSize.x, state.viewportSize.y)) // (drawing vector art: the rest dimmed)
 
 	rl.EndMode2D()
 	e.Render_MakeOpaque(f32(state.renderTexture.texture.width), f32(state.renderTexture.texture.height)) // (shown blended: soft edges kept their dark rim)
@@ -737,6 +738,20 @@ Viewport_HandleInputAndGizmos :: proc(state: ^EditorState) {
 		if isPanning {
 			deltaScreen := [2]f32{io.MouseDelta.x, io.MouseDelta.y}
 			state.cameraPos -= deltaScreen / state.cameraZoom
+		}
+	}
+
+	// Drawing vector art (vector_draw.odin) owns the mouse while active;
+	// double-clicking a selected Vector Shape starts it.
+	if Viewport_VectorDraw(state, drawList, mouseScreen, mouseWorld) {
+		state.activeHandle = .None
+		state.isDraggingGizmo = false
+		return
+	}
+	if sel := state.selectedNode; sel != nil && sel.typeId == e.VectorShapeNode && state.viewportHovered && imgui.IsMouseDoubleClicked(.Left) && !Editor_ViewLocked(state, sel) && !Editor_NodeLocked(state, sel) {
+		if e.VectorShapeNode_HitTest(cast(^e.VectorShapeNode)sel, mouseWorld) {
+			VectorDraw_Enter(state, cast(^e.VectorShapeNode)sel)
+			return
 		}
 	}
 

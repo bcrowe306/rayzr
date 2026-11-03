@@ -50,9 +50,16 @@ inspector_vector :: proc(state: ^EditorState, v: ^e.VectorShapeNode) {
 		Vector_EditExternal(state, e.Project_ResolveAssetPath(&state.game.gameContext, v.file))
 	}
 	vector_skin_picker(state, v)
+	UI_PropLabel("")
+	drawing := VectorDraw_Node() == v
+	if UI_Button(fmt.tprintf("%s  %s", ICON_FA_PEN, "Done Drawing" if drawing else "Edit Art"), "insp.vec.draw") {
+		if drawing do VectorDraw_Exit(state)
+		else do VectorDraw_Enter(state, v)
+	}
+	UI_Tooltip("Draw in the viewport: select, node and pen tools; the edits are saved into the SVG (double-click the shape does the same)")
 	UI_EndProps()
 	if v.file == "" {
-		UI_DimText("Draws its preset. Pick an SVG, or drag one from Assets into the viewport.")
+		UI_DimText("Draws its preset. Pick an SVG, drag one from Assets into the viewport, or Edit Art to draw one.")
 		return
 	}
 	r := e.VectorShapeNode_Asset(v)

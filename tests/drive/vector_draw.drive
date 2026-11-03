@@ -1,0 +1,69 @@
+# #267: drawing vector art in the viewport - Edit Art on an empty Vector
+# Shape, the pen draws a closed shape (a line, a curve, back to the start)
+# into a new art/<name>.svg; the node tool adds and removes an anchor and
+# drags one; the select tool moves the shape; undo and Esc.
+# drive: copy tests/drive/fixtures/vector_lossy art_zz
+wait 5
+key escape
+click @hier.add
+type vector
+click @addnode.create
+expect selected == VectorShape
+click @insp.vec.draw
+expect vd.active == true
+click @vd.tool:pen
+expect vd.tool == Pen
+
+# The pen: two corners, a curve (dragged), then the first point closes it.
+click @node:VectorShape+-60,-60
+click @node:VectorShape+60,-60
+drag @node:VectorShape+60,60 @node:VectorShape+100,60
+click @node:VectorShape+-60,-60
+expect vd.shapes == 1
+expect vd.file == art/vectorshape.svg
+expect vd.cmds == MLCCZ
+expect file:art/vectorshape.svg contains Made with Rayzr
+expect file:art/vectorshape.svg contains <path d="M
+screenshot pen_shape
+
+# Nodes: the shape's anchors; double-click a segment adds one, Alt+click removes it.
+click @vd.tool:node
+click @node:VectorShape+0,-40
+expect vd.shape == 0
+expect vd.anchors == 3
+dblclick @vd.seg:1
+expect vd.anchors == 4
+hold alt
+click @vd.anchor:1
+release
+expect vd.anchors == 3
+drag @vd.anchor:0 @vd.anchor:0+-30,0
+screenshot node_edit
+
+# Select: drag the shape; Esc leaves the mode.
+click @vd.tool:select
+drag @node:VectorShape+0,-40 @node:VectorShape+40,-40
+expect file:art/vectorshape.svg contains <path
+key escape
+expect vd.active == false
+screenshot done
+
+# An SVG with parts Rayzr can't draw (text): Edit Art asks first; a copy
+# keeps the original.
+click @hier.add
+type vector
+click @addnode.create
+click @insp.vec.file
+wait 2
+click @pick:art_zz/sign_zz.svg
+wait 3
+click @insp.vec.draw
+expect vd.asking == true
+expect vd.active == false
+screenshot lossy_question
+click @vd.lossy.copy
+expect vd.active == true
+expect vd.file == art_zz/sign_zz_edit.svg
+expect file:art_zz/sign_zz_edit.svg contains Made with Rayzr
+expect file:art_zz/sign_zz.svg contains EXIT
+key escape
