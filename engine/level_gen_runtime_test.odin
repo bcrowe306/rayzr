@@ -335,3 +335,37 @@ test_level_gen_rebake_navigation :: proc(t: ^testing.T) {
 	lgr_wait(lg, ctx)
 	testing.expect(t, region.bakeVersion > 0 && blocked(region, {0, 0}), "baked after a background level")
 }
+
+// #355: the entities a generation places have their global positions when
+// "generated" fires.
+@(test)
+test_level_gen_generated_global_positions :: proc(t: ^testing.T) {
+	game, scene := lgr_game()
+	defer os.remove_all(LGR_DIR)
+	defer game->terminate()
+	ctx := &game.gameContext
+	_ = os.write_entire_file(LGR_DIR + "/levels/coins.levelgen.json", transmute([]u8)string(`{"size": [10, 4], "nodes": [
+		{"id": 1, "type": "rect", "params": {"x": 0, "y": 3, "w": 10, "h": 1}},
+		{"id": 2, "type": "surface", "inputs": {"in": 1}},
+		{"id": 3, "type": "entity_output", "inputs": {"in": 2}, "params": {"max": 4}, "component": "components/coin.component.json"},
+		{"id": 4, "type": "tile_output", "inputs": {"in": 1}, "rules": [{"min": 0.5, "max": 1, "tile": 2}]}]}`))
+
+	lg, ground := lgr_node(scene, ctx, "levels/coins.levelgen.json")
+	lg.position = {100, 50}
+	Node_SetGlobalPositions(scene.manager, scene.rootNode)
+	Seen :: struct {ground: ^TileMapNode, placed, wrong: int}
+	seen := Seen{ground = ground}
+	lg.onGenerated->subscribe(proc(source: rawptr, value: EventValue, ctx: ^GameContext, user: rawptr) {
+		s := cast(^Seen)user
+		s.placed, s.wrong = 0, 0
+		for c in GetChildrenTemp(nil, s.ground) do if !c.removing && Node_HasTag(c, GEN_ENTITY_TAG) {
+			s.placed += 1
+			want := [2]f32{100, 50} + c.position
+			if c.globalPosition != want do s.wrong += 1
+		}
+	}, &seen)
+	ok, why := LevelGeneratorNode_Generate(lg, ctx)
+	testing.expectf(t, ok, "generated: %s", why)
+	testing.expect_value(t, seen.placed, 4)
+	testing.expectf(t, seen.wrong == 0, "global positions composed before generated (%d wrong)", seen.wrong)
+}
