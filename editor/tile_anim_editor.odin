@@ -29,6 +29,9 @@ animWin: struct {
 // TileAnimEditor_Open: the animation starting on `tile` of a tileset (made
 // with that one frame when it has none yet).
 TileAnimEditor_Open :: proc(state: ^EditorState, image: string, tile: i32) {
+	// Another tile: the one open, if it was left at its single frame, goes
+	// (one frame isn't an animation - #375).
+	if animWin.open && (animWin.image != image || animWin.tile != tile) do tile_anim_drop_single(state)
 	delete(animWin.image)
 	animWin.image = strings.clone(image)
 	animWin.tile = tile
@@ -43,6 +46,20 @@ TileAnimEditor_Open :: proc(state: ^EditorState, image: string, tile: i32) {
 		animWin.adding = true // (the next clicks add its frames)
 	}
 	imgui.SetWindowFocusStr("Tile Animation###TileAnimation")
+}
+
+// tile_anim_drop_single: the window's animation removed (and saved) when it
+// has fewer than two frames. True when it went.
+@(private = "file")
+tile_anim_drop_single :: proc(state: ^EditorState) -> bool {
+	ts := Editor_Terrains(state, animWin.image)
+	i := e.Terrains_AnimationOf(ts, animWin.tile)
+	if ts == nil || i < 0 || len(ts.animations[i].frames) >= 2 do return false
+	delete(ts.animations[i].frames)
+	delete(ts.animations[i].durations)
+	ordered_remove(&ts.animations, i)
+	tile_anim_save(state)
+	return true
 }
 
 TileAnimEditor_Shutdown :: proc() {
@@ -102,16 +119,20 @@ TileAnimEditor_Render :: proc(state: ^EditorState) {
 	visible := imgui.Begin(fmt.ctprintf("%s  Tile Animation: tile %d###TileAnimation", ICON_FA_FILM, animWin.tile), &open, {})
 	defer imgui.End()
 	PanelHelp_Mark("tile-animation")
+	{
+		// (The title bar's close button, for drives.)
+		wp, ws := imgui.GetWindowPos(), imgui.GetWindowSize()
+		st := imgui.GetStyle()
+		fs := imgui.GetFontSize()
+		x := wp.x + ws.x - st.FramePadding.x - fs
+		Drive_ItemRect("tile-anim.close", {x, wp.y + st.FramePadding.y}, {x + fs, wp.y + st.FramePadding.y + fs})
+	}
 	if !open {
 		animWin.open = false
 		animWin.adding = false
-		// (One frame isn't an animation: dropped.)
-		if len(a.frames) < 2 {
-			delete(a.frames)
-			delete(a.durations)
-			ordered_remove(&ts.animations, i)
-			tile_anim_save(state)
-		}
+		// (One frame isn't an animation: dropped - and `a` with it, so
+		// nothing below may read it: #375.)
+		if tile_anim_drop_single(state) do return
 	}
 	if !visible do return
 	Drive_Window("tile-anim")

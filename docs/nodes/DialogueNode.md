@@ -23,7 +23,7 @@ closes. A script fills it with lines.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *Dialogue Box*. Put it under a
+1. **Add Node** (Cmd+A / Ctrl+A) > *Dialogue Box*. Put it under a
    [Screen Layer](ScreenLayerNode.md) so the camera doesn't move it.
 2. Place and size it: its **Position** is its top-left corner, **Size** its
    width and height (900 x 170 to start).

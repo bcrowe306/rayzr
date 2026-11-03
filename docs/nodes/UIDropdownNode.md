@@ -15,7 +15,7 @@ a choice has several options.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *UI Dropdown*. It is 360 x 28, labelled
+1. **Add Node** (Cmd+A / Ctrl+A) > *UI Dropdown*. It is 360 x 28, labelled
    "Select", with the items Option A, Option B and Option C.
 2. Put it under a [Screen Layer](ScreenLayerNode.md) or in a
    [UI Container](UIContainerNode.md).

@@ -182,7 +182,7 @@ LevelProject_Page :: proc(state: ^EditorState) {
 		}
 		if UI_SectionHeader("Custom commands", false) {
 			cmds := e.LdtkJson_Get(root, "customCommands")
-			UI_DimText("Commands run in the project's folder (Cmd+R runs the manual ones).")
+			UI_DimText("Commands run in the project's folder (" + CMD + "+R runs the manual ones).")
 			if cmds != nil && cmds.kind == .Array {
 				for c, i in cmds.items {
 					imgui.PushIDInt(i32(i))
@@ -261,7 +261,7 @@ LevelProject_Page :: proc(state: ^EditorState) {
 			level_tip("A new command", "project.commands")
 			imgui.SameLine()
 			if UI_Button(fmt.tprintf("%s  Run manual", ICON_FA_PLAY), "defs.command.run") do LevelCommands_Run(state, "Manual")
-			level_tip("Run the manual commands now (Cmd+R)", "project.commands")
+			level_tip("Run the manual commands now (" + CMD + "+R)", "project.commands")
 			iid := e.LdtkJson_Str(root, "iid")
 			if t, known := GlobalSettings.ldtkTrust[iid]; known {
 				imgui.SameLine()

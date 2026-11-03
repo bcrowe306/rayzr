@@ -174,7 +174,7 @@ Toolbar_PlayControls :: proc(state: ^EditorState, width: f32) {
 		if UI_IconButton(ICON_FA_FORWARD_STEP, "toolbar.step", "Step one frame (Shift+F9) - pauses the game") do Editor_StepGame(state)
 		if !linked do imgui.EndDisabled()
 		imgui.SameLine()
-		if UI_IconButton(ICON_FA_ROTATE_RIGHT, "toolbar.restart", "Restart (Cmd+Shift+F5) - saves, rebuilds if needed, plays the same again") do Editor_RestartGame(state)
+		if UI_IconButton(ICON_FA_ROTATE_RIGHT, "toolbar.restart", "Restart (" + CMD + "+Shift+F5) - saves, rebuilds if needed, plays the same again") do Editor_RestartGame(state)
 		imgui.SameLine()
 		if UI_IconButton(ICON_FA_STOP, "toolbar.stop", "Stop (Shift+F5)", tint = UI_DANGER) do Editor_StopGameProcess(state)
 		imgui.SameLine()

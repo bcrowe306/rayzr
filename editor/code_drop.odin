@@ -742,7 +742,7 @@ code_drop_target :: proc(state: ^EditorState, doc: ^Code_Doc, mouse: [2]f32) {
 		switch {
 		case asProp:                imgui.SetTooltip("Add as an exported property")
 		case io.KeyAlt && use != "": imgui.SetTooltip("%s", strings.clone_to_cstring(use, context.temp_allocator))
-		case use != "":             imgui.SetTooltip("The path · Cmd: an exported property · Alt: %s", strings.clone_to_cstring(use, context.temp_allocator))
+		case use != "":             imgui.SetTooltip("The path · " + CMD + ": an exported property · Alt: %s", strings.clone_to_cstring(use, context.temp_allocator))
 		}
 		if payload.Delivery {
 			if io.KeyAlt && use != "" && !asProp do code_insert(doc, pos, use)

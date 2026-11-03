@@ -17,7 +17,7 @@ screen with Stats / Items / Skills.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *UI Tab Container*. It starts 440 x 400 px with
+1. **Add Node** (Cmd+A / Ctrl+A) > *UI Tab Container*. It starts 440 x 400 px with
    two tabs, "Tab 1" and "Tab 2", the first one active.
 2. Put it under a [Screen Layer](ScreenLayerNode.md).
 3. Add UI nodes as its children (select it, then Add Node): labels,

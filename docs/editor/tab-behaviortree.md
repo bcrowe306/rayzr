@@ -66,7 +66,7 @@ Mouse and keys:
 | Action | What it does |
 |---|---|
 | Click a box | Select it (the side panel edits it). Click empty space to deselect. |
-| Drag a box onto another box | Move it (and everything under it): onto a sibling, just before that sibling (to go after the next one, use **Move Right**); onto a composite or decorator, as its last child. A leaf, or a parent that is full, refuses with *... can't take another child* in the Console. The root can't be moved. |
+| Drag a box onto another box | Move it (and everything under it): onto a sibling, it takes that sibling's place (after it when dragged from the left, before it from the right); onto a composite or decorator, as its last child. A leaf, or a parent that is full, refuses with *... can't take another child* in the Console (nothing to undo). The root can't be moved. |
 | **Delete** / Backspace | Delete the selected node and everything under it. |
 | Wheel, middle-drag | Pan. **Shift+wheel** pans sideways. |
 | **Cmd+wheel** (Ctrl+wheel) | Zoom at the mouse (30% to 250%). |

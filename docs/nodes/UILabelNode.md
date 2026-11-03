@@ -20,7 +20,7 @@ background colour.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *UI Label*. It says "Label".
+1. **Add Node** (Cmd+A / Ctrl+A) > *UI Label*. It says "Label".
 2. Put it under a [Screen Layer](ScreenLayerNode.md) (or a UI Container).
 3. In the Node tab's **Properties** section set **Text**, **Font Size**,
    **Text Color** and **Align** (Left, Center or Right).

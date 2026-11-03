@@ -19,7 +19,7 @@ map, simple level art made of strokes.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *Line*. It starts as a 120-pixel horizontal line
+1. **Add Node** (Cmd+A / Ctrl+A) > *Line*. It starts as a 120-pixel horizontal line
    with two points.
 2. Edit the points in the Inspector's **Points** section: each row is a
    point's x and y, relative to the node. **Add Point** adds one 40 pixels

@@ -28,7 +28,7 @@ editor, and a running game, update at once.
 1. Save the `.aseprite` file into the project. Assets lists it in an
    *Aseprite* section with its first frame as the thumbnail.
 2. Drag it into the viewport: that makes an *Aseprite Sprite* playing the
-   file's first tag. Or **Add Node** (Ctrl+A) > *Aseprite Sprite* and pick
+   file's first tag. Or **Add Node** (Cmd+A / Ctrl+A) > *Aseprite Sprite* and pick
    the **File** in the Inspector.
 3. In the Inspector's **Aseprite** section:
    - **File**, with a button that opens it in Aseprite (set the program in

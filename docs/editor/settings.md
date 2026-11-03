@@ -56,7 +56,7 @@ The dialog is modal, so **F1** can't open this page while it's open: the
 | **Autosave** | Saves modified scenes and scripts every 1-30 minutes; **Off** at 0 (and never while simulating). |
 | **Ask Before Quitting** | Asks about unsaved scenes and scripts when you quit. |
 | **Check for Updates** | At startup, looks for a newer Rayzr Editor release and shows it in the status bar. |
-| **Bottom Panel Follows Selection** | Selecting an AnimationPlayer, particle emitter, LDtk level, State Machine or Tile Map shows its tab in the bottom panel; selecting something else goes back to the tab you had. |
+| **Bottom Panel Follows Selection** | Selecting an AnimationPlayer, particle emitter, LDtk level, Tile Map, State Machine, Behavior Tree or GOAP node shows its tab in the bottom panel; selecting something else goes back to the tab you had. |
 | **Aseprite** | The Aseprite program **Edit in Aseprite** opens. Empty: found where Aseprite installs (Steam too). |
 
 ### General > Keymap

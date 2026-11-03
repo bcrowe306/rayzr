@@ -21,7 +21,7 @@ at the tail.
 
 ## Using it
 
-1. Select the node that moves, then **Add Node** (Ctrl+A) > *Trail*. The
+1. Select the node that moves, then **Add Node** (Cmd+A / Ctrl+A) > *Trail*. The
    trail becomes its child.
 2. Set its **Position** to where the ribbon should come from, relative to
    the parent: 0, 0 for its centre, or the tip of a sword.

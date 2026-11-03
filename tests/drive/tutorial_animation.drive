@@ -81,6 +81,12 @@ dblclick @insp.position.y
 key ctrl+a
 type 130
 key enter
+# The capsule's Radius (shape.radius: the node has a Radius of its own, #364).
+dblclick @insp.prop:shape.radius
+key ctrl+a
+type 6
+key enter
+expect shape:Player:0:radius == 6.0
 dblclick @insp.prop:size.x
 key ctrl+a
 type 12

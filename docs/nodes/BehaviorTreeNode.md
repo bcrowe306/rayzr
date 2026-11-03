@@ -25,7 +25,7 @@ for Godot, and supports the same nodes.
 
 ## Using it
 
-1. Select the character and **Add Node** (Ctrl+A) > *Behavior Tree*. It
+1. Select the character and **Add Node** (Cmd+A / Ctrl+A) > *Behavior Tree*. It
    acts for its parent, the **Actor**.
 2. The **Behavior Tree** tab opens in the bottom panel. Click **Add Root
    Selector**, or right-click the canvas.

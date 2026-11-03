@@ -19,7 +19,7 @@ the score, a minimap frame and the pause button go under one.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *Screen Layer*. It starts at its anchor, at
+1. **Add Node** (Cmd+A / Ctrl+A) > *Screen Layer*. It starts at its anchor, at
    position (0, 0).
 2. In the Node tab's **Properties** section, set **Anchor**: one of nine
    points of the screen (top left, top, top right, left, centre, right,

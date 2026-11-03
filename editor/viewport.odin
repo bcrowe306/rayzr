@@ -150,7 +150,7 @@ Viewport_UpdateAndRender :: proc(state: ^EditorState) {
 		Viewport_HandleInputAndGizmos(state)
 		// An empty scene: a hint in the middle.
 		if state.activeScene != nil && state.activeScene.rootNode != nil && len(e.GetChildrenView(state.activeScene.manager, state.activeScene.rootNode)) == 0 {
-			msg := fmt.ctprintf("%s  Empty scene: Cmd+A adds a node, or drop images, components and levels here", ICON_FA_WAND_MAGIC_SPARKLES)
+			msg := fmt.ctprintf("%s  Empty scene: " + CMD + "+A adds a node, or drop images, components and levels here", ICON_FA_WAND_MAGIC_SPARKLES)
 			w := imgui.CalcTextSize(msg).x
 			c := state.viewportPos + state.viewportSize * 0.5
 			imgui.DrawList_AddText(imgui.GetWindowDrawList(), {c.x - w * 0.5, c.y - 8}, col_u32(UI_TEXT_DIM), msg)
@@ -383,6 +383,11 @@ Node_Bounds :: proc(state: ^EditorState, node: ^e.Node) -> (corners: [4][2]f32, 
 		if ui.size.x > 0 && ui.size.y > 0 {
 			// UI elements are laid out from their top-left corner.
 			lo, hi, have = {0, 0}, ui.size, true
+			// Under a Screen Layer: drawn at the frame's scale (1/zoom of
+			// the camera's view), as the game shows it (#360).
+			if e.Viewport_InScreenLayer(node) && state.activeScene != nil && state.activeScene.manager != nil {
+				if k := state.activeScene.manager.screen.scale; k != 0 do hi *= k
+			}
 		}
 	}
 	if !have {
@@ -510,14 +515,23 @@ Editor_ScreenMapping :: proc(state: ^EditorState) -> e.Screen_Mapping {
 	vW, vH := frame.x, frame.y
 	cam := Editor_SceneCamera(state)
 	if cam == nil do return {scale = 1, size = {vW, vH}}
-	zoom: f32 = 1.0
-	if cam.currentZoom > 0 do zoom = cam.currentZoom
-	else if cam.targetZoom > 0 do zoom = cam.targetZoom
-	else if cam.zoom > 0 do zoom = cam.zoom
-	if zoom <= 0.001 do zoom = 1.0
+	zoom := editor_camera_zoom(state, cam)
 	center := e.CameraNode_ViewCenter(cam)
 	if state.isSimulating do center = cam.currentPosition
 	return {origin = center - [2]f32{vW, vH} * 0.5 / zoom, scale = 1 / zoom, size = {vW, vH}}
+}
+
+// editor_camera_zoom: the zoom a camera shows the game at - while editing
+// its Target Zoom (the zoom the game starts at: an edit shows at once, #360),
+// while simulating the live zoom.
+editor_camera_zoom :: proc(state: ^EditorState, cam: ^e.CameraNode) -> f32 {
+	zoom: f32 = 1.0
+	if state.isSimulating && cam.currentZoom > 0 do zoom = cam.currentZoom
+	else if cam.targetZoom > 0 do zoom = cam.targetZoom
+	else if cam.currentZoom > 0 do zoom = cam.currentZoom
+	else if cam.zoom > 0 do zoom = cam.zoom
+	if zoom <= 0.001 do zoom = 1.0
+	return zoom
 }
 
 // Draw camera viewport boundaries, frustum framing brackets, center reticle, and limits
@@ -566,11 +580,7 @@ Viewport_DrawCameraBounds :: proc(state: ^EditorState) {
 			isPrimary = false
 		}
 
-		zoom: f32 = 1.0
-		if cam.currentZoom > 0 do zoom = cam.currentZoom
-		else if cam.targetZoom > 0 do zoom = cam.targetZoom
-		else if cam.zoom > 0 do zoom = cam.zoom
-		if zoom <= 0.001 do zoom = 1.0
+		zoom := editor_camera_zoom(state, cam)
 
 		// Same rule the game uses at start (engine CameraNode_ViewCenter);
 		// while simulating, the live camera position.

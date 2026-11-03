@@ -47,6 +47,35 @@ key ctrl+z
 key ctrl+y
 expect node:AtlasSprite.children == 0
 screenshot only_the_region
+
+# #375: a region at the right edge with Width 0 stays inside, 1 px wide;
+# the node deleted while the editor is open: Apply does nothing (says so).
+click @hier:AtlasSprite
+click @insp.atlas.edit
+expect atlas.region == 0,0,48,48
+dblclick @atlas.x
+key ctrl+a
+type 494
+key enter
+dblclick @atlas.w
+key ctrl+a
+type 0
+key enter
+wait 1
+expect atlas.region == 493,0,1,48
+click @hier:AtlasSprite
+key delete
+wait 2
+expect node:AtlasSprite.exists == false
+expect item:atlas.gone == visible
+screenshot region_editor_node_gone
+click @atlas.apply
+wait 1
+expect log contains nothing applied
+expect atlas.open == false
+key ctrl+z
+wait 2
+expect node:AtlasSprite.exists == true
 key ctrl+s
 expect file:scenes/main.scene.json contains "AtlasSpriteNode"
 expect file:scenes/main.scene.json contains "region": [

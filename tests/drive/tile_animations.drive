@@ -35,3 +35,30 @@ click @tile.palette:97
 drag @world:300,330 @world:380,330
 expect node:TileMap.tiles >= 3
 screenshot painted_animated
+
+# #375: Animate on another tile drops the one left at a single frame (no
+# stray entry saved), and closing the window with one frame drops it too
+# (it used to read the freed frames). (Add Frames is off since the painting.)
+click @tile.palette:100
+click @tile.animate
+wait 1
+click @tile-anim.adding
+click @tile.palette:101
+click @tile.animate
+wait 1
+click @tile.palette:102
+wait 1
+expect file:textures/Asteroid_1.tileset.json contains [101, 120], [102, 120]
+expect file:textures/Asteroid_1.tileset.json !contains [100, 120]
+click @tile-anim.adding
+click @tile.palette:103
+click @tile.animate
+wait 1
+expect item:tile-anim.ms:0 == visible
+click @tile-anim.close
+wait 2
+expect item:tile-anim.adding == missing
+click @tile.palette:104
+wait 1
+expect file:textures/Asteroid_1.tileset.json !contains [103, 120]
+expect file:textures/Asteroid_1.tileset.json contains [101, 120], [102, 120]

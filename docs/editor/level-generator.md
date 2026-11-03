@@ -44,8 +44,9 @@ time the game runs.
 
 The window opens centred in the editor and docks like any panel. Its title
 is the file's name, with ` *` while there are unsaved changes. One
-generator is open at a time: opening another one saves the current one
-first.
+generator is open at a time: opening another one while this one has
+unsaved changes asks first - **Save**, **Don't Save** or **Cancel**, as a
+scene tab does.
 
 ## What's in it
 
@@ -59,11 +60,11 @@ canvas wider or narrower.
 | Control | What it does |
 |---|---|
 | **Save** (disk) | Saves the file. Cmd+S (Ctrl+S) while the window has focus. Lit while there are unsaved changes. |
-| **Undo** / **Redo** (arrows) | Every change to the graph: nodes, links, values, the seed, pastes, frames. Cmd+Z (Ctrl+Z), Cmd+Shift+Z (Ctrl+Shift+Z). Up to 100 steps; the history is lost when the window opens another file. |
+| **Undo** / **Redo** (arrows) | Every change to the graph: nodes, links, values, the seed, pastes, frames - and **Apply to TileMap**, in the order you made them. Cmd+Z (Ctrl+Z), Cmd+Shift+Z (Ctrl+Shift+Z); while you type in a field, these keys (and Cmd+S) are the field's. Up to 100 steps; the history is lost when the window opens another file. |
 | **Copy** | Copies the selected nodes and the links between them (Cmd+C (Ctrl+C)). Off when nothing is selected. |
 | **Paste** | Pastes copied nodes in the middle of the canvas (Cmd+V (Ctrl+V) pastes at the mouse). |
 | **Frame** (grouped squares) | Adds a comment frame around the selected nodes, or an empty one in the middle of the canvas when none are selected. |
-| **Apply to TileMap** | Writes the level - tiles and entities - into the Tile Map selected in the scene. Off until you select a Tile Map. The Console says which map and seed. It is a scene change: the scene's undo takes it back (see [Tips](#tips)). |
+| **Apply to TileMap** | Writes the level - tiles and entities - into the Tile Map selected in the scene. Off until you select a Tile Map. The Console says which map and seed. It is a scene change: the window's Undo takes it back, and so does the scene's (see [Tips](#tips)). |
 | **Apply to LDtk Layer** | Writes the tile output into the IntGrid layer picked in the Level tab: its tiles become the IntGrid values and the auto layers draw the rest. Off until an IntGrid layer is picked. The Level tab's undo takes it back. |
 | Status | `N nodes · W x H cells`. |
 
@@ -267,10 +268,10 @@ A cave written into a Tile Map:
 
 ## Tips
 
-- **Apply to TileMap** is undone with the scene's undo, not the window's:
-  click the viewport first, then press Cmd+Z (Ctrl+Z), or use
-  **Edit > Undo**. While the Level Generator has focus, Cmd+Z undoes the
-  graph.
+- **Apply to TileMap** is a step in both histories: Cmd+Z (Ctrl+Z) in the
+  window right after it takes the level out of the map, as does the
+  scene's **Edit > Undo**. If you edit the scene after applying, undo the
+  apply from the scene (the window says so).
 - Use the seed dice to judge a generator, not one lucky level: a good
   graph looks right on most seeds.
 - Nodes that take a `seed` add it to the level's seed, so two Random Fill

@@ -16,7 +16,7 @@ player sees the whole choice at a glance.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *UI Radio Group*. It is 360 px wide, labelled
+1. **Add Node** (Cmd+A / Ctrl+A) > *UI Radio Group*. It is 360 px wide, labelled
    "Option", with the options Option A, Option B and Option C in a column.
 2. Put it under a [Screen Layer](ScreenLayerNode.md) or in a
    [UI Container](UIContainerNode.md).

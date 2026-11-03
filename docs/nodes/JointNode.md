@@ -29,7 +29,7 @@ motors, springs and limits.
    [Dynamic](DynamicBodyNode.md), [Kinematic](KinematicBodyNode.md) or a
    [Character Mover](CharacterMoverNode.md). At least one should be
    dynamic, or nothing moves.
-2. Select body A and **Add Node** (Ctrl+A) > *Joint*. It becomes a child,
+2. Select body A and **Add Node** (Cmd+A / Ctrl+A) > *Joint*. It becomes a child,
    and **Body A** is its parent by default.
 3. In the Inspector's **Joint Bodies**, pick **Body B** (and another
    **Body A** if the joint isn't under it). The lists show the scene's

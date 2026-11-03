@@ -18,7 +18,7 @@ a row. Use it for objectives, credits, patch notes or an inventory read-out.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *UI Bullet List*. It starts 320 x 220 px with no
+1. **Add Node** (Cmd+A / Ctrl+A) > *UI Bullet List*. It starts 320 x 220 px with no
    rows.
 2. Put it under a [Screen Layer](ScreenLayerNode.md), or in a
    [UI Container](UIContainerNode.md).

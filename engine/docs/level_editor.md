@@ -49,8 +49,9 @@ The panels dock like the Game tab's: drag their edges to resize them,
 drag a panel's tab to move it.
 
 - **Levels** (left): the active world's levels (a combo picks the world in
-  multi-world projects); **+** adds a level next to the active one (in a
-  free spot), the bin deletes it. Double-click frames a level.
+  multi-world projects); **+** adds a level where you click next in the
+  canvas (Esc cancels; **Shift+click** the **+**: right of the active one,
+  in a free spot), the bin deletes it. Double-click frames a level.
 - **Layers** (right): the active level's layers, top first, as
   *Type: Name*. Drag a layer by its grip to put it in another order (in
   every level); the eye hides it (LDtk's per-level visibility, saved).

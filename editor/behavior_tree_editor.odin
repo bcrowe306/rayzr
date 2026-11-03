@@ -446,21 +446,41 @@ btg_canvas :: proc(state: ^EditorState, t: ^e.BehaviorTreeNode) {
 }
 
 // btg_drop: node `from` dropped onto `onto`: a sibling takes its place,
-// anything else gets it as its last child.
+// anything else gets it as its last child. A drop that can't happen
+// records no undo step (#374).
 @(private = "file")
 btg_drop :: proc(state: ^EditorState, t: ^e.BehaviorTreeNode, from, onto: int) {
-	if from == 0 do return
-	Editor_RecordUndo(state, "Move behavior tree node")
-	parent := t.nodes[from].parent
-	if t.nodes[onto].parent == parent && parent >= 0 {
-		at := 0
-		for c, k in t.nodes[parent].children do if c == onto do at = k
-		e.BT_MoveNode(t, from, parent, at)
+	parent, at, ok := Btg_DropTarget(t, from, onto)
+	if !ok {
+		if from > 0 && onto >= 0 && onto < len(t.nodes) do Editor_Log(state, .Warn, "%s can't take another child", e.BT_NodeName(&t.nodes[onto]))
 		return
 	}
-	if e.BT_IsLeaf(t.nodes[onto].kind) || !e.BT_MoveNode(t, from, onto, -1) {
-		Editor_Log(state, .Warn, "%s can't take another child", e.BT_NodeName(&t.nodes[onto]))
+	Editor_RecordUndo(state, "Move behavior tree node")
+	e.BT_MoveNode(t, from, parent, at)
+}
+
+// Btg_DropTarget: where a drop of `from` onto `onto` puts it - the parent
+// and the index for BT_MoveNode - or ok = false (the root, a leaf or a full
+// node, a node into its own subtree). Onto a sibling it takes the
+// sibling's place: before it from the right, after it from the left.
+Btg_DropTarget :: proc(t: ^e.BehaviorTreeNode, from, onto: int) -> (parent, at: int, ok: bool) {
+	if from <= 0 || from >= len(t.nodes) || onto < 0 || onto >= len(t.nodes) || from == onto do return
+	parent = t.nodes[from].parent
+	if t.nodes[onto].parent == parent && parent >= 0 {
+		fromK, ontoK := -1, -1
+		for c, k in t.nodes[parent].children {
+			if c == from do fromK = k
+			if c == onto do ontoK = k
+		}
+		if fromK < 0 || ontoK < 0 do return
+		// (BT_MoveNode counts `at` before the node is taken out.)
+		at = ontoK + 1 if fromK < ontoK else ontoK
+		return parent, at, true
 	}
+	if e.BT_IsLeaf(t.nodes[onto].kind) do return
+	for p := onto; p >= 0; p = t.nodes[p].parent do if p == from do return // (into its own subtree)
+	if max := e.BT_MaxChildren(t.nodes[onto].kind); max >= 0 && len(t.nodes[onto].children) >= max do return
+	return onto, -1, true
 }
 
 @(private = "file")

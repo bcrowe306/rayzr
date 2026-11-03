@@ -21,7 +21,7 @@ the image isn't drawn.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *Atlas Sprite*.
+1. **Add Node** (Cmd+A / Ctrl+A) > *Atlas Sprite*.
 2. In the Inspector's **Atlas Sprite** section, pick the image in
    **Texture** (the files under `textures/`). The region starts as the
    whole image.

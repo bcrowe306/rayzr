@@ -27,7 +27,7 @@ on a fist.
 
 1. Select the Skeleton. In the Inspector's **Bones** list, click the link
    button next to a bone: a Bone Attachment named `<bone>_attach` is added
-   under the skeleton, following that bone. Or **Add Node** (Ctrl+A) >
+   under the skeleton, following that bone. Or **Add Node** (Cmd+A / Ctrl+A) >
    *Bone Attachment* with the Skeleton selected, and type the bone's name
    in **Bone**.
 2. Add what should ride along as children of the attachment: a Texture Sprite, a

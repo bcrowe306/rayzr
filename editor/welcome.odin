@@ -126,10 +126,10 @@ Welcome_Render :: proc(state: ^EditorState) {
 			imgui.SameLine(26)
 			imgui.TextWrapped("%s", strings.clone_to_cstring(text, context.temp_allocator))
 		}
-		tip(ICON_FA_PLUS, "Cmd+A adds a node; drag images from Assets into the viewport for sprites.")
+		tip(ICON_FA_PLUS, CMD + "+A adds a node; drag images from Assets into the viewport for sprites.")
 		tip(ICON_FA_CODE, "Attach a Lua script in the Inspector; saving reloads it, even while playing.")
 		tip(ICON_FA_PLAY, "F5 plays the game; the Game tab shows its live scene tree.")
-		tip(ICON_FA_MAGNIFYING_GLASS, "Cmd+P finds files and commands; hover a property for help.")
+		tip(ICON_FA_MAGNIFYING_GLASS, CMD + "+P finds files and commands; hover a property for help.")
 		imgui.PopTextWrapPos()
 	}
 	imgui.EndChild()

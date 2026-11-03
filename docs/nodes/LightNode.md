@@ -27,7 +27,7 @@ places back. Lights can cast shadows from physics shapes.
 1. Darken the scene: in the Scene panel's **Settings** tab, set **Ambient**
    (or pick a preset: *Dusk*, *Night*, *Dark*; *Day (unlit)* turns it off).
    White means unlit: the scene is drawn as it is.
-2. **Add Node** (Ctrl+A) > *Light*. It's a warm point light with a
+2. **Add Node** (Cmd+A / Ctrl+A) > *Light*. It's a warm point light with a
    256-pixel radius.
 3. In the Node tab's **Properties** section:
    - **Kind**: *Point* shines all round, *Spot* shines in a cone, and

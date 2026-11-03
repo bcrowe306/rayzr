@@ -24,7 +24,7 @@ there. When the world changes, it plans again. It works like
 
 ## Using it
 
-1. Select the character and **Add Node** (Ctrl+A) > *GOAP Agent*. It acts
+1. Select the character and **Add Node** (Cmd+A / Ctrl+A) > *GOAP Agent*. It acts
    for its parent.
 2. The **GOAP** tab opens in the bottom panel. On the **Keys & Sensors**
    page, add:
