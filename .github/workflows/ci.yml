@@ -3,7 +3,8 @@
 # runner (js_wasm32, as the release does - #224); smoke-tests the
 # runner and the packaged editor on Linux under Xvfb. The templates'
 # scripted play-throughs (#329: scripts/templates/test_templates.py) run on
-# every platform: Linux (Xvfb), macOS (the runner's Metal-backed OpenGL),
+# every platform: Linux (Xvfb), macOS (when the runner has OpenGL - GitHub's
+# macOS VMs don't: played locally there),
 # Windows (Mesa's llvmpipe: scripts/ci/mesa_windows.sh), the web (the web
 # runner in headless Chrome) and Android (an emulator). Editor drives
 # (tests/drive) stay local: they're long and need a real GPU session.
@@ -160,12 +161,32 @@ jobs:
           odin test ui -define:ODIN_TEST_THREADS=1 $(scripts/odin_flags.sh)
 
       # The templates' scripted play-throughs (#329) - Linux plays them below
-      # (Templates, under Xvfb). macOS: the runner's own OpenGL (Metal
-      # underneath); Windows has no GPU driver: Mesa's llvmpipe next to a copy
-      # of the runner.
-      - name: Template play-throughs (macOS)
+      # (Templates, under Xvfb). Windows has no GPU driver: Mesa's llvmpipe
+      # next to a copy of the runner. macOS: GitHub's macOS VMs have no
+      # accelerated OpenGL - GLFW's NSGL (raylib's window) only takes an
+      # accelerated pixel format ("NSGL: Failed to find a suitable pixel
+      # format"; no software renderer, and raylib resets GLFW's hints, so no
+      # OSMesa either). So here the runner is checked to say so and exit 1
+      # (raylib 5.5 used to abort in InitWindow: engine/gl_window_check.odin);
+      # the play-throughs run when a window opens (a GPU runner), and are
+      # otherwise played on a Mac locally (python3
+      # scripts/templates/test_templates.py).
+      - name: Template play-throughs (macOS, when the runner has OpenGL)
         if: runner.os == 'macOS'
-        run: python3 scripts/templates/test_templates.py --runner bin/runners/macos/runner
+        run: |
+          set +e
+          out=$(bin/runners/macos/runner templates/platformer --frames 5 --hidden --user-data "$RUNNER_TEMP/gl_probe" 2>&1)
+          code=$?
+          set -e
+          if [ $code = 0 ]; then
+            python3 scripts/templates/test_templates.py --runner bin/runners/macos/runner
+          elif [ $code = 1 ] && grep -q "Could not open the game window" <<< "$out"; then
+            echo "::warning::macOS play-throughs not run: this runner has no accelerated OpenGL ($(grep -o 'Could not open the game window.*' <<< "$out" | head -1)). The runner exited cleanly; play them on a Mac locally."
+          else
+            echo "$out" | tail -40
+            echo "::error::the runner didn't exit cleanly without OpenGL (exit $code)"
+            exit 1
+          fi
       - name: Template play-throughs (Windows, Mesa llvmpipe)
         if: runner.os == 'Windows'
         env:

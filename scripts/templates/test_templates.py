@@ -355,7 +355,8 @@ class Android:
                 self.get(pkg, rel, dst)
             errs = [l for l in log if l.startswith("E/") or "Lua error" in l or "[ERROR]" in l]
             out.append({"code": code if code is not None else -1, "errors": errs,
-                        "tail": "" if code is not None else "the app didn't finish the run: " + " | ".join(log[-10:])})
+                        "tail": "" if code == 0 else
+                        ("the app's process ended mid-run: " if gone else "the app didn't finish the run: ") + " | ".join(log[-10:])})
             if code != 0:
                 break
         return out

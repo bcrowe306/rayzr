@@ -26,5 +26,9 @@ python3 -u scripts/templates/test_templates.py --android "$@" || status=$?
 if [ $status != 0 ]; then
 	echo "--- the app's log (logcat, last 200 lines)"
 	adb logcat -d -v brief -s Rayzr:V libc:V DEBUG:V AndroidRuntime:V | tail -200 || true
+	# (Everything else of the last run - a crash under the ARM translation,
+	# EGL / the window, the activity manager - unfiltered.)
+	echo "--- the device's log (logcat, last 400 lines, unfiltered)"
+	adb logcat -d -v brief | grep -v -E "ro.build.fingerprint" | tail -400 || true
 fi
 exit $status
