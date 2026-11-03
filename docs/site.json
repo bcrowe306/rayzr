@@ -30,6 +30,7 @@
         { "file": "docs/editor/tab-tilemap.md", "slug": "editor/tab-tilemap" },
         { "file": "docs/editor/tab-stategraph.md", "slug": "editor/tab-stategraph" },
         { "file": "docs/editor/tab-mixer.md", "slug": "editor/tab-mixer" },
+        { "file": "docs/editor/tab-library.md", "slug": "editor/tab-library" },
         { "file": "docs/editor/tab-search.md", "slug": "editor/tab-search" },
         { "file": "docs/editor/tab-files.md", "slug": "editor/tab-files" },
         { "file": "docs/editor/tab-tests.md", "slug": "editor/tab-tests" },

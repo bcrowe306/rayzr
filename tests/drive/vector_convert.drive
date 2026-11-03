@@ -1,0 +1,48 @@
+# #269: Convert to Symbol - shapes picked with Shift-click become a named
+# group of the file and a Vector Shape drawing it is placed over them; a
+# box selects; editing a symbol's node edits just that symbol in place.
+wait 5
+key escape
+click @hier.add
+type vector
+click @addnode.create
+click @insp.vec.draw
+click @vd.tool:rect
+drag @node:VectorShape+-120,-60 @node:VectorShape+-60,0
+click @vd.tool:ellipse
+drag @node:VectorShape+-50,-60 @node:VectorShape+10,0
+click @vd.tool:select
+click @node:VectorShape+-90,-30
+hold shift
+click @node:VectorShape+-20,-30
+release
+expect vd.selected == 2
+key f8
+expect item:vd.convert.name == visible
+key cmd+a
+type Wheel
+key enter
+expect vd.groups == 1
+expect file:art/vectorshape.svg contains id="Wheel"
+expect node:Wheel.type == VectorShapeNode
+expect node:Wheel.prop.group == Wheel
+expect node:Wheel.prop.file == art/vectorshape.svg
+screenshot converted
+
+# A box around both selects them (the ones wholly inside).
+drag @node:VectorShape+-140,-80 @node:VectorShape+30,20
+expect vd.selected == 2
+key escape
+
+# Editing the symbol's node: only its shapes; a new one goes into it.
+click @hier:Wheel
+click @insp.vec.draw
+expect vd.active == true
+expect item:vd.breadcrumb == visible
+expect vd.scope == 2
+click @vd.tool:rect
+drag @node:Wheel+-40,40 @node:Wheel+40,100
+expect vd.scope == 3
+expect vd.shapes == 3
+screenshot edit_symbol
+key escape

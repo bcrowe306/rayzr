@@ -319,6 +319,36 @@ Vector_DocImage :: proc(doc: ^Vector_Doc, maxSize: i32) -> rl.Image {
 	return img
 }
 
+// Vector_PartImage: one part of a resource (a symbol; -1: all of it)
+// rendered into an image fitting max x max px (the Library's previews).
+Vector_PartImage :: proc(r: ^Vector_Resource, part: int, maxSize: i32) -> rl.Image {
+	if !rl.IsWindowReady() || r == nil do return {}
+	shapes := Vector_DocShapes(&r.doc, part)
+	if len(shapes) == 0 do return {}
+	b := Vector_ShapesBounds(shapes)
+	size := [2]f32{b[2] - b[0], b[3] - b[1]}
+	if size.x <= 0 || size.y <= 0 do return {}
+	s := f32(maxSize) / max(size.x, size.y)
+	w, h := max(i32(size.x * s + 0.5), 1), max(i32(size.y * s + 0.5), 1)
+	rt := rl.LoadRenderTexture(w, h)
+	defer rl.UnloadRenderTexture(rt)
+	tess: Vector_Tess
+	defer Vector_Tess_Destroy(&tess)
+	cache: Vector_Cache
+	defer Vector_Cache_Destroy(&cache)
+	{
+		context.allocator = Engine_HeapAllocator()
+		Vector_Cache_Ensure(&cache, &tess, shapes, 1 / s)
+	}
+	rl.BeginTextureMode(rt)
+	rl.ClearBackground({0, 0, 0, 0})
+	Vector_Cache_Draw(&cache, {0, 0}, 0, {s, s}, rl.WHITE, {-b[0], -b[1]})
+	rl.EndTextureMode()
+	img := rl.LoadImageFromTexture(rt.texture)
+	rl.ImageFlipVertical(&img)
+	return img
+}
+
 // vector_resource_install: a finished background mesh into its part's
 // bucket slot (main thread; vector_jobs.odin).
 vector_resource_install :: proc(r: ^Vector_Resource, part: int, bucket: f32, mesh: ^Vector_Mesh) {

@@ -1,5 +1,6 @@
 package engine
 
+import "core:fmt"
 import "core:math"
 import "core:math/linalg"
 import os "osx"
@@ -318,4 +319,95 @@ Vector_DocMoveShape :: proc(doc: ^Vector_Doc, i, dir: int) -> int {
 	if Vector_DocShapeGroup(doc, i) != Vector_DocShapeGroup(doc, j) do return i
 	doc.shapes[i], doc.shapes[j] = doc.shapes[j], doc.shapes[i]
 	return j
+}
+
+// --- symbols ---------------------------------------------------------------------------
+
+// Vector_DocMakeGroup moves shapes into a new group named `name` inside
+// `parent` (-1: top level) - a symbol - in their drawing order, after the
+// parent's other shapes; the group's index.
+Vector_DocMakeGroup :: proc(doc: ^Vector_Doc, indices: []int, name: string, parent := -1) -> int {
+	order := make([dynamic]int, 0, len(indices), context.temp_allocator)
+	for i in indices do if i >= 0 && i < len(doc.shapes) do append(&order, i)
+	for i in 1 ..< len(order) {
+		for j := i; j > 0 && order[j] < order[j - 1]; j -= 1 do order[j], order[j - 1] = order[j - 1], order[j]
+	}
+	moved := make([dynamic]Vector_Shape, 0, len(order), context.temp_allocator)
+	for i in order do append(&moved, doc.shapes[i])
+	for k := len(order) - 1; k >= 0; k -= 1 do Vector_DocRemoveShape(doc, order[k])
+	g := Vector_DocAddGroup(doc, name, parent)
+	for s in moved do Vector_DocInsertShape(doc, s, g)
+	return g
+}
+
+// Vector_DocGroupNameFree: `base`, or base 2, base 3... - a name no group has.
+Vector_DocGroupNameFree :: proc(doc: ^Vector_Doc, base: string, allocator := context.temp_allocator) -> string {
+	taken :: proc(doc: ^Vector_Doc, n: string) -> bool {
+		for g in doc.groups do if g.name == n do return true
+		return false
+	}
+	if !taken(doc, base) do return strings.clone(base, allocator)
+	for i := 2; ; i += 1 {
+		n := fmt.tprintf("%s %d", base, i)
+		if !taken(doc, n) do return strings.clone(n, allocator)
+	}
+}
+
+// Vector_DocDuplicateGroup copies a group - its shapes and the groups in it
+// - as a new group named `name` beside it (same parent, after the parent's
+// other shapes); the copy's index.
+Vector_DocDuplicateGroup :: proc(doc: ^Vector_Doc, g: int, name: string) -> int {
+	if g < 0 || g >= len(doc.groups) do return -1
+	context.allocator = Vector_EditAllocator(doc)
+	src := doc.groups[g]
+	// The groups inside it (parents before children: they're read in order).
+	inside := make([dynamic]int, context.temp_allocator)
+	for x, i in doc.groups do if i != g && vector_group_in(doc, i, g) do append(&inside, i)
+	mapping := make(map[int]int, allocator = context.temp_allocator)
+	mapping[g] = Vector_DocAddGroup(doc, name, src.parent)
+	for i in inside do mapping[i] = Vector_DocAddGroup(doc, doc.groups[i].name, mapping[doc.groups[i].parent])
+	for i in inside do doc.groups[mapping[i]].hidden = doc.groups[i].hidden
+	// The shapes, each into its innermost group's copy (in order: ranges come out right).
+	shapes := make([dynamic]Vector_Shape, 0, src.count, context.temp_allocator)
+	owners := make([dynamic]int, 0, src.count, context.temp_allocator)
+	for k in src.first ..< src.first + src.count {
+		append(&shapes, Vector_ShapeCopy(&doc.shapes[k]))
+		append(&owners, Vector_DocShapeGroup(doc, k))
+	}
+	for s, k in shapes do Vector_DocInsertShape(doc, s, mapping[owners[k]] if owners[k] in mapping else mapping[g])
+	return mapping[g]
+}
+
+// Vector_ShapeCopy: a shape with its own path (the document's arena).
+Vector_ShapeCopy :: proc(s: ^Vector_Shape) -> Vector_Shape {
+	out := s^
+	out.path.cmds = make([dynamic]Vector_Cmd, len(s.path.cmds))
+	out.path.pts = make([dynamic][2]f32, len(s.path.pts))
+	copy(out.path.cmds[:], s.path.cmds[:])
+	copy(out.path.pts[:], s.path.pts[:])
+	return out
+}
+
+// Vector_DocRemoveGroup takes a group out with its shapes and the groups in it.
+Vector_DocRemoveGroup :: proc(doc: ^Vector_Doc, g: int) {
+	if g < 0 || g >= len(doc.groups) do return
+	context.allocator = Vector_EditAllocator(doc)
+	src := doc.groups[g]
+	for k := src.first + src.count - 1; k >= src.first; k -= 1 do Vector_DocRemoveShape(doc, k)
+	gone := make([]bool, len(doc.groups), context.temp_allocator)
+	for _, i in doc.groups do gone[i] = vector_group_in(doc, i, g)
+	newIndex := make([]int, len(doc.groups), context.temp_allocator)
+	n := 0
+	for i in 0 ..< len(doc.groups) {
+		newIndex[i] = -1 if gone[i] else n
+		if !gone[i] do n += 1
+	}
+	kept := make([dynamic]Vector_Group, 0, n)
+	for x, i in doc.groups {
+		if gone[i] do continue
+		y := x
+		if y.parent >= 0 do y.parent = newIndex[y.parent]
+		append(&kept, y)
+	}
+	doc.groups = kept
 }
