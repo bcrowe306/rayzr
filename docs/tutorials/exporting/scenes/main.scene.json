@@ -1,0 +1,148 @@
+{
+ "name": "main",
+ "background": [
+  40,
+  44,
+  64,
+  255
+ ],
+ "root": {
+  "type": "Node",
+  "name": "root",
+  "children": [
+   {
+    "type": "TextureNode",
+    "name": "Gem",
+    "position": [
+     320,
+     190
+    ],
+    "scale": [
+     2,
+     2
+    ],
+    "texture": "textures/gem.png"
+   },
+   {
+    "type": "ScreenLayerNode",
+    "name": "HUD",
+    "position": [
+     0,
+     0
+    ],
+    "layer": 7,
+    "properties": {
+     "anchor": "TopLeft"
+    },
+    "script": {
+     "path": "scripts/clicker.lua"
+    },
+    "children": [
+     {
+      "type": "UILabelNode",
+      "name": "Gems",
+      "position": [
+       16,
+       12
+      ],
+      "layer": 7,
+      "properties": {
+       "size": [
+        220,
+        26
+       ],
+       "text": "Gems: 0",
+       "fontSize": 20,
+       "drawBackground": true
+      }
+     },
+     {
+      "type": "UILabelNode",
+      "name": "Level",
+      "position": [
+       16,
+       44
+      ],
+      "layer": 7,
+      "properties": {
+       "size": [
+        220,
+        22
+       ],
+       "text": "Pick level 1",
+       "fontSize": 16,
+       "drawBackground": true
+      }
+     },
+     {
+      "type": "UIButtonNode",
+      "name": "Upgrade",
+      "position": [
+       16,
+       72
+      ],
+      "layer": 7,
+      "properties": {
+       "size": [
+        220,
+        30
+       ],
+       "text": "Upgrade: 10 gems",
+       "fontSize": 16,
+       "keyboardFocus": false
+      }
+     },
+     {
+      "type": "UILabelNode",
+      "name": "Status",
+      "position": [
+       16,
+       326
+      ],
+      "layer": 7,
+      "properties": {
+       "size": [
+        360,
+        22
+       ],
+       "text": "",
+       "fontSize": 16
+      }
+     },
+     {
+      "type": "ScreenLayerNode",
+      "name": "TopRight",
+      "position": [
+       -116,
+       12
+      ],
+      "layer": 7,
+      "properties": {
+       "anchor": "TopRight"
+      },
+      "children": [
+       {
+        "type": "UIButtonNode",
+        "name": "Menu",
+        "position": [
+         0,
+         0
+        ],
+        "layer": 7,
+        "properties": {
+         "size": [
+          100,
+          30
+         ],
+         "text": "Menu",
+         "fontSize": 16,
+         "keyboardFocus": false
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

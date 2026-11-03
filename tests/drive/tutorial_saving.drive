@@ -1,0 +1,97 @@
+# The Saving and loading tutorial (docs/tutorials/saving.md, #295): its
+# steps, in a copy of the finished project (docs/tutorials/saving/), and its
+# screenshots (scripts/docs/screenshots.sh tutorial_saving copies them to
+# docs/images/tutorial-saving_*.png). The drive makes scripts/game.lua a
+# global script again, saves a game from Simulate into the drive's own
+# user-data folder, plays it (Play continues it), and runs the project's
+# save tests in the Tests tab.
+# drive: project docs/tutorials/saving
+wait 5
+key escape
+
+# 1. The global script: taken away, then made global as the page says.
+rclick @asset:scripts/game.lua
+click @ctx:remove-global
+wait 2
+expect item:asset.global:scripts/game.lua == missing
+rclick @asset:scripts/game.lua
+click @ctx:make-global
+wait 2
+expect item:asset.global:scripts/game.lua == visible
+expect file:project.json contains {"name": "Game", "script": "scripts/game.lua"}
+click @toolbar.settings
+click @settings.page:Globals
+expect item:settings.global-name:0 == visible
+expect item:settings.global-problem:0 == missing
+annotate @settings.global-name:0 The global's name: every script reaches the table as Game
+annotate @settings.global-script:0 The script it is loaded from, once, before any scene
+screenshot tutorial-saving_global
+click @settings.cancel
+wait 2
+
+# 2. The title screen in Simulate: an empty slot, then a game saved from
+# the Lua line (Game:new_game writes slot_1.json in the user-data folder).
+dblclick @asset:scenes/title.scene.json
+wait 10
+expect scene contains title.scene.json
+click @hier:Menu
+key shift+home
+wait 3
+click @menu:Game
+click @menu:Game/Simulate in Editor
+wait 20
+expect node:Summary.prop.text == Slot 1: empty
+expect node:Continue.enabled == false
+click @bottom:console
+click @console.lua
+type Game:new_game(1); Game.data.gems = 40; Save.flush(); Scene.find_node("Menu"):get_script():show(1)
+key enter
+wait 5
+expect node:Summary.prop.text == Slot 1: 40 gems, pick level 1
+expect node:Continue.enabled == true
+expect abs-file:$PROJECT/../userdata/slot_1.json contains "gems": 40
+expect abs-file:$PROJECT/../userdata/settings.json contains "last_slot": 1
+annotate @node:Summary The summary: read from slot_1.json
+annotate @node:Continue Continue and Delete show when the slot has a game
+annotate @node:Slot Picks slot 1, 2 or 3
+screenshot tutorial-saving_title
+click @menu:Game
+click @menu:Game/Simulate in Editor
+wait 5
+
+# 3. The settings screen: a UI Slider and a UI Checkbox.
+dblclick @asset:scenes/settings.scene.json
+wait 10
+expect scene contains settings.scene.json
+click @hier:Menu/Volume
+key shift+home
+wait 5
+expect node:Volume.prop.maxValue == 1
+annotate @node:Volume A UI Slider, 0 to 1: value_changed sets the volume
+annotate @node:Fullscreen A UI Checkbox: value_changed switches fullscreen
+annotate @node:Back Back writes settings.json
+screenshot tutorial-saving_settings
+
+# 4. Played (without the drives' Show Colliders): Play uses the same
+# user-data folder, so the game continues the slot saved above.
+dblclick @asset:scenes/main.scene.json
+wait 10
+click @menu:Game
+click @menu:Game/Show Colliders in Game
+expect log contains Colliders hidden in the game
+game-args --frames 60 --screenshot $SHOTS/05_tutorial-saving_game.png --dump-scene $SHOTS/game_scene.json
+key f6
+wait-until game == stopped timeout=900
+expect abs-file:$SHOTS/game_scene.json contains "Gems: 40"
+
+# 5. The project's save tests (tests/saves_test.lua) in the Tests tab.
+click @bottom:tests
+wait 3
+drag 640,592 640,330
+wait 3
+expect item:tests.row:test_mined_gems_are_saved == visible
+click @tests.run-all
+wait-until log contains Tests: 3 passed, 0 failed timeout=1800
+wait 3
+annotate @tests.row:test_version_1_save_is_migrated A test writes a version 1 save and checks the migration
+screenshot tutorial-saving_tests

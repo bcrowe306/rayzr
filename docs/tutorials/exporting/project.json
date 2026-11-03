@@ -1,0 +1,38 @@
+{
+ "name": "Gem Clicker",
+ "version": "1.0.0",
+ "icon": "icon.png",
+ "initial_scene": "scenes/title.scene.json",
+ "window": {
+  "title": "Gem Clicker",
+  "width": 1280,
+  "height": 720,
+  "virtual_width": 640,
+  "virtual_height": 360,
+  "target_fps": 60
+ },
+ "video": {
+  "resizable": true,
+  "fullscreen": false
+ },
+ "globals": [
+  {"name": "Game", "script": "scripts/game.lua"}
+ ],
+ "scenes": [
+  "scenes/title.scene.json",
+  "scenes/main.scene.json",
+  "scenes/settings.scene.json"
+ ],
+ "export": {
+  "executable": "GemClicker",
+  "bundle_id": "com.yourname.gemclicker",
+  "compress": true,
+  "include_font": true,
+  "presets": [
+   {"name": "macOS", "target": "macos", "exclude": ["tests/"]},
+   {"name": "Windows", "target": "windows", "exclude": ["tests/"]},
+   {"name": "Linux", "target": "linux", "exclude": ["tests/"]},
+   {"name": "Web", "target": "web", "window_title": "Gem Clicker (web)", "exclude": ["tests/"]}
+  ]
+ }
+}

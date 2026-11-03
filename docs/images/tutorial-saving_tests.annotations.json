@@ -1,0 +1,7 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "A test writes a version 1 save and checks the migration", "x": 337, "y": 472, "w": 677, "h": 21}
+  ]
+}

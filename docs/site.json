@@ -20,7 +20,9 @@
         { "file": "docs/tutorials/tilemaps.md", "slug": "tutorials/tilemaps" },
         { "file": "docs/tutorials/levelgen.md", "slug": "tutorials/levelgen" },
         { "file": "docs/tutorials/animation.md", "slug": "tutorials/animation" },
-        { "file": "docs/tutorials/ui.md", "slug": "tutorials/ui" }
+        { "file": "docs/tutorials/ui.md", "slug": "tutorials/ui" },
+        { "file": "docs/tutorials/saving.md", "slug": "tutorials/saving" },
+        { "file": "docs/tutorials/exporting.md", "slug": "tutorials/exporting" }
       ]
     },
     {

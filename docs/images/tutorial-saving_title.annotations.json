@@ -1,0 +1,9 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "The summary: read from slot_1.json", "x": 431, "y": 250, "w": 56, "h": 56},
+    {"label": "Continue and Delete show when the slot has a game", "x": 487, "y": 288, "w": 56, "h": 56},
+    {"label": "Picks slot 1, 2 or 3", "x": 487, "y": 209, "w": 56, "h": 56}
+  ]
+}

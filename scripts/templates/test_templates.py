@@ -15,6 +15,12 @@ Tests: scripts/templates/tests/<id>.json, a list of
                 ["Player", "x", "<", 120],                  # x / y: position; others: properties
                 ["Enemy1", "exists", "==", false]],
      "quits": false}                                       # optional: true - the game must end itself first (no dump)
+Saves (#295, the saving tutorial): "user_files": {"slot_1.json": {...}} are
+written into the user-data folder first (a save from an older version);
+"before": [{"frames": 60, "input": [...], "quits": true}, ...] are earlier
+runs of the same copy with the same user-data folder (each must end
+cleanly), so the test's own run sees what they saved; an expect row
+["@file:slot_1.json", "game.gems", "==", 5] reads a user-data file.
 Each runs on a fresh copy of the template (--user-data in it), with fixed
 1/60 s frames: the same every time. Linux CI runs it under xvfb-run.
 
@@ -108,10 +114,30 @@ def run_test(runner, tid, test, tmp):
                 else:
                     n.setdefault("properties", {})[k] = v
         json.dump(sc, open(sp, "w"))
+    userdata = os.path.join(tmp, "userdata")
+    os.makedirs(userdata, exist_ok=True)
+    for fname, content in test.get("user_files", {}).items():
+        json.dump(content, open(os.path.join(userdata, fname), "w"))
     inp = os.path.join(tmp, "input.txt")
-    open(inp, "w").write("\n".join(test.get("input", [])) + "\n")
     dump = os.path.join(tmp, "dump.json")
-    cmd = [runner, proj, "--hidden", "--user-data", os.path.join(tmp, "userdata"), "--frames", str(test["frames"]),
+    # ("before": earlier runs on this copy and user data - what they save,
+    # the test's run loads.)
+    for i, run in enumerate(test.get("before", [])):
+        open(inp, "w").write("\n".join(run.get("input", [])) + "\n")
+        bcmd = [runner, proj, "--hidden", "--user-data", userdata, "--frames", str(run["frames"]),
+                "--input-script", inp, "--dump-scene", dump, "--scene", run.get("scene", cfg["initial_scene"])]
+        blog = subprocess.run(bcmd, capture_output=True, text=True, timeout=120)
+        berrors = [l for l in blog.stderr.splitlines() + blog.stdout.splitlines() if "[ERROR]" in l or "Lua error" in l]
+        if blog.returncode != 0:
+            return [f"run {i + 1} before: exit code {blog.returncode}: {blog.stderr[-600:]}"]
+        if run.get("quits") and os.path.isfile(dump):
+            return [f"run {i + 1} before: the game didn't quit: it ran all {run['frames']} frames"]
+        if berrors:
+            return [f"run {i + 1} before: log: {e}" for e in berrors[:5]]
+        if os.path.isfile(dump):
+            os.remove(dump)
+    open(inp, "w").write("\n".join(test.get("input", [])) + "\n")
+    cmd = [runner, proj, "--hidden", "--user-data", userdata, "--frames", str(test["frames"]),
            "--input-script", inp, "--dump-scene", dump, "--scene", scene_rel]
     cmd += test.get("args", [])  # ("args": extra runner arguments, e.g. ["--console", "perf"])
     shot = test.get("screenshot")
@@ -140,7 +166,11 @@ def run_test(runner, tid, test, tmp):
     root = top["root"]
     fails = []
     for name, key, op, want in test["expect"]:
-        node = top if name == "@scene" else find(root, name)  # (@scene: the running scene - its "name")
+        if name.startswith("@file:"):  # (a user-data file's JSON, e.g. a save slot)
+            fp = os.path.join(userdata, name[6:])
+            node = json.load(open(fp)) if os.path.isfile(fp) else None
+        else:
+            node = top if name == "@scene" else find(root, name)  # (@scene: the running scene - its "name")
         got = (node is not None) if key == "exists" else field(node, key)
         if not check(op, got, want):
             fails.append(f"{name}.{key} {op} {want!r}: got {got!r}")

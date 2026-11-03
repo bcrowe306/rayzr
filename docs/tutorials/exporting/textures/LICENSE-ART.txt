@@ -1,0 +1,3 @@
+Art: Kenney (www.kenney.nl), Creative Commons Zero (CC0) - free for any
+use, no attribution required. Pack: Sokoban. icon.png is textures/gem.png
+scaled to 512 x 512.
