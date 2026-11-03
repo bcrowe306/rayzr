@@ -147,6 +147,106 @@ def grid_of(rows, width=None):
     return [r.ljust(width, ".") for r in rows]
 
 
+# --- game screens (#329) ---------------------------------------------------------
+# The templates that are small complete games share a title screen (Play,
+# the start Level, Settings with the volume, Quit), a pause menu and a
+# result screen (a win or a game over), all Text nodes run by
+# scripts/common/menu.lua, and the global Game (scripts/common/game.lua):
+# the run (level, score, lives) and the save data (settings, progress).
+
+PIXEL_STYLE = {"size": (320, 180), "big": 32, "small": 16, "step": 18, "item_w": 170, "item_h": 16}
+HD_STYLE = {"size": (1280, 720), "big": 96, "small": 48, "step": 64, "item_w": 640, "item_h": 56}
+
+
+def menu_text(name, value, pos, st, color, size=None, item=False):
+    n = text(name, value, pos, size=size or st["small"], align="Center", color=color, pivot=(0.5, 0.5))
+    if item:
+        n["tags"] = ["item"]
+    return n
+
+
+def menu(name, kind, children, st, selected, visible=True, pause=False):
+    n = {"type": "Node", "name": name, "layer": 7,
+         "script": {"path": "scripts/menu.lua", "properties": {"kind": kind, "item_width": st["item_w"],
+                                                                "item_height": st["item_h"], "selected": selected}},
+         "children": children}
+    if not visible:
+        n["visible"] = False
+    if pause:
+        n["pause_mode"] = "always"
+    return n
+
+
+def title_scene(game_name, st, color, selected, background, decor=(), level_word="Level"):
+    """The title screen: the name, the best score, the menu; the settings."""
+    w, h = st["size"]
+    k, step = h / 180, st["step"]
+    y0 = 88 * k
+    items = [("Play", "Play"), ("Level", level_word), ("Settings", "Settings"), ("Quit", "Quit")]
+    main = menu("Menu", "title", [
+        menu_text("Title", game_name, (w / 2, 36 * k), st, color, size=st["big"]),
+        menu_text("Best", "", (w / 2, 62 * k), st, color),
+    ] + [menu_text(n, l, (w / 2, y0 + i * step), st, color, item=True) for i, (n, l) in enumerate(items)], st, selected)
+    settings = menu("SettingsMenu", "settings", [
+        menu_text("Heading", "Settings", (w / 2, 50 * k), st, color, size=st["big"]),
+        menu_text("Volume", "Volume", (w / 2, 96 * k), st, color, item=True),
+        menu_text("Back", "Back", (w / 2, 96 * k + step), st, color, item=True),
+    ], st, selected, visible=False)
+    camera = {"type": "CameraNode", "name": "Camera", "position": [w / 2, h / 2], "properties": {"isCurrent": True}}
+    return scene("title", [camera] + list(decor) + [main, settings], background=background)
+
+
+def result_scene(st, color, selected, background, decor=()):
+    """After a win or a game over: the score, the best, Again / Title."""
+    w, h = st["size"]
+    k, step = h / 180, st["step"]
+    camera = {"type": "CameraNode", "name": "Camera", "position": [w / 2, h / 2], "properties": {"isCurrent": True}}
+    return scene("result", [camera] + list(decor) + [menu("Menu", "result", [
+        menu_text("Heading", "", (w / 2, 46 * k), st, color, size=st["big"]),
+        menu_text("Score", "", (w / 2, 78 * k), st, color),
+        menu_text("Best", "", (w / 2, 78 * k + step), st, color),
+        menu_text("Again", "Play again", (w / 2, 124 * k), st, color, item=True),
+        menu_text("Title", "Title screen", (w / 2, 124 * k + step), st, color, item=True),
+    ], st, selected)], background=background)
+
+
+def pause_menu(st, selected, shade="#14141ec8", color="#ffffffff"):
+    """The pause menu: Esc / P / Start (or the touch II button) opens it."""
+    w, h = st["size"]
+    k, step = h / 180, st["step"]
+    return menu("PauseMenu", "pause", [
+        {"type": "UIContainerNode", "name": "Shade", "layer": 7, "position": [0, 0],
+         "properties": {"size": [w, h], "drawBackground": True, "drawBorder": False, "showHeader": False,
+                        "backgroundColor": shade}},
+        menu_text("Heading", "Paused", (w / 2, 46 * k), st, color, size=st["big"]),
+        menu_text("Resume", "Resume", (w / 2, 84 * k), st, color, item=True),
+        menu_text("Restart", "Restart level", (w / 2, 84 * k + step), st, color, item=True),
+        menu_text("Title", "Title screen", (w / 2, 84 * k + 2 * step), st, color, item=True),
+    ], st, selected, visible=False, pause=True)
+
+
+GAME_ACTIONS = [action("confirm", "ENTER", "KP_ENTER", "SPACE", "pad:RIGHT_FACE_DOWN"),
+                action("pause", "ESCAPE", "P", "pad:MIDDLE_RIGHT")]
+GAME_GLOBALS = [{"name": "Game", "script": "scripts/game.lua"}]
+
+
+def game_scripts(t, levels, lives=3, score_name="Score", lower_is_better=False, level_word="Level"):
+    """scripts/game.lua (the global Game, with this game's levels) and menu.lua."""
+    cfg = "\n".join([
+        "-- This game (make_templates.py writes it): its levels, in order; the lives a",
+        "-- run starts with; what the score counts; whether a lower result is better;",
+        "-- what a level is called.",
+        "Game.LEVELS = { " + ", ".join(f'"{lv}"' for lv in levels) + " }",
+        f"Game.LIVES = {lives if lives else 'nil'}",
+        f'Game.SCORE_NAME = "{score_name}"',
+        f"Game.LOWER_IS_BETTER = {'true' if lower_is_better else 'false'}",
+        f'Game.LEVEL_WORD = "{level_word}"',
+    ])
+    with open(os.path.join(SCRIPTS, "common", "game.lua")) as f:
+        t.write("scripts/game.lua", f.read().replace("--$CONFIG$", cfg))
+    t.script("menu", src="common")
+
+
 class Template:
     def __init__(self, tid, name, description, icon, order):
         self.id = tid
@@ -244,9 +344,11 @@ def _level2():
 PLATFORMER_LEVEL2 = _level2()
 
 
-def platformer_scene(t, rows, name, next_level=""):
+def platformer_scene(t, rows, name, next_level="", game_level=None):
     """A platformer level (scene children) from a text map:
-    # ground, = one-way platform, o coin, ^ spikes, e enemy, P player, D door."""
+    # ground, = one-way platform, o coin, ^ spikes, e enemy, P player, D door.
+    game_level: the level's number in a game (#329: the HUD shows the level
+    and the lives, Game runs the levels)."""
     T = 18  # tile size
     TILES, CHARS = "textures/tiles.png", "textures/characters.png"
     TG, CG = (20, 9), (9, 3)  # sheet grids
@@ -343,10 +445,15 @@ def platformer_scene(t, rows, name, next_level=""):
         "script": {"path": "scripts/player.lua", "properties": {"fall_limit": H * T + 40}},
         "children": [sprite("Sprite", CHARS, CG, {"idle": ([0], 1, True), "run": ([0, 1], 8, True),
                                                   "jump": ([1], 1, False)}, pos=(0, -3), layer=3)]})
-    children.append({"type": "Node", "name": "HUD", "script": {"path": "scripts/hud.lua"}, "children": [
+    hud = {"type": "Node", "name": "HUD", "script": {"path": "scripts/hud.lua"}, "children": [
         text("Coins", "Coins 0", (8, 4), color="#3c3c5aff"),
         text("Message", "", (160, 70), size=32, align="Center", pivot=(0.5, 0.5), color="#3c3c5aff"),
-    ]})
+    ]}
+    if game_level:
+        hud["script"]["properties"] = {"level": game_level}
+        hud["children"] += [text("LevelText", "", (160, 4), align="Center", pivot=(0.5, 0), color="#3c3c5aff"),
+                            text("Lives", "", (312, 4), align="Right", pivot=(1, 0), color="#3c3c5aff")]
+    children.append(hud)
     return scene(name, children, background=(223, 246, 245, 255))
 
 
@@ -363,15 +470,30 @@ PLATFORMER_ACTIONS = MOVE_ACTIONS + [action("jump", "SPACE", "W", "UP", "pad:RIG
 
 def platformer():
     t = Template("platformer", "Platformer",
-                 "Run and jump through a level: coins, spikes, an enemy to stomp, a door to the end. "
-                 "Pixel art, a camera that follows, a HUD.", "person-running", 1)
+                 "Run and jump through two levels: coins, spikes, enemies to stomp, a door to the end, three "
+                 "lives. A title screen, settings, a pause menu, saved progress.", "person-running", 1)
     t.begin()
     platformer_art(t)
-    t.json("scenes/level1.scene.json", with_touch(platformer_scene(t, PLATFORMER_LEVEL, "level1"), (320, 180),
-                                                  stick=("move_left", "move_right", "", "")))
-    t.json("project.json", project("Platformer", ["scenes/level1.scene.json"], PLATFORMER_ACTIONS))
+    # A small game (#329): the title, two levels (three lives), the result
+    # screen; the furthest level and the best coin count saved.
+    ink, red = "#3c3c5aff", "#c0392bff"
+    levels = ["scenes/level1.scene.json", "scenes/level2.scene.json"]
+    for i, rows in enumerate((PLATFORMER_LEVEL, PLATFORMER_LEVEL2)):
+        sc = platformer_scene(t, rows, f"level{i + 1}", game_level=i + 1)
+        sc["root"]["children"].append(pause_menu(PIXEL_STYLE, red))
+        t.json(levels[i], with_touch(sc, (320, 180), stick=("move_left", "move_right", "", ""), pause="pause"))
+    sky = (223, 246, 245, 255)
+
+    def backdrop():
+        return tilemap("Backdrop", "textures/backgrounds.png", 24, [[(9, 11)[c % 2] for c in range(15)]] +
+                       [[16 + c % 4 for c in range(15)] for _ in range(3)], layer=0, pos=(0, 84))
+    t.json("scenes/title.scene.json", title_scene("Platformer", PIXEL_STYLE, ink, red, sky, [backdrop()]))
+    t.json("scenes/result.scene.json", result_scene(PIXEL_STYLE, ink, red, sky, [backdrop()]))
+    t.json("project.json", project("Platformer", ["scenes/title.scene.json"] + levels + ["scenes/result.scene.json"],
+                                   PLATFORMER_ACTIONS + GAME_ACTIONS, globals_=GAME_GLOBALS))
     for s_ in PLATFORMER_SCRIPTS:
         t.script(s_)
+    game_scripts(t, levels, lives=3, score_name="Coins")
     # Starter physics components (they were snippets built into the editor: #87).
     t.json("components/physics_crate.component.json", {
         "type": "DynamicBodyNode", "name": "PhysicsCrate", "uid": "crate000",
@@ -432,10 +554,12 @@ def adventure():
                                    ["scenes/title.scene.json", "scenes/level1.scene.json", "scenes/level2.scene.json"],
                                    PLATFORMER_ACTIONS + [action("pause", "ESCAPE", "P", "pad:MIDDLE_RIGHT"),
                                                          action("confirm", "ENTER", "SPACE", "pad:RIGHT_FACE_DOWN")]))
+    # (Its own player / hud / goal: the Platformer template's are a game of
+    # their own now - #329.)
     for s_ in PLATFORMER_SCRIPTS:
-        if s_ != "goal":
+        if s_ not in ("goal", "player", "hud"):
             t.script(s_, src="platformer")
-    for s_ in ("goal", "menu"):
+    for s_ in ("goal", "menu", "player", "hud"):
         with open(os.path.join(SCRIPTS, "adventure", s_ + ".lua")) as f:
             t.write(f"scripts/{s_}.lua", f.read())
     with open(os.path.join(SCRIPTS, "adventure", "README.md")) as f:
@@ -555,8 +679,8 @@ def rpg():
 
 def shmup():
     t = Template("shmup", "Shoot 'em up",
-                 "Fly right through waves of enemies: shoot, dodge their bullets, keep your three lives. "
-                 "Pooled bullets, explosions, a scrolling sea, a saved high score.", "jet-fighter", 3)
+                 "Fly right through three stages of enemies: shoot, dodge their bullets, keep your three lives. "
+                 "A title screen, settings, a pause menu, a saved high score.", "jet-fighter", 3)
     t.begin()
     t.art("pixel-shmup/ships_packed.png", "textures/ships.png")
     t.art("pixel-shmup/tiles_packed.png", "textures/tiles.png")
@@ -589,29 +713,46 @@ def shmup():
             "children": [{**sprite("Sprite", SHIPS, SG, {"idle": ([cell], 1, True)}, layer=2), "rotation": 90}]})
     t.json("components/explosion.component.json", {
         "type": "Node", "name": "Explosion", "script": {"path": "scripts/explosion.lua"}, "children": [explosion]})
-    children = [
-        {"type": "CameraNode", "name": "Camera", "position": [160, 90], "properties": {"isCurrent": True}},
-        {**tilemap("Sea", TILES, 16, sea, layer=0, pos=(0, -6)),
-         "script": {"path": "scripts/scroll.lua", "properties": {"speed": 20, "wrap": 320}}},
-        {"type": "Node", "name": "Player", "position": [40, 90], "tags": ["player"],
-         "script": {"path": "scripts/player.lua"},
-         "children": [{**sprite("Sprite", SHIPS, SG, {"idle": ([1], 1, True)}, layer=2), "rotation": -90}]},
-        {"type": "Node", "name": "Spawner", "script": {"path": "scripts/spawner.lua"}},
-        {"type": "Node", "name": "Shots"},  # bullets, enemies, explosions go here
-        {"type": "Node", "name": "HUD", "script": {"path": "scripts/hud.lua"}, "children": [
-            text("Score", "Score 0", (6, 2), color="#1d3b4cff"),
-            text("High", "Best 0", (314, 2), align="Right", pivot=(1, 0), color="#1d3b4cff"),
-            text("Lives", "Lives 3", (6, 162), color="#1d3b4cff"),
-            text("Message", "", (160, 80), size=32, align="Center", pivot=(0.5, 0.5), color="#1d3b4cff"),
-        ]},
-    ]
-    t.json("scenes/game.scene.json", with_touch(scene("game", children, background=(140, 214, 225, 255)), (320, 180),
-                                                buttons=(("fire", "F"),)))
-    t.json("project.json", project("Shoot 'em up", ["scenes/game.scene.json"], MOVE_ACTIONS + [
-        action("fire", "SPACE", "J", "pad:RIGHT_FACE_DOWN"),
-    ], gravity=(0, 0)))
+    ink, red, sky = "#1d3b4cff", "#c0392bff", (140, 214, 225, 255)
+
+    def sea_map():
+        return {**tilemap("Sea", TILES, 16, sea, layer=0, pos=(0, -6)),
+                "script": {"path": "scripts/scroll.lua", "properties": {"speed": 20, "wrap": 320}}}
+    # A small game (#329): three stages - the first down the middle, then
+    # sweeping waves with shooters - three lives for the whole run, the best
+    # score saved; the title, a pause menu, the result screen.
+    STAGES = [{"count": 6, "interval": 0.8, "shooter_every": 0, "spread": 0},
+              {"count": 8, "interval": 0.9, "shooter_every": 4, "spread": 1},
+              {"count": 10, "interval": 0.75, "shooter_every": 3, "spread": 1}]
+    levels = [f"scenes/stage{i + 1}.scene.json" for i in range(len(STAGES))]
+    for i, props in enumerate(STAGES):
+        children = [
+            {"type": "CameraNode", "name": "Camera", "position": [160, 90], "properties": {"isCurrent": True}},
+            sea_map(),
+            {"type": "Node", "name": "Player", "position": [40, 90], "tags": ["player"],
+             "script": {"path": "scripts/player.lua"},
+             "children": [{**sprite("Sprite", SHIPS, SG, {"idle": ([1], 1, True)}, layer=2), "rotation": -90}]},
+            {"type": "Node", "name": "Spawner", "script": {"path": "scripts/spawner.lua", "properties": {"stage": i + 1, **props}}},
+            {"type": "Node", "name": "Shots"},  # bullets, enemies, explosions go here
+            {"type": "Node", "name": "HUD", "script": {"path": "scripts/hud.lua"}, "children": [
+                text("Score", "Score 0", (6, 2), color=ink),
+                text("Stage", "", (160, 2), align="Center", pivot=(0.5, 0), color=ink),
+                text("High", "Best 0", (314, 2), align="Right", pivot=(1, 0), color=ink),
+                text("Lives", "Lives 3", (6, 162), color=ink),
+                text("Message", "", (160, 80), size=32, align="Center", pivot=(0.5, 0.5), color=ink),
+            ]},
+            pause_menu(PIXEL_STYLE, red),
+        ]
+        t.json(levels[i], with_touch(scene(f"stage{i + 1}", children, background=sky), (320, 180),
+                                     buttons=(("fire", "F"),), pause="pause"))
+    t.json("scenes/title.scene.json", title_scene("Shoot 'em up", PIXEL_STYLE, ink, red, sky, [sea_map()], level_word="Stage"))
+    t.json("scenes/result.scene.json", result_scene(PIXEL_STYLE, ink, red, sky, [sea_map()]))
+    t.json("project.json", project("Shoot 'em up", ["scenes/title.scene.json"] + levels + ["scenes/result.scene.json"],
+                                   MOVE_ACTIONS + [action("fire", "SPACE", "J", "pad:RIGHT_FACE_DOWN")] + GAME_ACTIONS,
+                                   gravity=(0, 0), globals_=GAME_GLOBALS))
     for s_ in ("player", "bullet", "enemy", "spawner", "explosion", "scroll", "hud"):
         t.script(s_)
+    game_scripts(t, levels, lives=3, score_name="Score", level_word="Stage")
     with open(os.path.join(SCRIPTS, "shmup", "README.md")) as f:
         t.write("README.md", f.read())
     return t
@@ -675,10 +816,13 @@ def sokoban_solve(rows, limit=2_000_000):
 
 def puzzle():
     t = Template("puzzle", "Puzzle (Sokoban)",
-                 "Push every crate onto a target. Three levels written as text in a script, undo, restart, "
-                 "a move counter, smooth moves. Add levels by typing them.", "puzzle-piece", 4)
+                 "Push every crate onto a target. Three levels written as text in a script, move limits, undo, "
+                 "restart, smooth moves. A title screen, settings, a pause menu, saved progress.", "puzzle-piece", 4)
+    limits = []
     for i, lv in enumerate(PUZZLE_LEVELS):
-        assert sokoban_solve(lv) is not None, f"puzzle level {i + 1} can't be solved"
+        sol = sokoban_solve(lv)
+        assert sol is not None, f"puzzle level {i + 1} can't be solved"
+        limits.append(2 * len(sol) + 6)  # (the move limit: room for a few mistakes)
     t.begin()
     for name in ("ground", "wall", "crate", "crate_on_goal", "goal", "player"):
         t.art(f"sokoban/{name}.png", f"textures/{name}.png")
@@ -686,21 +830,33 @@ def puzzle():
     # The levels go into the script as Lua strings.
     lua_levels = ",\n".join("    {\n" + ",\n".join(f'        "{row}"' for row in lv) + ",\n    }" for lv in PUZZLE_LEVELS)
     with open(os.path.join(SCRIPTS, "puzzle", "puzzle.lua")) as f:
-        t.write("scripts/puzzle.lua", f.read().replace("--$LEVELS$", lua_levels))
+        t.write("scripts/puzzle.lua", f.read().replace("--$LEVELS$", lua_levels)
+                .replace("--$LIMITS$", ", ".join(str(n) for n in limits)))
+    # A small game (#329): the three levels with move limits (out of moves:
+    # game over), the furthest level and each level's fewest moves saved;
+    # the title, a pause menu, the result screen.
+    ink, red, sand = "#3b2a20ff", "#c0392bff", (229, 207, 167, 255)
     children = [
         {"type": "CameraNode", "name": "Camera", "position": [640, 360], "properties": {"isCurrent": True}},
         {"type": "Node", "name": "Board", "script": {"path": "scripts/puzzle.lua", "properties": {"start_level": 1}}},
-        text("Level", "Level 1", (24, 16), size=32, color="#3b2a20ff"),
-        text("Moves", "Moves 0", (1256, 16), size=32, align="Right", pivot=(1, 0), color="#3b2a20ff"),
-        text("Help", "Arrows / WASD move   Z undo   R restart", (640, 690), size=32, align="Center", pivot=(0.5, 1), color="#3b2a20aa"),
-        text("Message", "", (640, 80), size=48, align="Center", pivot=(0.5, 0.5), color="#3b2a20ff"),
+        text("Level", "Level 1", (24, 16), size=32, color=ink),
+        text("Moves", "Moves 0", (1256, 16), size=32, align="Right", pivot=(1, 0), color=ink),
+        text("Help", "Arrows / WASD move   Z undo   R restart   Esc pause", (640, 690), size=32, align="Center",
+             pivot=(0.5, 1), color="#3b2a20aa"),
+        text("Message", "", (640, 80), size=48, align="Center", pivot=(0.5, 0.5), color=ink),
+        pause_menu(HD_STYLE, red),
     ]
-    t.json("scenes/puzzle.scene.json", with_touch(scene("puzzle", children, background=(229, 207, 167, 255)), (1280, 720),
-                                                  buttons=(("undo", "Undo"), ("restart", "R"))))
-    t.json("project.json", project("Puzzle", ["scenes/puzzle.scene.json"], MOVE_ACTIONS + [
+    t.json("scenes/puzzle.scene.json", with_touch(scene("puzzle", children, background=sand), (1280, 720),
+                                                  buttons=(("undo", "Undo"), ("restart", "R")), pause="pause"))
+    t.json("scenes/title.scene.json", title_scene("Puzzle", HD_STYLE, ink, red, sand))
+    t.json("scenes/result.scene.json", result_scene(HD_STYLE, ink, red, sand))
+    t.json("project.json", project("Puzzle", ["scenes/title.scene.json", "scenes/puzzle.scene.json", "scenes/result.scene.json"],
+                                   MOVE_ACTIONS + [
         action("undo", "Z", "U", "BACKSPACE", "pad:RIGHT_FACE_RIGHT"),
         action("restart", "R", "pad:RIGHT_FACE_UP"),
-    ], virtual=(1280, 720), gravity=(0, 0), pixel=False))
+    ] + GAME_ACTIONS, virtual=(1280, 720), gravity=(0, 0), pixel=False, globals_=GAME_GLOBALS))
+    # (Every level is the puzzle scene: the board builds the run's level.)
+    game_scripts(t, ["scenes/puzzle.scene.json"] * len(PUZZLE_LEVELS), lives=None, score_name="Moves", lower_is_better=True)
     with open(os.path.join(SCRIPTS, "puzzle", "README.md")) as f:
         t.write("README.md", f.read())
     return t

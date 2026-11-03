@@ -1,0 +1,734 @@
+{
+ "name": "stage2",
+ "background": [
+  140,
+  214,
+  225,
+  255
+ ],
+ "root": {
+  "type": "Node",
+  "name": "root",
+  "children": [
+   {
+    "type": "CameraNode",
+    "name": "Camera",
+    "position": [
+     160,
+     90
+    ],
+    "properties": {
+     "isCurrent": true
+    }
+   },
+   {
+    "type": "TileMapNode",
+    "name": "Sea",
+    "position": [
+     0,
+     -6
+    ],
+    "layer": 0,
+    "z_index": 0,
+    "tilemap": {
+     "tileset": "textures/tiles.png",
+     "tile_size": [
+      16,
+      16
+     ],
+     "map_size": [
+      40,
+      12
+     ],
+     "data": [
+      [
+       42,
+       42
+      ],
+      [
+       1,
+       37
+      ],
+      [
+       1,
+       38
+      ],
+      [
+       1,
+       39
+      ],
+      [
+       17,
+       42
+      ],
+      [
+       1,
+       37
+      ],
+      [
+       1,
+       38
+      ],
+      [
+       1,
+       39
+      ],
+      [
+       17,
+       42
+      ],
+      [
+       1,
+       49
+      ],
+      [
+       1,
+       50
+      ],
+      [
+       1,
+       51
+      ],
+      [
+       1,
+       39
+      ],
+      [
+       16,
+       42
+      ],
+      [
+       1,
+       49
+      ],
+      [
+       1,
+       50
+      ],
+      [
+       1,
+       51
+      ],
+      [
+       1,
+       39
+      ],
+      [
+       16,
+       42
+      ],
+      [
+       1,
+       61
+      ],
+      [
+       1,
+       62
+      ],
+      [
+       1,
+       63
+      ],
+      [
+       1,
+       51
+      ],
+      [
+       16,
+       42
+      ],
+      [
+       1,
+       61
+      ],
+      [
+       1,
+       62
+      ],
+      [
+       1,
+       63
+      ],
+      [
+       1,
+       51
+      ],
+      [
+       17,
+       42
+      ],
+      [
+       1,
+       61
+      ],
+      [
+       1,
+       62
+      ],
+      [
+       1,
+       63
+      ],
+      [
+       17,
+       42
+      ],
+      [
+       1,
+       61
+      ],
+      [
+       1,
+       62
+      ],
+      [
+       1,
+       63
+      ],
+      [
+       65,
+       42
+      ],
+      [
+       1,
+       37
+      ],
+      [
+       1,
+       38
+      ],
+      [
+       1,
+       39
+      ],
+      [
+       17,
+       42
+      ],
+      [
+       1,
+       37
+      ],
+      [
+       1,
+       38
+      ],
+      [
+       1,
+       39
+      ],
+      [
+       17,
+       42
+      ],
+      [
+       1,
+       49
+      ],
+      [
+       1,
+       50
+      ],
+      [
+       1,
+       51
+      ],
+      [
+       1,
+       39
+      ],
+      [
+       16,
+       42
+      ],
+      [
+       1,
+       49
+      ],
+      [
+       1,
+       50
+      ],
+      [
+       1,
+       51
+      ],
+      [
+       1,
+       39
+      ],
+      [
+       16,
+       42
+      ],
+      [
+       1,
+       61
+      ],
+      [
+       1,
+       62
+      ],
+      [
+       1,
+       63
+      ],
+      [
+       1,
+       51
+      ],
+      [
+       16,
+       42
+      ],
+      [
+       1,
+       61
+      ],
+      [
+       1,
+       62
+      ],
+      [
+       1,
+       63
+      ],
+      [
+       1,
+       51
+      ],
+      [
+       17,
+       42
+      ],
+      [
+       1,
+       61
+      ],
+      [
+       1,
+       62
+      ],
+      [
+       1,
+       63
+      ],
+      [
+       17,
+       42
+      ],
+      [
+       1,
+       61
+      ],
+      [
+       1,
+       62
+      ],
+      [
+       1,
+       63
+      ],
+      [
+       85,
+       42
+      ]
+     ]
+    },
+    "properties": {
+     "solid": false
+    },
+    "script": {
+     "path": "scripts/scroll.lua",
+     "properties": {
+      "speed": 20,
+      "wrap": 320
+     }
+    }
+   },
+   {
+    "type": "Node",
+    "name": "Player",
+    "position": [
+     40,
+     90
+    ],
+    "tags": [
+     "player"
+    ],
+    "script": {
+     "path": "scripts/player.lua"
+    },
+    "children": [
+     {
+      "type": "AnimationPlayerNode",
+      "name": "Sprite",
+      "position": [
+       0,
+       0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 2,
+      "z_index": 0,
+      "fps": 8,
+      "animation": "idle",
+      "default_animation": "idle",
+      "animations": [
+       {
+        "name": "idle",
+        "loop": true,
+        "fps": 1,
+        "sheet": "textures/ships.png",
+        "grid": [
+         4,
+         6
+        ],
+        "cells": [
+         1
+        ],
+        "start": 0,
+        "end": 0
+       }
+      ],
+      "properties": {
+       "autoplay": true
+      },
+      "rotation": -90
+     }
+    ]
+   },
+   {
+    "type": "Node",
+    "name": "Spawner",
+    "script": {
+     "path": "scripts/spawner.lua",
+     "properties": {
+      "stage": 2,
+      "count": 8,
+      "interval": 0.9,
+      "shooter_every": 4,
+      "spread": 1
+     }
+    }
+   },
+   {
+    "type": "Node",
+    "name": "Shots"
+   },
+   {
+    "type": "Node",
+    "name": "HUD",
+    "script": {
+     "path": "scripts/hud.lua"
+    },
+    "children": [
+     {
+      "type": "TextNode",
+      "name": "Score",
+      "position": [
+       6,
+       2
+      ],
+      "pivot": [
+       0,
+       0
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Score 0",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 16,
+       "align": "Left",
+       "color": "#1d3b4cff"
+      }
+     },
+     {
+      "type": "TextNode",
+      "name": "Stage",
+      "position": [
+       160,
+       2
+      ],
+      "pivot": [
+       0.5,
+       0
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 16,
+       "align": "Center",
+       "color": "#1d3b4cff"
+      }
+     },
+     {
+      "type": "TextNode",
+      "name": "High",
+      "position": [
+       314,
+       2
+      ],
+      "pivot": [
+       1,
+       0
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Best 0",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 16,
+       "align": "Right",
+       "color": "#1d3b4cff"
+      }
+     },
+     {
+      "type": "TextNode",
+      "name": "Lives",
+      "position": [
+       6,
+       162
+      ],
+      "pivot": [
+       0,
+       0
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Lives 3",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 16,
+       "align": "Left",
+       "color": "#1d3b4cff"
+      }
+     },
+     {
+      "type": "TextNode",
+      "name": "Message",
+      "position": [
+       160,
+       80
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 32,
+       "align": "Center",
+       "color": "#1d3b4cff"
+      }
+     }
+    ]
+   },
+   {
+    "type": "Node",
+    "name": "PauseMenu",
+    "layer": 7,
+    "script": {
+     "path": "scripts/menu.lua",
+     "properties": {
+      "kind": "pause",
+      "item_width": 170,
+      "item_height": 16,
+      "selected": "#c0392bff"
+     }
+    },
+    "children": [
+     {
+      "type": "UIContainerNode",
+      "name": "Shade",
+      "layer": 7,
+      "position": [
+       0,
+       0
+      ],
+      "properties": {
+       "size": [
+        320,
+        180
+       ],
+       "drawBackground": true,
+       "drawBorder": false,
+       "showHeader": false,
+       "backgroundColor": "#14141ec8"
+      }
+     },
+     {
+      "type": "TextNode",
+      "name": "Heading",
+      "position": [
+       160.0,
+       46.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Paused",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 32,
+       "align": "Center",
+       "color": "#ffffffff"
+      }
+     },
+     {
+      "type": "TextNode",
+      "name": "Resume",
+      "position": [
+       160.0,
+       84.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Resume",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 16,
+       "align": "Center",
+       "color": "#ffffffff"
+      },
+      "tags": [
+       "item"
+      ]
+     },
+     {
+      "type": "TextNode",
+      "name": "Restart",
+      "position": [
+       160.0,
+       102.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Restart level",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 16,
+       "align": "Center",
+       "color": "#ffffffff"
+      },
+      "tags": [
+       "item"
+      ]
+     },
+     {
+      "type": "TextNode",
+      "name": "Title",
+      "position": [
+       160.0,
+       120.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Title screen",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 16,
+       "align": "Center",
+       "color": "#ffffffff"
+      },
+      "tags": [
+       "item"
+      ]
+     }
+    ],
+    "visible": false,
+    "pause_mode": "always"
+   },
+   {
+    "type": "ScreenLayerNode",
+    "name": "TouchLeft",
+    "properties": {
+     "anchor": "BottomLeft"
+    },
+    "children": [
+     {
+      "type": "TouchJoystickNode",
+      "name": "TouchStick",
+      "position": [
+       80.0,
+       -54.0
+      ],
+      "properties": {
+       "radius": 17.5,
+       "knobRadius": 7.5,
+       "floating": true,
+       "area": [
+        160.0,
+        108.0
+       ],
+       "actionLeft": "move_left",
+       "actionRight": "move_right",
+       "actionUp": "move_up",
+       "actionDown": "move_down"
+      }
+     }
+    ]
+   },
+   {
+    "type": "ScreenLayerNode",
+    "name": "TouchRight",
+    "properties": {
+     "anchor": "BottomRight"
+    },
+    "children": [
+     {
+      "type": "TouchButtonNode",
+      "name": "TouchFire",
+      "position": [
+       -27.5,
+       -27.5
+      ],
+      "properties": {
+       "radius": 13.0,
+       "action": "fire",
+       "label": "F",
+       "fontSize": 12
+      }
+     }
+    ]
+   },
+   {
+    "type": "ScreenLayerNode",
+    "name": "TouchTop",
+    "properties": {
+     "anchor": "TopRight"
+    },
+    "children": [
+     {
+      "type": "TouchButtonNode",
+      "name": "TouchPause",
+      "position": [
+       -15.0,
+       15.0
+      ],
+      "properties": {
+       "radius": 8.5,
+       "action": "pause",
+       "label": "II",
+       "fontSize": 8
+      }
+     }
+    ]
+   }
+  ]
+ }
+}

@@ -463,6 +463,13 @@ Runner_Start :: proc(opts: Run_Options) -> (^Runner_State, bool) {
 	rl.SetTraceLogLevel(.ERROR) // raylib warns once per oversized icon glyph (thousands of lines)
 	when ODIN_OS == .JS do rl.SetTraceLogLevel(.WARNING) // (the browser console: shader / GL problems)
 	titleC := strings.clone_to_cstring(winTitle, context.temp_allocator)
+	// (Asked first: raylib aborts inside InitWindow when GLFW can't make the
+	// window on a machine with a monitor - gl_window_check.odin.)
+	if glOk, why := Window_CanOpenGL(video.msaa); !glOk {
+		log.errorf("Could not open the game window (OpenGL 3.3 is needed): %s", why)
+		Runner_Stop(rs)
+		return nil, false
+	}
 	rl.InitWindow(winW, winH, titleC)
 	if Runner_AfterWindow != nil do Runner_AfterWindow()
 	if !rl.IsWindowReady() {
@@ -734,7 +741,6 @@ Runner_Stop :: proc(rs: ^Runner_State) {
 	delete(rs.inputEvents)
 	Pixel_Release()
 	if rs.fontsLoaded do UnloadEngineFonts()
-	if rs.audioOpen do rl.CloseAudioDevice()
 	Post_Unload()
 	Render_ReleaseBatching()
 	if runnerTarget.id != 0 {
@@ -746,6 +752,10 @@ Runner_Stop :: proc(rs: ^Runner_State) {
 	if Tests_Active() do Tests_Shutdown(rs.game)
 	Recorder_Discard()
 	rs.game->terminate()
+	// (After the game: its teardown stops the mixer's stream and unloads its
+	// sounds, which lock raylib's audio mutex - gone once the device is
+	// closed: Android's libc aborts on that, #384.)
+	if rs.audioOpen do rl.CloseAudioDevice()
 	free(rs)
 }
 

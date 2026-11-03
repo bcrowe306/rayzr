@@ -14,7 +14,9 @@ import "base:runtime"
 import "core:c"
 import "core:fmt"
 import "core:log"
+import "core:strings"
 import e "../../engine"
+import os "../../engine/osx"
 import rl "vendor:raylib"
 
 @(default_calling_convention = "c")
@@ -48,6 +50,35 @@ main_start :: proc "c" () {
 	context = web_context()
 	opts := e.Run_Options{projectPath = "/game.rayzr", userDataDir = "/save"}
 	log.info("[web] starting /game.rayzr")
+	rs, ok := e.Runner_Start(opts)
+	if !ok {
+		log.error("The game could not start (is game.rayzr there?)")
+		return
+	}
+	state.rs = rs
+	log.info("[web] started")
+}
+
+// main_start_test: main_start with runner arguments (--frames,
+// --input-script, --dump-scene, --scene, --user-data...) read from
+// /test/args.txt, one a line - the page's ?test mode, for scripted
+// play-throughs in headless Chrome (scripts/templates/test_templates.py
+// --web). The game is still /game.rayzr and its saves /save unless the
+// arguments say otherwise.
+@(export)
+main_start_test :: proc "c" () {
+	context = web_context()
+	text, err := os.read_entire_file("/test/args.txt")
+	if err != nil {
+		log.errorf("[web] no /test/args.txt: %v", err)
+		return
+	}
+	args := make([dynamic]string)
+	for line in strings.split_lines(string(text)) do if line != "" do append(&args, line)
+	opts := e.Engine_ParseRunArgs(args[:])
+	if opts.projectPath == "" do opts.projectPath = "/game.rayzr"
+	if opts.userDataDir == "" do opts.userDataDir = "/save"
+	log.infof("[web] test run: %v", args[:])
 	rs, ok := e.Runner_Start(opts)
 	if !ok {
 		log.error("The game could not start (is game.rayzr there?)")

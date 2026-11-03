@@ -1,6 +1,10 @@
 -- Sokoban: push every crate onto a target. The board is built from the
 -- level text below (TextureNodes made at runtime), moves slide with a
--- tween, every move can be undone. Finish a level to go to the next.
+-- tween, every move can be undone. Each level has a move limit: run out
+-- before it's solved and the game is over. Finish a level to go to the next
+-- (Game: unlocked and its fewest moves saved; the result screen after the
+-- last). The level played is the run's (Game.run.level); Start Level when
+-- the scene is played on its own (F6).
 --
 -- Level text: # wall, . target, $ crate, * crate on a target, @ you,
 -- + you on a target, spaces are floor (only the inside gets a floor tile).
@@ -20,11 +24,15 @@ local LEVELS = {
 --$LEVELS$
 }
 
+-- Each level's move limit (make_templates.py: twice its shortest solution and 6 more).
+local LIMITS = { --$LIMITS$ }
+
 local DIRS = { move_up = { 0, -1 }, move_down = { 0, 1 }, move_left = { -1, 0 }, move_right = { 1, 0 } }
 
 function Puzzle:ready()
     self.hold, self.held = 0, nil
-    self:load(self.start_level)
+    self.run = Game:ensure_run(self.start_level)
+    self:load(self.run.level)
 end
 
 -- key: a grid cell's table key.
@@ -44,13 +52,14 @@ function Puzzle:pos(c, r)
     return self.ox + (c - 1) * self.tile, self.oy + (r - 1) * self.tile
 end
 
--- load: builds level n (1-based; wraps to 1 after the last).
+-- load: builds level n (1-based).
 function Puzzle:load(n)
-    if n > #LEVELS then n = 1 end
+    n = math.max(1, math.min(n, #LEVELS))
     self.level = n
+    self.limit = LIMITS[n]
     for _, child in ipairs(self.node:get_children()) do child:destroy() end
     self.walls, self.goals, self.crates, self.history = {}, {}, {}, {}
-    self.moves, self.done = 0, false
+    self.moves, self.done, self.lost = 0, false, false
     local rows = LEVELS[n]
     local w, h = 0, #rows
     for _, row in ipairs(rows) do w = math.max(w, #row) end
@@ -96,7 +105,7 @@ end
 
 function Puzzle:refresh()
     Scene.find_node("Level").text = "Level " .. self.level .. " / " .. #LEVELS
-    Scene.find_node("Moves").text = "Moves " .. self.moves
+    Scene.find_node("Moves").text = "Moves " .. self.moves .. " / " .. self.limit
     local on = 0
     for k, crate in pairs(self.crates) do
         local on_goal = self.goals[k] == true
@@ -108,7 +117,10 @@ function Puzzle:refresh()
     if on == total and not self.done then
         self.done, self.next_in = true, 1.0
         Scene.find_node("Message").text = self.level == #LEVELS and "All levels done!" or "Solved!"
-        Save.set("best_level", math.max(Save.get("best_level", 0), self.level))
+    elseif not self.done and self.moves >= self.limit then
+        -- Out of moves: the game is over (a moment to see it first).
+        self.done, self.lost, self.next_in = true, true, 1.5
+        Scene.find_node("Message").text = "Out of moves!"
     elseif not self.done then
         Scene.find_node("Message").text = ""
     end
@@ -165,7 +177,15 @@ end
 function Puzzle:update(dt)
     if self.done then
         self.next_in = self.next_in - dt
-        if self.next_in <= 0 then self:load(self.level + 1) end
+        if self.next_in <= 0 then
+            self.next_in = 1e9
+            if self.lost then
+                Game:finish(false)
+            else
+                Game:add_score(self.moves)
+                Game:level_done(self.level, self.moves) -- (the next level: this scene again)
+            end
+        end
         return
     end
     if Input.is_action_pressed("restart") then self:load(self.level) return end

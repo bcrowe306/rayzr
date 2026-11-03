@@ -1,6 +1,6 @@
 {
   "name": "Shoot 'em up",
-  "description": "Fly right through waves of enemies: shoot, dodge their bullets, keep your three lives. Pooled bullets, explosions, a scrolling sea, a saved high score.",
+  "description": "Fly right through three stages of enemies: shoot, dodge their bullets, keep your three lives. A title screen, settings, a pause menu, a saved high score.",
   "icon": "jet-fighter",
   "order": 3
 }

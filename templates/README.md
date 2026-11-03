@@ -7,10 +7,10 @@ Character's art was drawn for Rayzr.
 
 | Template | |
 |---|---|
-| [Platformer](platformer/README.md) | Run and jump through a level: coins, spikes, enemies to stomp, a door to the end |
+| [Platformer](platformer/README.md) | Run and jump through two levels: coins, spikes, enemies to stomp, three lives; a title, settings, a pause menu, saved progress |
 | [Top-down RPG](rpg/README.md) | Explore a small dungeon: talk to a wizard, fight slimes, find the key, unlock the door and escape |
-| [Shoot 'em up](shmup/README.md) | Fly through waves of enemies: pooled bullets, explosions, a saved high score |
-| [Puzzle (Sokoban)](puzzle/README.md) | Push every crate onto a target; levels typed as text, undo, a move counter |
+| [Shoot 'em up](shmup/README.md) | Fly through three stages of enemies: pooled bullets, explosions, three lives; a title, settings, a pause menu, a saved high score |
+| [Puzzle (Sokoban)](puzzle/README.md) | Push every crate onto a target: three levels typed as text, move limits, undo; a title, settings, a pause menu, saved progress |
 | [Visual Novel](visual_novel/README.md) | A branching story: characters, backgrounds, choices, three endings; save slots, a backlog, auto and skip |
 | [Isometric Dungeon](dungeon/README.md) | Click to walk (path finding) or WASD in an isometric room; walk behind pillars and walls; a chest, a key, a door |
 | [Hex Island](hex/README.md) | A hex-grid island: click a hex to walk there hex by hex round water and trees, step with the keys, pick every flower |
