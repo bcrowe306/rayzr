@@ -1,0 +1,50 @@
+# #267 part 2: the shape tools drag out rectangles (rounded), ellipses,
+# polygons and stars - plain paths in the SVG, editable with the node tool;
+# a click without a drag draws nothing.
+wait 5
+key escape
+click @hier.add
+type vector
+click @addnode.create
+expect selected == VectorShape
+click @insp.vec.draw
+expect vd.active == true
+
+click @vd.tool:rect
+drag @node:VectorShape+-120,-80 @node:VectorShape+-20,-10
+expect vd.shapes == 1
+expect vd.cmds == MLLLZ
+dblclick @vd.radius
+key cmd+a
+type 12
+key enter
+drag @node:VectorShape+20,-80 @node:VectorShape+120,-10
+expect vd.shapes == 2
+expect vd.cmds == MLCLCLCLCZ
+
+click @vd.tool:ellipse
+drag @node:VectorShape+-120,10 @node:VectorShape+-20,80
+expect vd.shapes == 3
+expect vd.cmds == MCCCCZ
+
+click @vd.tool:polygon
+drag @node:VectorShape+20,10 @node:VectorShape+80,80
+expect vd.shapes == 4
+expect vd.cmds == MLLLLZ
+
+click @vd.tool:star
+drag @node:VectorShape+90,10 @node:VectorShape+160,80
+expect vd.shapes == 5
+expect vd.cmds == MLLLLLLLLLZ
+
+# A click alone: nothing.
+click @node:VectorShape+0,120
+expect vd.shapes == 5
+expect file:art/vectorshape.svg contains <path d="M
+screenshot primitives
+
+# They're ordinary paths: the node tool edits the star's anchors.
+click @vd.tool:node
+click @node:VectorShape+125,45
+expect vd.anchors == 10
+key escape
