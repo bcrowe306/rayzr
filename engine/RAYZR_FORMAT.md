@@ -235,11 +235,12 @@ this is the file's full shape. Code: `Gen_GraphParse` / `Gen_GraphSerialize`
 | `id` | integer > 0 | required | Unique in the file; links and `output` name nodes by it. |
 | `type` | string | required | A built-in type (below) or the name of a type registered from Odin (`Gen_RegisterNode`). An unknown type fails the whole file. |
 | `inputs` | object | optional | Port name -> the id of the node it reads. A port not listed reads zeros. A cycle is an error when generating. |
-| `params` | object | optional | Parameter name -> value. A number; `true` / `false` for toggles (also 1 / 0); a choice parameter by name (`"op": "max"`; its index also works). Missing parameters take their defaults; unknown ones are ignored. Writers write every parameter (except a `tile_output`'s `writes` when it is `tiles`). |
+| `params` | object | optional | Parameter name -> value. A number; `true` / `false` for toggles (also 1 / 0); a choice parameter by name (`"op": "max"`; its index also works). Missing parameters take their defaults; unknown ones are ignored. Writers write every parameter (except a `tile_output`'s `writes` when it is `tiles` and `tile_ids` when it is off). |
 | `pos` | `[x, y]` | optional | Where the editor draws it (canvas units); not written when `[0, 0]`. |
 | `rules`, `patterns`, `tileset`, `layer` | | `tile_output` | Below. |
 | `component` | string | `entity_output` | The `.component.json` it places. |
 | `script` | string | `script` | The `.lua` file (returning `function(ctx)`). |
+| `sample`, `wang` | | `wfc` | Below. |
 
 ### Node types and parameters
 
@@ -260,6 +261,7 @@ mixes in its id).
 | `lines` | | `count` (6), `min_length` (6), `max_length` (20), `thickness` (1), `direction`: `horizontal` / `vertical` / `both` / `any` (default `both`), `seed` (0) |
 | `rectangles` | | `count` (5), `min_size` (4), `max_size` (12), `thickness` (1), `filled` (false), `seed` (0) |
 | `circles` | | `count` (5), `min_radius` (3), `max_radius` (8), `thickness` (1), `filled` (false), `seed` (0) |
+| `wfc` | `mask`, `fixed` | `rules`: `sample` / `wang`, `wrap` (false), `attempts` (10, 1-100), `seed` (0); and `sample`, `wang` (#171) |
 | `threshold` | `in` | `value` (0.5), `invert` (false) |
 | `invert` | `in` | |
 | `remap` | `in` | `from_min` (0), `from_max` (1), `to_min` (0), `to_max` (1) |
@@ -277,7 +279,7 @@ mixes in its id).
 | `check` | `in` | `min_open` (0.25), `connected` (true), `open`, `diagonal` |
 | `script` | `a`, `b` | `p1`..`p4` (0), `seed` (0); and `script` |
 | *(registered)* | as registered | as registered |
-| `tile_output` | `in` | `empty` (-1), `tile_w` (16), `tile_h` (16), `writes`: `tiles` / `components` (#171, part 3) |
+| `tile_output` | `in` | `empty` (-1), `tile_w` (16), `tile_h` (16), `writes`: `tiles` / `components` (#171, part 3), `tile_ids` (false; #171) |
 | `entity_output` | `in` | `max` (0 = every point); and `component` |
 
 ### Tile output
@@ -301,6 +303,44 @@ mixes in its id).
   What a generation paints is tagged `levelgen` and replaced by the next.
   Such an output is never the default `output`.
 
+`params.tile_ids` (#171, off by default and then not written): its input
+holds tile ids (a `wfc` node's) - each cell takes the tile its value
+rounds to, a negative value `empty`; `rules` are skipped, `patterns` still
+run (their `min`..`max` then compare tile ids).
+
+### Wave Function Collapse (`wfc`)
+
+Its grid holds **tile ids**, not 0..1 values (-1 where nothing goes), for a
+`tile_output` with `tile_ids` on. Which tile may sit next to which, in each
+of the four directions, comes from `params.rules`:
+
+- `sample` (the default): learned from `sample` - every pair of neighbours
+  in it (left-right and above-below; with `wrap`, also across its edges) is
+  allowed, nothing else; how often a tile appears in it is its weight.
+- `wang`: from `wang` - two tiles may touch where their touching edges have
+  the same colour; each tile's `weight` is how often it is picked.
+
+| Key | | |
+|---|---|---|
+| `sample` | object | `{"size": [w, h], "cells": [...]}`: w x h tile ids, row by row; -1 is an unpainted cell (nothing learned from it). Each side 1-64 (default 8 x 8); missing cells are unpainted. Missing: an unpainted 8 x 8 (as a new node has). Written once a cell is painted or the size isn't 8 x 8. |
+| `wang` | array | Each `{"tile", "edges", "weight"}`: a tile id, its edges' colours `[north, east, south, west]` (integers) and a weight (default 1). Written only when there are any. |
+
+Inputs: `mask` (optional: only its cells >= 0.5 are filled, -1 elsewhere,
+and they don't constrain their neighbours), `fixed` (optional: a cell whose
+value rounds to one of the rules' tiles keeps it - e.g. another `wfc`
+node's). A contradiction (a cell no tile fits) starts again with the next
+seed, `attempts` times, then fails the node with an error ("a
+contradiction on every try") - which a Level Generator with Random Seed
+answers by trying other seeds, as for `check`. The same graph and seed give
+the same tiles.
+
+```json
+{"id": 4, "type": "wfc", "inputs": {"mask": 3}, "params": {"attempts": 20},
+ "sample": {"size": [3, 3], "cells": [45, 45, 176, 45, 176, 476, 176, 476, 476]}},
+{"id": 5, "type": "tile_output", "inputs": {"in": 4}, "params": {"tile_ids": true},
+ "rules": [], "tileset": "textures/Tiles.png"}
+```
+
 ### Frames
 
 Each `{"title", "pos", "size", "color"}`: the title (string), the top-left
@@ -312,11 +352,13 @@ middles are inside it.
 ### Compatibility
 
 Format 1 since #326. The keys added later - `frames`, `noise.type`,
-`poisson_scatter`, `params.writes` and a rule's `component` - are optional
+`poisson_scatter`, `params.writes` and a rule's `component`, the `wfc`
+node (with its `sample` and `wang`) and `params.tile_ids` - are optional
 and additive: a file without them reads as before, so they didn't change
 the format number. Graphs that use none of them save exactly as before. An
 older Rayzr reads a newer graph without them: it ignores frames and the
-`writes` parameter, and fails on a node type it doesn't know.
+`writes` and `tile_ids` parameters, and fails on a node type it doesn't
+know (`wfc`).
 
 ---
 

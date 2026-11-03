@@ -23,7 +23,7 @@ python3 scripts/make_bench_project.py /tmp/rayzr_bench > /dev/null
 if want engine; then
 echo "== engine"
 odin build engine -build-mode:test -o:speed -define:ODIN_TEST_THREADS=1 \
-	-define:ODIN_TEST_NAMES=engine.bench_scene_hot_paths,engine.bench_particles,engine.bench_scripts,engine.bench_navigation,engine.bench_components,engine.bench_level_gen \
+	-define:ODIN_TEST_NAMES=engine.bench_scene_hot_paths,engine.bench_particles,engine.bench_scripts,engine.bench_navigation,engine.bench_components,engine.bench_level_gen,engine.bench_level_gen_wfc \
 	-out:/tmp/rayzr_bench_engine > /dev/null || exit 1
 /tmp/rayzr_bench_engine 2>&1 | grep '\[bench\]' | sed 's/^.*\[bench\]/[bench]/'
 fi

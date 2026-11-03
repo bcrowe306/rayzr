@@ -100,6 +100,7 @@ lge: struct {
 	tilesFor:  [2]int,  // (node, rule) tilesBuf belongs to ({-1, -1}: none)
 	layerBuf:  [64]u8,  // the layer name being typed in
 	layerFor:  int,     // the node layerBuf belongs to (0: none)
+	wfcBrush:  i32,     // the tile a WFC node's sample is painted with (-1: the eraser)
 }
 
 // The node clipboard, shared by every generator opened in this editor
@@ -642,11 +643,22 @@ lge_refresh :: proc(state: ^EditorState) {
 			en, ok := lge.cache.entries[n.id]
 			if !ok do continue
 			tex, have := lge.thumbs[n.id]
-			if have && lge.thumbKeys[n.id] == en.key && n.kind != .Tile_Output && tex.width == i32(en.grid.w) && tex.height == i32(en.grid.h) do continue
-			// (A tile output with its tileset: drawn with its tiles.)
+			if have && lge.thumbKeys[n.id] == en.key && n.kind != .Tile_Output && n.kind != .WFC && tex.width == i32(en.grid.w) && tex.height == i32(en.grid.h) do continue
+			// (A tile output with its tileset: drawn with its tiles. A WFC
+			// node's tile ids: with the tileset of the output it feeds.)
 			pixels: []rl.Color
 			pw, ph := en.grid.w, en.grid.h
-			if ts := lge_tileset(state, n.tileset); n.kind == .Tile_Output && !e.Gen_WritesComponents(&n) && ts != nil {
+			if n.kind == .WFC {
+				ids := make([]i32, len(en.grid.v), context.temp_allocator)
+				for v, i in en.grid.v do ids[i] = i32(math.round(v)) if v >= 0 else -1
+				out := lge_wfc_output(&j.graph, n.id)
+				if ts := lge_tileset(state, out.tileset if out != nil else ""); ts != nil {
+					pixels, pw, ph = lge_tile_pixels(ts, lge_tile_size(out), ids, en.grid.w, en.grid.h)
+				} else {
+					pixels = make([]rl.Color, len(ids), context.temp_allocator)
+					for t, i in ids do pixels[i] = lge_tile_color(t) if t >= 0 else {}
+				}
+			} else if ts := lge_tileset(state, n.tileset); n.kind == .Tile_Output && !e.Gen_WritesComponents(&n) && ts != nil {
 				pixels, pw, ph = lge_tile_pixels(ts, lge_tile_size(&n), e.Gen_TilesOf(&n, en.grid, j.graph.seed, context.temp_allocator, Editor_Terrains(state, n.tileset)), en.grid.w, en.grid.h)
 			} else {
 				pixels = make([]rl.Color, len(en.grid.v), context.temp_allocator)
@@ -1084,6 +1096,9 @@ lge_canvas :: proc(state: ^EditorState) {
 			if hoverIn != 0 && hoverIn != lge.linkFrom {
 				before := e.Gen_GraphSerialize(g)
 				if e.Gen_Connect(g, hoverIn, hoverInPort, lge.linkFrom) {
+					// (A WFC node into a tile output: its values are tile ids.)
+					dst, src := e.Gen_FindNode(g, hoverIn), e.Gen_FindNode(g, lge.linkFrom)
+					if dst != nil && src != nil && dst.kind == .Tile_Output && src.kind == .WFC && hoverInPort == 0 do e.Gen_SetParam(dst, "tile_ids", 1)
 					append(&lge.undo, before)
 					for s in lge.redo do delete(s)
 					clear(&lge.redo)
@@ -1177,7 +1192,7 @@ lge_add_menu :: proc(state: ^EditorState) {
 		label: string,
 		kinds: []e.Gen_Kind,
 	}{
-		{"Generators", {.Constant, .Noise, .Random_Fill, .Gradient, .Border, .Rect, .Rooms, .Walker, .Lines, .Rectangles, .Circles}},
+		{"Generators", {.Constant, .Noise, .Random_Fill, .Gradient, .Border, .Rect, .Rooms, .Walker, .Lines, .Rectangles, .Circles, .WFC}},
 		{"Modifiers", {.Threshold, .Invert, .Remap, .Blur, .Cellular, .Dilate, .Erode, .Combine, .Scatter, .Poisson_Scatter, .Surface}},
 		{"Playable", {.Flood_Fill, .Regions, .Connect_Regions, .Path, .Check}},
 		{"Output", {.Tile_Output, .Entity_Output}},
@@ -1361,6 +1376,7 @@ lge_side :: proc(state: ^EditorState) {
 				if n.component == "" do imgui.TextColored(UI_WARNING, "Pick the component it places")
 			}
 			if n.kind == .Script do lge_script_picker(state, n)
+			if n.kind == .WFC do lge_wfc(state, n)
 		}
 	}
 	// The preview: the selected node's grid, else the output's.
@@ -1546,6 +1562,207 @@ lge_tile_output :: proc(state: ^EditorState, n: ^e.Gen_Node) {
 	if !comps && n.tileset != "" && lge_tileset(state, n.tileset) == nil do imgui.TextColored(UI_WARNING, "Can't read the tileset image")
 }
 
+// lge_wfc_output: the tile output a WFC node feeds (its tileset paints the
+// sample and draws the previews; nil: none).
+@(private = "file")
+lge_wfc_output :: proc(g: ^e.Gen_Graph, id: int) -> ^e.Gen_Node {
+	for &o in g.nodes do if o.kind == .Tile_Output && o.inputs[0] == id && !e.Gen_WritesComponents(&o) do return &o
+	return nil
+}
+
+// lge_draw_tile: a tile in a rectangle - from the tileset, else in its
+// colour; -1 (unpainted) a dark cell.
+@(private = "file")
+lge_draw_tile :: proc(dl: ^imgui.DrawList, ts: ^Lge_Tileset, tile: [2]int, t: i32, mn, mx: [2]f32) {
+	if t < 0 {
+		imgui.DrawList_AddRectFilled(dl, mn, mx, col_u32(ui_line(0.06)))
+		return
+	}
+	if _, count := lge_tile_grid(ts, tile); ts != nil && int(t) < count {
+		uv0, uv1 := lge_tile_uv(ts, tile, t)
+		imgui.DrawList_AddImage(dl, transmute(imgui.TextureID)&ts.tex, mn, mx, uv0, uv1)
+		return
+	}
+	c := lge_tile_color(t)
+	imgui.DrawList_AddRectFilled(dl, mn, mx, col32(u32(c.r), u32(c.g), u32(c.b)))
+}
+
+// lge_wfc: a Wave Function Collapse node's rules - the sample painted with
+// the tiles of the tileset of the output it feeds (left button paints the
+// brush, right erases), or its Wang tiles.
+@(private = "file")
+lge_wfc :: proc(state: ^EditorState, n: ^e.Gen_Node) {
+	g := &lge.graph
+	out := lge_wfc_output(g, n.id)
+	ts: ^Lge_Tileset
+	tile := [2]int{16, 16}
+	if out != nil {
+		ts = lge_tileset(state, out.tileset)
+		tile = lge_tile_size(out)
+	}
+	if out == nil do imgui.TextColored(UI_WARNING, "Connect it to a Tile Output: its tileset paints the sample")
+	else if ts == nil do UI_DimTextWrapped("Pick the Tile Output's Tileset to paint with its tiles (until then: tile numbers, in colours).")
+	if int(e.Gen_Param(n, "rules")) == 1 {
+		lge_wang(n, ts, tile)
+		return
+	}
+	imgui.SeparatorText("Sample")
+	UI_DimTextWrapped("Paint how the tiles go together: the level only puts a tile next to another (left, right, above, below) where the sample does, and uses each about as often. Left button paints the brush, right erases; unpainted cells teach nothing.")
+	if UI_BeginProps("##lge_wfc") {
+		UI_PropLabel("Size")
+		sz := [2]i32{i32(n.sample.w), i32(n.sample.h)}
+		if imgui.DragInt2("##lge_wfc_size", &sz, 0.1, 1, e.GEN_WFC_SAMPLE_MAX) do e.Gen_WFCResizeSample(g, n, {int(sz.x), int(sz.y)})
+		lge_undo_on_activate()
+		Drive_Item("lge.wfc-size")
+		UI_Tooltip("The sample's cells across and down (1-64); cells outside a smaller size are dropped")
+		UI_PropLabel("Brush")
+		if ts == nil {
+			b := lge.wfcBrush
+			imgui.SetNextItemWidth(-1)
+			if imgui.DragInt("##lge_wfc_brush", &b, 0.1, -1, 1 << 20) do lge.wfcBrush = b
+			Drive_Item("lge.wfc-brush")
+			UI_Tooltip("The tile number to paint (-1: erase)")
+		} else {
+			p := imgui.GetCursorScreenPos()
+			lge_draw_tile(imgui.GetWindowDrawList(), ts, tile, lge.wfcBrush, p, p + 20)
+			imgui.Dummy({20, 20})
+			imgui.SameLine(0, 6)
+			imgui.TextUnformatted(fmt.ctprintf("%d", lge.wfcBrush) if lge.wfcBrush >= 0 else "Eraser")
+		}
+		UI_EndProps()
+	}
+	if UI_Button(fmt.tprintf("%s  Eraser", ICON_FA_ERASER), "lge.wfc-eraser") do lge.wfcBrush = -1
+	UI_Tooltip("Paint with nothing (right-click erases too)")
+	imgui.SameLine(0, 4)
+	if UI_Button(fmt.tprintf("%s  Fill", ICON_FA_FILL_DRIP), "lge.wfc-fill") {
+		lge_change()
+		for &c in n.sample.cells do c = lge.wfcBrush
+	}
+	UI_Tooltip("Every cell of the sample the brush's tile")
+
+	// The tiles in the sample already (pick one again), then the tileset.
+	if rules, why := e.Gen_WFCRules(n); why == "" {
+		for t, k in rules.tiles {
+			if k > 0 do imgui.SameLine(0, 2)
+			if k == 0 do imgui.TextUnformatted("In it:")
+			if k == 0 do imgui.SameLine(0, 6)
+			p := imgui.GetCursorScreenPos()
+			imgui.PushIDInt(i32(k))
+			if imgui.InvisibleButton("##used", {20, 20}) do lge.wfcBrush = t
+			imgui.PopID()
+			Drive_Item(fmt.tprintf("lge.wfc-used:%d", t))
+			UI_Tooltip(fmt.tprintf("Tile %d", t))
+			dl := imgui.GetWindowDrawList()
+			lge_draw_tile(dl, ts, tile, t, p, p + 20)
+			if t == lge.wfcBrush do imgui.DrawList_AddRect(dl, p - 1, p + 21, col_u32(UI_ACCENT), 0, imgui.DrawFlags(0), 2)
+		}
+	}
+	if ts != nil {
+		cols, count := lge_tile_grid(ts, tile)
+		scale := clamp((imgui.GetContentRegionAvail().x - 4) / f32(max(ts.size.x, 1)), 0.25, 4)
+		size := [2]f32{f32(ts.size.x), f32(ts.size.y)} * scale
+		p0 := imgui.GetCursorScreenPos()
+		imgui.InvisibleButton("##lge_wfc_palette", size)
+		dl := imgui.GetWindowDrawList()
+		imgui.DrawList_AddImage(dl, transmute(imgui.TextureID)&ts.tex, p0, p0 + size)
+		cell := [2]f32{f32(tile.x), f32(tile.y)} * scale
+		for t in 0 ..< min(count, 4096) {
+			mn := p0 + {f32(t % cols), f32(t / cols)} * cell
+			if i32(t) == lge.wfcBrush do imgui.DrawList_AddRect(dl, mn, mn + cell, col_u32(UI_ACCENT), 0, imgui.DrawFlags(0), 2)
+			Drive_ItemRect(fmt.tprintf("lge.wfc-brush:%d", t), mn, mn + cell, inWindow = true)
+		}
+		if imgui.IsItemClicked(.Left) {
+			m := imgui.GetMousePos() - p0
+			cx, cy := int(m.x / cell.x), int(m.y / cell.y)
+			if cx >= 0 && cx < cols && cy >= 0 && cols > 0 && cy * cols + cx < count do lge.wfcBrush = i32(cy * cols + cx)
+		}
+		UI_Tooltip("Click a tile: the brush")
+	}
+
+	// The sample: drag to paint.
+	s := &n.sample
+	if s.w <= 0 || s.h <= 0 || len(s.cells) < s.w * s.h do return
+	cs := clamp(math.floor((imgui.GetContentRegionAvail().x - 4) / f32(s.w)), 6, 32)
+	p0 := imgui.GetCursorScreenPos()
+	size := [2]f32{cs * f32(s.w), cs * f32(s.h)}
+	imgui.InvisibleButton("##lge_wfc_sample", size, {.MouseButtonLeft, .MouseButtonRight})
+	if imgui.IsItemActivated() do lge_change()
+	if imgui.IsItemActive() {
+		m := imgui.GetMousePos() - p0
+		cx, cy := int(math.floor(m.x / cs)), int(math.floor(m.y / cs))
+		t := lge.wfcBrush if !imgui.IsMouseDown(.Right) else -1
+		if e.Gen_WFCSetCell(n, cx, cy, t) do lge_edited()
+	}
+	dl := imgui.GetWindowDrawList()
+	for y in 0 ..< s.h do for x in 0 ..< s.w {
+		mn := p0 + {f32(x), f32(y)} * cs
+		lge_draw_tile(dl, ts, tile, s.cells[y * s.w + x], mn, mn + cs)
+		Drive_ItemRect(fmt.tprintf("lge.wfc-cell:%d:%d", x, y), mn, mn + cs, inWindow = true)
+	}
+	imgui.DrawList_AddRect(dl, p0, p0 + size, col_u32(ui_line(0.3)))
+	if rules, why := e.Gen_WFCRules(n); why == "" {
+		pairs := 0
+		for d in 0 ..< 2 do for word in rules.allow[d] do pairs += int(card(transmute(bit_set[0 ..< 64; u64])word))
+		UI_DimText(fmt.tprintf("Learned: %d tiles, %d neighbour pairs", len(rules.tiles), pairs))
+	} else {
+		imgui.TextColored(UI_WARNING, fmt.ctprintf("%s", why))
+	}
+}
+
+// lge_wang: a WFC node's Wang tiles - each a tile, its edges' colours
+// (north, east, south, west) and a weight.
+@(private = "file")
+lge_wang :: proc(n: ^e.Gen_Node, ts: ^Lge_Tileset, tile: [2]int) {
+	g := &lge.graph
+	imgui.SeparatorText("Wang Tiles")
+	UI_DimTextWrapped("Each tile's four edges have a colour (a number): north, east, south, west. Two tiles only touch where their touching edges match. Weight: how often it is picked.")
+	remove := -1
+	for &wt, i in n.wang {
+		imgui.PushIDInt(i32(2000 + i))
+		p := imgui.GetCursorScreenPos()
+		lge_draw_tile(imgui.GetWindowDrawList(), ts, tile, wt.tile, p, p + 20)
+		imgui.Dummy({20, 20})
+		imgui.SameLine(0, 4)
+		w := (imgui.GetContentRegionAvail().x - 30 - 6 * 4) / 6
+		imgui.SetNextItemWidth(w)
+		t := wt.tile
+		if imgui.DragInt("##tile", &t, 0.1, 0, 1 << 20, "tile %d") do wt.tile = t
+		lge_undo_on_activate()
+		Drive_Item(fmt.tprintf("lge.wang-tile:%d", i))
+		UI_Tooltip("The tile (its number in the tileset)")
+		for side, k in ([4]string{"N", "E", "S", "W"}) {
+			imgui.SameLine(0, 4)
+			imgui.SetNextItemWidth(w)
+			imgui.PushIDInt(i32(k))
+			c := wt.edges[k]
+			if imgui.DragInt("##edge", &c, 0.05, 0, 255, fmt.ctprintf("%s %%d", side)) do wt.edges[k] = c
+			lge_undo_on_activate()
+			Drive_Item(fmt.tprintf("lge.wang-edge:%d:%d", i, k))
+			imgui.PopID()
+		}
+		imgui.SameLine(0, 4)
+		imgui.SetNextItemWidth(w)
+		imgui.DragFloat("##weight", &wt.weight, 0.01, 0, 100, "x%.2f")
+		lge_undo_on_activate()
+		UI_Tooltip("Weight: how often it is picked (relative)")
+		imgui.SameLine(0, 4)
+		if UI_IconButton(ICON_FA_XMARK, fmt.tprintf("lge.wang-remove:%d", i), "Remove the tile", size = 24) do remove = i
+		imgui.PopID()
+	}
+	if remove >= 0 {
+		lge_change()
+		ordered_remove(&n.wang, remove)
+	}
+	if UI_Button(fmt.tprintf("%s  Add Wang Tile", ICON_FA_PLUS), "lge.wang-add") {
+		lge_change()
+		if n.wang == nil do n.wang = make([dynamic]e.Gen_Wang_Tile, g.allocator)
+		next := i32(0)
+		for wt in n.wang do next = max(next, wt.tile + 1)
+		append(&n.wang, e.Gen_Wang_Tile{tile = next, weight = 1})
+	}
+	UI_Tooltip("Another tile (the next number; set its edges)")
+}
+
 // lge_rule_terrain: the rule's terrain (of the output's tileset; None: its
 // tiles) - its cells then take the terrain's tiles by their neighbours.
 @(private = "file")
@@ -1647,7 +1864,8 @@ lge_rules :: proc(state: ^EditorState, n: ^e.Gen_Node) {
 		return
 	}
 	imgui.SeparatorText("Rules")
-	UI_DimTextWrapped("Each cell takes the first rule whose range holds its value: one of its tiles.")
+	if e.Gen_Param(n, "tile_ids") != 0 do UI_DimTextWrapped("tile_ids is on: each cell takes the tile its input holds (a Wave Function Collapse node's) and these rules are skipped; the pattern rules still run.")
+	else do UI_DimTextWrapped("Each cell takes the first rule whose range holds its value: one of its tiles.")
 	remove := -1
 	for &r, i in n.rules {
 		imgui.PushIDInt(i32(i))
@@ -1847,6 +2065,7 @@ LevelGenEditor_DriveQuery :: proc(q: string) -> (string, bool) {
 	case "lge.selection": return fmt.tprint(len(lge.sel)), true
 	case "lge.frames": return fmt.tprint(len(lge.graph.frames)), true
 	case "lge.frame-selected": return fmt.tprint(lge.frameSel - 1), true
+	case "lge.wfc-brush": return fmt.tprint(lge.wfcBrush), true
 	}
 	if strings.has_prefix(q, "lge.pos:") {
 		// lge.pos:<node> -> its position on the canvas ("x,y")
