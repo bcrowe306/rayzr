@@ -34,6 +34,20 @@ click @btg.ctx.wrap
 click @btg.cat:Decorator
 click @pick:Inverter
 expect bt-tree == Selector(Inverter(Wait),Blackboard Set)
+# Dropped onto its right sibling it takes its place: after it (#374);
+# undo puts it back. A drop onto a leaf is refused and records no undo step.
+drag @btg.node:3 @btg.node:2
+wait 2
+expect bt-tree == Selector(Blackboard Set,Inverter(Wait))
+key cmd+z
+wait 2
+expect bt-tree == Selector(Inverter(Wait),Blackboard Set)
+expect undo == 6
+drag @btg.node:2 @btg.node:1
+wait 2
+expect log contains can't take another child
+expect bt-tree == Selector(Inverter(Wait),Blackboard Set)
+expect undo == 6
 wait 2
 screenshot tree
 key cmd+s

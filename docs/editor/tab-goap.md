@@ -186,8 +186,9 @@ A lumberjack who gathers wood:
 
 - A red dot in edit mode means no action's effect can meet that
   condition: add an action, or check the effect's direction.
-- Renaming or removing a key doesn't update the conditions, effects,
-  targets and sensors that use it: pick the key again in each.
+- Renaming a key renames it in the conditions, effects, targets and
+  sensors that use it (one undo step; the Console says how many). Removing
+  a key doesn't: pick another key in each place that used it.
 - **Delete** in the canvas removes the goal or action, not the selected
   scene node, while the tab has focus.
 - An action that runs a Behavior Tree needs that tree's **Process Mode**

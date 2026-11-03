@@ -28,6 +28,32 @@ expect goap-graph == GatherWood|PickUpAxe,ChopWood,PunchTree
 click @gg.page:keys
 wait 2
 screenshot keys
+# A key renamed: what uses it follows (#374) - TreeSpot's targets and
+# sensor, Wood's condition and effects - one undo step each.
+click @gg.key.name:3
+key cmd+a
+type Forest
+key enter
+wait 2
+expect log contains Renamed GOAP key TreeSpot to Forest (3 uses)
+click @gg.key.name:1
+key cmd+a
+type Logs
+key enter
+wait 2
+expect log contains Renamed GOAP key Wood to Logs (3 uses)
+click @gg.page:graph
+wait 2
+click @gg.canvas
+key cmd+z
+wait 2
+key cmd+s
+wait 3
+expect file:scenes/goap_lumberjack.scene.json contains "target": "Forest"
+expect file:scenes/goap_lumberjack.scene.json contains {"key": "Forest", "kind": "Node"
+expect file:scenes/goap_lumberjack.scene.json contains {"key": "Wood", "cmp": ">="
+expect file:scenes/goap_lumberjack.scene.json !contains Logs
+expect file:scenes/goap_lumberjack.scene.json !contains TreeSpot
 click @gg.page:graph
 # Simulate: it goes for the axe first.
 click @menu:Game

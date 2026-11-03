@@ -246,3 +246,41 @@ test_goap_saving :: proc(t: ^testing.T) {
 	testing.expect(t, Goap_Met({cmp = .Less_Equal, amount = 3}, 3, 0) && !Goap_Met({cmp = .Less, amount = 3}, 3, 0) && Goap_Met({cmp = .Greater, refKey = "x"}, 4, 3), "met")
 	free_all(context.temp_allocator)
 }
+
+// A key renamed (the editor's Keys & Sensors page, #374): the conditions
+// (key and compared-with key), effects, targets and sensors using it follow;
+// other keys' uses don't.
+@(test)
+test_goap_rename_key_refs :: proc(t: ^testing.T) {
+	game, _, _, g := goap_setup()
+	defer game->terminate()
+	Goap_AddKey(g, "Wood")
+	Goap_AddKey(g, "Stone")
+	Goap_AddKey(g, "TreeSpot", target = true)
+	gi := Goap_AddGoal(g, "Gather")
+	Goap_AddCondition(g, &g.goals[gi].conditions, "Wood", .Greater, 5)
+	Goap_AddCondition(g, &g.goals[gi].conditions, "Stone", .Greater, 1)
+	g.goals[gi].conditions[1].refKey = strings.clone("Wood", g.allocator)
+	a := Goap_AddAction(g, "Chop")
+	Goap_AddCondition(g, &g.actions[a].conditions, "Wood", .Less, 9)
+	Goap_AddEffect(g, &g.actions[a], "Wood", true)
+	Goap_AddEffect(g, &g.actions[a], "Stone", false)
+	Goap_SetString(g, &g.actions[a].target, "TreeSpot")
+	Goap_AddSensor(g, "Wood", .Method, "count_wood")
+	Goap_AddSensor(g, "TreeSpot", .Nearest_Tag, "tree")
+
+	testing.expect_value(t, Goap_RenameKeyRefs(g, "Wood", "Logs"), 5)
+	testing.expect_value(t, g.goals[gi].conditions[0].key, "Logs")
+	testing.expect_value(t, g.goals[gi].conditions[1].key, "Stone")
+	testing.expect_value(t, g.goals[gi].conditions[1].refKey, "Logs")
+	testing.expect_value(t, g.actions[a].conditions[0].key, "Logs")
+	testing.expect_value(t, g.actions[a].effects[0].key, "Logs")
+	testing.expect_value(t, g.actions[a].effects[1].key, "Stone")
+	testing.expect_value(t, g.sensors[0].key, "Logs")
+	testing.expect_value(t, Goap_RenameKeyRefs(g, "TreeSpot", "Forest"), 2)
+	testing.expect_value(t, g.actions[a].target, "Forest")
+	testing.expect_value(t, g.sensors[1].key, "Forest")
+	testing.expect_value(t, Goap_RenameKeyRefs(g, "Nothing", "Else"), 0)
+	testing.expect_value(t, Goap_RenameKeyRefs(g, "Logs", "Logs"), 0)
+	free_all(context.temp_allocator)
+}
