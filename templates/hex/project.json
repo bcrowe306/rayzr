@@ -1,7 +1,7 @@
 {
  "name": "Hex Island",
  "version": "0.1.0",
- "initial_scene": "scenes/island.scene.json",
+ "initial_scene": "scenes/title.scene.json",
  "window": {
   "title": "Hex Island",
   "width": 1280,
@@ -88,10 +88,127 @@
       "key": "Z"
      }
     ]
+   },
+   {
+    "name": "move_left",
+    "bindings": [
+     {
+      "key": "A"
+     },
+     {
+      "key": "LEFT"
+     },
+     {
+      "button": "LEFT_FACE_LEFT"
+     },
+     {
+      "axis": "LEFT_X",
+      "positive": false,
+      "deadzone": 0.3
+     }
+    ]
+   },
+   {
+    "name": "move_right",
+    "bindings": [
+     {
+      "key": "D"
+     },
+     {
+      "key": "RIGHT"
+     },
+     {
+      "button": "LEFT_FACE_RIGHT"
+     },
+     {
+      "axis": "LEFT_X",
+      "positive": true,
+      "deadzone": 0.3
+     }
+    ]
+   },
+   {
+    "name": "move_up",
+    "bindings": [
+     {
+      "key": "W"
+     },
+     {
+      "key": "UP"
+     },
+     {
+      "button": "LEFT_FACE_UP"
+     },
+     {
+      "axis": "LEFT_Y",
+      "positive": false,
+      "deadzone": 0.3
+     }
+    ]
+   },
+   {
+    "name": "move_down",
+    "bindings": [
+     {
+      "key": "S"
+     },
+     {
+      "key": "DOWN"
+     },
+     {
+      "button": "LEFT_FACE_DOWN"
+     },
+     {
+      "axis": "LEFT_Y",
+      "positive": true,
+      "deadzone": 0.3
+     }
+    ]
+   },
+   {
+    "name": "confirm",
+    "bindings": [
+     {
+      "key": "ENTER"
+     },
+     {
+      "key": "KP_ENTER"
+     },
+     {
+      "key": "SPACE"
+     },
+     {
+      "button": "RIGHT_FACE_DOWN"
+     }
+    ]
+   },
+   {
+    "name": "pause",
+    "bindings": [
+     {
+      "key": "ESCAPE"
+     },
+     {
+      "key": "P"
+     },
+     {
+      "button": "MIDDLE_RIGHT"
+     }
+    ]
    }
   ]
  },
  "scenes": [
-  "scenes/island.scene.json"
+  "scenes/title.scene.json",
+  "scenes/island1.scene.json",
+  "scenes/island2.scene.json",
+  "scenes/island3.scene.json",
+  "scenes/result.scene.json"
+ ],
+ "globals": [
+  {
+   "name": "Game",
+   "script": "scripts/game.lua"
+  }
  ]
 }

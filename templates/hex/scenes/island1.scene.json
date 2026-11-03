@@ -1,5 +1,5 @@
 {
- "name": "island",
+ "name": "island1",
  "background": [
   64,
   140,
@@ -245,7 +245,11 @@
     "name": "Island",
     "layer": 1,
     "script": {
-     "path": "scripts/island.lua"
+     "path": "scripts/island.lua",
+     "properties": {
+      "island": 1,
+      "step_limit": 24
+     }
     }
    },
    {
@@ -433,7 +437,7 @@
    },
    {
     "type": "TextNode",
-    "name": "Flowers",
+    "name": "IslandText",
     "position": [
      16,
      12
@@ -444,7 +448,47 @@
     ],
     "layer": 7,
     "properties": {
+     "text": "",
+     "font": "fonts/kenney_pixel.ttf",
+     "fontSize": 32,
+     "align": "Left",
+     "color": "#ffffffff"
+    }
+   },
+   {
+    "type": "TextNode",
+    "name": "Flowers",
+    "position": [
+     16,
+     52
+    ],
+    "pivot": [
+     0,
+     0
+    ],
+    "layer": 7,
+    "properties": {
      "text": "Flowers 0 / 0",
+     "font": "fonts/kenney_pixel.ttf",
+     "fontSize": 32,
+     "align": "Left",
+     "color": "#ffffffff"
+    }
+   },
+   {
+    "type": "TextNode",
+    "name": "Steps",
+    "position": [
+     16,
+     92
+    ],
+    "pivot": [
+     0,
+     0
+    ],
+    "layer": 7,
+    "properties": {
+     "text": "",
      "font": "fonts/kenney_pixel.ttf",
      "fontSize": 32,
      "align": "Left",
@@ -484,12 +528,161 @@
     ],
     "layer": 7,
     "properties": {
-     "text": "Click a hex to walk   D A E Q C Z: one step",
+     "text": "Click a hex to walk   D A E Q C Z: one step   Esc pause",
      "font": "fonts/kenney_pixel.ttf",
      "fontSize": 32,
      "align": "Right",
      "color": "#ffffffaa"
     }
+   },
+   {
+    "type": "Node",
+    "name": "PauseMenu",
+    "layer": 7,
+    "script": {
+     "path": "scripts/menu.lua",
+     "properties": {
+      "kind": "pause",
+      "item_width": 640,
+      "item_height": 56,
+      "selected": "#ffe066ff"
+     }
+    },
+    "children": [
+     {
+      "type": "UIContainerNode",
+      "name": "Shade",
+      "layer": 7,
+      "position": [
+       0,
+       0
+      ],
+      "properties": {
+       "size": [
+        1280,
+        720
+       ],
+       "drawBackground": true,
+       "drawBorder": false,
+       "showHeader": false,
+       "backgroundColor": "#14141ec8"
+      }
+     },
+     {
+      "type": "TextNode",
+      "name": "Heading",
+      "position": [
+       640.0,
+       184.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Paused",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 96,
+       "align": "Center",
+       "color": "#ffffffff"
+      }
+     },
+     {
+      "type": "TextNode",
+      "name": "Resume",
+      "position": [
+       640.0,
+       336.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Resume",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 48,
+       "align": "Center",
+       "color": "#ffffffff"
+      },
+      "tags": [
+       "item"
+      ]
+     },
+     {
+      "type": "TextNode",
+      "name": "Restart",
+      "position": [
+       640.0,
+       400.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Restart level",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 48,
+       "align": "Center",
+       "color": "#ffffffff"
+      },
+      "tags": [
+       "item"
+      ]
+     },
+     {
+      "type": "TextNode",
+      "name": "Title",
+      "position": [
+       640.0,
+       464.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Title screen",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 48,
+       "align": "Center",
+       "color": "#ffffffff"
+      },
+      "tags": [
+       "item"
+      ]
+     }
+    ],
+    "visible": false,
+    "pause_mode": "always"
+   },
+   {
+    "type": "ScreenLayerNode",
+    "name": "TouchTop",
+    "properties": {
+     "anchor": "TopRight"
+    },
+    "children": [
+     {
+      "type": "TouchButtonNode",
+      "name": "TouchPause",
+      "position": [
+       -60.0,
+       60.0
+      ],
+      "properties": {
+       "radius": 34.0,
+       "action": "pause",
+       "label": "II",
+       "fontSize": 24.0
+      }
+     }
+    ]
    }
   ]
  }

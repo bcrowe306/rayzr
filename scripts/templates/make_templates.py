@@ -232,8 +232,10 @@ GAME_ACTIONS = [action("confirm", "ENTER", "KP_ENTER", "SPACE", "pad:RIGHT_FACE_
 GAME_GLOBALS = [{"name": "Game", "script": "scripts/game.lua"}]
 
 
-def game_scripts(t, levels, lives=3, score_name="Score", lower_is_better=False, level_word="Level"):
-    """scripts/game.lua (the global Game, with this game's levels) and menu.lua."""
+def game_scripts(t, levels, lives=3, score_name="Score", lower_is_better=False, level_word="Level", extra=False):
+    """scripts/game.lua (the global Game, with this game's levels) and menu.lua.
+    extra: scripts/<template>/game_extra.lua is added to game.lua (this game's
+    own lines: the title's best, the result's score)."""
     cfg = "\n".join([
         "-- This game (make_templates.py writes it): its levels, in order; the lives a",
         "-- run starts with; what the score counts; whether a lower result is better;",
@@ -245,7 +247,11 @@ def game_scripts(t, levels, lives=3, score_name="Score", lower_is_better=False, 
         f'Game.LEVEL_WORD = "{level_word}"',
     ])
     with open(os.path.join(SCRIPTS, "common", "game.lua")) as f:
-        t.write("scripts/game.lua", f.read().replace("--$CONFIG$", cfg))
+        src = f.read().replace("--$CONFIG$", cfg)
+    if extra:
+        with open(os.path.join(SCRIPTS, t.id, "game_extra.lua")) as f:
+            src = src.replace("\nreturn Game\n", "\n" + f.read() + "\nreturn Game\n")
+    t.write("scripts/game.lua", src)
     t.script("menu", src="common")
 
 
@@ -1178,34 +1184,98 @@ def dungeon():
 
 # --- hex island ---------------------------------------------------------------------
 
-# The island, one character a hex (rows are grid y; odd rows are shifted
+# The islands, one character a hex (rows are grid y; odd rows are shifted
 # right by half a hex): ~ water, g grass, d dirt, s sand, r stone,
 # T tree, P pine, A autumn tree, R rock, b bush, f flower (red / yellow /
 # blue in turn), @ the explorer (on grass).
-HEX_ISLAND = [
-    "~~~~~~~~~~~~~",
-    "~~~ssggggs~~~",
-    "~~sgTgfggAss~",
-    "~sgPgggRgfs~~",
-    "~sgg@ggTgggs~",
-    "~~sgdddgbs~~~",
-    "~sgfgdPgRgfs~",
-    "~~ssgAfgss~~~",
-    "~~~~sssr~~~~~",
-    "~~~~~~~~~~~~~",
+HEX_ISLANDS = [
+    [
+        "~~~~~~~~~~~~~",
+        "~~~ssggggs~~~",
+        "~~sgTgfggAss~",
+        "~sgPgggRgfs~~",
+        "~sgg@ggTgggs~",
+        "~~sgdddgbs~~~",
+        "~sgfgdPgRgfs~",
+        "~~ssgAfgss~~~",
+        "~~~~sssr~~~~~",
+        "~~~~~~~~~~~~~",
+    ],
+    [  # two halves and a sand bridge
+        "~~~~~~~~~~~~~",
+        "~~ggf~~~sggf~",
+        "~sgTgs~~gRgg~",
+        "~gfgPgs~gTPf~",
+        "~sg@gdsssgg~~",
+        "~~gRgg~~sdgs~",
+        "~sggfg~~gAgg~",
+        "~~sbgs~~sgfs~",
+        "~~~ss~~~~ss~~",
+        "~~~~~~~~~~~~~",
+    ],
+    [  # a ring round a lagoon
+        "~~~~~~~~~~~~~",
+        "~~sfgggRgfs~~",
+        "~sgTg~~~gPgs~",
+        "~gg~~~~~~~gg~",
+        "~fR~~~~~~~bf~",
+        "~gg~~~~~~~gs~",
+        "~sgA~~~~~Tgs~",
+        "~~sgfg@gggf~~",
+        "~~~ssrsss~~~~",
+        "~~~~~~~~~~~~~",
+    ],
+]
+HEX_SLACK = [6, 6, 4]  # steps to spare over the shortest walk to every flower
+
+
+def hex_sides(x, y):
+    """The six hexes round (x, y) on a pointy map with odd rows shifted right."""
+    d = [(1, 0), (0, 1), (-1, 1), (-1, 0), (-1, -1), (0, -1)] if y % 2 == 0 else \
+        [(1, 0), (1, 1), (0, 1), (-1, 0), (0, -1), (1, -1)]
+    return [(x + a, y + b) for a, b in d]
+
+
+def hex_tour(rows):
+    """The fewest steps from the explorer to every flower (each hex walked
+    into is a step), and the flowers in that order."""
+    import collections
+    import itertools
+    H, W = len(rows), len(rows[0])
+    def ok(x, y):
+        return 0 <= x < W and 0 <= y < H and rows[y][x] in "gdsrf@"
+    flowers = [(x, y) for y in range(H) for x in range(W) if rows[y][x] == "f"]
+    start = next((x, y) for y in range(H) for x in range(W) if rows[y][x] == "@")
+
+    def bfs(s):
+        dist, q = {s: 0}, collections.deque([s])
+        while q:
+            c = q.popleft()
+            for n in hex_sides(*c):
+                if ok(*n) and n not in dist:
+                    dist[n] = dist[c] + 1
+                    q.append(n)
+        return dist
+    dist = {p: bfs(p) for p in [start] + flowers}
+    assert all(f in dist[start] for f in flowers), "hex: a flower can't be reached"
+    best = None
+    for order in itertools.permutations(flowers):
+        d = dist[start][order[0]] + sum(dist[a][b] for a, b in zip(order, order[1:]))
+        if best is None or d < best[0]:
+            best = (d, order)
+    return best
+
+
+HEX_INK, HEX_GOLD, HEX_SEA = "#ffffffff", "#ffe066ff", (64, 140, 196, 255)
+HEX_ACTIONS = [
+    action("step_e", "D", "RIGHT"), action("step_w", "A", "LEFT"),
+    action("step_ne", "E"), action("step_nw", "Q"),
+    action("step_se", "C"), action("step_sw", "Z"),
 ]
 
 
-def hex_island():
-    t = Template("hex", "Hex Island",
-                 "Explore a little island on a hex grid: click a hex to walk there (paths step hex by hex round "
-                 "water, trees and rocks) or step with the keys, and pick every flower.", "map", 7)
-    t.begin()
-    t.art("hexagon/tiles.png", "textures/hex_tiles.png")
-    t.art("hexagon/objects.png", "textures/hex_objects.png")
-    t.art("hexagon/alien.png", "textures/explorer.png")
-    t.license("Hexagon Tiles")
-    rows = HEX_ISLAND
+def hex_island_scene(rows, n, limit):
+    """An island (a scene): the maps, the explorer, the HUD, the pause menu."""
     H, W = len(rows), len(rows[0])
     CW, CH = 65, 66
     GROUND = {"~": 7, "g": 0, "d": 2, "s": 3, "r": 4}
@@ -1231,40 +1301,69 @@ def hex_island():
                 start = (x, y)
 
     def hmap(name, grid, tileset, tile, layer, offset, ysort=False):
-        n = tilemap(name, tileset, 0, grid, layer=layer, pos=ORIGIN)
-        n["tilemap"]["tile_size"] = tile
-        n["properties"].update({"layout": "HexPointy", "stagger": "Odd", "cellSize": [CW, CH], "tileOffset": offset})
+        m = tilemap(name, tileset, 0, grid, layer=layer, pos=ORIGIN)
+        m["tilemap"]["tile_size"] = tile
+        m["properties"].update({"layout": "HexPointy", "stagger": "Odd", "cellSize": [CW, CH], "tileOffset": offset})
         if ysort:
-            n["ySort"] = True
+            m["ySort"] = True
         if not tileset:
-            del n["tilemap"]["tileset"]
-        return n
+            del m["tilemap"]["tileset"]
+        return m
 
     sx, sy = center(*start)
     children = [
         {"type": "CameraNode", "name": "Camera", "position": [640, 360], "properties": {"isCurrent": True}},
         hmap("Ground", ground, "textures/hex_tiles.png", [65, 89], 1, [0, 23]),
         hmap("Walk", [[-1] * W for _ in range(H)], "", [65, 89], 1, [0, 0]),
-        {"type": "Node", "name": "Island", "layer": 1, "script": {"path": "scripts/island.lua"}},
+        {"type": "Node", "name": "Island", "layer": 1,
+         "script": {"path": "scripts/island.lua", "properties": {"island": n, "step_limit": limit}}},
         {"type": "Node", "name": "World", "ySort": True, "children": [
             hmap("Objects", objects, "textures/hex_objects.png", [65, 107], 2, [0, -25], ysort=True),
             {"type": "Node", "name": "Explorer", "position": [sx, sy], "script": {"path": "scripts/explorer.lua"},
              "children": [{"type": "TextureNode", "name": "Sprite", "position": [0, 6], "pivot": [0.5, 1], "layer": 2,
                            "texture": "textures/explorer.png"}]},
         ]},
-        text("Flowers", "Flowers 0 / 0", (16, 12), size=32, color="#ffffffff", layer=7),
-        text("Message", "", (640, 60), size=48, align="Center", pivot=(0.5, 0.5), color="#ffe066ff", layer=7),
-        text("Help", "Click a hex to walk   D A E Q C Z: one step", (1264, 690), size=32, align="Right",
+        text("IslandText", "", (16, 12), size=32, color=HEX_INK, layer=7),
+        text("Flowers", "Flowers 0 / 0", (16, 52), size=32, color=HEX_INK, layer=7),
+        text("Steps", "", (16, 92), size=32, color=HEX_INK, layer=7),
+        text("Message", "", (640, 60), size=48, align="Center", pivot=(0.5, 0.5), color=HEX_GOLD, layer=7),
+        text("Help", "Click a hex to walk   D A E Q C Z: one step   Esc pause", (1264, 690), size=32, align="Right",
              pivot=(1, 1), color="#ffffffaa", layer=7),
+        pause_menu(HD_STYLE, HEX_GOLD),
     ]
-    t.json("scenes/island.scene.json", scene("island", children, background=(64, 140, 196, 255)))
-    t.json("project.json", project("Hex Island", ["scenes/island.scene.json"], [
-        action("step_e", "D", "RIGHT"), action("step_w", "A", "LEFT"),
-        action("step_ne", "E"), action("step_nw", "Q"),
-        action("step_se", "C"), action("step_sw", "Z"),
-    ], virtual=(1280, 720), gravity=(0, 0), pixel=False))
+    return with_touch(scene(f"island{n}", children, background=HEX_SEA), (1280, 720), stick=None, buttons=(),
+                      pause="pause")
+
+
+def hex_island():
+    t = Template("hex", "Hex Island",
+                 "Explore three little islands on a hex grid: click a hex to walk there (paths step hex by hex "
+                 "round water, trees and rocks) or step with the keys, and pick every flower before your steps run "
+                 "out. A title screen, settings, a pause menu, the fewest steps saved.", "map", 7)
+    t.begin()
+    t.art("hexagon/tiles.png", "textures/hex_tiles.png")
+    t.art("hexagon/objects.png", "textures/hex_objects.png")
+    t.art("hexagon/alien.png", "textures/explorer.png")
+    t.license("Hexagon Tiles")
+    # A small game (#329): three islands; picking every flower clears one,
+    # and each has a step limit (the shortest walk to every flower and a few
+    # to spare) - out of steps is game over. The furthest island and each
+    # one's fewest steps are saved; the title, a pause menu, the result.
+    levels = [f"scenes/island{i + 1}.scene.json" for i in range(len(HEX_ISLANDS))]
+    for i, rows in enumerate(HEX_ISLANDS):
+        fewest, _ = hex_tour(rows)
+        t.json(levels[i], hex_island_scene(rows, i + 1, fewest + HEX_SLACK[i]))
+    explorer = {"type": "TextureNode", "name": "Explorer", "position": [250, 600], "pivot": [0.5, 1], "scale": [2, 2],
+                "layer": 2, "texture": "textures/explorer.png"}
+    t.json("scenes/title.scene.json", title_scene("Hex Island", HD_STYLE, HEX_INK, HEX_GOLD, HEX_SEA,
+                                                  decor=[explorer], level_word="Island"))
+    t.json("scenes/result.scene.json", result_scene(HD_STYLE, HEX_INK, HEX_GOLD, HEX_SEA))
+    t.json("project.json", project("Hex Island", ["scenes/title.scene.json"] + levels + ["scenes/result.scene.json"],
+                                   HEX_ACTIONS + MOVE_ACTIONS + GAME_ACTIONS, virtual=(1280, 720), gravity=(0, 0),
+                                   pixel=False, globals_=GAME_GLOBALS))
     for s_ in ("island", "explorer"):
         t.script(s_, src="hex")
+    game_scripts(t, levels, lives=None, score_name="Steps", lower_is_better=True, level_word="Island", extra=True)
     with open(os.path.join(SCRIPTS, "hex", "README.md")) as f:
         t.write("README.md", f.read())
     return t
