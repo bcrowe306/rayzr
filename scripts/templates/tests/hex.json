@@ -651,5 +651,15 @@
    ]
   ],
   "scene": "scenes/island1.scene.json"
+ },
+ {
+  "name": "preview: walking island 1",
+  "frames": 80,
+  "scene": "scenes/island1.scene.json",
+  "input": [
+   "10 mouse 900 422.5 click"
+  ],
+  "preview": true,
+  "expect": []
  }
 ]

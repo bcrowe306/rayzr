@@ -971,5 +971,24 @@
     false
    ]
   ]
+ },
+ {
+  "name": "preview: the robot in the bushes",
+  "frames": 120,
+  "scene": "scenes/story.scene.json",
+  "input": [
+   "10 SPACE tap",
+   "20 SPACE tap",
+   "30 SPACE tap",
+   "40 SPACE tap",
+   "50 SPACE tap",
+   "60 SPACE tap",
+   "70 SPACE tap",
+   "80 SPACE tap",
+   "90 SPACE tap",
+   "100 SPACE tap"
+  ],
+  "preview": true,
+  "expect": []
  }
 ]

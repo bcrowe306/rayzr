@@ -342,12 +342,13 @@
   ]
  },
  {
-  "name": "talking: Pep's line (his own voice moves his mouth)",
-  "frames": 400,
+  "name": "talking: Enter skips Pip's line - Pep answers (his own voice moves his mouth)",
+  "frames": 245,
   "scene": "scenes/stage1.scene.json",
   "input": [
    "10 D down",
-   "119 SPACE tap"
+   "119 SPACE tap",
+   "230 ENTER tap"
   ],
   "expect": [
    [
@@ -773,5 +774,16 @@
     0
    ]
   ]
+ },
+ {
+  "name": "preview: Pip talks to Pep on stage 1",
+  "frames": 250,
+  "scene": "scenes/stage1.scene.json",
+  "input": [
+   "10 D down",
+   "119 SPACE tap"
+  ],
+  "preview": true,
+  "expect": []
  }
 ]

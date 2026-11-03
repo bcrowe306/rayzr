@@ -633,5 +633,15 @@
     2
    ]
   ]
+ },
+ {
+  "name": "preview: walking room 1",
+  "frames": 70,
+  "scene": "scenes/room1.scene.json",
+  "input": [
+   "20 mouse 768 424 click"
+  ],
+  "preview": true,
+  "expect": []
  }
 ]

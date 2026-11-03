@@ -455,5 +455,17 @@
     "stage1"
    ]
   ]
+ },
+ {
+  "name": "preview: shooting on stage 2",
+  "frames": 130,
+  "scene": "scenes/stage2.scene.json",
+  "input": [
+   "5 SPACE down",
+   "5 DOWN down",
+   "38 DOWN up"
+  ],
+  "preview": true,
+  "expect": []
  }
 ]

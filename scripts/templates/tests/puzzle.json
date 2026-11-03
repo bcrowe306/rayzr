@@ -589,5 +589,29 @@
    ]
   ],
   "scene": "scenes/puzzle.scene.json"
+ },
+ {
+  "name": "preview: pushing the crates of level 3",
+  "frames": 150,
+  "scene": "scenes/puzzle.scene.json",
+  "patch": {
+   "Board": {
+    "script.start_level": 3
+   }
+  },
+  "input": [
+   "10 LEFT tap",
+   "24 LEFT tap",
+   "38 UP tap",
+   "52 UP tap",
+   "66 LEFT tap",
+   "80 UP tap",
+   "94 RIGHT tap",
+   "108 UP tap",
+   "122 RIGHT tap",
+   "136 DOWN tap"
+  ],
+  "preview": true,
+  "expect": []
  }
 ]

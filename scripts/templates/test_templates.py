@@ -4,6 +4,7 @@ scripted input and checks the result (TODO E.2):
 
     python3 scripts/templates/test_templates.py [--runner bin/runners/macos/runner] [platformer ...]
     python3 scripts/templates/test_templates.py --previews    # also writes templates/<id>/preview.png
+                                                              # (of its "preview" test: below)
 
 Tests: scripts/templates/tests/<id>.json, a list of
     {"name": "...", "frames": 120,
@@ -22,6 +23,9 @@ written into the user-data folder first (a save from an older version);
 runs of the same copy with the same user-data folder (each must end
 cleanly), so the test's own run sees what they saved; an expect row
 ["@file:slot_1.json", "game.gems", "==", 5] reads a user-data file.
+A test with "preview": true is the Welcome window's picture (--previews:
+its last frame, e.g. a level being played; none: the initial scene's 20th
+frame); it runs only then.
 Each runs on a fresh copy of the template (--user-data in it), with fixed
 1/60 s frames: the same every time. "frames": N runs exactly N frames - the
 dump (and screenshot) is of frame N, however small (#362: runners before it
@@ -498,8 +502,13 @@ def main():
         tests = json.load(open(path if os.path.isabs(path) or not tid.endswith(".json") else os.path.join(ROOT, path)))
         tid = os.path.basename(tid)[:-5] if tid.endswith(".json") else tid
         if previews:
-            # The Welcome window's picture: the first test's start, full size.
-            tests = [{"name": "preview", "frames": 20, "expect": [], "screenshot": os.path.join(ROOT, "templates", tid, "preview.png")}] + tests
+            # The Welcome window's picture, full size: the "preview" test's last
+            # frame (else the initial scene's start).
+            shot = {"name": "preview", "frames": 20}
+            shot.update(next((t for t in tests if t.get("preview")), {}))
+            shot.update({"name": "preview", "expect": [], "screenshot": os.path.join(ROOT, "templates", tid, "preview.png")})
+            tests = [shot] + tests
+        tests = [t for t in tests if not t.get("preview") or t.get("screenshot")]
         for test in tests:
             if UPDATE_GOLDENS and test.get("env"):
                 continue
