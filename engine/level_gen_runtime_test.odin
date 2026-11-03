@@ -88,6 +88,18 @@ lgr_monotonic :: proc(values: []f64) -> bool {
 	return true
 }
 
+// lgr_wait updates `lg` until its background generation is in (or 20 s
+// pass). A deadline, not a count of short sleeps: Windows rounds a sleep
+// under a millisecond down to almost nothing.
+@(private = "file")
+lgr_wait :: proc(lg: ^LevelGeneratorNode, ctx: ^GameContext) {
+	start := time.tick_now()
+	for LevelGeneratorNode_Generating(lg) && time.tick_since(start) < 20 * time.Second {
+		time.sleep(time.Millisecond)
+		LevelGeneratorNode_Update(lg, ctx, 0.016)
+	}
+}
+
 @(test)
 test_level_gen_progress :: proc(t: ^testing.T) {
 	game, scene := lgr_game()
@@ -122,10 +134,7 @@ test_level_gen_progress :: proc(t: ^testing.T) {
 	ok, why := LevelGeneratorNode_Generate(lg, ctx, 9)
 	testing.expectf(t, ok, "started: %s", why)
 	testing.expect(t, len(values) == 1 && values[0] == 0 && lg.progress == 0, "0 at the start")
-	for i := 0; i < 2000 && LevelGeneratorNode_Generating(lg); i += 1 {
-		time.sleep(500 * time.Microsecond)
-		LevelGeneratorNode_Update(lg, ctx, 0.016)
-	}
+	lgr_wait(lg, ctx)
 	testing.expect(t, !LevelGeneratorNode_Generating(lg) && tm.mapSize == {96, 96}, "done, the level in")
 	testing.expectf(t, lgr_monotonic(values[:]) && values[len(values) - 1] == 1, "0 .. 1, growing: %v", values[:])
 	testing.expectf(t, len(values) >= 2 && len(values) <= 102, "a bounded number of events (%d)", len(values))
@@ -177,10 +186,7 @@ started = gen:get_property("progress")
 	testing.expect_value(t, num(L, "after"), 1)
 	testing.expect_value(t, num(L, "count"), 2)
 	testing.expect_value(t, num(L, "started"), 0)
-	for i := 0; i < 2000 && LevelGeneratorNode_Generating(lg); i += 1 {
-		time.sleep(500 * time.Microsecond)
-		LevelGeneratorNode_Update(lg, ctx, 0.016)
-	}
+	lgr_wait(lg, ctx)
 	run(t, L, `
 local gen = Scene.find_node("Gen")
 last = seen[#seen]
@@ -326,9 +332,6 @@ test_level_gen_rebake_navigation :: proc(t: ^testing.T) {
 	lg.background = true
 	region.bakeVersion = 0
 	LevelGeneratorNode_Generate(lg, ctx, 2)
-	for i := 0; i < 2000 && LevelGeneratorNode_Generating(lg); i += 1 {
-		time.sleep(500 * time.Microsecond)
-		LevelGeneratorNode_Update(lg, ctx, 0.016)
-	}
+	lgr_wait(lg, ctx)
 	testing.expect(t, region.bakeVersion > 0 && blocked(region, {0, 0}), "baked after a background level")
 }
