@@ -543,7 +543,39 @@ Scene_RenderAllLayers :: proc(scene: ^Scene, gameContext: ^GameContext, deltaTim
 	defer Render_ClearView()
 	for layer in RenderLayer do render_bucket(scene, buckets[layer][:], gameContext, deltaTime)
 	// Screen Layers last (on top); placed by the scene's screen mapping.
+	render_screen_mapped(scene, screen, gameContext, deltaTime, view)
+}
+
+// render_screen_mapped draws Screen Layers' subtrees where the scene's
+// screen mapping puts the frame. A mapping that moves or scales the frame
+// (the editor's: the camera's view, 1/zoom) is applied as a transform over
+// the subtrees placed as the game places them (the frame at scale 1), so
+// what doesn't follow globalScale - UI sizes, text - matches the game too
+// (#360).
+@(private = "file")
+render_screen_mapped :: proc(scene: ^Scene, screen: [RenderLayer][dynamic]^Node, gameContext: ^GameContext, deltaTime: f32, view: Maybe(rl.Rectangle)) {
+	hasScreen := false
+	for l in screen do if len(l) > 0 {hasScreen = true; break}
+	if !hasScreen do return
+	m := scene.manager.screen
+	size, s := screen_frame(m)
+	if s == 1 && m.origin == {0, 0} {
+		for layer in RenderLayer do render_bucket(scene, screen[layer][:], gameContext, deltaTime)
+		return
+	}
+	scene.manager.screen = {scale = 1, size = size}
+	Node_SetGlobalPositions(scene.manager, scene.rootNode)
+	if v, ok := view.?; ok do Render_SetView({(v.x - m.origin.x) / s, (v.y - m.origin.y) / s, v.width / s, v.height / s})
+	rlgl.DrawRenderBatchActive()
+	rlgl.PushMatrix()
+	rlgl.Translatef(m.origin.x, m.origin.y, 0)
+	rlgl.Scalef(s, s, 1)
 	for layer in RenderLayer do render_bucket(scene, screen[layer][:], gameContext, deltaTime)
+	rlgl.DrawRenderBatchActive()
+	rlgl.PopMatrix()
+	if v, ok := view.?; ok do Render_SetView(v)
+	scene.manager.screen = m
+	Node_SetGlobalPositions(scene.manager, scene.rootNode)
 }
 
 // render_bucket draws one layer's nodes, skipping those outside the view.
