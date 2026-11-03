@@ -16,7 +16,7 @@ import imgui "lib/imgui"
 // Explode into Parts (a Vector Shape per child group, to animate apart).
 // ============================================================================
 
-@(private = "file")
+@(private)
 vector_files :: proc(state: ^EditorState) -> []string {
 	return Editor_ListProjectFiles(state, "", {".svg"})
 }
@@ -158,6 +158,37 @@ inspector_vector :: proc(state: ^EditorState, v: ^e.VectorShapeNode) {
 		}
 		UI_Tooltip("Replace this node with a Node holding a Vector Shape per child group (pivots at their centres), to move and animate the parts apart")
 	}
+	if UI_Button(fmt.tprintf("%s  Make Animated Symbol", ICON_FA_FILM), "insp.vec.animated", {field_width() + 80, 0}) do Vector_MakeAnimatedSymbol(state, v)
+	UI_Tooltip("A symbol with its own timeline (Flash's movie clip): its parts exploded into Vector Shapes, an Animation Player added, saved as a component - every instance plays its own animation")
+}
+
+// Vector_MakeAnimatedSymbol turns a Vector Shape into a component with its
+// own timeline: the parts exploded (when the symbol has child groups), an
+// Animation Player under them, saved as components/<symbol>.component.json
+// and this node linked to it.
+Vector_MakeAnimatedSymbol :: proc(state: ^EditorState, v: ^e.VectorShapeNode) -> bool {
+	r := e.VectorShapeNode_Asset(v)
+	if r == nil || state.activeScene == nil do return false
+	name := v.group[strings.last_index_byte(v.group, '/') + 1:] if v.group != "" else v.name
+	root: ^e.Node = &v.node
+	g, _, _, ok := e.VectorShapeNode_Part(v, r)
+	if ok && v.frame >= 0 do g = e.Vector_ResourceGroup(r, v.group)
+	if ok && len(e.Vector_GroupChildren(r, g)) > 0 {
+		if n := Vector_ExplodeParts(state, v); n != nil do root = n
+	} else {
+		Editor_RecordUndo(state, "Make Animated Symbol")
+	}
+	mgr := state.activeScene.manager
+	player := e.Node_CreateByTypeName(state.activeScene, "AnimationPlayerNode", root)
+	if player == nil do return false
+	player.name = strings.clone(Editor_UniqueChildName(state, root, "AnimationPlayer"), player.allocator)
+	player.gameContext = &state.game.gameContext
+	e.ProcessNodeQueues(mgr, &state.game.gameContext)
+	path, saved := Editor_SaveComponent(state, root, name)
+	if !saved do return false
+	Editor_SelectNode(state, root)
+	Editor_Log(state, .Info, "%s is an animated symbol (%s): animate it in the Animation tab; every instance plays its own", name, asset_rel_editor(state, path))
+	return true
 }
 
 // vector_skin_picker: under a Skeleton, the bones the art bends with

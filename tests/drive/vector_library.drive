@@ -1,0 +1,60 @@
+# #269: the Library tab - a file's symbols as previews with their uses;
+# dragging one into the viewport places it; duplicate, rename (the nodes
+# follow) and double-click to edit it in place.
+wait 5
+key escape
+click @hier.add
+type vector
+click @addnode.create
+click @insp.vec.draw
+click @vd.tool:rect
+drag @node:VectorShape+-120,-60 @node:VectorShape+-60,0
+click @vd.tool:ellipse
+drag @node:VectorShape+-50,-60 @node:VectorShape+10,0
+click @vd.tool:select
+drag @node:VectorShape+-140,-80 @node:VectorShape+30,20
+expect vd.selected == 2
+key f8
+key cmd+a
+type Wheel
+key enter
+key escape
+click @hier:VectorShape
+
+click @bottom:library
+# (a taller bottom panel: the splitter above its tabs, dragged up)
+drag 640,592 640,330
+wait 3
+expect item:library.symbol:Wheel == visible
+screenshot library
+drag @library.symbol:Wheel @viewport+150,0 20
+expect node:Wheel2.prop.group == Wheel
+
+rclick @library.symbol:Wheel
+click @ctx:library-duplicate
+wait 2
+expect item:library.symbol:Wheel 2 == visible
+
+rclick @library.symbol:Wheel
+click @ctx:library-rename
+key cmd+a
+type Hub
+key enter
+wait 2
+expect item:library.symbol:Hub == visible
+expect node:Wheel.prop.group == Hub
+expect node:Wheel2.prop.group == Hub
+expect file:art/vectorshape.svg contains id="Hub"
+
+dblclick @library.symbol:Hub
+expect vd.active == true
+expect item:vd.breadcrumb == visible
+key escape
+
+# Make Animated Symbol: a component with an Animation Player, the node linked.
+click @hier:Wheel
+click @insp.vec.animated
+wait 2
+expect file:components/Hub.component.json contains AnimationPlayerNode
+expect file:components/Hub.component.json contains "group"
+expect node:Wheel.component == components/Hub.component.json

@@ -152,9 +152,28 @@ anywhere. One file can hold a whole character, or a sheet of props.
   white) and **colour offset** (`colorAdd`: added to every colour - a hit
   flash). The meshes are shared: one tessellation per symbol per zoom.
 - **Editing the symbol updates every instance**: save the SVG.
-- **A symbol with its own timeline** is a component: make a component
-  (prefab) of a node tree drawing parts, give it an Animation Player, and
-  instance it - each instance plays (or holds) its own animation.
+- **A symbol with its own timeline** is a component. The Inspector's
+  **Make Animated Symbol** does it in one step: the symbol's parts are
+  exploded into Vector Shapes (when it has child groups), an Animation
+  Player is added, and the result is saved as
+  `components/<symbol>.component.json` with this node linked to it. Each
+  instance plays (or holds) its own animation.
+
+### Making and managing symbols in the editor
+
+- **Convert to Symbol**: while drawing, select shapes (Shift-click adds
+  one, or drag a box round them) and press **F8**, or **To Symbol** in the
+  toolbar. Name it: the shapes become a group of the file, and a Vector
+  Shape drawing the new symbol is placed exactly over them.
+- **Editing a symbol in place**: double-click a Vector Shape that shows one
+  symbol. Only that symbol's shapes can be picked and drawn into, and the
+  toolbar shows `file > symbol`. Every node drawing the symbol updates.
+  When drawing grows the symbol's box, the node moves so the art stays where
+  it is.
+- **The Library tab** lists a file's symbols with previews and how many
+  nodes in the scene use each. Drag one into the viewport to place it,
+  double-click one to edit it, and right-click to rename it (the nodes
+  follow), duplicate it, or delete it ([Library tab](../../docs/editor/tab-library.md)).
 
 ### Explode into Parts
 

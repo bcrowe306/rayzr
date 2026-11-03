@@ -137,6 +137,7 @@ Viewport_UpdateAndRender :: proc(state: ^EditorState) {
 		{
 			io := imgui.GetIO()
 			AssetBrowser_HandleViewportDrop(state, Viewport_ScreenToWorld(state, {io.MousePos.x, io.MousePos.y}))
+			Library_HandleViewportDrop(state, Viewport_ScreenToWorld(state, {io.MousePos.x, io.MousePos.y})) // (a symbol from the Library)
 		}
 		state.viewportHovered = imgui.IsItemHovered()
 		state.viewportFocused = imgui.IsWindowFocused()
