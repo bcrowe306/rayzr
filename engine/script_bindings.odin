@@ -4290,6 +4290,55 @@ lua_engine_set_fullscreen :: proc "c" (L: ^lua.State) -> c.int {
 	return 0
 }
 
+// Engine.quit(): the game ends after this frame - the runner stops as when
+// the window is closed; the editor's Simulate stops (Play from the editor is
+// its own process: it ends, the editor stays). The web: nothing (a page
+// can't close itself), false + a warning.
+@(private="file")
+lua_engine_quit :: proc "c" (L: ^lua.State) -> c.int {
+	context = Script_Context(L)
+	sm := get_script_manager(L)
+	when ODIN_OS == .JS {
+		script_warn_once(L, "quit", "Engine.quit does nothing on the web: a page can't close itself (it returned false)")
+		lua.pushboolean(L, false)
+	} else {
+		ok := sm != nil && sm.game != nil
+		if ok do Game_RequestQuit(sm.game)
+		lua.pushboolean(L, b32(ok))
+	}
+	return 1
+}
+
+// node:ui_focus() / ui_has_focus(): a UI widget takes the keyboard /
+// gamepad focus (a menu focusing its first button when it opens), as Tab
+// would; false + a warning when it can't (#252).
+@(private="file")
+lua_node_ui_focus :: proc "c" (L: ^lua.State) -> c.int {
+	context = Script_Context(L)
+	node, ok := to_node_userdata(L, 1)
+	if !ok {
+		script_warn_once(L, "ui_focus", "ui_focus: call it on a node (node:ui_focus())")
+		lua.pushboolean(L, false)
+		return 1
+	}
+	sm := get_script_manager(L)
+	if why := UI_FocusNode(sm.game if sm != nil else nil, node); why != "" {
+		script_warn_once(L, "ui_focus", "ui_focus: %s %s (it keeps no focus)", node.name, why)
+		lua.pushboolean(L, false)
+		return 1
+	}
+	lua.pushboolean(L, true)
+	return 1
+}
+
+@(private="file")
+lua_node_ui_has_focus :: proc "c" (L: ^lua.State) -> c.int {
+	context = Script_Context(L)
+	node, ok := to_node_userdata(L, 1)
+	lua.pushboolean(L, b32(ok && UI_HasFocus(node)))
+	return 1
+}
+
 @(private="file")
 lua_engine_is_fullscreen :: proc "c" (L: ^lua.State) -> c.int {
 	context = Script_Context(L)
@@ -4962,6 +5011,10 @@ RegisterEngineLuaBindings :: proc(L: ^lua.State, sm: ^ScriptManager) {
 		lua.setfield(L, -2, "is_visible")
 		lua.pushcfunction(L, lua_node_set_visible)
 		lua.setfield(L, -2, "set_visible")
+		lua.pushcfunction(L, lua_node_ui_focus) // (UI widgets)
+		lua.setfield(L, -2, "ui_focus")
+		lua.pushcfunction(L, lua_node_ui_has_focus)
+		lua.setfield(L, -2, "ui_has_focus")
 
 		// Tags (node_tags.odin)
 		lua.pushcfunction(L, lua_node_add_tag)
@@ -5381,6 +5434,8 @@ RegisterEngineLuaBindings :: proc(L: ^lua.State, sm: ^ScriptManager) {
 	lua.setfield(L, -2, "set_fullscreen")
 	lua.pushcfunction(L, lua_engine_is_fullscreen)
 	lua.setfield(L, -2, "is_fullscreen")
+	lua.pushcfunction(L, lua_engine_quit)
+	lua.setfield(L, -2, "quit")
 	lua.setglobal(L, "Engine")
 
 	// 3. Global "Input" table

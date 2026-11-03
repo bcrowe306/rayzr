@@ -34,6 +34,10 @@ local TextHolder = {}
 ---@class UIListHolder
 local UIListHolder = {}
 
+---UI widgets that take the keyboard / gamepad focus (Button, Slider, Checkbox, Toggle Switch, Knob, Text Input, Dropdown, Radio Group, List View, Tree View, Tab Container, Notched Slider, Volume Fader, Bullet / Numbered List, Table).
+---@class UIFocusable
+local UIFocusable = {}
+
 ---Nodes with a walkable grid (TileMapNode, LdtkLevelNode).
 ---@class NavGrid
 local NavGrid = {}
@@ -210,27 +214,27 @@ local GoapNode = {}
 
 ---@class UILabelNode : Node, TextHolder
 
----@class UIButtonNode : Node, TextHolder
+---@class UIButtonNode : Node, TextHolder, UIFocusable
 
----@class UISliderNode : Node
+---@class UISliderNode : Node, UIFocusable
 
----@class UICheckboxNode : Node
+---@class UICheckboxNode : Node, UIFocusable
 
 ---@class UIProgressBarNode : Node
 
----@class UITextInputNode : Node, TextHolder
+---@class UITextInputNode : Node, TextHolder, UIFocusable
 
----@class UIDropdownNode : Node, UIListHolder
+---@class UIDropdownNode : Node, UIListHolder, UIFocusable
 
----@class UIRadioGroupNode : Node, UIListHolder
+---@class UIRadioGroupNode : Node, UIListHolder, UIFocusable
 
----@class UIToggleSwitchNode : Node
+---@class UIToggleSwitchNode : Node, UIFocusable
 
----@class UIKnobNode : Node
+---@class UIKnobNode : Node, UIFocusable
 
----@class UINotchedSliderNode : Node, UIListHolder
+---@class UINotchedSliderNode : Node, UIListHolder, UIFocusable
 
----@class UIVolumeFaderNode : Node
+---@class UIVolumeFaderNode : Node, UIFocusable
 
 ---@class UIVolumeMeterNode : Node
 
@@ -238,21 +242,21 @@ local GoapNode = {}
 
 ---@class UIXYPlotNode : Node, UIListHolder
 
----@class UIListViewNode : Node, UIListHolder
+---@class UIListViewNode : Node, UIListHolder, UIFocusable
 
----@class UITreeViewNode : Node, UIListHolder
+---@class UITreeViewNode : Node, UIListHolder, UIFocusable
 
----@class UIUnorderedListNode : Node, UIListHolder
+---@class UIUnorderedListNode : Node, UIListHolder, UIFocusable
 
----@class UIOrderedListNode : Node, UIListHolder
+---@class UIOrderedListNode : Node, UIListHolder, UIFocusable
 
----@class UITableNode : Node, UIListHolder
+---@class UITableNode : Node, UIListHolder, UIFocusable
 
 ---@class UIIconNode : Node
 
 ---@class UIToolbarNode : Node, UIListHolder
 
----@class UITabContainerNode : Node, UIListHolder
+---@class UITabContainerNode : Node, UIListHolder, UIFocusable
 
 ---Gets the concrete runtime type of the node (e.g. "Node", "TextureNode", "DynamicBodyNode", "CameraNode").
 ---
@@ -9277,6 +9281,18 @@ function UIListHolder:get_items() end
 ---@return string[] One string per item, as in the Inspector; empty for nodes without a list
 function UIListHolder:ui_get_items() end
 
+---Gives the widget the keyboard / gamepad focus, as Tab would: Enter, Space or the gamepad's A then presses it, and the arrows move on from it. A menu calls it on its first button when it opens, so the keys work at once. It fails (false and a warning) when the node can't take the focus: not a focusable widget (a label, an image), Keyboard Focus off, disabled (or under a disabled node), hidden, or not in the running scene.
+---
+---Example: `self.menu:set_enabled(true); self.menu:get_node("Resume"):ui_focus()`
+---@return boolean focused true when it took the focus; false (nothing changes) when it can't
+function UIFocusable:ui_focus() end
+
+---Whether the widget has the keyboard / gamepad focus (from ui_focus, Tab, the arrows or a click).
+---
+---Example: `if self.node:get_node("Play"):ui_has_focus() then self.hint:set_text("Enter: play") end`
+---@return boolean true while it has the focus; false for other nodes
+function UIFocusable:ui_has_focus() end
+
 ---TextNode: types the text out again (revealSpeed > 0).
 ---
 ---Example: `self.node:get_node("Intro"):text_restart()`
@@ -12086,6 +12102,12 @@ function EngineModule.set_fullscreen(on) end
 ---Example: `local full = Engine.is_fullscreen(); Log.info("Fullscreen: " .. tostring(full))`
 ---@return boolean true when fullscreen, or when fullscreen was just asked for and is about to happen
 function EngineModule.is_fullscreen() end
+
+---Ends the game after this frame, as closing its window does (the same shutdown). In the editor's Simulate it stops the simulation instead, and Play from the editor ends the game, not the editor. On the web it does nothing - a page can't close itself - and returns false (with a warning), so a Quit button can do something else there: `if not Engine.quit() then Scene.change_scene("scenes/title.scene.json") end`.
+---
+---Example: `self.node:get_node("Quit"):connect("clicked", function() Engine.quit() end)`
+---@return boolean quitting true when the game (or the editor's run) is ending; false on the web
+function EngineModule.quit() end
 
 
 ---@class InputModule

@@ -161,6 +161,15 @@ Game_SetViewportCanvas :: proc(game: ^Game, canvasRect: rl.Rectangle, virtualSiz
 	game.virtualSize = virtualSize
 }
 
+// Game_RequestQuit: the game ends after this frame (Engine.quit, the dev
+// console's `quit`). The runner's loop stops as when the window is closed
+// (Runner_Stop: the same shutdown); the editor's Simulate, which shares the
+// editor's game, stops the run instead (Editor_UpdatePlaytest).
+Game_RequestQuit :: proc(game: ^Game) {
+	if game == nil do return
+	game.shouldQuit = true
+}
+
 GameQuit :: proc(game: ^Game) {
 	if game == nil do return
 	game.shouldQuit = true

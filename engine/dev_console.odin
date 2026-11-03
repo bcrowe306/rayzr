@@ -376,7 +376,7 @@ console_add_builtins :: proc() {
 	Console_Register("nav", "nav: show / hide navigation regions and their blocked cells", proc(game: ^Game, args: []string) {toggle(.Navigation, "navigation")})
 	Console_Register("camera", "camera: show / hide the camera's view and limits", proc(game: ^Game, args: []string) {toggle(.Camera, "camera bounds")})
 	Console_Register("outlines", "outlines: show / hide every node's bounds (a dot where a node has none)", proc(game: ^Game, args: []string) {toggle(.Outlines, "outlines")})
-	Console_Register("quit", "quit: end the game", proc(game: ^Game, args: []string) {game.shouldQuit = true})
+	Console_Register("quit", "quit: end the game", proc(game: ^Game, args: []string) {Game_RequestQuit(game)})
 }
 
 // ----------------------------------------------------------------------------

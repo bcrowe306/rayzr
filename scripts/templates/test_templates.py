@@ -13,7 +13,8 @@ Tests: scripts/templates/tests/<id>.json, a list of
      "scene": "scenes/level1.scene.json",                  # optional: the scene patched / started
      "expect": [["Coins", "text", "==", "Coins 1 / 11"],   # node, field, op, value
                 ["Player", "x", "<", 120],                  # x / y: position; others: properties
-                ["Enemy1", "exists", "==", false]]}
+                ["Enemy1", "exists", "==", false]],
+     "quits": false}                                       # optional: true - the game must end itself first (no dump)
 Each runs on a fresh copy of the template (--user-data in it), with fixed
 1/60 s frames: the same every time. Linux CI runs it under xvfb-run.
 
@@ -123,6 +124,16 @@ def run_test(runner, tid, test, tmp):
         cmd += ["--screenshot", shot]
     env = dict(os.environ, **test.get("env", {}))  # ("env": extra environment variables)
     log = subprocess.run(cmd, capture_output=True, text=True, timeout=120, env=env)
+    if test.get("quits"):
+        # ("quits": true - the game ends itself (Engine.quit) before its frame
+        # count: the runner exits cleanly without writing the scene dump.)
+        fails = []
+        if log.returncode != 0:
+            fails.append(f"exit code {log.returncode}: {log.stderr[-600:]}")
+        if os.path.isfile(dump):
+            fails.append(f"the game didn't quit: it ran all {test['frames']} frames")
+        errors = [l for l in log.stderr.splitlines() + log.stdout.splitlines() if "[ERROR]" in l or "Lua error" in l]
+        return fails + [f"log: {e}" for e in errors[:5]]
     if not os.path.isfile(dump):
         return [f"no scene dump (exit {log.returncode}): {log.stderr[-600:]}"]
     top = json.load(open(dump))

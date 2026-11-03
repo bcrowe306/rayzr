@@ -31,7 +31,7 @@ test_lua_definitions_match_bindings :: proc(t: ^testing.T) {
 			sig = sig[:paren]
 			if i := strings.index_byte(sig, ':'); i >= 0 {
 				cls := sig[:i]
-				if cls == "Node" || strings.has_suffix(cls, "Node") || cls == "TextHolder" || cls == "NavGrid" || cls == "UIListHolder" do nodeDecl[sig[i + 1:]] = true
+				if cls == "Node" || strings.has_suffix(cls, "Node") || cls == "TextHolder" || cls == "NavGrid" || cls == "UIListHolder" || cls == "UIFocusable" do nodeDecl[sig[i + 1:]] = true
 			} else if i := strings.index_byte(sig, '.'); i >= 0 {
 				cls := sig[:i]
 				if cls not_in modDecl do modDecl[cls] = make(map[string]bool, allocator = context.temp_allocator)
