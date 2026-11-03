@@ -33,12 +33,12 @@ node's current region, or the whole image when it has none.
 | Control | What it does |
 |---|---|
 | *Texture: W × H px*, *File:* | The image's size and path. |
-| **X**, **Y**, **Width**, **Height** | The region in image pixels; drag or double-click to type. It is kept inside the image. |
+| **X**, **Y**, **Width**, **Height** | The region in image pixels; drag or double-click to type. It is kept inside the image, at least 1 x 1 pixel. |
 | **Full Texture** | The whole image. |
 | **Reset** | Back to the region the node had when the editor opened. |
-| **Snap to Grid** | Shows a grid on the image and snaps the dragged rectangle's corners to its lines. |
+| **Snap to Grid** | Shows a grid on the image (a line every **Cell Size** pixels) and snaps the dragged rectangle's corners to its lines. |
 | **Columns**, **Rows** | (Snap to Grid) The grid's cells across and down, 1 to 256. They set **Cell Size**. |
-| **Cell Size** | (Snap to Grid) A cell's width and height in pixels. Sets the columns and rows to how many fit. |
+| **Cell Size** | (Snap to Grid) A cell's width and height in pixels: what the grid snaps to. Sets the columns and rows to how many fit. |
 | *Selected Region: W × H px* | The region's size. |
 | Preview | The region alone, as the sprite will show it. |
 | **Apply** | Sets the node's region (one undo step) and closes the editor. |

@@ -1,6 +1,7 @@
 package editor
 
 import "core:c"
+import "core:encoding/uuid"
 import "core:fmt"
 import "core:math"
 import "core:strings"
@@ -17,7 +18,11 @@ import rl "vendor:raylib"
 @(private = "file")
 atlasDialog: struct {
 	open:         bool,
+	// The node edited, held with its id: it may be deleted (or rebuilt by an
+	// undo) while the window is open - atlas_node() checks before each use
+	// (#375).
 	node:         ^e.AtlasSpriteNode,
+	nodeId:       uuid.Identifier,
 	origRegion:   rl.Rectangle,
 	region:       rl.Rectangle,
 	// Grid snapping
@@ -52,6 +57,7 @@ AtlasRegion_Open :: proc(state: ^EditorState, node: ^e.AtlasSpriteNode) {
 	if node == nil || state == nil do return
 	atlasDialog.open = true
 	atlasDialog.node = node
+	atlasDialog.nodeId = node.id
 	atlasDialog.origRegion = node.region
 	atlasDialog.region = node.region
 	atlasDialog.dragging = false
@@ -69,6 +75,33 @@ AtlasRegion_Open :: proc(state: ^EditorState, node: ^e.AtlasSpriteNode) {
 		if atlasDialog.cellSize[0] <= 0 do atlasDialog.cellSize[0] = c.int(tw / max(f32(atlasDialog.gridCols), 1))
 		if atlasDialog.cellSize[1] <= 0 do atlasDialog.cellSize[1] = c.int(th / max(f32(atlasDialog.gridRows), 1))
 	}
+}
+
+// atlas_node: the node being edited, or nil once it's gone (deleted, or
+// rebuilt by an undo).
+@(private = "file")
+atlas_node :: proc() -> ^e.AtlasSpriteNode {
+	n := atlasDialog.node
+	if n == nil || !e.Node_IsAlive(&n.node) || n.id != atlasDialog.nodeId || n.typeId != e.AtlasSpriteNode do return nil
+	return n
+}
+
+// Atlas_ClampRegion: a region inside a w x h texture, at least 1 x 1 (a
+// region starting on the right / bottom edge moves in by a pixel).
+Atlas_ClampRegion :: proc(r: rl.Rectangle, w, h: f32) -> rl.Rectangle {
+	out := r
+	out.x = clamp(r.x, 0, max(w - 1, 0))
+	out.y = clamp(r.y, 0, max(h - 1, 0))
+	out.width = clamp(r.width, 1, max(w - out.x, 1))
+	out.height = clamp(r.height, 1, max(h - out.y, 1))
+	return out
+}
+
+// Atlas_SnapStep: the grid's step on one axis - the cell size when set
+// (what Snap to Grid snaps to), else the texture split into `count` cells.
+Atlas_SnapStep :: proc(size: f32, count, cell: c.int) -> f32 {
+	if cell > 0 do return f32(cell)
+	return size / f32(max(count, 1))
 }
 
 AtlasRegion_IsOpen :: proc() -> bool {
@@ -94,6 +127,7 @@ atlas_fit_scale :: proc(texW, texH: f32, avail: [2]f32) -> f32 {
 
 AtlasRegion_Render :: proc(state: ^EditorState) {
 	if !atlasDialog.open || atlasDialog.node == nil do return
+	node := atlas_node()
 
 	imgui.SetNextWindowSize({820, 560}, .FirstUseEver)
 	center := imgui.GetMainViewport().WorkPos + imgui.GetMainViewport().WorkSize * 0.5
@@ -108,15 +142,26 @@ AtlasRegion_Render :: proc(state: ^EditorState) {
 
 	// --- Left Settings Column ---
 	if imgui.BeginChild("##atlas_side", {270, 0}, {}, {}) {
-		if atlasDialog.node.texture == nil {
+		if node == nil {
+			// (Deleted while the window was open: nothing to apply to.)
+			imgui.TextColored(UI_WARNING, "The Atlas Sprite was deleted.")
+			UI_DimTextWrapped("Close this window and open the editor again from an Atlas Sprite's Inspector.")
+			Drive_Item("atlas.gone")
+			if UI_PrimaryButton(fmt.tprintf("%s  Apply", ICON_FA_CHECK), "atlas.apply", {120, 0}) {
+				Editor_Log(state, .Warn, "Atlas Region Editor: the Atlas Sprite is gone - nothing applied")
+				atlasDialog.open = false
+			}
+			imgui.SameLine()
+			if UI_Button("Cancel", "atlas.cancel", {120, 0}) do atlasDialog.open = false
+		} else if node.texture == nil {
 			UI_DimText("No texture assigned to this node.")
 		} else {
-			tw := f32(atlasDialog.node.texture.texture.width)
-			th := f32(atlasDialog.node.texture.texture.height)
+			tw := f32(node.texture.texture.width)
+			th := f32(node.texture.texture.height)
 
 			UI_DimText(fmt.tprintf("Texture: %d × %d px", int(tw), int(th)))
-			if atlasDialog.node.filePath != "" {
-				UI_DimText(fmt.tprintf("File: %s", atlasDialog.node.filePath))
+			if node.filePath != "" {
+				UI_DimText(fmt.tprintf("File: %s", node.filePath))
 			}
 
 			imgui.Separator()
@@ -139,11 +184,8 @@ AtlasRegion_Render :: proc(state: ^EditorState) {
 				UI_EndProps()
 			}
 
-			// Clamp region
-			atlasDialog.region.x = clamp(atlasDialog.region.x, 0, tw)
-			atlasDialog.region.y = clamp(atlasDialog.region.y, 0, th)
-			atlasDialog.region.width = clamp(atlasDialog.region.width, 1, tw - atlasDialog.region.x)
-			atlasDialog.region.height = clamp(atlasDialog.region.height, 1, th - atlasDialog.region.y)
+			// Clamp region (at least 1 x 1, inside the texture: #375)
+			atlasDialog.region = Atlas_ClampRegion(atlasDialog.region, tw, th)
 
 			if UI_Button("Full Texture", "atlas.full") {
 				atlasDialog.region = {0, 0, tw, th}
@@ -200,14 +242,14 @@ AtlasRegion_Render :: proc(state: ^EditorState) {
 				off := [2]f32{(previewBoxW - pw) * 0.5, (previewBoxH - ph) * 0.5}
 				uv0 := [2]f32{atlasDialog.region.x / tw, atlasDialog.region.y / th}
 				uv1 := [2]f32{(atlasDialog.region.x + atlasDialog.region.width) / tw, (atlasDialog.region.y + atlasDialog.region.height) / th}
-				imgui.DrawList_AddImage(dl, transmute(imgui.TextureID)&atlasDialog.node.texture.texture, cur + off, cur + off + {pw, ph}, uv0, uv1)
+				imgui.DrawList_AddImage(dl, transmute(imgui.TextureID)&node.texture.texture, cur + off, cur + off + {pw, ph}, uv0, uv1)
 				imgui.Dummy({previewBoxW, previewBoxH})
 			}
 
 			imgui.Separator()
 			if UI_PrimaryButton(fmt.tprintf("%s  Apply", ICON_FA_CHECK), "atlas.apply", {120, 0}) {
 				Editor_RecordUndo(state, "Edit Atlas Region")
-				e.AtlasSpriteNode_SetRegion(atlasDialog.node, atlasDialog.region)
+				e.AtlasSpriteNode_SetRegion(node, atlasDialog.region)
 				atlasDialog.open = false
 			}
 			imgui.SameLine()
@@ -221,18 +263,17 @@ AtlasRegion_Render :: proc(state: ^EditorState) {
 
 	// --- Right Interactive Canvas Column ---
 	if imgui.BeginChild("##atlas_sheet", {0, 0}, {.Borders}, {.HorizontalScrollbar, .NoMove}) {
-		if atlasDialog.node.texture == nil {
+		if node == nil || node.texture == nil {
 			UI_DimText("No texture to display.")
 		} else {
-			atlas_canvas(state)
+			atlas_canvas(state, node)
 		}
 	}
 	imgui.EndChild()
 }
 
 @(private = "file")
-atlas_canvas :: proc(state: ^EditorState) {
-	node := atlasDialog.node
+atlas_canvas :: proc(state: ^EditorState, node: ^e.AtlasSpriteNode) {
 	if node.texture == nil do return
 	tw := f32(node.texture.texture.width)
 	th := f32(node.texture.texture.height)
@@ -309,18 +350,17 @@ atlas_canvas :: proc(state: ^EditorState) {
 	Drive_ItemRect("atlas.canvas", p0, p0 + imgSize, inWindow = true)
 
 	// Grid lines if enabled
+	// (Every cell-size step: what Snap to Grid snaps to - #375.)
+	stepX := Atlas_SnapStep(tw, atlasDialog.gridCols, atlasDialog.cellSize[0])
+	stepY := Atlas_SnapStep(th, atlasDialog.gridRows, atlasDialog.cellSize[1])
 	if atlasDialog.enableGrid {
-		cols := max(atlasDialog.gridCols, 1)
-		rows := max(atlasDialog.gridRows, 1)
-		cellW := tw / f32(cols)
-		cellH := th / f32(rows)
-		for c in 0 ..= cols {
-			x := p0.x + f32(c) * cellW * scale
-			imgui.DrawList_AddLine(dl, {x, p0.y}, {x, p0.y + imgSize.y}, col32(255, 255, 255, 45), 1)
+		for x := f32(0); x <= tw + 0.01; x += stepX {
+			sx := p0.x + x * scale
+			imgui.DrawList_AddLine(dl, {sx, p0.y}, {sx, p0.y + imgSize.y}, col32(255, 255, 255, 45), 1)
 		}
-		for r in 0 ..= rows {
-			y := p0.y + f32(r) * cellH * scale
-			imgui.DrawList_AddLine(dl, {p0.x, y}, {p0.x + imgSize.x, y}, col32(255, 255, 255, 45), 1)
+		for y := f32(0); y <= th + 0.01; y += stepY {
+			sy := p0.y + y * scale
+			imgui.DrawList_AddLine(dl, {p0.x, sy}, {p0.x + imgSize.x, sy}, col32(255, 255, 255, 45), 1)
 		}
 	}
 
@@ -335,10 +375,8 @@ atlas_canvas :: proc(state: ^EditorState) {
 		atlasDialog.dragging = true
 		pt := texelMouse
 		if atlasDialog.enableGrid {
-			cols := max(atlasDialog.gridCols, 1)
-			rows := max(atlasDialog.gridRows, 1)
-			pt.x = snapCoord(pt.x, tw / f32(cols))
-			pt.y = snapCoord(pt.y, th / f32(rows))
+			pt.x = snapCoord(pt.x, stepX)
+			pt.y = snapCoord(pt.y, stepY)
 		}
 		atlasDialog.dragStart = pt
 	}
@@ -347,16 +385,14 @@ atlas_canvas :: proc(state: ^EditorState) {
 		if imgui.IsMouseDown(.Left) {
 			pt := texelMouse
 			if atlasDialog.enableGrid {
-				cols := max(atlasDialog.gridCols, 1)
-				rows := max(atlasDialog.gridRows, 1)
-				pt.x = snapCoord(pt.x, tw / f32(cols))
-				pt.y = snapCoord(pt.y, th / f32(rows))
+				pt.x = snapCoord(pt.x, stepX)
+				pt.y = snapCoord(pt.y, stepY)
 			}
 			x0 := clamp(min(atlasDialog.dragStart.x, pt.x), 0, tw)
 			y0 := clamp(min(atlasDialog.dragStart.y, pt.y), 0, th)
 			x1 := clamp(max(atlasDialog.dragStart.x, pt.x), 0, tw)
 			y1 := clamp(max(atlasDialog.dragStart.y, pt.y), 0, th)
-			atlasDialog.region = {x0, y0, max(x1 - x0, 1), max(y1 - y0, 1)}
+			atlasDialog.region = Atlas_ClampRegion({x0, y0, x1 - x0, y1 - y0}, tw, th)
 		} else {
 			atlasDialog.dragging = false
 		}

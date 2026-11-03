@@ -35,7 +35,7 @@ slicer: struct {
 	margin:    [2]c.int,
 	spacing:   [2]c.int,
 	selection: [dynamic]int,
-	lastCell:  int,
+	lastCell:  int, // the last cell clicked (Shift+click's range starts after it; -1: none - reset when the grid changes, #375)
 	dragAdd:   bool,
 	nameBuf:   [64]u8,
 	loop:      bool,
@@ -53,6 +53,7 @@ Slicer_Open :: proc(state: ^EditorState, texRel: string) {
 		slicer.grid = {4, 1}
 		slicer.loop = true
 		slicer.fps = 12
+		slicer.lastCell = -1
 	}
 	if texRel != "" do slicer_set_texture(state, texRel)
 }
@@ -89,6 +90,7 @@ slicer_set_texture :: proc(state: ^EditorState, rel: string) {
 	}
 	slicer_fit()
 	clear(&slicer.selection)
+	slicer.lastCell = -1
 	slicer_clear_anims()
 }
 
@@ -111,12 +113,33 @@ cell_size_px :: proc() -> [2]int {
 	return {int(max(slicer.cellSize.x, 1)), int(max(slicer.cellSize.y, 1))}
 }
 
-// slicer_fit: by cell size, the grid is the whole cells that fit.
+// slicer_fit: by cell size, the grid is the whole cells that fit. A grid
+// that changes drops the picked cells' Shift+click anchor (#375).
 @(private = "file")
 slicer_fit :: proc() {
 	if !slicer.byCell || slicer.tex.id == 0 do return
 	fit := e.SpriteSheet_FitGrid({f32(slicer.tex.width), f32(slicer.tex.height)}, {int(slicer.margin.x), int(slicer.margin.y)}, {int(slicer.spacing.x), int(slicer.spacing.y)}, cell_size_px())
-	slicer.grid = {c.int(max(fit.x, 1)), c.int(max(fit.y, 1))}
+	grid := [2]c.int{c.int(max(fit.x, 1)), c.int(max(fit.y, 1))}
+	if grid != slicer.grid do slicer.lastCell = -1
+	slicer.grid = grid
+}
+
+// Slicer_RangeCells: the cells a Shift+click on `cell` adds - from the one
+// after `last` (the last clicked) up to `cell`; just `cell` when there is no
+// last cell or it isn't in the grid of `count` cells any more (#375).
+Slicer_RangeCells :: proc(last, cell, count: int, allocator := context.temp_allocator) -> []int {
+	out := make([dynamic]int, allocator)
+	if cell < 0 || cell >= count do return out[:]
+	if last < 0 || last >= count || last == cell {
+		append(&out, cell)
+		return out[:]
+	}
+	step := 1 if cell > last else -1
+	for k := last + step; ; k += step {
+		append(&out, k)
+		if k == cell do break
+	}
+	return out[:]
 }
 
 @(private = "file")
@@ -248,7 +271,10 @@ Slicer_Render :: proc(state: ^EditorState) {
 				changed |= imgui.DragInt2("##spacing", &slicer.spacing, 0.1, 0, 512)
 				Drive_Item("slicer.spacing")
 				if changed do slicer_fit()
-				if changed do clear(&slicer.selection)
+				if changed {
+					clear(&slicer.selection)
+					slicer.lastCell = -1 // (a range from a cell of the old grid: #375)
+				}
 				UI_EndProps()
 			}
 			if UI_Button(fmt.tprintf("%s  Save Preset", ICON_FA_FLOPPY_DISK), "slicer.save-preset") {
@@ -443,12 +469,10 @@ slicer_sheet :: proc(state: ^EditorState) {
 		if !hovered || !point_in_rect(mouse, mn, mx) do continue
 		imgui.DrawList_AddRect(dl, mn, mx, col32(255, 255, 255, 230), 0, {}, 2)
 		if imgui.IsMouseClicked(.Left) {
-			if io.KeyShift && slicer.lastCell >= 0 {
+			if io.KeyShift && slicer.lastCell >= 0 && slicer.lastCell < cell_count() {
 				// A range from the last clicked cell.
-				step := 1 if cell >= slicer.lastCell else -1
-				for k := slicer.lastCell + step; ; k += step {
+				for k in Slicer_RangeCells(slicer.lastCell, cell, cell_count()) {
 					if !slice.contains(slicer.selection[:], k) do append(&slicer.selection, k)
-					if k == cell do break
 				}
 			} else if idx >= 0 {
 				ordered_remove(&slicer.selection, idx)
