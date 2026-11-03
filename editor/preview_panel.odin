@@ -131,9 +131,17 @@ PreviewPanel_OnNodeSelected :: proc(state: ^EditorState, node: ^e.Node) {
 PreviewPanel_LoadTexture :: proc(state: ^EditorState, fullPath: string) {
 	if state.previewTexturePath == fullPath && state.previewTextureLoaded do return
 
-	if state.previewTextureLoaded {
-		rl.UnloadTexture(state.previewTexture)
-		state.previewTextureLoaded = false
+	// The textures shown before stay loaded (a few, while their files are
+	// unchanged): clicking from one sprite to another doesn't decode its
+	// image again each time (#331).
+	if state.previewTextureLoaded do preview_cache_put(state.previewTexturePath, state.previewTexture)
+	state.previewTextureLoaded = false
+	if tex, ok := preview_cache_take(fullPath); ok {
+		state.previewTexture = tex
+		state.previewTextureLoaded = true
+		delete(state.previewTexturePath)
+		state.previewTexturePath = strings.clone(fullPath)
+		return
 	}
 
 	pathC := strings.clone_to_cstring(fullPath, context.temp_allocator)
@@ -152,8 +160,64 @@ PreviewPanel_LoadTexture :: proc(state: ^EditorState, fullPath: string) {
 	if tex.id > 0 {
 		state.previewTexture = tex
 		state.previewTextureLoaded = true
+		delete(state.previewTexturePath)
 		state.previewTexturePath = strings.clone(fullPath)
 	}
+}
+
+// The preview's recent textures (PreviewPanel_LoadTexture): by path, with
+// the file's modification time when loaded (a changed file loads again).
+PREVIEW_CACHE_MAX :: 8
+
+@(private = "file")
+Preview_Cached :: struct {
+	path:  string,
+	tex:   rl.Texture2D,
+	mtime: i64,
+}
+
+@(private = "file")
+previewCache: [dynamic]Preview_Cached
+
+@(private = "file")
+preview_file_time :: proc(path: string) -> i64 {
+	fi, err := os.stat(path, context.temp_allocator)
+	return 0 if err != nil else fi.modification_time._nsec
+}
+
+@(private = "file")
+preview_cache_put :: proc(path: string, tex: rl.Texture2D) {
+	append(&previewCache, Preview_Cached{strings.clone(path), tex, preview_file_time(path)})
+	for len(previewCache) > PREVIEW_CACHE_MAX {
+		old := previewCache[0]
+		rl.UnloadTexture(old.tex)
+		delete(old.path)
+		ordered_remove(&previewCache, 0)
+	}
+}
+
+@(private = "file")
+preview_cache_take :: proc(path: string) -> (rl.Texture2D, bool) {
+	for c, i in previewCache do if c.path == path {
+		ordered_remove(&previewCache, i)
+		delete(c.path)
+		if c.mtime != preview_file_time(path) {
+			rl.UnloadTexture(c.tex) // (the file changed since)
+			return {}, false
+		}
+		return c.tex, true
+	}
+	return {}, false
+}
+
+// PreviewPanel_ClearTextureCache unloads the recent preview textures.
+PreviewPanel_ClearTextureCache :: proc() {
+	for c in previewCache {
+		rl.UnloadTexture(c.tex)
+		delete(c.path)
+	}
+	delete(previewCache)
+	previewCache = nil
 }
 
 PreviewPanel_LoadAudio :: proc(state: ^EditorState, fullPath: string) {
@@ -1398,6 +1462,7 @@ PreviewPanel_Shutdown :: proc(state: ^EditorState) {
 	}
 	delete(state.previewTexturePath)
 	state.previewTexturePath = ""
+	PreviewPanel_ClearTextureCache()
 
 	if state.previewSoundLoaded {
 		if state.previewAudioPlaying {
