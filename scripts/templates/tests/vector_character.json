@@ -267,6 +267,7 @@
  },
  {
   "name": "talking: Pip stops at Pep and says his line, lip-synced; the clock waits",
+  "audio_clock": true,
   "frames": 250,
   "scene": "scenes/stage1.scene.json",
   "input": [
@@ -739,6 +740,7 @@
  },
  {
   "name": "T talks: the mouth moves with the voice",
+  "audio_clock": true,
   "frames": 50,
   "scene": "scenes/stage1.scene.json",
   "input": [
