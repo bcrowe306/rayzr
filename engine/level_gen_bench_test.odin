@@ -5,10 +5,10 @@ import "core:testing"
 import "core:time"
 
 // #171: what generating a level costs - a cave + noise graph of every heavy
-// kind (cellular, noise, blur, scatter, the outputs) at 128 / 256 / 512
-// cells square: a whole generation (tiles and entities), the editor's
-// previews (every node) cold and after one change, and each node alone (its
-// inputs cached). Printed, not asserted (scripts/bench.sh runs it with
+// kind (cellular, noise of each type, blur, scatter, Poisson scatter, the
+// outputs) at 128 / 256 / 512 cells square: a whole generation (tiles and
+// entities), the editor's previews (every node) cold and after one change,
+// and each node alone (its inputs cached). Printed, not asserted (scripts/bench.sh runs it with
 // -o:speed).
 
 @(private = "file")
@@ -26,7 +26,11 @@ bench_graph_text :: proc(size: int) -> string {
 		{{"id": 10, "type": "surface", "inputs": {{"in": 8}}}},
 		{{"id": 11, "type": "scatter", "inputs": {{"in": 10}}, "params": {{"chance": 0.05, "spacing": 6}}}},
 		{{"id": 12, "type": "entity_output", "inputs": {{"in": 11}}, "component": "components/coin.component.json"}},
-		{{"id": 13, "type": "tile_output", "inputs": {{"in": 8}}, "rules": [{{"min": 0.5, "max": 1, "tiles": [3, 4]}}]}}]}}`, size, size)
+		{{"id": 13, "type": "tile_output", "inputs": {{"in": 8}}, "rules": [{{"min": 0.5, "max": 1, "tiles": [3, 4]}}]}},
+		{{"id": 14, "type": "noise", "params": {{"type": "perlin", "scale": 24, "octaves": 4}}}},
+		{{"id": 15, "type": "noise", "params": {{"type": "simplex", "scale": 24, "octaves": 4}}}},
+		{{"id": 16, "type": "poisson_scatter", "params": {{"radius": 4}}}},
+		{{"id": 17, "type": "poisson_scatter", "inputs": {{"mask": 10}}, "params": {{"radius": 6}}}}]}}`, size, size)
 }
 
 @(test)
@@ -68,12 +72,14 @@ bench_level_gen :: proc(t: ^testing.T) {
 		free_all(context.temp_allocator)
 
 		// Each node alone (its inputs from the cache).
-		for n in g.nodes {
+		for &n in g.nodes {
 			if n.kind == .Tile_Output || n.kind == .Entity_Output do continue
 			Gen_CacheForget(&cache, n.id)
 			start = time.tick_now()
 			_, _ = Gen_Evaluate(&g, n.id, 0, context.temp_allocator, &cache)
-			fmt.printf("[bench] levelgen %dx%d   %-12s %.3f ms\n", size, size, GEN_KINDS[n.kind].name, ms(start))
+			label := GEN_KINDS[n.kind].name
+			if n.kind == .Noise do label = fmt.tprintf("noise %s", GEN_NOISE_TYPES[clamp(int(Gen_Param(&n, "type")), 0, len(GEN_NOISE_TYPES) - 1)])
+			fmt.printf("[bench] levelgen %dx%d   %-16s %.3f ms\n", size, size, label, ms(start))
 			free_all(context.temp_allocator)
 		}
 	}
