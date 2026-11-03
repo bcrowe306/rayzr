@@ -1,7 +1,7 @@
 [
  {
-  "name": "new game starts level 1",
-  "frames": 90,
+  "name": "play-through: the title's Play starts level 1 (three lives)",
+  "frames": 60,
   "input": [
    "10 ENTER tap"
   ],
@@ -13,19 +13,245 @@
     "level1"
    ],
    [
-    "Player",
-    "exists",
+    "LevelText",
+    "text",
     "==",
-    true
+    "Level 1 / 2"
+   ],
+   [
+    "Lives",
+    "text",
+    "==",
+    "Lives 3"
    ]
   ]
  },
  {
-  "name": "continue needs a save",
+  "name": "play-through: from the title, level 1 played to its door routes to level 2 (unlocked and saved)",
+  "frames": 720,
+  "input": [
+   "10 ENTER tap",
+   "33 RIGHT down",
+   "164 SPACE tap 16",
+   "292 SPACE tap 16",
+   "343 SPACE tap 16",
+   "391 SPACE tap 16",
+   "545 SPACE tap 16"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "level2"
+   ],
+   [
+    "LevelText",
+    "text",
+    "==",
+    "Level 2 / 2"
+   ],
+   [
+    "Lives",
+    "text",
+    "==",
+    "Lives 3"
+   ],
+   [
+    "@file:save.json",
+    "progress.unlocked",
+    "==",
+    2
+   ]
+  ]
+ },
+ {
+  "name": "play-through: from the title, running into the enemy three times is game over",
+  "frames": 660,
+  "input": [
+   "10 ENTER tap",
+   "33 RIGHT down"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "result"
+   ],
+   [
+    "Heading",
+    "text",
+    "==",
+    "Game over"
+   ],
+   [
+    "Again",
+    "text",
+    "contains",
+    "Retry level 1"
+   ]
+  ]
+ },
+ {
+  "name": "play-through: level 2 played through - its door ends the game: the result screen, a new best",
+  "frames": 800,
+  "scene": "scenes/level2.scene.json",
+  "input": [
+   "5 RIGHT down",
+   "97 SPACE tap 16",
+   "135 SPACE tap 16",
+   "251 SPACE tap 16",
+   "373 SPACE tap 16",
+   "470 SPACE tap 16",
+   "520 SPACE tap 16",
+   "588 SPACE tap 16"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "result"
+   ],
+   [
+    "Heading",
+    "text",
+    "==",
+    "You win!"
+   ],
+   [
+    "Best",
+    "text",
+    "==",
+    "New best!"
+   ],
+   [
+    "@file:save.json",
+    "progress.best",
+    ">",
+    0
+   ]
+  ]
+ },
+ {
+  "name": "play-through: the result screen's Retry plays the level again",
   "frames": 60,
+  "scene": "scenes/result.scene.json",
+  "input": [
+   "10 ENTER tap"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "level1"
+   ],
+   [
+    "Lives",
+    "text",
+    "==",
+    "Lives 3"
+   ]
+  ]
+ },
+ {
+  "name": "play-through: the unlocked level survives a restart - the title starts at level 2",
+  "frames": 60,
+  "patch_scene": "scenes/level1.scene.json",
+  "patch": {
+   "Player": {
+    "position": [
+     1000,
+     110
+    ]
+   }
+  },
+  "before": [
+   {
+    "frames": 200,
+    "input": [
+     "10 ENTER tap",
+     "33 RIGHT down"
+    ]
+   }
+  ],
+  "input": [
+   "10 ENTER tap"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "level2"
+   ],
+   [
+    "@file:save.json",
+    "progress.unlocked",
+    "==",
+    2
+   ]
+  ]
+ },
+ {
+  "name": "play-through: the volume set in Settings survives a restart",
+  "frames": 60,
+  "before": [
+   {
+    "frames": 120,
+    "input": [
+     "10 DOWN tap",
+     "20 DOWN tap",
+     "30 ENTER tap",
+     "45 LEFT tap",
+     "55 LEFT tap",
+     "65 LEFT tap",
+     "75 DOWN tap",
+     "85 ENTER tap"
+    ]
+   }
+  ],
   "input": [
    "10 DOWN tap",
+   "20 DOWN tap",
+   "30 ENTER tap"
+  ],
+  "expect": [
+   [
+    "Volume",
+    "text",
+    "==",
+    "Volume  < 50% >"
+   ],
+   [
+    "@file:save.json",
+    "settings.volume",
+    "==",
+    0.5
+   ]
+  ]
+ },
+ {
+  "name": "play-through: Quit on the title ends the game",
+  "frames": 120,
+  "quits": true,
+  "input": [
+   "10 UP tap",
    "20 ENTER tap"
+  ]
+ },
+ {
+  "name": "pause: Esc pauses; Title screen goes back to the title",
+  "frames": 130,
+  "scene": "scenes/level1.scene.json",
+  "input": [
+   "20 ESCAPE tap",
+   "25 RIGHT down",
+   "40 DOWN tap",
+   "50 DOWN tap",
+   "60 ENTER tap"
   ],
   "expect": [
    [
@@ -33,12 +259,30 @@
     "name",
     "==",
     "title"
+   ]
+  ]
+ },
+ {
+  "name": "pause: Resume plays on",
+  "frames": 110,
+  "scene": "scenes/level1.scene.json",
+  "input": [
+   "20 ESCAPE tap",
+   "40 ENTER tap",
+   "50 RIGHT down"
+  ],
+  "expect": [
+   [
+    "PauseMenu",
+    "visible",
+    "==",
+    false
    ],
    [
-    "Item2",
-    "text",
-    "contains",
-    "no save yet"
+    "Player",
+    "x",
+    ">",
+    60
    ]
   ]
  },
@@ -66,45 +310,33 @@
   ]
  },
  {
-  "name": "resume plays on",
-  "frames": 110,
-  "scene": "scenes/level1.scene.json",
+  "name": "touch: tapping Play on the title starts level 1",
+  "frames": 60,
   "input": [
-   "20 ESCAPE tap",
-   "40 ENTER tap",
-   "50 RIGHT down"
-  ],
-  "expect": [
-   [
-    "PauseMenu",
-    "visible",
-    "==",
-    false
-   ],
-   [
-    "Player",
-    "x",
-    ">",
-    60
-   ]
-  ]
- },
- {
-  "name": "the pause menu goes back to the title",
-  "frames": 130,
-  "scene": "scenes/level1.scene.json",
-  "input": [
-   "20 ESCAPE tap",
-   "30 DOWN tap",
-   "40 DOWN tap",
-   "50 ENTER tap"
+   "10 touch1 160 88 tap"
   ],
   "expect": [
    [
     "@scene",
     "name",
     "==",
-    "title"
+    "level1"
+   ]
+  ]
+ },
+ {
+  "name": "touch: the pause button pauses",
+  "frames": 90,
+  "scene": "scenes/level1.scene.json",
+  "input": [
+   "20 touch1 300 15 tap"
+  ],
+  "expect": [
+   [
+    "PauseMenu",
+    "visible",
+    "==",
+    true
    ]
   ]
  },
@@ -136,87 +368,40 @@
     "text",
     "==",
     "Coins 0 / 14"
-   ]
-  ]
- },
- {
-  "name": "level 1 played through leads to level 2",
-  "frames": 700,
-  "scene": "scenes/level1.scene.json",
-  "input": [
-   "5 RIGHT down",
-   "136 SPACE tap 16",
-   "264 SPACE tap 16",
-   "315 SPACE tap 16",
-   "363 SPACE tap 16",
-   "517 SPACE tap 16"
-  ],
-  "expect": [
-   [
-    "@scene",
-    "name",
-    "==",
-    "level2"
-   ]
-  ]
- },
- {
-  "name": "level 2 played through ends the game (back at the title)",
-  "frames": 800,
-  "scene": "scenes/level2.scene.json",
-  "input": [
-   "5 RIGHT down",
-   "97 SPACE tap 16",
-   "135 SPACE tap 16",
-   "251 SPACE tap 16",
-   "373 SPACE tap 16",
-   "470 SPACE tap 16",
-   "520 SPACE tap 16",
-   "588 SPACE tap 16"
-  ],
-  "expect": [
-   [
-    "@scene",
-    "name",
-    "==",
-    "title"
    ],
    [
-    "Hint",
+    "LevelText",
     "text",
-    "contains",
-    "You finished it"
-   ]
-  ]
- },
- {
-  "name": "touch: OK starts a new game",
-  "frames": 90,
-  "input": [
-   "10 touch1 292 152 tap"
-  ],
-  "expect": [
-   [
-    "@scene",
-    "name",
     "==",
-    "level1"
+    "Level 2 / 2"
+   ],
+   [
+    "@file:save.json",
+    "progress.unlocked",
+    "==",
+    2
    ]
   ]
  },
  {
-  "name": "touch: the pause button pauses",
-  "frames": 90,
+  "name": "a death costs a life",
+  "frames": 240,
   "scene": "scenes/level1.scene.json",
   "input": [
-   "20 touch1 300 15 tap"
+   "10 RIGHT down"
   ],
   "expect": [
    [
-    "PauseMenu",
-    "visible",
+    "Lives",
+    "text",
     "==",
-    true
+    "Lives 2"
+   ],
+   [
+    "Player",
+    "x",
+    "<",
+    120
    ]
   ]
  }

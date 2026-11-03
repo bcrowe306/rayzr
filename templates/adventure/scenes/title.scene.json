@@ -14,8 +14,8 @@
     "type": "CameraNode",
     "name": "Camera",
     "position": [
-     160,
-     90
+     160.0,
+     90.0
     ],
     "properties": {
      "isCurrent": true
@@ -294,7 +294,10 @@
     "script": {
      "path": "scripts/menu.lua",
      "properties": {
-      "kind": "title"
+      "kind": "title",
+      "item_width": 170,
+      "item_height": 16,
+      "selected": "#c0392bff"
      }
     },
     "children": [
@@ -302,8 +305,8 @@
       "type": "TextNode",
       "name": "Title",
       "position": [
-       160,
-       40
+       160.0,
+       36.0
       ],
       "pivot": [
        0.5,
@@ -320,50 +323,10 @@
      },
      {
       "type": "TextNode",
-      "name": "Item1",
+      "name": "Best",
       "position": [
-       160,
-       88
-      ],
-      "pivot": [
-       0.5,
-       0.5
-      ],
-      "layer": 7,
-      "properties": {
-       "text": "New game",
-       "font": "fonts/kenney_pixel.ttf",
-       "fontSize": 16,
-       "align": "Center",
-       "color": "#3c3c5aff"
-      }
-     },
-     {
-      "type": "TextNode",
-      "name": "Item2",
-      "position": [
-       160,
-       106
-      ],
-      "pivot": [
-       0.5,
-       0.5
-      ],
-      "layer": 7,
-      "properties": {
-       "text": "Continue",
-       "font": "fonts/kenney_pixel.ttf",
-       "fontSize": 16,
-       "align": "Center",
-       "color": "#3c3c5aff"
-      }
-     },
-     {
-      "type": "TextNode",
-      "name": "Hint",
-      "position": [
-       160,
-       160
+       160.0,
+       62.0
       ],
       "pivot": [
        0.5,
@@ -375,63 +338,185 @@
        "font": "fonts/kenney_pixel.ttf",
        "fontSize": 16,
        "align": "Center",
-       "color": "#3c3c5a99"
+       "color": "#3c3c5aff"
       }
+     },
+     {
+      "type": "TextNode",
+      "name": "Play",
+      "position": [
+       160.0,
+       88.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Play",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 16,
+       "align": "Center",
+       "color": "#3c3c5aff"
+      },
+      "tags": [
+       "item"
+      ]
+     },
+     {
+      "type": "TextNode",
+      "name": "Level",
+      "position": [
+       160.0,
+       106.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Level",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 16,
+       "align": "Center",
+       "color": "#3c3c5aff"
+      },
+      "tags": [
+       "item"
+      ]
+     },
+     {
+      "type": "TextNode",
+      "name": "Settings",
+      "position": [
+       160.0,
+       124.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Settings",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 16,
+       "align": "Center",
+       "color": "#3c3c5aff"
+      },
+      "tags": [
+       "item"
+      ]
+     },
+     {
+      "type": "TextNode",
+      "name": "Quit",
+      "position": [
+       160.0,
+       142.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Quit",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 16,
+       "align": "Center",
+       "color": "#3c3c5aff"
+      },
+      "tags": [
+       "item"
+      ]
      }
     ]
    },
    {
-    "type": "ScreenLayerNode",
-    "name": "TouchLeft",
-    "properties": {
-     "anchor": "BottomLeft"
+    "type": "Node",
+    "name": "SettingsMenu",
+    "layer": 7,
+    "script": {
+     "path": "scripts/menu.lua",
+     "properties": {
+      "kind": "settings",
+      "item_width": 170,
+      "item_height": 16,
+      "selected": "#c0392bff"
+     }
     },
     "children": [
      {
-      "type": "TouchJoystickNode",
-      "name": "TouchStick",
+      "type": "TextNode",
+      "name": "Heading",
       "position": [
-       80.0,
-       -54.0
+       160.0,
+       50.0
       ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
       "properties": {
-       "radius": 17.5,
-       "knobRadius": 7.5,
-       "floating": true,
-       "area": [
-        160.0,
-        108.0
-       ],
-       "actionLeft": "move_left",
-       "actionRight": "move_right",
-       "actionUp": "move_up",
-       "actionDown": "move_down"
+       "text": "Settings",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 32,
+       "align": "Center",
+       "color": "#3c3c5aff"
       }
-     }
-    ]
-   },
-   {
-    "type": "ScreenLayerNode",
-    "name": "TouchRight",
-    "properties": {
-     "anchor": "BottomRight"
-    },
-    "children": [
+     },
      {
-      "type": "TouchButtonNode",
-      "name": "TouchConfirm",
+      "type": "TextNode",
+      "name": "Volume",
       "position": [
-       -27.5,
-       -27.5
+       160.0,
+       96.0
       ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
       "properties": {
-       "radius": 13.0,
-       "action": "confirm",
-       "label": "OK",
-       "fontSize": 12
-      }
+       "text": "Volume",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 16,
+       "align": "Center",
+       "color": "#3c3c5aff"
+      },
+      "tags": [
+       "item"
+      ]
+     },
+     {
+      "type": "TextNode",
+      "name": "Back",
+      "position": [
+       160.0,
+       114.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Back",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 16,
+       "align": "Center",
+       "color": "#3c3c5aff"
+      },
+      "tags": [
+       "item"
+      ]
      }
-    ]
+    ],
+    "visible": false
    }
   ]
  }

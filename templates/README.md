@@ -15,7 +15,7 @@ Character's art was drawn for Rayzr.
 | [Isometric Dungeon](dungeon/README.md) | Click to walk (path finding) or WASD in an isometric room; walk behind pillars and walls; a chest, a key, a door |
 | [Hex Island](hex/README.md) | A hex-grid island: click a hex to walk there hex by hex round water and trees, step with the keys, pick every flower |
 | [Vector Character](vector_character/README.md) | Pip, a vector-art character rigged with bones: walk left and right, talk with lip-sync, blink |
-| [Platformer Adventure](adventure/README.md) (sample) | The platformer grown into a small game: title screen, two levels, saved progress, a pause menu |
+| [Platformer Adventure](adventure/README.md) (sample) | The platformer grown into a small game: two levels routed by their doors, three lives, a game over; a title, settings, a pause menu, saved progress |
 
 On a phone or tablet (the web export), the templates played with keys show
 on-screen controls at the first touch: a joystick on the left half and

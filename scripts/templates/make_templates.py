@@ -510,58 +510,39 @@ def platformer():
 
 
 def adventure():
-    """A sample: the platformer grown into a small game - a title screen
-    (Play / Continue), two levels with saved progress, a pause menu."""
+    """A sample: the platformer grown into a small game - the shared title,
+    settings, pause and result screens (#329), lives, saved progress; each
+    door's Next Level routes the levels."""
     t = Template("adventure", "Platformer Adventure (sample)",
-                 "The platformer grown into a small game: a title screen, two levels, saved progress, "
-                 "a pause menu - how the pieces fit together.", "gamepad", 50)
+                 "The platformer grown into a small game: a title screen, settings, two levels routed by their "
+                 "doors, three lives, a game over, saved progress, a pause menu - how the pieces fit together.",
+                 "gamepad", 50)
     t.meta["kind"] = "sample"
     t.begin()
     platformer_art(t)
+    ink, red, sky = "#3c3c5aff", "#c0392bff", (223, 246, 245, 255)
+    levels = ["scenes/level1.scene.json", "scenes/level2.scene.json"]
+    # The routes: level 1's door leads to level 2, level 2's (none) to the result.
+    routes = ["scenes/level2.scene.json", ""]
+    side = ("move_left", "move_right", "move_up", "move_down")  # (up / down pick in the pause menu)
+    for i, rows in enumerate((PLATFORMER_LEVEL, PLATFORMER_LEVEL2)):
+        sc = platformer_scene(t, rows, f"level{i + 1}", routes[i], game_level=i + 1)
+        sc["root"]["children"].append(pause_menu(PIXEL_STYLE, red))
+        t.json(levels[i], with_touch(sc, (320, 180), stick=side, pause="pause"))
 
-    def with_pause(sc):
-        sc["root"]["children"].append({
-            "type": "Node", "name": "PauseMenu", "layer": 7, "pause_mode": "always", "visible": False,
-            "script": {"path": "scripts/menu.lua", "properties": {"kind": "pause"}},
-            "children": [
-                {"type": "UIContainerNode", "name": "Shade", "layer": 7, "position": [0, 0],
-                 "properties": {"size": [320, 180], "drawBackground": True, "drawBorder": False, "showHeader": False,
-                                "backgroundColor": "#14141ec8"}},
-                text("Title", "Paused", (160, 46), size=32, align="Center", pivot=(0.5, 0.5)),
-                text("Item1", "Resume", (160, 84), align="Center", pivot=(0.5, 0.5)),
-                text("Item2", "Restart level", (160, 102), align="Center", pivot=(0.5, 0.5)),
-                text("Item3", "Title screen", (160, 120), align="Center", pivot=(0.5, 0.5)),
-            ]})
-        return sc
-
-    side = ("move_left", "move_right", "move_up", "move_down") # (up / down pick in the pause menu)
-    t.json("scenes/level1.scene.json", with_touch(with_pause(platformer_scene(t, PLATFORMER_LEVEL, "level1", "scenes/level2.scene.json")),
-                                                  (320, 180), stick=side, pause="pause"))
-    t.json("scenes/level2.scene.json", with_touch(with_pause(platformer_scene(t, PLATFORMER_LEVEL2, "level2", "scenes/title.scene.json")),
-                                                  (320, 180), stick=side, pause="pause"))
-    t.json("scenes/title.scene.json", with_touch(scene("title", [
-        {"type": "CameraNode", "name": "Camera", "position": [160, 90], "properties": {"isCurrent": True}},
-        tilemap("Backdrop", "textures/backgrounds.png", 24, [[(9, 11)[c % 2] for c in range(15)]] + [[16 + c % 4 for c in range(15)] for _ in range(3)], layer=0, pos=(0, 84)),
-        {"type": "Node", "name": "Menu", "layer": 7, "script": {"path": "scripts/menu.lua", "properties": {"kind": "title"}},
-         "children": [
-             text("Title", "Platformer Adventure", (160, 40), size=32, align="Center", pivot=(0.5, 0.5), color="#3c3c5aff"),
-             text("Item1", "New game", (160, 88), align="Center", pivot=(0.5, 0.5), color="#3c3c5aff"),
-             text("Item2", "Continue", (160, 106), align="Center", pivot=(0.5, 0.5), color="#3c3c5aff"),
-             text("Hint", "", (160, 160), align="Center", pivot=(0.5, 0.5), color="#3c3c5a99"),
-         ]},
-    ], background=(223, 246, 245, 255)), (320, 180), buttons=(("confirm", "OK"),)))
-    t.json("project.json", project("Platformer Adventure",
-                                   ["scenes/title.scene.json", "scenes/level1.scene.json", "scenes/level2.scene.json"],
-                                   PLATFORMER_ACTIONS + [action("pause", "ESCAPE", "P", "pad:MIDDLE_RIGHT"),
-                                                         action("confirm", "ENTER", "SPACE", "pad:RIGHT_FACE_DOWN")]))
-    # (Its own player / hud / goal: the Platformer template's are a game of
-    # their own now - #329.)
+    def backdrop():
+        return tilemap("Backdrop", "textures/backgrounds.png", 24, [[(9, 11)[c % 2] for c in range(15)]] +
+                       [[16 + c % 4 for c in range(15)] for _ in range(3)], layer=0, pos=(0, 84))
+    t.json("scenes/title.scene.json", title_scene("Platformer Adventure", PIXEL_STYLE, ink, red, sky, [backdrop()]))
+    t.json("scenes/result.scene.json", result_scene(PIXEL_STYLE, ink, red, sky, [backdrop()]))
+    t.json("project.json", project("Platformer Adventure", ["scenes/title.scene.json"] + levels + ["scenes/result.scene.json"],
+                                   PLATFORMER_ACTIONS + GAME_ACTIONS, globals_=GAME_GLOBALS))
+    # The Platformer's scripts, but its own door (the routes).
     for s_ in PLATFORMER_SCRIPTS:
-        if s_ not in ("goal", "player", "hud"):
+        if s_ != "goal":
             t.script(s_, src="platformer")
-    for s_ in ("goal", "menu", "player", "hud"):
-        with open(os.path.join(SCRIPTS, "adventure", s_ + ".lua")) as f:
-            t.write(f"scripts/{s_}.lua", f.read())
+    t.script("goal")
+    game_scripts(t, levels, lives=3, score_name="Coins")
     with open(os.path.join(SCRIPTS, "adventure", "README.md")) as f:
         t.write("README.md", f.read())
     return t

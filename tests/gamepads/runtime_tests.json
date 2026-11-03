@@ -215,13 +215,14 @@
   ]
  },
  {
-  "name": "a template's menus with a controller: the Adventure title, D-pad down + A (Continue: no save yet)",
+  "name": "a template's menus with a controller: the Adventure title, D-pad down twice + A opens Settings",
   "project": "templates/adventure",
   "frames": 60,
   "input": [
    "2 pad1 connect Xbox Wireless Controller",
    "10 pad1 LEFT_FACE_DOWN tap",
-   "20 pad1 RIGHT_FACE_DOWN tap"
+   "20 pad1 LEFT_FACE_DOWN tap",
+   "30 pad1 RIGHT_FACE_DOWN tap"
   ],
   "expect": [
    [
@@ -231,15 +232,21 @@
     "title"
    ],
    [
-    "Item2",
+    "SettingsMenu",
+    "visible",
+    "==",
+    true
+   ],
+   [
+    "Volume",
     "text",
     "contains",
-    "no save yet"
+    "80%"
    ]
   ]
  },
  {
-  "name": "... and A on New game starts level 1",
+  "name": "... and A on Play starts level 1",
   "project": "templates/adventure",
   "frames": 90,
   "input": [
