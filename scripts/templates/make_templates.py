@@ -900,8 +900,8 @@ def puzzle():
 def visual_novel():
     t = Template("visual_novel", "Visual Novel",
                  "A short branching story: characters, backgrounds, choices that change what happens, three "
-                 "endings. Save slots, a backlog, auto and skip, a title screen with settings. Write your own "
-                 "in story.lua.", "book", 5)
+                 "endings (one of them bad). Save slots, a backlog, auto and skip, a title screen with settings "
+                 "and the endings found. Write your own in story.lua.", "book", 5)
     t.begin()
     for who in ("ada", "theo", "unit"):
         for pose in ("idle", "talk", "think", "cheer", "hurt"):
@@ -967,7 +967,7 @@ def visual_novel():
          "properties": {"size": [1000, 180], "fontSize": 26, "padding": 22, "revealSpeed": 40,
                         "panelColor": PANEL, "borderColor": BORDER, "choiceColor": ACCENT, "advanceAction": "confirm"}},
         quick,
-        dict(label("Ending", "", (640, 300), size=64, layer=8, pivot=(0.5, 0.5)), visible=False),
+        dict(label("Ending", "", (640, 300), size=64, layer=8, pivot=(0.5, 0.5), color="#1e2840ff"), visible=False),
         label("Toast", "", (1260, 16), size=22, align="Right", pivot=(1, 0), layer=8),
         log, slots,
     ]
@@ -984,9 +984,10 @@ def visual_novel():
         figure("Ada", "ada", 260, True), figure("Theo", "theo", 1020, True),
         {"type": "Node", "name": "Title", "script": {"path": "scripts/title.lua"}},
         label("Name", "The Castle Road", (640, 60), size=80, color="#1e2840ff"),
-        label("Endings", "", (640, 660), size=22, color="#1e2840cc"),
-        column("Menu", (500, 220), (280, 300), [button("NewGame", "New game"), button("Continue", "Continue"),
-                                               button("Load", "Load"), button("Settings", "Settings")]),
+        label("Endings", "", (640, 640), size=22, color="#1e2840cc"),
+        column("Menu", (500, 220), (280, 360), [button("NewGame", "New game"), button("Continue", "Continue"),
+                                               button("Load", "Load"), button("Settings", "Settings"),
+                                               button("Quit", "Quit")]),
         column("SettingsPanel", (340, 190), (600, 300), sliders + [button("SettingsClose", "Done", w=160, h=40, size=20)],
                title="Settings"),
         slots,

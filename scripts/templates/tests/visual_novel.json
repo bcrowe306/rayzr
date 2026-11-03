@@ -1,5 +1,569 @@
 [
  {
+  "name": "play-through: Enter on the title starts a new game (New game has the focus)",
+  "frames": 90,
+  "input": [
+   "10 ENTER tap"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "story"
+   ],
+   [
+    "Background",
+    "texture",
+    "==",
+    "textures/bg_castle.png"
+   ]
+  ]
+ },
+ {
+  "name": "play-through: from the title to the kind ending (help the robot: the key opens the gate) - saved as found",
+  "frames": 240,
+  "input": [
+   "10 ENTER tap",
+   "60 SPACE tap",
+   "64 SPACE tap",
+   "68 SPACE tap",
+   "72 SPACE tap",
+   "76 SPACE tap",
+   "80 SPACE tap",
+   "84 SPACE tap",
+   "88 SPACE tap",
+   "92 SPACE tap",
+   "96 SPACE tap",
+   "100 SPACE tap",
+   "104 SPACE tap",
+   "108 SPACE tap",
+   "112 SPACE tap",
+   "116 SPACE tap",
+   "120 SPACE tap",
+   "124 SPACE tap",
+   "128 SPACE tap",
+   "132 SPACE tap",
+   "136 SPACE tap",
+   "140 SPACE tap",
+   "144 SPACE tap",
+   "148 SPACE tap",
+   "152 SPACE tap",
+   "156 SPACE tap",
+   "160 SPACE tap",
+   "164 SPACE tap",
+   "168 SPACE tap",
+   "172 SPACE tap",
+   "176 SPACE tap",
+   "180 SPACE tap",
+   "184 SPACE tap",
+   "188 SPACE tap",
+   "192 SPACE tap",
+   "196 SPACE tap",
+   "200 SPACE tap",
+   "204 SPACE tap",
+   "208 SPACE tap",
+   "212 SPACE tap",
+   "216 SPACE tap"
+  ],
+  "expect": [
+   [
+    "Ending",
+    "text",
+    "contains",
+    "The kind ending"
+   ],
+   [
+    "Ending",
+    "text",
+    "contains",
+    "The End"
+   ],
+   [
+    "@file:save.json",
+    "endings.The kind ending",
+    "==",
+    true
+   ],
+   [
+    "@file:save.json",
+    "autosave",
+    "==",
+    null
+   ]
+  ]
+ },
+ {
+  "name": "play-through: from the title to the bumpy ending - the bad one: the story lost",
+  "frames": 218,
+  "input": [
+   "10 ENTER tap",
+   "60 SPACE tap",
+   "64 SPACE tap",
+   "68 SPACE tap",
+   "72 SPACE tap",
+   "76 SPACE tap",
+   "80 SPACE tap",
+   "84 SPACE tap",
+   "88 SPACE tap",
+   "92 SPACE tap",
+   "96 SPACE tap",
+   "100 SPACE tap",
+   "104 SPACE tap",
+   "108 SPACE tap",
+   "112 SPACE tap",
+   "116 SPACE tap",
+   "120 SPACE tap",
+   "124 SPACE tap",
+   "127 DOWN tap",
+   "130 SPACE tap",
+   "134 SPACE tap",
+   "138 SPACE tap",
+   "142 SPACE tap",
+   "146 SPACE tap",
+   "150 SPACE tap",
+   "154 SPACE tap",
+   "158 SPACE tap",
+   "162 SPACE tap",
+   "166 SPACE tap",
+   "170 SPACE tap",
+   "174 SPACE tap",
+   "178 SPACE tap",
+   "182 SPACE tap",
+   "186 SPACE tap",
+   "190 SPACE tap",
+   "194 SPACE tap"
+  ],
+  "expect": [
+   [
+    "Ending",
+    "text",
+    "contains",
+    "Bad End"
+   ],
+   [
+    "Ending",
+    "text",
+    "contains",
+    "The bumpy ending"
+   ],
+   [
+    "@file:save.json",
+    "endings.The bumpy ending",
+    "==",
+    "bad"
+   ]
+  ]
+ },
+ {
+  "name": "play-through: from the title to the patient ending",
+  "frames": 212,
+  "input": [
+   "10 ENTER tap",
+   "60 SPACE tap",
+   "64 SPACE tap",
+   "68 SPACE tap",
+   "72 SPACE tap",
+   "76 SPACE tap",
+   "80 SPACE tap",
+   "84 SPACE tap",
+   "88 SPACE tap",
+   "92 SPACE tap",
+   "96 SPACE tap",
+   "100 SPACE tap",
+   "104 SPACE tap",
+   "108 SPACE tap",
+   "112 SPACE tap",
+   "116 SPACE tap",
+   "120 SPACE tap",
+   "124 SPACE tap",
+   "127 DOWN tap",
+   "130 SPACE tap",
+   "134 SPACE tap",
+   "138 SPACE tap",
+   "142 SPACE tap",
+   "146 SPACE tap",
+   "150 SPACE tap",
+   "154 SPACE tap",
+   "158 SPACE tap",
+   "161 DOWN tap",
+   "164 SPACE tap",
+   "168 SPACE tap",
+   "172 SPACE tap",
+   "176 SPACE tap",
+   "180 SPACE tap",
+   "184 SPACE tap",
+   "188 SPACE tap"
+  ],
+  "expect": [
+   [
+    "Ending",
+    "text",
+    "contains",
+    "The patient ending"
+   ],
+   [
+    "@file:save.json",
+    "endings.The patient ending",
+    "==",
+    true
+   ]
+  ]
+ },
+ {
+  "name": "play-through: after an ending, Enter goes back to the title, which lists it",
+  "frames": 120,
+  "scene": "scenes/story.scene.json",
+  "patch": {
+   "VN": {
+    "script.start": "open_gate"
+   }
+  },
+  "input": [
+   "10 SPACE tap",
+   "20 SPACE tap",
+   "30 SPACE tap",
+   "40 SPACE tap",
+   "50 SPACE tap",
+   "60 SPACE tap",
+   "70 SPACE tap",
+   "80 ENTER tap"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "title"
+   ],
+   [
+    "Endings",
+    "text",
+    "==",
+    "Endings found: 1 / 3\nThe kind ending"
+   ]
+  ]
+ },
+ {
+  "name": "play-through: the endings found survive a restart (the bad one marked)",
+  "frames": 30,
+  "before": [
+   {
+    "frames": 218,
+    "input": [
+     "10 ENTER tap",
+     "60 SPACE tap",
+     "64 SPACE tap",
+     "68 SPACE tap",
+     "72 SPACE tap",
+     "76 SPACE tap",
+     "80 SPACE tap",
+     "84 SPACE tap",
+     "88 SPACE tap",
+     "92 SPACE tap",
+     "96 SPACE tap",
+     "100 SPACE tap",
+     "104 SPACE tap",
+     "108 SPACE tap",
+     "112 SPACE tap",
+     "116 SPACE tap",
+     "120 SPACE tap",
+     "124 SPACE tap",
+     "127 DOWN tap",
+     "130 SPACE tap",
+     "134 SPACE tap",
+     "138 SPACE tap",
+     "142 SPACE tap",
+     "146 SPACE tap",
+     "150 SPACE tap",
+     "154 SPACE tap",
+     "158 SPACE tap",
+     "162 SPACE tap",
+     "166 SPACE tap",
+     "170 SPACE tap",
+     "174 SPACE tap",
+     "178 SPACE tap",
+     "182 SPACE tap",
+     "186 SPACE tap",
+     "190 SPACE tap",
+     "194 SPACE tap"
+    ]
+   }
+  ],
+  "user_files": {
+   "save.json": {
+    "endings": {
+     "The kind ending": true
+    }
+   }
+  },
+  "expect": [
+   [
+    "Endings",
+    "text",
+    "==",
+    "Endings found: 2 / 3\nThe bumpy ending (bad)   The kind ending"
+   ]
+  ]
+ },
+ {
+  "name": "play-through: a save slot survives a restart - the title's Load lists it and loads it",
+  "frames": 150,
+  "before": [
+   {
+    "frames": 110,
+    "scene": "scenes/story.scene.json",
+    "input": [
+     "10 SPACE tap",
+     "20 SPACE tap",
+     "30 SPACE tap",
+     "50 mouse 861 707 click",
+     "70 mouse 640 226 click",
+     "90 ESCAPE tap"
+    ]
+   }
+  ],
+  "input": [
+   "10 DOWN tap",
+   "20 ENTER tap",
+   "60 mouse 640 226 click",
+   "130 L tap"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "story"
+   ],
+   [
+    "LogText",
+    "text",
+    "contains",
+    "Sure? No."
+   ],
+   [
+    "LogText",
+    "text",
+    "!contains",
+    "Wonderful."
+   ]
+  ]
+ },
+ {
+  "name": "play-through: the title's Load shows the slot saved before a restart",
+  "frames": 40,
+  "before": [
+   {
+    "frames": 110,
+    "scene": "scenes/story.scene.json",
+    "input": [
+     "10 SPACE tap",
+     "20 SPACE tap",
+     "30 SPACE tap",
+     "50 mouse 861 707 click",
+     "70 mouse 640 226 click",
+     "90 ESCAPE tap"
+    ]
+   }
+  ],
+  "input": [
+   "10 DOWN tap",
+   "20 ENTER tap"
+  ],
+  "expect": [
+   [
+    "Slots",
+    "enabled",
+    "==",
+    true
+   ],
+   [
+    "Slot1",
+    "text",
+    "==",
+    "1.  Sure? No. Hopeful? Very."
+   ],
+   [
+    "Slot2",
+    "text",
+    "==",
+    "2.  (empty)"
+   ]
+  ]
+ },
+ {
+  "name": "play-through: Continue (the autosave) survives a restart - Enter goes on from the last line",
+  "frames": 120,
+  "before": [
+   {
+    "frames": 60,
+    "scene": "scenes/story.scene.json",
+    "input": [
+     "10 SPACE tap",
+     "20 SPACE tap",
+     "30 SPACE tap"
+    ]
+   }
+  ],
+  "input": [
+   "10 ENTER tap",
+   "100 L tap"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "story"
+   ],
+   [
+    "LogText",
+    "text",
+    "contains",
+    "Theo, are you sure"
+   ],
+   [
+    "LogText",
+    "text",
+    "!contains",
+    "Wonderful."
+   ]
+  ]
+ },
+ {
+  "name": "play-through: the settings survive a restart (text speed set with the keys)",
+  "frames": 60,
+  "before": [
+   {
+    "frames": 100,
+    "input": [
+     "10 DOWN tap",
+     "20 DOWN tap",
+     "30 DOWN tap",
+     "40 ENTER tap",
+     "60 LEFT tap",
+     "70 LEFT tap",
+     "85 ESCAPE tap"
+    ]
+   }
+  ],
+  "input": [
+   "10 DOWN tap",
+   "20 DOWN tap",
+   "30 DOWN tap",
+   "40 ENTER tap"
+  ],
+  "expect": [
+   [
+    "SettingsPanel",
+    "enabled",
+    "==",
+    true
+   ],
+   [
+    "TextSpeed",
+    "value",
+    "==",
+    28
+   ],
+   [
+    "@file:save.json",
+    "settings.text_speed",
+    "==",
+    28
+   ]
+  ]
+ },
+ {
+  "name": "the story plays at the saved text speed",
+  "frames": 20,
+  "scene": "scenes/story.scene.json",
+  "user_files": {
+   "save.json": {
+    "settings": {
+     "text_speed": 28,
+     "auto_delay": 2
+    }
+   }
+  },
+  "expect": [
+   [
+    "Dialogue",
+    "revealSpeed",
+    "==",
+    28
+   ]
+  ]
+ },
+ {
+  "name": "play-through: Quit on the title ends the game",
+  "frames": 120,
+  "quits": true,
+  "input": [
+   "10 DOWN tap",
+   "20 DOWN tap",
+   "30 DOWN tap",
+   "40 DOWN tap",
+   "50 ENTER tap"
+  ]
+ },
+ {
+  "name": "touch: tapping New game starts the story",
+  "frames": 90,
+  "input": [
+   "10 touch1 640 260 tap"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "story"
+   ]
+  ]
+ },
+ {
+  "name": "touch: from the title, taps play the lines and pick a choice",
+  "frames": 174,
+  "input": [
+   "10 touch1 640 260 tap",
+   "60 touch1 640 250 tap",
+   "64 touch1 640 250 tap",
+   "68 touch1 640 250 tap",
+   "72 touch1 640 250 tap",
+   "76 touch1 640 250 tap",
+   "80 touch1 640 250 tap",
+   "84 touch1 640 250 tap",
+   "88 touch1 640 250 tap",
+   "92 touch1 640 250 tap",
+   "96 touch1 640 250 tap",
+   "100 touch1 640 250 tap",
+   "104 touch1 640 250 tap",
+   "108 touch1 640 250 tap",
+   "112 touch1 640 250 tap",
+   "116 touch1 640 250 tap",
+   "120 touch1 640 250 tap",
+   "124 touch1 640 250 tap",
+   "130 touch1 640 456 tap",
+   "164 L tap"
+  ],
+  "expect": [
+   [
+    "LogText",
+    "text",
+    "contains",
+    "> Keep going"
+   ],
+   [
+    "LogText",
+    "text",
+    "contains",
+    "The castle gate is shut"
+   ]
+  ]
+ },
+ {
   "name": "title screen (no save yet)",
   "frames": 20,
   "expect": [

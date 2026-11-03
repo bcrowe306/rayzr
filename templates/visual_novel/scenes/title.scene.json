@@ -109,7 +109,7 @@
     "name": "Endings",
     "position": [
      640,
-     660
+     640
     ],
     "pivot": [
      0.5,
@@ -135,7 +135,7 @@
     "properties": {
      "size": [
       280,
-      300
+      360
      ],
      "direction": "Vertical",
      "alignment": "Center",
@@ -210,6 +210,23 @@
         48
        ],
        "text": "Settings",
+       "fontSize": 24,
+       "normalColor": "#0f121ce6",
+       "hoverColor": "#5c8dffc8",
+       "borderColor": "#5c8dffff",
+       "textColor": "#eef0f6ff"
+      }
+     },
+     {
+      "type": "UIButtonNode",
+      "name": "Quit",
+      "layer": 8,
+      "properties": {
+       "size": [
+        260,
+        48
+       ],
+       "text": "Quit",
        "fontSize": 24,
        "normalColor": "#0f121ce6",
        "hoverColor": "#5c8dffc8",

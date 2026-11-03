@@ -1,6 +1,6 @@
 {
   "name": "Visual Novel",
-  "description": "A short branching story: characters, backgrounds, choices that change what happens, three endings. Save slots, a backlog, auto and skip, a title screen with settings. Write your own in story.lua.",
+  "description": "A short branching story: characters, backgrounds, choices that change what happens, three endings (one of them bad). Save slots, a backlog, auto and skip, a title screen with settings and the endings found. Write your own in story.lua.",
   "icon": "book",
   "order": 5
 }

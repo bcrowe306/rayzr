@@ -11,7 +11,7 @@ Character's art was drawn for Rayzr.
 | [Top-down RPG](rpg/README.md) | Two dungeon floors: talk to a wizard, fight slimes, collect gold, find each key, unlock the door, take the stairs; a title, settings, a pause menu, saved progress |
 | [Shoot 'em up](shmup/README.md) | Fly through three stages of enemies: pooled bullets, explosions, three lives; a title, settings, a pause menu, a saved high score |
 | [Puzzle (Sokoban)](puzzle/README.md) | Push every crate onto a target: three levels typed as text, move limits, undo; a title, settings, a pause menu, saved progress |
-| [Visual Novel](visual_novel/README.md) | A branching story: characters, backgrounds, choices, three endings; save slots, a backlog, auto and skip |
+| [Visual Novel](visual_novel/README.md) | A branching story: characters, backgrounds, choices, three endings (one bad); save slots, a backlog, auto and skip; a title with settings and the endings found |
 | [Isometric Dungeon](dungeon/README.md) | Three isometric rooms against the clock: click to walk (path finding) or WASD, behind pillars and walls; each room's key and door, holes, three lives; a title, settings, a pause menu, saved progress |
 | [Hex Island](hex/README.md) | Three hex-grid islands: click a hex to walk there hex by hex round water and trees, or step with the keys; pick every flower before the steps run out; a title, settings, a pause menu, the fewest steps saved |
 | [Vector Character](vector_character/README.md) | Pip, a vector-art character rigged with bones: walk left and right, talk with lip-sync, blink |
