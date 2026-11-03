@@ -1,0 +1,10 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "The game's name: the window, the app and its save folder", "x": 636, "y": 166, "w": 445, "h": 25},
+    {"label": "The version the exported app reports", "x": 636, "y": 199, "w": 445, "h": 25},
+    {"label": "The scene the exported game starts with", "x": 636, "y": 265, "w": 336, "h": 25},
+    {"label": "The icon: a 512 x 512 PNG", "x": 636, "y": 298, "w": 445, "h": 25}
+  ]
+}

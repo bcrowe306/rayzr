@@ -3,7 +3,9 @@
 Each tutorial builds one small project step by step, teaching one part of
 Rayzr on the way. They start from an empty project and end with a game you
 can play; each one links a download of its finished project, so you can
-compare your work or start from the end.
+compare your work or start from the end. Together the eight take a game
+from the first script to an export people can download; do them in order,
+or pick the one you need.
 
 | Tutorial | You build | You learn |
 |---|---|---|
@@ -13,6 +15,8 @@ compare your work or start from the end.
 | [The level generator](levelgen.md) | Crystal Cave: a new cave every time, coins on its floor, R digs another | The Level Generator window, noise / threshold / cave smoothing, previews, tile outputs with a terrain, playable levels (Connect Regions, Check), entity outputs, the Level Generator node, fixed and random seeds, generating from Lua |
 | [Animation](animation.md) | Coin Hop: an astronaut that stands, runs and jumps, a coin that bobs and pops | Slicing a sprite sheet, the Animation Player and its timeline (property tracks, keys, easing), playing animations from Lua, `animation_finished`, a State Machine for idle / run / jump, pointers to tweens, skeletal and vector animation |
 | [UI and HUD](ui.md) | Coin Run: a health bar and a score on screen, a pause menu, a title screen | The UI nodes, Screen Layers (a HUD the camera doesn't move), anchors, updating the HUD from Lua with events, pausing the game, keyboard and gamepad focus, fonts and text rendering, touch controls |
+| [Saving and loading](saving.md) | Gem Clicker: mine gems, three save slots (Continue / New Game / Delete), a settings screen | The `Save` module and where saves live, a global script, loading with defaults, save slots, settings in their own file, autosave and saving on quit, versioning and migrating save data, deleting a save, testing saves (`--user-data`, the Tests tab) |
+| [Exporting your game](exporting.md) | Gem Clicker for macOS, Windows, Linux, the web and Android | The project settings an export uses (name, version, icon, startup scene), Export settings and presets, what goes into `game.rayzr`, testing an export, web hosting (itch.io), Android signing, unsigned-app warnings |
 
 New to the editor? Start with [Your first game](../getting-started/first-game.md):
 it plays and changes a template in ten minutes. The

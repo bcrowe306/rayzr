@@ -1,0 +1,9 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "The executable's name: GemClicker.app, GemClicker.exe", "x": 636, "y": 127, "w": 445, "h": 25},
+    {"label": "macOS: the app's bundle identifier", "x": 636, "y": 292, "w": 445, "h": 25},
+    {"label": "One preset per platform", "x": 370, "y": 417, "w": 716, "h": 21}
+  ]
+}

@@ -1,0 +1,171 @@
+{
+ "name": "title",
+ "background": [
+  40,
+  44,
+  64,
+  255
+ ],
+ "root": {
+  "type": "Node",
+  "name": "root",
+  "children": [
+   {
+    "type": "ScreenLayerNode",
+    "name": "Menu",
+    "position": [
+     0,
+     0
+    ],
+    "layer": 7,
+    "properties": {
+     "anchor": "Center"
+    },
+    "script": {
+     "path": "scripts/title.lua"
+    },
+    "children": [
+     {
+      "type": "TextNode",
+      "name": "Title",
+      "position": [
+       0,
+       -140
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Gem Clicker",
+       "fontSize": 40,
+       "align": "Center",
+       "color": "#ffd27aff"
+      }
+     },
+     {
+      "type": "UIButtonNode",
+      "name": "Slot",
+      "position": [
+       -110,
+       -110
+      ],
+      "layer": 7,
+      "properties": {
+       "size": [
+        220,
+        30
+       ],
+       "text": "Slot 1",
+       "fontSize": 16
+      }
+     },
+     {
+      "type": "UILabelNode",
+      "name": "Summary",
+      "position": [
+       -160,
+       -74
+      ],
+      "layer": 7,
+      "properties": {
+       "size": [
+        320,
+        24
+       ],
+       "text": "Slot 1: empty",
+       "fontSize": 16,
+       "align": "Center"
+      }
+     },
+     {
+      "type": "UIButtonNode",
+      "name": "Continue",
+      "position": [
+       -110,
+       -40
+      ],
+      "layer": 7,
+      "properties": {
+       "size": [
+        220,
+        30
+       ],
+       "text": "Continue",
+       "fontSize": 16
+      }
+     },
+     {
+      "type": "UIButtonNode",
+      "name": "NewGame",
+      "position": [
+       -110,
+       -4
+      ],
+      "layer": 7,
+      "properties": {
+       "size": [
+        220,
+        30
+       ],
+       "text": "New Game",
+       "fontSize": 16
+      }
+     },
+     {
+      "type": "UIButtonNode",
+      "name": "Delete",
+      "position": [
+       -110,
+       32
+      ],
+      "layer": 7,
+      "properties": {
+       "size": [
+        220,
+        30
+       ],
+       "text": "Delete",
+       "fontSize": 16
+      }
+     },
+     {
+      "type": "UIButtonNode",
+      "name": "Settings",
+      "position": [
+       -110,
+       68
+      ],
+      "layer": 7,
+      "properties": {
+       "size": [
+        220,
+        30
+       ],
+       "text": "Settings",
+       "fontSize": 16
+      }
+     },
+     {
+      "type": "UIButtonNode",
+      "name": "Quit",
+      "position": [
+       -110,
+       104
+      ],
+      "layer": 7,
+      "properties": {
+       "size": [
+        220,
+        30
+       ],
+       "text": "Quit",
+       "fontSize": 16
+      }
+     }
+    ]
+   }
+  ]
+ }
+}

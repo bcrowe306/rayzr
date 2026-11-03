@@ -903,5 +903,522 @@
     "title"
    ]
   ]
+ },
+ {
+  "name": "saving tutorial (#295): a first run: slot 1 is empty, Continue and Delete are off, New Game has the focus",
+  "project": "docs/tutorials/saving",
+  "frames": 30,
+  "expect": [
+   [
+    "Summary",
+    "text",
+    "==",
+    "Slot 1: empty"
+   ],
+   [
+    "Continue",
+    "enabled",
+    "==",
+    false
+   ],
+   [
+    "Delete",
+    "enabled",
+    "==",
+    false
+   ]
+  ]
+ },
+ {
+  "name": "saving tutorial (#295): New Game starts slot 1; clicking the gem mines a gem a click",
+  "project": "docs/tutorials/saving",
+  "frames": 110,
+  "input": [
+   "20 mouse 320 191 click",
+   "70 mouse 320 190 click",
+   "80 mouse 320 190 click",
+   "90 mouse 320 190 click"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "main"
+   ],
+   [
+    "Gems",
+    "text",
+    "==",
+    "Gems: 3"
+   ]
+  ]
+ },
+ {
+  "name": "saving tutorial (#295): saved, then quit (Menu, Quit: Engine.quit) - the next run's title shows the slot",
+  "project": "docs/tutorials/saving",
+  "frames": 30,
+  "before": [
+   {
+    "frames": 600,
+    "input": [
+     "20 mouse 320 191 click",
+     "70 mouse 320 190 click",
+     "80 mouse 320 190 click",
+     "90 mouse 320 190 click",
+     "100 mouse 320 190 click",
+     "110 mouse 320 190 click",
+     "140 mouse 574 27 click",
+     "220 mouse 320 299 click"
+    ],
+    "quits": true
+   }
+  ],
+  "expect": [
+   [
+    "Summary",
+    "text",
+    "==",
+    "Slot 1: 5 gems, pick level 1"
+   ],
+   [
+    "Continue",
+    "enabled",
+    "==",
+    true
+   ],
+   [
+    "@file:slot_1.json",
+    "game.gems",
+    "==",
+    5
+   ],
+   [
+    "@file:slot_1.json",
+    "game.version",
+    "==",
+    2
+   ]
+  ]
+ },
+ {
+  "name": "saving tutorial (#295): Continue carries on the saved game",
+  "project": "docs/tutorials/saving",
+  "frames": 80,
+  "before": [
+   {
+    "frames": 600,
+    "input": [
+     "20 mouse 320 191 click",
+     "70 mouse 320 190 click",
+     "80 mouse 320 190 click",
+     "90 mouse 320 190 click",
+     "100 mouse 320 190 click",
+     "110 mouse 320 190 click",
+     "140 mouse 574 27 click",
+     "220 mouse 320 299 click"
+    ],
+    "quits": true
+   }
+  ],
+  "input": [
+   "20 mouse 320 155 click"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "main"
+   ],
+   [
+    "Gems",
+    "text",
+    "==",
+    "Gems: 5"
+   ]
+  ]
+ },
+ {
+  "name": "saving tutorial (#295): closing the game mid-play keeps the gems: the live Save table is written on quit",
+  "project": "docs/tutorials/saving",
+  "frames": 30,
+  "before": [
+   {
+    "frames": 120,
+    "input": [
+     "20 mouse 320 191 click",
+     "70 mouse 320 190 click",
+     "80 mouse 320 190 click",
+     "90 mouse 320 190 click",
+     "100 mouse 320 190 click"
+    ]
+   }
+  ],
+  "expect": [
+   [
+    "Summary",
+    "text",
+    "==",
+    "Slot 1: 4 gems, pick level 1"
+   ]
+  ]
+ },
+ {
+  "name": "saving tutorial (#295): the autosave writes the file while playing (Autosave Every 1 s)",
+  "project": "docs/tutorials/saving",
+  "scene": "scenes/main.scene.json",
+  "frames": 90,
+  "patch": {
+   "HUD": {
+    "script.autosave_every": 1
+   }
+  },
+  "input": [
+   "20 mouse 320 190 click",
+   "30 mouse 320 190 click"
+  ],
+  "expect": [
+   [
+    "Status",
+    "text",
+    "==",
+    "Saved"
+   ],
+   [
+    "Gems",
+    "text",
+    "==",
+    "Gems: 2"
+   ]
+  ]
+ },
+ {
+  "name": "saving tutorial (#295): a version 1 save (score) is migrated: gems, pick level 1, version 2",
+  "project": "docs/tutorials/saving",
+  "frames": 30,
+  "user_files": {
+   "slot_1.json": {
+    "game": {
+     "version": 1,
+     "score": 42
+    }
+   }
+  },
+  "expect": [
+   [
+    "Summary",
+    "text",
+    "==",
+    "Slot 1: 42 gems, pick level 1"
+   ],
+   [
+    "@file:slot_1.json",
+    "game.gems",
+    "==",
+    42
+   ],
+   [
+    "@file:slot_1.json",
+    "game.version",
+    "==",
+    2
+   ],
+   [
+    "@file:slot_1.json",
+    "game.score",
+    "==",
+    null
+   ]
+  ]
+ },
+ {
+  "name": "saving tutorial (#295): Delete asks first: one click only changes its text",
+  "project": "docs/tutorials/saving",
+  "frames": 40,
+  "user_files": {
+   "slot_1.json": {
+    "game": {
+     "version": 2,
+     "gems": 7,
+     "total": 7,
+     "level": 1,
+     "unlocked": {},
+     "play_time": 0
+    }
+   }
+  },
+  "input": [
+   "20 mouse 320 227 click"
+  ],
+  "expect": [
+   [
+    "Delete",
+    "text",
+    "==",
+    "Really delete?"
+   ],
+   [
+    "Summary",
+    "text",
+    "==",
+    "Slot 1: 7 gems, pick level 1"
+   ]
+  ]
+ },
+ {
+  "name": "saving tutorial (#295): Delete clicked twice empties the slot",
+  "project": "docs/tutorials/saving",
+  "frames": 60,
+  "user_files": {
+   "slot_1.json": {
+    "game": {
+     "version": 2,
+     "gems": 7,
+     "total": 7,
+     "level": 1,
+     "unlocked": {},
+     "play_time": 0
+    }
+   }
+  },
+  "input": [
+   "20 mouse 320 227 click",
+   "40 mouse 320 227 click"
+  ],
+  "expect": [
+   [
+    "Summary",
+    "text",
+    "==",
+    "Slot 1: empty"
+   ],
+   [
+    "Continue",
+    "enabled",
+    "==",
+    false
+   ],
+   [
+    "@file:slot_1.json",
+    "game",
+    "==",
+    null
+   ]
+  ]
+ },
+ {
+  "name": "saving tutorial (#295): the slot button picks slot 2 (empty); slot 1's game stays",
+  "project": "docs/tutorials/saving",
+  "frames": 40,
+  "user_files": {
+   "slot_1.json": {
+    "game": {
+     "version": 2,
+     "gems": 7,
+     "total": 7,
+     "level": 1,
+     "unlocked": {},
+     "play_time": 0
+    }
+   }
+  },
+  "input": [
+   "20 mouse 320 85 click"
+  ],
+  "expect": [
+   [
+    "Slot",
+    "text",
+    "==",
+    "Slot 2"
+   ],
+   [
+    "Summary",
+    "text",
+    "==",
+    "Slot 2: empty"
+   ],
+   [
+    "@file:slot_1.json",
+    "game.gems",
+    "==",
+    7
+   ]
+  ]
+ },
+ {
+  "name": "saving tutorial (#295): the last slot played is remembered (settings.json): the title starts at slot 2",
+  "project": "docs/tutorials/saving",
+  "frames": 30,
+  "before": [
+   {
+    "frames": 90,
+    "input": [
+     "20 mouse 320 85 click",
+     "40 mouse 320 191 click"
+    ]
+   }
+  ],
+  "expect": [
+   [
+    "Slot",
+    "text",
+    "==",
+    "Slot 2"
+   ],
+   [
+    "Summary",
+    "text",
+    "==",
+    "Slot 2: 0 gems, pick level 1"
+   ],
+   [
+    "@file:settings.json",
+    "settings.last_slot",
+    "==",
+    2
+   ]
+  ]
+ },
+ {
+  "name": "saving tutorial (#295): the volume set on the settings screen (a gamepad: Down, A, Left x2, Down x2, A on Back) is saved and loaded at the next start",
+  "project": "docs/tutorials/saving",
+  "scene": "scenes/settings.scene.json",
+  "frames": 20,
+  "before": [
+   {
+    "frames": 140,
+    "input": [
+     "5 pad1 connect",
+     "20 pad1 LEFT_FACE_DOWN tap 3",
+     "30 pad1 RIGHT_FACE_DOWN tap 3",
+     "70 pad1 LEFT_FACE_LEFT tap 3",
+     "80 pad1 LEFT_FACE_LEFT tap 3",
+     "90 pad1 LEFT_FACE_DOWN tap 3",
+     "100 pad1 LEFT_FACE_DOWN tap 3",
+     "110 pad1 RIGHT_FACE_DOWN tap 3"
+    ]
+   }
+  ],
+  "expect": [
+   [
+    "Volume",
+    "value",
+    "<",
+    0.71
+   ],
+   [
+    "Volume",
+    "value",
+    ">",
+    0.69
+   ],
+   [
+    "@file:settings.json",
+    "settings.volume",
+    "<",
+    0.71
+   ]
+  ]
+ },
+ {
+  "name": "saving tutorial (#295): Upgrade spends 10 gems for pick level 2",
+  "project": "docs/tutorials/saving",
+  "frames": 90,
+  "user_files": {
+   "slot_1.json": {
+    "game": {
+     "version": 2,
+     "gems": 25,
+     "total": 25,
+     "level": 1,
+     "unlocked": {},
+     "play_time": 0
+    }
+   }
+  },
+  "input": [
+   "20 mouse 320 155 click",
+   "70 mouse 116 87 click"
+  ],
+  "expect": [
+   [
+    "Gems",
+    "text",
+    "==",
+    "Gems: 15"
+   ],
+   [
+    "Level",
+    "text",
+    "==",
+    "Pick level 2 (+2 a click)"
+   ]
+  ]
+ },
+ {
+  "name": "saving tutorial (#295): 100 gems mined unlocks the trophy (saved in unlocked)",
+  "project": "docs/tutorials/saving",
+  "frames": 90,
+  "user_files": {
+   "slot_1.json": {
+    "game": {
+     "version": 2,
+     "gems": 99,
+     "total": 99,
+     "level": 1,
+     "unlocked": {},
+     "play_time": 0
+    }
+   }
+  },
+  "input": [
+   "20 mouse 320 155 click",
+   "70 mouse 320 190 click"
+  ],
+  "expect": [
+   [
+    "Status",
+    "text",
+    "==",
+    "Trophy: 100 gems mined!"
+   ],
+   [
+    "@file:slot_1.json",
+    "game.unlocked.hundred",
+    "==",
+    true
+   ]
+  ]
+ },
+ {
+  "name": "exporting tutorial (#295): the project being exported plays: the title screen, then New Game and a mined gem (the export itself runs in tests/drive/tutorial_exporting.drive)",
+  "project": "docs/tutorials/exporting",
+  "frames": 90,
+  "input": [
+   "20 mouse 320 191 click",
+   "70 mouse 320 190 click"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "main"
+   ],
+   [
+    "Gems",
+    "text",
+    "==",
+    "Gems: 1"
+   ],
+   [
+    "@file:slot_1.json",
+    "game.gems",
+    "==",
+    1
+   ]
+  ]
  }
 ]

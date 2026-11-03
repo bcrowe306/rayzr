@@ -1,0 +1,68 @@
+# The Exporting your game tutorial (docs/tutorials/exporting.md, #295): its
+# steps, in a copy of the finished project (docs/tutorials/exporting/), and
+# its screenshots (scripts/docs/screenshots.sh tutorial_exporting copies
+# them to docs/images/tutorial-exporting_*.png). Project Settings > General
+# (name, version, icon), the Export page's presets, then real exports: the
+# macOS preset (the .app is run, hidden, and its scene dump checked) and
+# the Web preset (served by File > Export > Open Web Export in Browser and
+# played in headless Chrome).
+# drive: project docs/tutorials/exporting
+# drive: serial (touches bin/runners or other shared files; runs after the parallel drives)
+exec bash scripts/web/ensure_runner.sh
+wait 5
+key escape
+
+# 1. Project Settings > General: the game's name, version, icon and start.
+click @toolbar.settings
+click @settings.page:General
+expect item:settings.name == visible
+annotate @settings.name The game's name: the window, the app and its save folder
+annotate @settings.version The version the exported app reports
+annotate @settings.startup The scene the exported game starts with
+annotate @settings.icon The icon: a 512 x 512 PNG
+screenshot tutorial-exporting_general
+
+# 2. Project Settings > Export: one preset per platform; tests/ excluded.
+click @settings.page:Export
+expect item:settings.preset:macOS == visible
+expect item:settings.preset:Web == visible
+click @settings.preset:macOS
+wait 2
+annotate @settings.export-name The executable's name: GemClicker.app, GemClicker.exe
+annotate @settings.bundle-id macOS: the app's bundle identifier
+annotate @settings.preset:macOS One preset per platform
+screenshot tutorial-exporting_presets
+
+# 3. Export the macOS preset, then run the exported app (hidden).
+click @settings.export-preset
+wait 10
+expect log contains Exported macOS (macos):
+expect log contains Signed GemClicker.app (ad-hoc)
+expect abs-file:$PROJECT_standalone/macOS/GemClicker.app/Contents/Info.plist contains <string>com.yourname.gemclicker</string>
+expect abs-file:$PROJECT_standalone/macOS/GemClicker.app/Contents/Info.plist contains <string>1.0.0</string>
+expect abs-file:$PROJECT_standalone/macOS/GemClicker.app/Contents/Info.plist contains AppIcon
+exec $PROJECT_standalone/macOS/GemClicker.app/Contents/MacOS/GemClicker --hidden --frames 60 --screenshot $SHOTS/04_tutorial-exporting_game.png --dump-scene $SHOTS/exported_scene.json --user-data $PROJECT/../exported_userdata
+expect abs-file:$SHOTS/exported_scene.json contains "Slot 1: empty"
+
+# 4. Export the Web preset (Save and Export closed the window: open it
+# again); serve it and play it in headless Chrome.
+click @toolbar.settings
+click @settings.page:Export
+click @settings.preset:Web
+wait 2
+expect item:settings.preset-title == visible
+annotate @settings.preset-title The web page's title
+annotate @settings.preset:Web The Web preset
+screenshot tutorial-exporting_web_preset
+click @settings.export-preset
+wait 10
+expect log contains Exported Web (web):
+expect abs-file:$PROJECT_standalone/Web/index.html contains <title>Gem Clicker (web)</title>
+expect abs-file:$PROJECT_standalone/Web/index.html contains odin.js
+wait 3
+click @menu:File
+click @menu:File/Export
+click @menu:Export/Open Web Export in Browser
+wait 5
+expect log contains Serving
+exec node scripts/web/capture.mjs http://127.0.0.1:8765/index.html?autostart $SHOTS/05_tutorial-exporting_browser.png 12

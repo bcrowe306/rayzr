@@ -1,0 +1,8 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "The global's name: every script reaches the table as Game", "x": 374, "y": 262, "w": 254, "h": 25},
+    {"label": "The script it is loaded from, once, before any scene", "x": 641, "y": 262, "w": 408, "h": 25}
+  ]
+}

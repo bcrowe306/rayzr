@@ -1,0 +1,27 @@
+{
+ "name": "Gem Clicker",
+ "version": "0.1.0",
+ "initial_scene": "scenes/title.scene.json",
+ "window": {
+  "title": "Gem Clicker",
+  "width": 1280,
+  "height": 720,
+  "virtual_width": 640,
+  "virtual_height": 360,
+  "target_fps": 60
+ },
+ "video": {
+  "resizable": true
+ },
+ "globals": [
+  {
+   "name": "Game",
+   "script": "scripts/game.lua"
+  }
+ ],
+ "scenes": [
+  "scenes/title.scene.json",
+  "scenes/main.scene.json",
+  "scenes/settings.scene.json"
+ ]
+}
