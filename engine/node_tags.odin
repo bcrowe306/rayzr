@@ -45,7 +45,7 @@ Scene_FindByTag :: proc(scene: ^Scene, tag: string, allocator := context.temp_al
 	out := make([dynamic]^Node, allocator)
 	if scene == nil || scene.manager == nil || scene.rootNode == nil do return out[:]
 	walk :: proc(m: ^NodeManager, n: ^Node, tag: string, out: ^[dynamic]^Node) {
-		if n == nil do return
+		if n == nil || n.removing do return // (queued for removal: gone already, #356)
 		if Node_HasTag(n, tag) do append(out, n)
 		for child in GetChildrenView(m, n) do walk(m, child, tag, out)
 	}

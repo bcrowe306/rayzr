@@ -448,9 +448,9 @@ Simulate, so it carries on slot 1's 40 gems.
 ![Played: slot 1 continued](../images/tutorial-saving_game.png)
 
 There is no "the game is quitting" callback to save in, and none is
-needed with live tables. A script's `on_destroy` does run when the game
-quits, but after the save file has been written: a `Save.set` there is
-lost unless it calls `Save.flush()` itself.
+needed with live tables. When the game quits, the scene is taken down
+first - every node's `on_exited_tree`, then the scripts' `on_destroy` -
+and the save file is written after: a `Save.set` there is kept.
 
 ## 7. Settings, saved separately
 

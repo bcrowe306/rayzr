@@ -1,5 +1,6 @@
 package engine
 
+import os "osx"
 import "core:strings"
 import rl "vendor:raylib"
 import ui "../ui"
@@ -21,6 +22,7 @@ InitEngineFonts :: proc(fontPath: cstring = "engine/Open_Sans/static/OpenSans-Re
 	engineGuiFont = ui.InitFonts(fontPath)
 	delete(engineFontFile, Engine_HeapAllocator())
 	engineFontFile = strings.clone(string(fontPath), Engine_HeapAllocator()) // (its MSDF: text.odin)
+	if data, err := os.read_entire_file(engineFontFile, context.temp_allocator); err == nil do engineSpaceRatio = Text_SpaceRatio(data) // (its spaces: text.odin)
 	ui.TextDrawOverride = Text_UIOverride // scaled UI text: sharp (text.odin)
 	return engineGuiFont
 }

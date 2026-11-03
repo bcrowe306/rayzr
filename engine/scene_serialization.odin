@@ -859,6 +859,11 @@ Scene_InstantiateFromJSON :: proc(scene: ^Scene, jsonBytes: []u8, gameContext: ^
 
 	if rootNodeObj, hasRoot := sj_obj(rootObj, "root"); hasRoot {
 		if uid := sj_string(rootNodeObj, "uid", ""); uid != "" && scene.rootNode != nil do scene.rootNode.uid = strings.clone(uid, scene.rootNode.allocator)
+		// The root node takes no script (the editor offers none there): one
+		// written into the file by hand never ran, silently (#370).
+		if scriptObj, ok := sj_obj(rootNodeObj, "script"); ok {
+			log.warnf("[SceneLoader] %s: the scene's root node can't have a script - %q doesn't run; put it on a child node", scene.filePath if scene.filePath != "" else scene.name, sj_string(scriptObj, "path", "?"))
+		}
 		if childrenArr, hasChildren := sj_arr(rootNodeObj, "children"); hasChildren {
 			for childVal in childrenArr {
 				if childObj, ok := childVal.(json.Object); ok {

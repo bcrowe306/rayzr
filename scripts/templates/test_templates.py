@@ -22,7 +22,9 @@ runs of the same copy with the same user-data folder (each must end
 cleanly), so the test's own run sees what they saved; an expect row
 ["@file:slot_1.json", "game.gems", "==", 5] reads a user-data file.
 Each runs on a fresh copy of the template (--user-data in it), with fixed
-1/60 s frames: the same every time. Linux CI runs it under xvfb-run.
+1/60 s frames: the same every time. "frames": N runs exactly N frames - the
+dump (and screenshot) is of frame N, however small (#362: runners before it
+ran at least 25 with a capture). Linux CI runs it under xvfb-run.
 
 Render tests: "golden": {"image": "tests/vector/expected/x.png",
 "max_pixels": 0.01, "threshold": 48} screenshots the last frame and fails
