@@ -227,9 +227,10 @@ among the Targets (a project without presets) and set:
   variable before starting the editor. It is never saved in the project.
 
 The export writes an `.apk` to install on a phone (`adb install`) and an
-`.aab` to upload to Google Play. On the phone, fingers work as the mouse,
-so Gem Clicker's buttons and gem work by touch. More, including testing on
-an emulator: [Android export](../../engine/docs/android_export.md).
+`.aab` to upload to Google Play (the first Android export downloads
+bundletool, the tool that makes the `.aab`, once). On the phone, fingers
+work as the mouse, so Gem Clicker's buttons and gem work by touch. More,
+including testing on an emulator: [Android export](../../engine/docs/android_export.md).
 
 ## Where next
 

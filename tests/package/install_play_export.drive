@@ -15,7 +15,7 @@ click @toolbar.settings
 click @settings.page:Export
 screenshot export_settings
 click @settings.export-now
-wait 10
-expect log contains Standalone game ready
+# (An Android target downloads bundletool first, once: the AAB.)
+wait-until log contains Standalone game ready timeout=36000
 expect log !contains building it once
 key escape

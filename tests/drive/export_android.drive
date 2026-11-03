@@ -2,7 +2,8 @@
 # Export: an APK (signed with the debug key, its manifest the project's)
 # and an AAB. Needs the Android runner (scripts/build_android_runner.sh),
 # the SDK (build-tools 34, android-34) and Java 17+; bundletool for the AAB
-# (bin/android_tools: scripts/package_android.sh fetches it).
+# (bin/android_tools: scripts/package_android.sh fetches it; else the
+# editor downloads it into --user-data/tools).
 # drive: serial (touches bin/runners or other shared files; runs after the parallel drives)
 exec test -s bin/runners/android/libmain.so
 wait 5

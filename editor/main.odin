@@ -144,6 +144,7 @@ editor_main :: proc() -> int {
 		Lua_UpdateProjectTypes(&GlobalEditor)
 		Code_ApplyPendingNodeProp(&GlobalEditor) // a node property dropped into a properties table
 		UpdateCheck_Poll(&GlobalEditor)
+		Bundletool_Poll(&GlobalEditor) // (a finished bundletool download: the Android export again)
 		Plugins_Update(&GlobalEditor) // hot reload, failed plugins closed
 		e.MemTrack_Frame()
 		if n := e.Shader_CheckForChanges(); n > 0 do Editor_Log(&GlobalEditor, .Info, "Reloaded %d changed shader(s)", n)

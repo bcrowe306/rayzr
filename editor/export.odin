@@ -154,6 +154,24 @@ Editor_ExportStandalone :: proc(state: ^EditorState, afterBuild := false, only :
 		return // Editor_UpdatePlaytest calls back when the build succeeds
 	}
 
+	// An Android export with no bundletool anywhere: download it first (in
+	// the background; Bundletool_Poll exports again when it's there). Not
+	// when the export can't run anyway (no runner, SDK or Java: it says so).
+	if Bundletool_Downloading() {
+		Editor_Log(state, .Warn, "Waiting for bundletool's download (the Android AAB): the export runs when it's done")
+		return
+	}
+	if !Bundletool_TakeSkip() {
+		for &p in presets do if p.target == .Android {
+			runner := Editor_FindRunner(.Android, p.debug)
+			if runner == "" do runner = Editor_FindRunner(.Android)
+			sdk := Android_SdkDir()
+			if runner == "" || sdk == "" || Android_JavaBin() == "" do break
+			if Android_Bundletool(state, runner, sdk) == "" && Bundletool_StartDownload(state) do return
+			break
+		}
+	}
+
 	exported := 0
 	for &p in presets {
 		if dir, ok := export_preset(state, &p, outDir); ok {

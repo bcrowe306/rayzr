@@ -85,7 +85,7 @@ notes.
       Android, `adb install` the APK (or copy it over and allow unknown
       apps), play it - touch controls, sound, back button, rotate, leave and
       come back. Once with a release keystore (Export settings) and the AAB
-      if you ship to Google Play (needs bundletool: the editor says where to
-      put it).
+      if you ship to Google Play (the first AAB export downloads bundletool
+      into `~/.config/rayzr_editor/tools`, so be online for it).
 - [ ] **The web export in a real browser** (Chrome, Firefox, Safari), served
       by File > Export > **Open Web Export in Browser** and from a web host.

@@ -383,7 +383,7 @@ for t in $targets; do
 	else fail "export: $t" "no ${f#$work/} (the drive's screenshots: shots/play/)"; fi
 done
 [ -n "$(ls "$out"/android/*.apk 2> /dev/null)" ] && [ -z "$(ls "$out"/android/*.aab 2> /dev/null)" ] &&
-	note "export: android" "APK only, no AAB (Google Play): bundletool isn't in the package"
+	note "export: android" "APK only, no AAB (Google Play): the editor couldn't download bundletool (its log says why)"
 if [ $code != 0 ]; then
 	fail "editor drive (Play + export)" "exit $code: $(grep '\[DRIVE\] FAIL' "$log" | head -3 | tr '\n' ' ')"
 	show_log "$log"
