@@ -1,0 +1,500 @@
+{
+ "name": "main",
+ "background": [
+  205,
+  232,
+  247,
+  255
+ ],
+ "root": {
+  "type": "Node",
+  "name": "root",
+  "children": [
+   {
+    "type": "TileMapNode",
+    "name": "Ground",
+    "position": [
+     0,
+     0
+    ],
+    "layer": 1,
+    "z_index": 0,
+    "properties": {
+     "solid": true
+    },
+    "tilemap": {
+     "tileset": "textures/tiles.png",
+     "tile_size": [
+      18,
+      18
+     ],
+     "map_size": [
+      18,
+      10
+     ],
+     "data": [
+      [
+       101,
+       -1
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       1,
+       2
+      ],
+      [
+       1,
+       3
+      ],
+      [
+       40,
+       -1
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       16,
+       2
+      ],
+      [
+       1,
+       3
+      ],
+      [
+       1,
+       4
+      ],
+      [
+       1,
+       5
+      ],
+      [
+       1,
+       4
+      ],
+      [
+       1,
+       5
+      ],
+      [
+       1,
+       4
+      ],
+      [
+       1,
+       5
+      ],
+      [
+       1,
+       4
+      ],
+      [
+       1,
+       5
+      ],
+      [
+       1,
+       4
+      ],
+      [
+       1,
+       5
+      ],
+      [
+       1,
+       4
+      ],
+      [
+       1,
+       5
+      ],
+      [
+       1,
+       4
+      ],
+      [
+       1,
+       5
+      ],
+      [
+       1,
+       4
+      ],
+      [
+       1,
+       5
+      ],
+      [
+       1,
+       4
+      ],
+      [
+       1,
+       5
+      ]
+     ]
+    }
+   },
+   {
+    "type": "CharacterMoverNode",
+    "name": "Player",
+    "position": [
+     40,
+     130
+    ],
+    "tags": [
+     "player"
+    ],
+    "shapes": [
+     {
+      "type": "Capsule",
+      "radius": 6,
+      "size": [
+       12,
+       6
+      ]
+     }
+    ],
+    "properties": {
+     "controlMode": "Script"
+    },
+    "script": {
+     "path": "scripts/player.lua"
+    },
+    "children": [
+     {
+      "type": "AnimationPlayerNode",
+      "name": "Sprite",
+      "position": [
+       0,
+       -3
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 3,
+      "fps": 8,
+      "animation": "idle",
+      "default_animation": "idle",
+      "animations": [
+       {
+        "name": "idle",
+        "loop": true,
+        "sheet": "textures/characters.png",
+        "grid": [
+         9,
+         3
+        ],
+        "cells": [
+         0
+        ],
+        "start": 0,
+        "end": 0
+       },
+       {
+        "name": "run",
+        "loop": true,
+        "sheet": "textures/characters.png",
+        "grid": [
+         9,
+         3
+        ],
+        "cells": [
+         0,
+         1
+        ],
+        "start": 0,
+        "end": 1
+       },
+       {
+        "name": "jump",
+        "loop": false,
+        "sheet": "textures/characters.png",
+        "grid": [
+         9,
+         3
+        ],
+        "cells": [
+         1
+        ],
+        "start": 0,
+        "end": 0
+       }
+      ]
+     },
+     {
+      "type": "StateMachineNode",
+      "name": "StateMachine",
+      "state_machine": {
+       "initial": "idle",
+       "player": "",
+       "autostart": true,
+       "params": [
+        [
+         "speed",
+         0,
+         "float"
+        ],
+        [
+         "on_floor",
+         1,
+         "bool"
+        ]
+       ],
+       "triggers": [],
+       "states": [
+        {
+         "name": "idle",
+         "animation": "idle",
+         "pos": [
+          120,
+          60
+         ]
+        },
+        {
+         "name": "run",
+         "animation": "run",
+         "pos": [
+          340,
+          60
+         ]
+        },
+        {
+         "name": "jump",
+         "animation": "jump",
+         "pos": [
+          230,
+          200
+         ]
+        }
+       ],
+       "transitions": [
+        {
+         "from": "idle",
+         "to": "run",
+         "mode": "auto",
+         "blend": 0.1,
+         "when": [
+          [
+           ">",
+           "speed",
+           10
+          ]
+         ]
+        },
+        {
+         "from": "run",
+         "to": "idle",
+         "mode": "auto",
+         "blend": 0.1,
+         "when": [
+          [
+           "<",
+           "speed",
+           10
+          ]
+         ]
+        },
+        {
+         "from": "*",
+         "to": "jump",
+         "mode": "auto",
+         "when": [
+          [
+           "false",
+           "on_floor"
+          ]
+         ]
+        },
+        {
+         "from": "jump",
+         "to": "idle",
+         "mode": "auto",
+         "when": [
+          [
+           "true",
+           "on_floor"
+          ]
+         ]
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "type": "AreaNode",
+    "name": "Coin",
+    "position": [
+     225,
+     72
+    ],
+    "tags": [
+     "coin"
+    ],
+    "shapes": [
+     {
+      "type": "Circle",
+      "radius": 6
+     }
+    ],
+    "script": {
+     "path": "scripts/coin.lua"
+    },
+    "children": [
+     {
+      "type": "AnimationPlayerNode",
+      "name": "Sprite",
+      "position": [
+       0,
+       0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 2,
+      "fps": 8,
+      "animation": "bob",
+      "default_animation": "bob",
+      "animations": [
+       {
+        "name": "bob",
+        "loop": true,
+        "sheet": "textures/tiles.png",
+        "grid": [
+         20,
+         9
+        ],
+        "cells": [
+         151
+        ],
+        "start": 0,
+        "end": 0,
+        "tracks": [
+         {
+          "target": ".",
+          "property": "position",
+          "units": "seconds",
+          "keys": [
+           {
+            "t": 0,
+            "ease": "in_out_sine"
+           },
+           {
+            "t": 0.6,
+            "v": [
+             0,
+             -4,
+             0,
+             0
+            ],
+            "ease": "in_out_sine"
+           },
+           {
+            "t": 1.2
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "name": "collect",
+        "loop": false,
+        "sheet": "textures/tiles.png",
+        "grid": [
+         20,
+         9
+        ],
+        "cells": [
+         151
+        ],
+        "start": 0,
+        "end": 0,
+        "tracks": [
+         {
+          "target": ".",
+          "property": "position",
+          "units": "seconds",
+          "keys": [
+           {
+            "t": 0,
+            "ease": "out_quad"
+           },
+           {
+            "t": 0.3,
+            "v": [
+             0,
+             -14,
+             0,
+             0
+            ]
+           }
+          ]
+         },
+         {
+          "target": ".",
+          "property": "scale",
+          "units": "seconds",
+          "keys": [
+           {
+            "t": 0,
+            "v": [
+             1,
+             1,
+             0,
+             0
+            ]
+           },
+           {
+            "t": 0.15,
+            "v": [
+             1.6,
+             1.6,
+             0,
+             0
+            ],
+            "ease": "in_back"
+           },
+           {
+            "t": 0.3
+           }
+          ]
+         }
+        ]
+       }
+      ],
+      "properties": {
+       "autoplay": true
+      }
+     }
+    ]
+   },
+   {
+    "type": "TextNode",
+    "name": "Info",
+    "position": [
+     6,
+     4
+    ],
+    "pivot": [
+     0,
+     0
+    ],
+    "layer": 7,
+    "properties": {
+     "text": "",
+     "fontSize": 16,
+     "align": "Left",
+     "color": "#3c3c5aff"
+    }
+   }
+  ]
+ }
+}

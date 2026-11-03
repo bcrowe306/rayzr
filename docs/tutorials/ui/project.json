@@ -1,0 +1,25 @@
+{
+ "name": "Coin Run",
+ "version": "0.1.0",
+ "initial_scene": "scenes/title.scene.json",
+ "window": {
+  "title": "Coin Run",
+  "width": 1280,
+  "height": 720,
+  "virtual_width": 640,
+  "virtual_height": 360,
+  "target_fps": 60
+ },
+ "video": {
+  "resizable": true,
+  "sharp_scaling": true
+ },
+ "physics": {
+  "gravity": [0, 900],
+  "debug_draw": false
+ },
+ "scenes": [
+  "scenes/title.scene.json",
+  "scenes/main.scene.json"
+ ]
+}

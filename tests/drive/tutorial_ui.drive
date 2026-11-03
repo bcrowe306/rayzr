@@ -1,0 +1,267 @@
+# The UI and HUD tutorial (docs/tutorials/ui.md, #295): its steps, in a copy
+# of the finished project (docs/tutorials/ui/), and its screenshots
+# (scripts/docs/screenshots.sh tutorial_ui copies them to
+# docs/images/tutorial-ui_*.png). The level is the finished one with its HUD
+# and pause menu removed; the drive builds them again as the page says.
+# drive: project docs/tutorials/ui
+wait 5
+key escape
+dblclick @asset:scenes/main.scene.json
+wait 10
+expect scene contains main.scene.json
+click @hier:HUD
+key delete
+wait 3
+click @hier:Ground
+click @hier:PauseLayer
+wait 2
+expect selected == PauseLayer
+key delete
+wait 3
+expect node:HUD.exists == false
+expect node:PauseLayer.exists == false
+click @hier:Ground
+key escape
+expect selected ==
+
+# 1. The HUD: a Screen Layer (top left) with a UI Progress Bar.
+click @hier.add
+type screen layer
+click @addnode.create
+expect node:ScreenLayer.type == ScreenLayerNode
+dblclick @insp.name
+key ctrl+a
+type HUD
+key enter
+expect node:HUD.prop.anchor == TopLeft
+click @insp.script-attach
+click @pick:scripts/hud.lua
+click @hier.add
+type ui progress bar
+click @addnode.create
+expect node:UIProgressBar.parent == HUD
+dblclick @insp.name
+key ctrl+a
+type HealthBar
+key enter
+dblclick @insp.position.x
+key ctrl+a
+type 16
+key enter
+dblclick @insp.position.y
+key ctrl+a
+type 16
+key enter
+dblclick @insp.prop:size.x
+key ctrl+a
+type 200
+key enter
+dblclick @insp.prop:label
+key ctrl+a
+type Health
+key enter
+dblclick @insp.prop:maxValue
+key ctrl+a
+type 100
+key enter
+dblclick @insp.prop:value
+key ctrl+a
+type 100
+key enter
+expect node:HealthBar.prop.maxValue == 100
+
+# 2. The score: a second Screen Layer, anchored top right, with a UI Label.
+click @hier:HUD
+click @hier.add
+type screen layer
+click @addnode.create
+expect node:ScreenLayer.parent == HUD
+dblclick @insp.name
+key ctrl+a
+type TopRight
+key enter
+click @insp.prop:anchor
+click @pick:TopRight
+expect node:TopRight.prop.anchor == TopRight
+dblclick @insp.position.x
+key ctrl+a
+type -176
+key enter
+dblclick @insp.position.y
+key ctrl+a
+type 16
+key enter
+click @hier.add
+type ui label
+click @addnode.create
+expect node:UILabel.parent == TopRight
+dblclick @insp.name
+key ctrl+a
+type Score
+key enter
+dblclick @insp.position.x
+key ctrl+a
+type 0
+key enter
+dblclick @insp.position.y
+key ctrl+a
+type 0
+key enter
+dblclick @insp.prop:size.x
+key ctrl+a
+type 160
+key enter
+dblclick @insp.prop:text
+key ctrl+a
+type Score: 0
+key enter
+dblclick @insp.prop:fontSize
+key ctrl+a
+type 20
+key enter
+click @insp.prop:align
+click @pick:Right
+expect node:Score.prop.align == Right
+click @insp.prop:drawBackground
+expect node:Score.prop.drawBackground == true
+click @hier:HUD
+key shift+home
+wait 5
+annotate @node:HealthBar A UI Progress Bar: Health, 0 to 100
+annotate @node:Score A UI Label under a top-right Screen Layer
+annotate @hier:HUD The HUD: a Screen Layer - drawn over the camera's frame
+screenshot tutorial-ui_hud
+
+# 3. The pause menu: a centred Screen Layer (Pause Mode Always), a UI
+# Container, two UI Buttons.
+click @hier:Ground
+key escape
+expect selected ==
+click @hier.add
+type screen layer
+click @addnode.create
+dblclick @insp.name
+key ctrl+a
+type PauseLayer
+key enter
+click @insp.prop:anchor
+click @pick:Center
+click @insp.pause-mode
+click @pick:Always
+expect node:PauseLayer.prop.anchor == Center
+click @insp.script-attach
+click @pick:scripts/pause_menu.lua
+click @hier.add
+type ui container
+click @addnode.create
+expect node:UIContainer.parent == PauseLayer
+dblclick @insp.name
+key ctrl+a
+type Menu
+key enter
+dblclick @insp.position.x
+key ctrl+a
+type -120
+key enter
+dblclick @insp.position.y
+key ctrl+a
+type -80
+key enter
+dblclick @insp.prop:size.x
+key ctrl+a
+type 240
+key enter
+dblclick @insp.prop:title
+key ctrl+a
+type Paused
+key enter
+click @insp.prop:autoSizeHeight
+expect node:Menu.prop.autoSizeHeight == true
+click @hier.add
+type ui button
+click @addnode.create
+expect node:UIButton.parent == Menu
+dblclick @insp.name
+key ctrl+a
+type Resume
+key enter
+dblclick @insp.prop:text
+key ctrl+a
+type Resume
+key enter
+click @hier:PauseLayer/Menu
+click @hier.add
+type ui button
+click @addnode.create
+expect node:UIButton.parent == Menu
+dblclick @insp.name
+key ctrl+a
+type Quit
+key enter
+dblclick @insp.prop:text
+key ctrl+a
+type Quit
+key enter
+key ctrl+s
+expect file:scenes/main.scene.json contains "pause_mode": "always"
+expect file:scenes/main.scene.json contains "anchor": "TopRight"
+expect file:scenes/main.scene.json contains "type": "UIProgressBarNode"
+
+# 4. Simulate: the events from the Lua line change the score and the bar;
+# the pause menu opened from its script, laid out by the container.
+click @hier:Ground
+key shift+f
+wait 3
+click @menu:Game
+click @menu:Game/Simulate in Editor
+wait 20
+expect node:Score.prop.text == Score: 0
+expect node:Menu.enabled == false
+click @bottom:console
+click @console.lua
+type Events.emit("coin_collected", 10)
+key enter
+wait 5
+expect node:Score.prop.text == Score: 10
+click @console.lua
+type Scene.find_node("Player"):get_script():hurt(25)
+key enter
+wait 5
+expect node:HealthBar.prop.value == 75
+annotate @node:Score The score label, set by the coin_collected event
+annotate @node:HealthBar The bar's value, set by the health_changed event
+screenshot tutorial-ui_events
+click @console.lua
+type Scene.find_node("PauseLayer"):get_script():show(true)
+key enter
+wait 10
+expect node:Menu.enabled == true
+annotate @node:Menu A UI Container laying out its buttons (in Simulate and the game)
+screenshot tutorial-ui_pause
+click @menu:Game
+click @menu:Game/Simulate in Editor
+wait 5
+
+# 5. The title screen: a Text node's Rendering (Auto keeps it sharp scaled).
+dblclick @asset:scenes/title.scene.json
+wait 10
+expect scene contains title.scene.json
+click @hier:Menu/Title
+key shift+home
+wait 5
+hover @insp.prop:rendering
+wait 2
+annotate @insp.prop:rendering Rendering: Auto, Sharp (MSDF) or Bitmap
+annotate @node:Play A UI Button: its clicked signal starts the game
+screenshot tutorial-ui_title
+
+# 6. Played (without the drives' Show Colliders): the game's own HUD.
+dblclick @asset:scenes/main.scene.json
+wait 10
+click @menu:Game
+click @menu:Game/Show Colliders in Game
+expect log contains Colliders hidden in the game
+game-args --frames 60 --screenshot $SHOTS/05_tutorial-ui_game.png --dump-scene $SHOTS/game_scene.json
+key f6
+wait-until game == stopped timeout=900
+expect abs-file:$SHOTS/game_scene.json contains "Score: 0"

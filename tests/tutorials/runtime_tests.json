@@ -400,5 +400,408 @@
     72
    ]
   ]
+ },
+ {
+  "name": "animation tutorial (#295): the scene plays; the State Machine starts in idle, the coin bobs (Autoplay)",
+  "project": "docs/tutorials/animation",
+  "frames": 30,
+  "expect": [
+   [
+    "Info",
+    "text",
+    "==",
+    "State: idle"
+   ],
+   [
+    "Sprite",
+    "animation",
+    "==",
+    "idle"
+   ],
+   [
+    "Coin",
+    "exists",
+    "==",
+    true
+   ]
+  ]
+ },
+ {
+  "name": "animation tutorial (#295): running right - speed > 10 takes the arrow to run",
+  "project": "docs/tutorials/animation",
+  "frames": 40,
+  "input": [
+   "10 RIGHT down"
+  ],
+  "expect": [
+   [
+    "Info",
+    "text",
+    "==",
+    "State: run"
+   ],
+   [
+    "Sprite",
+    "animation",
+    "==",
+    "run"
+   ],
+   [
+    "Sprite",
+    "scale",
+    "==",
+    [
+     1,
+     1
+    ]
+   ],
+   [
+    "Player",
+    "x",
+    ">",
+    60
+   ]
+  ]
+ },
+ {
+  "name": "animation tutorial (#295): running left mirrors the sprite (negative x scale)",
+  "project": "docs/tutorials/animation",
+  "frames": 40,
+  "patch": {
+   "Player": {
+    "position": [
+     200,
+     130
+    ]
+   }
+  },
+  "input": [
+   "10 LEFT down"
+  ],
+  "expect": [
+   [
+    "Info",
+    "text",
+    "==",
+    "State: run"
+   ],
+   [
+    "Sprite",
+    "scale",
+    "==",
+    [
+     -1,
+     1
+    ]
+   ]
+  ]
+ },
+ {
+  "name": "animation tutorial (#295): Space jumps - off the floor, the Any-state arrow goes to jump",
+  "project": "docs/tutorials/animation",
+  "frames": 40,
+  "input": [
+   "30 SPACE tap 2"
+  ],
+  "expect": [
+   [
+    "Info",
+    "text",
+    "==",
+    "State: jump"
+   ],
+   [
+    "Sprite",
+    "animation",
+    "==",
+    "jump"
+   ],
+   [
+    "Player",
+    "y",
+    "<",
+    125
+   ]
+  ]
+ },
+ {
+  "name": "animation tutorial (#295): after landing, on_floor takes jump back to idle",
+  "project": "docs/tutorials/animation",
+  "frames": 120,
+  "input": [
+   "30 SPACE tap 2"
+  ],
+  "expect": [
+   [
+    "Info",
+    "text",
+    "==",
+    "State: idle"
+   ],
+   [
+    "Sprite",
+    "animation",
+    "==",
+    "idle"
+   ]
+  ]
+ },
+ {
+  "name": "animation tutorial (#295): falling onto the coin plays collect; the coin stays until the animation finishes",
+  "project": "docs/tutorials/animation",
+  "frames": 25,
+  "patch": {
+   "Player": {
+    "position": [
+     225,
+     40
+    ]
+   }
+  },
+  "expect": [
+   [
+    "Coin",
+    "exists",
+    "==",
+    true
+   ]
+  ]
+ },
+ {
+  "name": "animation tutorial (#295): animation_finished (collect) removes the coin",
+  "project": "docs/tutorials/animation",
+  "frames": 60,
+  "patch": {
+   "Player": {
+    "position": [
+     225,
+     40
+    ]
+   }
+  },
+  "expect": [
+   [
+    "Coin",
+    "exists",
+    "==",
+    false
+   ]
+  ]
+ },
+ {
+  "name": "ui tutorial (#295): the title screen shows; clicking Play changes to the game scene",
+  "project": "docs/tutorials/ui",
+  "frames": 60,
+  "input": [
+   "20 mouse 320 208 click"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "main"
+   ]
+  ]
+ },
+ {
+  "name": "ui tutorial (#295): the game plays with a full health bar and Score: 0; the pause menu is off",
+  "project": "docs/tutorials/ui",
+  "scene": "scenes/main.scene.json",
+  "frames": 30,
+  "expect": [
+   [
+    "HealthBar",
+    "value",
+    "==",
+    100
+   ],
+   [
+    "Score",
+    "text",
+    "==",
+    "Score: 0"
+   ],
+   [
+    "Menu",
+    "enabled",
+    "==",
+    false
+   ]
+  ]
+ },
+ {
+  "name": "ui tutorial (#295): a coin's coin_collected event adds 10 to the score label",
+  "project": "docs/tutorials/ui",
+  "scene": "scenes/main.scene.json",
+  "frames": 60,
+  "input": [
+   "10 RIGHT down"
+  ],
+  "expect": [
+   [
+    "Score",
+    "text",
+    "==",
+    "Score: 10"
+   ],
+   [
+    "Coin1",
+    "exists",
+    "==",
+    false
+   ]
+  ]
+ },
+ {
+  "name": "ui tutorial (#295): spikes hurt the player; health_changed sets the health bar",
+  "project": "docs/tutorials/ui",
+  "scene": "scenes/main.scene.json",
+  "frames": 40,
+  "patch": {
+   "Player": {
+    "position": [
+     243,
+     290
+    ]
+   }
+  },
+  "expect": [
+   [
+    "HealthBar",
+    "value",
+    "==",
+    75
+   ]
+  ]
+ },
+ {
+  "name": "ui tutorial (#295): the HUD stays on screen while the camera follows the player",
+  "project": "docs/tutorials/ui",
+  "scene": "scenes/main.scene.json",
+  "frames": 150,
+  "patch": {
+   "Player": {
+    "position": [
+     500,
+     300
+    ]
+   }
+  },
+  "input": [
+   "10 RIGHT down"
+  ],
+  "expect": [
+   [
+    "HUD",
+    "x",
+    "==",
+    0
+   ],
+   [
+    "HealthBar",
+    "x",
+    "==",
+    16
+   ],
+   [
+    "Player",
+    "x",
+    ">",
+    650
+   ]
+  ]
+ },
+ {
+  "name": "ui tutorial (#295): Esc pauses - the menu shows, the player stops",
+  "project": "docs/tutorials/ui",
+  "scene": "scenes/main.scene.json",
+  "frames": 60,
+  "input": [
+   "20 ESCAPE tap 2",
+   "25 RIGHT down"
+  ],
+  "expect": [
+   [
+    "Menu",
+    "enabled",
+    "==",
+    true
+   ],
+   [
+    "Player",
+    "x",
+    "<",
+    45
+   ]
+  ]
+ },
+ {
+  "name": "ui tutorial (#295): Esc again resumes",
+  "project": "docs/tutorials/ui",
+  "scene": "scenes/main.scene.json",
+  "frames": 70,
+  "input": [
+   "20 ESCAPE tap 2",
+   "30 ESCAPE tap 2",
+   "35 RIGHT down"
+  ],
+  "expect": [
+   [
+    "Menu",
+    "enabled",
+    "==",
+    false
+   ],
+   [
+    "Player",
+    "x",
+    ">",
+    50
+   ]
+  ]
+ },
+ {
+  "name": "ui tutorial (#295): clicking Resume closes the menu and unpauses",
+  "project": "docs/tutorials/ui",
+  "scene": "scenes/main.scene.json",
+  "frames": 80,
+  "input": [
+   "20 ESCAPE tap 2",
+   "35 mouse 320 168 click",
+   "45 RIGHT down"
+  ],
+  "expect": [
+   [
+    "Menu",
+    "enabled",
+    "==",
+    false
+   ],
+   [
+    "Player",
+    "x",
+    ">",
+    50
+   ]
+  ]
+ },
+ {
+  "name": "ui tutorial (#295): clicking Quit unpauses and changes to the title scene",
+  "project": "docs/tutorials/ui",
+  "scene": "scenes/main.scene.json",
+  "frames": 80,
+  "input": [
+   "20 ESCAPE tap 2",
+   "35 mouse 320 212 click"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "title"
+   ]
+  ]
  }
 ]

@@ -1,0 +1,9 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "A key: the Sprite's position at frame 7 (0.6 s)", "x": 664, "y": 630, "w": 12, "h": 12},
+    {"label": "The selected key's value and easing", "x": 779, "y": 663, "w": 239, "h": 25},
+    {"label": "The star: the animation selected when the scene loads (Autoplay plays it)", "x": 935, "y": 471, "w": 26, "h": 26}
+  ]
+}

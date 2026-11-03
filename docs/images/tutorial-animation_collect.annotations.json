@@ -1,0 +1,7 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "Loop off: collect plays once, then animation_finished", "x": 658, "y": 471, "w": 57, "h": 25}
+  ]
+}

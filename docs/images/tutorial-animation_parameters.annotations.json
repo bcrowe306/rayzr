@@ -1,0 +1,8 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "speed: a float the script sets every frame", "x": 375, "y": 584, "w": 75, "h": 25},
+    {"label": "on_floor: a bool, true at the start", "x": 463, "y": 617, "w": 25, "h": 25}
+  ]
+}

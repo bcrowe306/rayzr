@@ -1,0 +1,26 @@
+{
+ "name": "Coin Hop",
+ "version": "0.1.0",
+ "initial_scene": "scenes/main.scene.json",
+ "window": {
+  "title": "Coin Hop",
+  "width": 1280,
+  "height": 720,
+  "virtual_width": 320,
+  "virtual_height": 180,
+  "target_fps": 60
+ },
+ "video": {
+  "resizable": true,
+  "sharp_scaling": true,
+  "integer_scaling": true,
+  "pixel_snap": true
+ },
+ "physics": {
+  "gravity": [0, 900],
+  "debug_draw": false
+ },
+ "scenes": [
+  "scenes/main.scene.json"
+ ]
+}

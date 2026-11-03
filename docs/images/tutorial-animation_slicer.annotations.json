@@ -1,0 +1,9 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "Cell Grid: 9 columns, 3 rows - cells of 24 x 24 px", "x": 366, "y": 151, "w": 145, "h": 25},
+    {"label": "Pick cells, name the animation, Add Animation", "x": 337, "y": 407, "w": 174, "h": 25},
+    {"label": "Add the animations to the selected Animation Player", "x": 272, "y": 599, "w": 239, "h": 25}
+  ]
+}
