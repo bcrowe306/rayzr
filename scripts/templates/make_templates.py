@@ -344,9 +344,11 @@ def _level2():
 PLATFORMER_LEVEL2 = _level2()
 
 
-def platformer_scene(t, rows, name, next_level=""):
+def platformer_scene(t, rows, name, next_level="", game_level=None):
     """A platformer level (scene children) from a text map:
-    # ground, = one-way platform, o coin, ^ spikes, e enemy, P player, D door."""
+    # ground, = one-way platform, o coin, ^ spikes, e enemy, P player, D door.
+    game_level: the level's number in a game (#329: the HUD shows the level
+    and the lives, Game runs the levels)."""
     T = 18  # tile size
     TILES, CHARS = "textures/tiles.png", "textures/characters.png"
     TG, CG = (20, 9), (9, 3)  # sheet grids
@@ -443,10 +445,15 @@ def platformer_scene(t, rows, name, next_level=""):
         "script": {"path": "scripts/player.lua", "properties": {"fall_limit": H * T + 40}},
         "children": [sprite("Sprite", CHARS, CG, {"idle": ([0], 1, True), "run": ([0, 1], 8, True),
                                                   "jump": ([1], 1, False)}, pos=(0, -3), layer=3)]})
-    children.append({"type": "Node", "name": "HUD", "script": {"path": "scripts/hud.lua"}, "children": [
+    hud = {"type": "Node", "name": "HUD", "script": {"path": "scripts/hud.lua"}, "children": [
         text("Coins", "Coins 0", (8, 4), color="#3c3c5aff"),
         text("Message", "", (160, 70), size=32, align="Center", pivot=(0.5, 0.5), color="#3c3c5aff"),
-    ]})
+    ]}
+    if game_level:
+        hud["script"]["properties"] = {"level": game_level}
+        hud["children"] += [text("LevelText", "", (160, 4), align="Center", pivot=(0.5, 0), color="#3c3c5aff"),
+                            text("Lives", "", (312, 4), align="Right", pivot=(1, 0), color="#3c3c5aff")]
+    children.append(hud)
     return scene(name, children, background=(223, 246, 245, 255))
 
 
@@ -463,15 +470,30 @@ PLATFORMER_ACTIONS = MOVE_ACTIONS + [action("jump", "SPACE", "W", "UP", "pad:RIG
 
 def platformer():
     t = Template("platformer", "Platformer",
-                 "Run and jump through a level: coins, spikes, an enemy to stomp, a door to the end. "
-                 "Pixel art, a camera that follows, a HUD.", "person-running", 1)
+                 "Run and jump through two levels: coins, spikes, enemies to stomp, a door to the end, three "
+                 "lives. A title screen, settings, a pause menu, saved progress.", "person-running", 1)
     t.begin()
     platformer_art(t)
-    t.json("scenes/level1.scene.json", with_touch(platformer_scene(t, PLATFORMER_LEVEL, "level1"), (320, 180),
-                                                  stick=("move_left", "move_right", "", "")))
-    t.json("project.json", project("Platformer", ["scenes/level1.scene.json"], PLATFORMER_ACTIONS))
+    # A small game (#329): the title, two levels (three lives), the result
+    # screen; the furthest level and the best coin count saved.
+    ink, red = "#3c3c5aff", "#c0392bff"
+    levels = ["scenes/level1.scene.json", "scenes/level2.scene.json"]
+    for i, rows in enumerate((PLATFORMER_LEVEL, PLATFORMER_LEVEL2)):
+        sc = platformer_scene(t, rows, f"level{i + 1}", game_level=i + 1)
+        sc["root"]["children"].append(pause_menu(PIXEL_STYLE, red))
+        t.json(levels[i], with_touch(sc, (320, 180), stick=("move_left", "move_right", "", ""), pause="pause"))
+    sky = (223, 246, 245, 255)
+
+    def backdrop():
+        return tilemap("Backdrop", "textures/backgrounds.png", 24, [[(9, 11)[c % 2] for c in range(15)]] +
+                       [[16 + c % 4 for c in range(15)] for _ in range(3)], layer=0, pos=(0, 84))
+    t.json("scenes/title.scene.json", title_scene("Platformer", PIXEL_STYLE, ink, red, sky, [backdrop()]))
+    t.json("scenes/result.scene.json", result_scene(PIXEL_STYLE, ink, red, sky, [backdrop()]))
+    t.json("project.json", project("Platformer", ["scenes/title.scene.json"] + levels + ["scenes/result.scene.json"],
+                                   PLATFORMER_ACTIONS + GAME_ACTIONS, globals_=GAME_GLOBALS))
     for s_ in PLATFORMER_SCRIPTS:
         t.script(s_)
+    game_scripts(t, levels, lives=3, score_name="Coins")
     # Starter physics components (they were snippets built into the editor: #87).
     t.json("components/physics_crate.component.json", {
         "type": "DynamicBodyNode", "name": "PhysicsCrate", "uid": "crate000",
@@ -532,10 +554,12 @@ def adventure():
                                    ["scenes/title.scene.json", "scenes/level1.scene.json", "scenes/level2.scene.json"],
                                    PLATFORMER_ACTIONS + [action("pause", "ESCAPE", "P", "pad:MIDDLE_RIGHT"),
                                                          action("confirm", "ENTER", "SPACE", "pad:RIGHT_FACE_DOWN")]))
+    # (Its own player / hud / goal: the Platformer template's are a game of
+    # their own now - #329.)
     for s_ in PLATFORMER_SCRIPTS:
-        if s_ != "goal":
+        if s_ not in ("goal", "player", "hud"):
             t.script(s_, src="platformer")
-    for s_ in ("goal", "menu"):
+    for s_ in ("goal", "menu", "player", "hud"):
         with open(os.path.join(SCRIPTS, "adventure", s_ + ".lua")) as f:
             t.write(f"scripts/{s_}.lua", f.read())
     with open(os.path.join(SCRIPTS, "adventure", "README.md")) as f:

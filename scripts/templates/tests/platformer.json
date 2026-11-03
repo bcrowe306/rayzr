@@ -1,5 +1,307 @@
 [
  {
+  "name": "play-through: the title's Play starts level 1 (three lives)",
+  "frames": 60,
+  "input": [
+   "10 ENTER tap"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "level1"
+   ],
+   [
+    "LevelText",
+    "text",
+    "==",
+    "Level 1 / 2"
+   ],
+   [
+    "Lives",
+    "text",
+    "==",
+    "Lives 3"
+   ]
+  ]
+ },
+ {
+  "name": "play-through: from the title, level 1 played to its door goes on to level 2 (unlocked and saved)",
+  "frames": 720,
+  "input": [
+   "10 ENTER tap",
+   "33 RIGHT down",
+   "164 SPACE tap 16",
+   "292 SPACE tap 16",
+   "343 SPACE tap 16",
+   "391 SPACE tap 16",
+   "545 SPACE tap 16"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "level2"
+   ],
+   [
+    "LevelText",
+    "text",
+    "==",
+    "Level 2 / 2"
+   ],
+   [
+    "Lives",
+    "text",
+    "==",
+    "Lives 3"
+   ],
+   [
+    "@file:save.json",
+    "progress.unlocked",
+    "==",
+    2
+   ]
+  ]
+ },
+ {
+  "name": "play-through: from the title, running into the enemy three times is game over",
+  "frames": 660,
+  "input": [
+   "10 ENTER tap",
+   "33 RIGHT down"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "result"
+   ],
+   [
+    "Heading",
+    "text",
+    "==",
+    "Game over"
+   ],
+   [
+    "Again",
+    "text",
+    "contains",
+    "Retry level 1"
+   ]
+  ]
+ },
+ {
+  "name": "play-through: level 2 played through wins the game (the result screen, a new best)",
+  "frames": 800,
+  "scene": "scenes/level2.scene.json",
+  "input": [
+   "5 RIGHT down",
+   "97 SPACE tap 16",
+   "135 SPACE tap 16",
+   "251 SPACE tap 16",
+   "373 SPACE tap 16",
+   "470 SPACE tap 16",
+   "520 SPACE tap 16",
+   "588 SPACE tap 16"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "result"
+   ],
+   [
+    "Heading",
+    "text",
+    "==",
+    "You win!"
+   ],
+   [
+    "Best",
+    "text",
+    "==",
+    "New best!"
+   ],
+   [
+    "@file:save.json",
+    "progress.best",
+    ">",
+    0
+   ]
+  ]
+ },
+ {
+  "name": "play-through: the result screen's Retry plays the level again",
+  "frames": 60,
+  "scene": "scenes/result.scene.json",
+  "input": [
+   "10 ENTER tap"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "level1"
+   ],
+   [
+    "Lives",
+    "text",
+    "==",
+    "Lives 3"
+   ]
+  ]
+ },
+ {
+  "name": "play-through: the unlocked level survives a restart - the title starts at level 2",
+  "frames": 60,
+  "patch_scene": "scenes/level1.scene.json",
+  "patch": {
+   "Player": {
+    "position": [
+     1000,
+     110
+    ]
+   }
+  },
+  "before": [
+   {
+    "frames": 200,
+    "input": [
+     "10 ENTER tap",
+     "33 RIGHT down"
+    ]
+   }
+  ],
+  "input": [
+   "10 ENTER tap"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "level2"
+   ],
+   [
+    "@file:save.json",
+    "progress.unlocked",
+    "==",
+    2
+   ]
+  ]
+ },
+ {
+  "name": "play-through: the volume set in Settings survives a restart",
+  "frames": 60,
+  "before": [
+   {
+    "frames": 120,
+    "input": [
+     "10 DOWN tap",
+     "20 DOWN tap",
+     "30 ENTER tap",
+     "45 LEFT tap",
+     "55 LEFT tap",
+     "65 LEFT tap",
+     "75 DOWN tap",
+     "85 ENTER tap"
+    ]
+   }
+  ],
+  "input": [
+   "10 DOWN tap",
+   "20 DOWN tap",
+   "30 ENTER tap"
+  ],
+  "expect": [
+   [
+    "Volume",
+    "text",
+    "==",
+    "Volume  < 50% >"
+   ],
+   [
+    "@file:save.json",
+    "settings.volume",
+    "==",
+    0.5
+   ]
+  ]
+ },
+ {
+  "name": "play-through: Quit on the title ends the game",
+  "frames": 120,
+  "quits": true,
+  "input": [
+   "10 UP tap",
+   "20 ENTER tap"
+  ]
+ },
+ {
+  "name": "pause: Esc pauses; Title screen goes back to the title",
+  "frames": 130,
+  "scene": "scenes/level1.scene.json",
+  "input": [
+   "20 ESCAPE tap",
+   "25 RIGHT down",
+   "40 DOWN tap",
+   "50 DOWN tap",
+   "60 ENTER tap"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "title"
+   ]
+  ]
+ },
+ {
+  "name": "pause: Resume plays on",
+  "frames": 110,
+  "scene": "scenes/level1.scene.json",
+  "input": [
+   "20 ESCAPE tap",
+   "40 ENTER tap",
+   "50 RIGHT down"
+  ],
+  "expect": [
+   [
+    "PauseMenu",
+    "visible",
+    "==",
+    false
+   ],
+   [
+    "Player",
+    "x",
+    ">",
+    60
+   ]
+  ]
+ },
+ {
+  "name": "touch: tapping Play on the title starts level 1",
+  "frames": 60,
+  "input": [
+   "10 touch1 160 88 tap"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "level1"
+   ]
+  ]
+ },
+ {
   "name": "runs and jumps for a coin",
   "frames": 90,
   "input": [
@@ -19,7 +321,8 @@
     ">",
     150
    ]
-  ]
+  ],
+  "scene": "scenes/level1.scene.json"
  },
  {
   "name": "an enemy hurts from the side",
@@ -34,7 +337,8 @@
     "==",
     "Ouch!"
    ]
-  ]
+  ],
+  "scene": "scenes/level1.scene.json"
  },
  {
   "name": "after dying the level starts again",
@@ -60,8 +364,15 @@
     "text",
     "==",
     "Coins 0 / 11"
+   ],
+   [
+    "Lives",
+    "text",
+    "==",
+    "Lives 2"
    ]
-  ]
+  ],
+  "scene": "scenes/level1.scene.json"
  },
  {
   "name": "stomping an enemy",
@@ -83,7 +394,8 @@
     "==",
     ""
    ]
-  ]
+  ],
+  "scene": "scenes/level1.scene.json"
  },
  {
   "name": "spikes hurt",
@@ -106,7 +418,8 @@
     "==",
     "Ouch!"
    ]
-  ]
+  ],
+  "scene": "scenes/level1.scene.json"
  },
  {
   "name": "falling out of the level",
@@ -126,7 +439,8 @@
     "==",
     "Ouch!"
    ]
-  ]
+  ],
+  "scene": "scenes/level1.scene.json"
  },
  {
   "name": "the door finishes the level",
@@ -149,7 +463,8 @@
     "==",
     "Level complete!"
    ]
-  ]
+  ],
+  "scene": "scenes/level1.scene.json"
  },
  {
   "name": "the level can be finished (found by find_route.py)",
@@ -169,7 +484,8 @@
     "==",
     "Level complete!"
    ]
-  ]
+  ],
+  "scene": "scenes/level1.scene.json"
  },
  {
   "name": "touch: the joystick runs, the button jumps for the coin",
@@ -192,6 +508,7 @@
     ">",
     150
    ]
-  ]
+  ],
+  "scene": "scenes/level1.scene.json"
  }
 ]

@@ -2,6 +2,7 @@
  {
   "name": "developer console: open, with help, a Lua result, outlines and the camera's bounds",
   "project": "templates/platformer",
+  "scene": "scenes/level1.scene.json",
   "frames": 40,
   "args": ["--console", "outlines; camera; help; 1 + 1; open"],
   "expect": [

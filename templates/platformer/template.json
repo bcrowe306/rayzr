@@ -1,6 +1,6 @@
 {
   "name": "Platformer",
-  "description": "Run and jump through a level: coins, spikes, an enemy to stomp, a door to the end. Pixel art, a camera that follows, a HUD.",
+  "description": "Run and jump through two levels: coins, spikes, enemies to stomp, a door to the end, three lives. A title screen, settings, a pause menu, saved progress.",
   "icon": "person-running",
   "order": 1
 }
