@@ -97,6 +97,26 @@ colour and line width of new shapes.
   eye hides a layer (saved hidden) and the lock stops its shapes being
   picked. Type in the name field and press Enter to rename. The arrows move
   a layer above or below the next.
+- **Fill and stroke**: under Layers, the Inspector edits the selected
+  shape's style, or the style of new shapes when nothing is selected:
+  - **Fill** and **Stroke** each have a paint: none, a colour, or a linear
+    or radial gradient. A gradient has a stop bar: click it to add a stop,
+    drag a stop along it, and right-click a stop to remove it. Each stop has
+    its own colour, and **Spread** sets what happens past the ends.
+  - The fill has a fill rule (even-odd makes overlaps into holes).
+  - The stroke has width, joins, a miter limit, caps, dashes (`8 4`: dash,
+    gap...) and a dash offset.
+  - **Opacity** applies to the whole shape.
+- **Swatches**: the project's palette, saved in `project.json`. Click a
+  swatch to use it as the fill (**Shift+click**: the line colour),
+  right-click to remove it, and **+** adds the current fill. The colours
+  the file already uses are listed under it.
+- **Gradient** tool (**F**): drag the ends of the selected shape's gradient
+  on the canvas. For a radial gradient, drag its centre and its radius.
+- **Eyedropper** (**I**): click a shape to copy its fill and line to the
+  selected shape. With nothing selected, or when you click the selected
+  shape itself, new shapes take that style. **Alt+click** takes the colour
+  on screen as the fill (**Alt+Shift**: the line).
 - **Draw order**: **Ctrl+]** draws the selected shape over the next one and
   **Ctrl+[** under the one before, within its group. The Inspector's
   **Forward** and **Backward** buttons do the same.
