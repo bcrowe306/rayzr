@@ -9943,10 +9943,10 @@ function AdvancedCameraNode:snap() end
 
 
 ---The collision layers this body's shapes are on: project layer names
----(Project Settings > Physics), "LayerN" or numbers 1-16; several or a table.
+---(Project Settings > General > Collision Layers), "LayerN" or numbers 1-16; several or a table.
 ---
 ---Example: `self.node:set_collision_layer("player")`
----@param ... CollisionLayer|string|integer|table Layer names from Project Settings > Physics, "LayerN" or numbers 1-16, as arguments or one table; replaces the layers it had; an unknown name is an error
+---@param ... CollisionLayer|string|integer|table Layer names from Project Settings > General > Collision Layers, "LayerN" or numbers 1-16, as arguments or one table; replaces the layers it had; an unknown name is an error
 function Node:set_collision_layer(...) end
 
 ---The collision layers this body's shapes collide with.
@@ -9999,7 +9999,7 @@ function StateMachineNode:sm_get(name) end
 ---
 ---Triggers only drive Automatic arrows; to take a Manual arrow, call `sm_transition`.
 ---
----Example: `if Input.is_action_just_pressed("jump") then self.node:get_node("StateMachine"):sm_trigger("jump") end`
+---Example: `if Input.is_action_pressed("jump") then self.node:get_node("StateMachine"):sm_trigger("jump") end`
 ---@param name StateMachineTrigger|string The trigger (State Machine tab > Parameters and Triggers)
 ---@return boolean ok false (and a warning) when the machine has no trigger of that name
 function StateMachineNode:sm_trigger(name) end
@@ -13044,11 +13044,11 @@ function PhysicsModule.set_paused(paused) end
 ---@param startY number World Y where the ray starts, in px
 ---@param endX number World X where the ray ends, in px (a Vec2 also works, with endY left out)
 ---@param endY number World Y where the ray ends, in px
----@param ... CollisionLayer|string|integer|table Optional: only colliders on these layers are hit (names from Project Settings > Physics, 1-16, or a list); none hits every layer. An unknown name is an error
+---@param ... CollisionLayer|string|integer|table Optional: only colliders on these layers are hit (names from Project Settings > General > Collision Layers, 1-16, or a list); none hits every layer. An unknown name is an error
 ---@return RaycastHit? hit The closest hit: point_x, point_y, normal_x, normal_y, fraction 0 to 1 along the ray, and node; nil when nothing solid is in the way
 function PhysicsModule.raycast(startX, startY, endX, endY) end
 
----The project's name for collision layer n (Project Settings > Physics), or "".
+---The project's name for collision layer n (Project Settings > General > Collision Layers), or "".
 ---
 ---Example: `local name = Physics.layer_name(3); Log.info("Layer 3: " .. name)`
 ---@param n integer Layer number, 1 to 16

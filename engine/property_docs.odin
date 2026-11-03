@@ -50,7 +50,7 @@ PROPERTY_DOCS_SHARED := [?]Property_Doc_Entry {
 	{"dampingRatio", "Spring damping: 0 bounces forever, 1 settles without overshoot."},
 	{"enableLimit", "Clamp the joint's travel to the lower / upper limits."},
 	{"enableMotor", "Drive the joint at Motor Speed, up to the maximum force / torque."},
-	{"categoryLayers", "Collision layers this object is on (names in Project Settings > Physics)."},
+	{"categoryLayers", "Collision layers this object is on (names in Project Settings > General > Collision Layers)."},
 	{"maskLayers", "Collision layers this object collides with."},
 	{"label", "Caption shown next to the control."},
 	{"labelWidth", "Width reserved for the label (px); 0 = none."},

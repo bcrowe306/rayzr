@@ -1,4 +1,4 @@
-# Physics extras: a named collision layer (Project Settings > Physics) shown
+# Physics extras: a named collision layer (Project Settings > General > Collision Layers) shown
 # in a shape's layer list, a one-way static body, and a Joint between two
 # bodies (pickers, only the active type's parameters), saved; Show Colliders
 # off in Project Settings.

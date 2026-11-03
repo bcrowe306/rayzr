@@ -667,7 +667,7 @@ property_widget :: proc(state: ^EditorState, node: ^e.Node, p: e.Node_Property, 
 		}
 	case .Bit_Set:
 		names := e.Property_EnumNames(p)
-		// Collision layers show the project's names (Project Settings > Physics).
+		// Collision layers show the project's names (Project Settings > General > Collision Layers).
 		isLayers := p.type.id == typeid_of(e.CollisionLayerSet)
 		count := 0
 		for _, i in names do if e.Property_BitSetHas(p, i) do count += 1

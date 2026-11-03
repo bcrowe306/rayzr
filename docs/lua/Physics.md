@@ -4,7 +4,7 @@
 - **Gravity changes**: `Physics.set_gravity(gx, gy)` for low-gravity zones, upside-down rooms or a space level; `get_gravity` reads it back. It affects every body in the world.
 - **Freezing the simulation**: `Physics.set_paused(true)` stops bodies while scripts keep running - a slow-motion intro, an inspect mode. To pause the whole game, use `Engine.set_paused` instead.
 - **Debugging collisions**: `Physics.set_debug_draw(true)` draws colliders, joints and areas while the game runs, like the project's **Show Colliders** setting.
-- **Showing layer names**: `Physics.layer_name(n)` returns the name given to collision layer *n* in Project Settings > Physics.
+- **Showing layer names**: `Physics.layer_name(n)` returns the name given to collision layer *n* in Project Settings > General > Collision Layers.
 
 ## Example
 

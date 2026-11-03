@@ -35,7 +35,7 @@ hitboxes and hurtboxes.
 5. Collision layers decide what it notices: each shape's **Mask Layers**
    (in **Collision Shapes**) lists the layers it reports bodies from, and a
    body's shapes are on their **Category Layers**. Name the layers in
-   Project Settings > Physics.
+   Project Settings > General > Collision Layers.
 
 ## How it works
 

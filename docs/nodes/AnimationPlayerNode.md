@@ -71,9 +71,11 @@ curves, events and onion skin are in
   easing or curve). Enums, text and a sprite's texture step: each key holds
   until the next.
 - Tracks can drive any node in the scene, not only the player's children.
-- `animation_play` always starts the animation from its first frame (its
-  last when reversed), even if it is already playing. Call it when the
-  animation should change, not every frame.
+- `animation_play(name)` starts an animation from its first frame (its
+  last when reversed). Naming the animation already playing changes
+  nothing (a paused one resumes), so calling it every frame is fine; a
+  finished non-looping one starts again. `animation_play()` with no name
+  restarts the current one.
 - With a blend time (`animation_play("run", 0.15)`) the property tracks
   the two animations share crossfade; the frames switch at once.
 - Method keys and other event keys fire once when playback passes them,
@@ -113,16 +115,9 @@ function Player:ready()
     self.anim:connect("animation_finished", function(name)
         if name == "attack" then
             self.attacking = false
-            self:play("idle")
+            self.anim:animation_play("idle", 0.1)
         end
     end)
-end
-
--- Switch only when the animation changes (animation_play restarts it).
-function Player:play(name)
-    if self.anim:animation_get_current() ~= name then
-        self.anim:animation_play(name, 0.1)
-    end
 end
 
 function Player:update(dt)
@@ -133,7 +128,8 @@ function Player:update(dt)
         return
     end
     local vx = self.node:character_get_velocity()
-    self:play(math.abs(vx) > 10 and "run" or "idle")
+    -- Every frame: naming the animation already playing changes nothing.
+    self.anim:animation_play(math.abs(vx) > 10 and "run" or "idle", 0.1)
     if vx ~= 0 then self.anim:set_scale(vx < 0 and -1 or 1, 1) end
 end
 
