@@ -61,6 +61,36 @@ markers, and a radial gradient's separate focal point.
 | Affinity Designer | *Export > SVG*: "Flatten transforms" off is fine; rasterise nothing; text as curves. |
 | Figma | *Export > SVG* on a frame; "Outline text" on. Clip content (frames) is kept. |
 
+## Drawing in the editor
+
+Draw vector art without leaving Rayzr: select a Vector Shape and
+**double-click** it in the viewport, or press **Edit Art** in the
+Inspector. The rest of the scene dims and the Vector toolbar appears at
+the top of the viewport. Every change is saved into the SVG straight away,
+and **Ctrl+Z** undoes it. Press **Esc** or **Done** to finish.
+
+| Tool | Key | What it does |
+|---|---|---|
+| **Select** | V | Click a shape to select it, and drag to move it. **Delete** removes it. |
+| **Nodes** | A | Shows a shape's anchors and their Bézier handles. Drag an anchor to move it with its handles. Drag a handle to bend the curve: the opposite handle turns with it, or hold **Alt** to move just this one. **Double-click** a segment to add an anchor there without changing the shape. **Alt+click** an anchor to remove it. **Right-click** an anchor to make it **Smooth**, **Symmetric** or **Corner**. |
+| **Pen** | P | Click to place a corner; click and drag to place a smooth anchor with its handles. Click the first anchor to close the shape, which then gets the fill colour. **Enter**, **Esc** or a double-click ends an open path. |
+
+The toolbar's two colour swatches and the width field set the fill, line
+colour and line width of new shapes.
+
+- **Starting from nothing**: a Vector Shape with no file creates
+  `art/<node name>.svg` the first time you click with the pen.
+- **What's saved**: clean SVG that Inkscape, Illustrator and Affinity open
+  again. It has your groups (symbols and swap frames) and gradients, with
+  the file's transforms applied to the coordinates. The first save of a file
+  keeps the original as `<file>.svg.bak`.
+- **Files with parts Rayzr can't draw** (text, images, filters; see the
+  Inspector's warnings): **Edit Art** asks first. **Edit a Copy** writes
+  `<name>_edit.svg` and points the node at it, so the original stays as it
+  was. **Overwrite** edits the file itself, dropping those parts.
+- Drawing into a symbol (a Vector Shape that shows one group) adds the new
+  shapes to that group.
+
 ## Characters: symbols, part swapping and lip-sync
 
 Build a character the way Flash animators did: draw it in layers (or
@@ -574,6 +604,9 @@ The benchmark: `tests/vector/project`, scene `scenes/bench.scene.json`
 - SVG text, images, filters, masks, patterns and markers aren't imported
   (see above); group opacity is applied to each shape (overlapping shapes
   in a half-transparent group show through each other).
+- The editor's drawing tools are the selection, node and pen tools; shapes
+  (rectangles, ellipses, stars), the brush and paint bucket, and snapping
+  come next (#267).
 - Hidden layers (`display:none`) aren't imported, so keep swap frames
   visible in the file; a whole-file instance draws every frame at once
   (explode it, or pick the symbol).
