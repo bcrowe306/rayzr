@@ -31,7 +31,7 @@ scripts and accessibility defaults - saved in the project's
 |---|---|
 | **File > Settings...** or Cmd+, (Ctrl+,) | **General** |
 | The gear in the toolbar, or the project name at the left of the toolbar | **Project** |
-| **Project Settings...** in the command palette (Cmd+Shift+P (Ctrl+Shift+P) or F1) | **Project** |
+| **Project Settings...** in the command palette (Cmd+Shift+P (Ctrl+Shift+P)) | **Project** |
 
 The dialog edits copies. **Save** writes `project.json` and your editor
 settings and applies both (gravity, input actions, resolution, volumes,

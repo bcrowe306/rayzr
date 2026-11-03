@@ -157,6 +157,7 @@ BottomPanel_Render :: proc(state: ^EditorState) {
 			bottom_tab_menu(t.id, t.name)
 			if tabOpen {
 				state.bottomTab = t.tab
+				PanelHelp_Mark(fmt.tprintf("tab-%s", t.id))
 				#partial switch t.tab {
 				case .Console:    BottomPanel_RenderConsole(state, counts)
 				case .Profiler:   BottomPanel_RenderProfiler(state)

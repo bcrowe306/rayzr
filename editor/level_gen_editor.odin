@@ -726,6 +726,7 @@ LevelGenEditor_Render :: proc(state: ^EditorState) {
 	title := fmt.ctprintf("%s  %s%s###LevelGenWindow", ICON_FA_SHUFFLE, filepath.base(lge.path), " *" if lge.dirty else "")
 	visible := imgui.Begin(title, &open, {.NoScrollbar, .NoScrollWithMouse})
 	defer imgui.End()
+	PanelHelp_Mark("level-generator")
 	{
 		// (The title bar's close button, for drives.)
 		wp, ws := imgui.GetWindowPos(), imgui.GetWindowSize()

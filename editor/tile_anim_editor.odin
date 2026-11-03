@@ -101,6 +101,7 @@ TileAnimEditor_Render :: proc(state: ^EditorState) {
 	open := true
 	visible := imgui.Begin(fmt.ctprintf("%s  Tile Animation: tile %d###TileAnimation", ICON_FA_FILM, animWin.tile), &open, {})
 	defer imgui.End()
+	PanelHelp_Mark("tile-animation")
 	if !open {
 		animWin.open = false
 		animWin.adding = false

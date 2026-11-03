@@ -1,0 +1,66 @@
+# Panel help (#45): F1 opens the editor manual's page for the panel with
+# focus (panel_help.odin), and Help > Help for <panel> the last one's.
+wait 8
+key escape
+expect noderef.open == false
+
+click @hier:PlayerShip
+wait 2
+key f1
+expect noderef.open == true
+expect noderef.page == editor/scene-tree
+click @noderef.close
+wait 1
+
+click @insp.name
+key escape
+wait 1
+key f1
+expect noderef.page == editor/inspector
+click @noderef.close
+wait 1
+
+click @window:viewport
+wait 1
+key f1
+expect noderef.page == editor/viewport
+click @noderef.close
+wait 1
+
+click @asset:textures/Asteroid_2.png
+wait 2
+key f1
+expect noderef.page == editor/assets
+click @noderef.close
+wait 1
+
+click @bottom:mixer
+wait 2
+key f1
+expect noderef.page == editor/tab-mixer
+click @noderef.close
+wait 1
+
+click @bottom:console
+wait 2
+key f1
+expect noderef.page == editor/tab-console
+click @noderef.close
+wait 1
+
+# The Help menu: the last panel used.
+click @menu:Help
+click @menu:Help/Help for This Panel
+expect noderef.page == editor/tab-console
+click @noderef.close
+wait 1
+
+# The Level Generator window.
+click @asset.add
+click @ctx:add-new-levelgen
+wait 3
+expect lge.open == true
+click @lge.canvas
+wait 1
+key f1
+expect noderef.page == editor/level-generator

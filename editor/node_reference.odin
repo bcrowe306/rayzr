@@ -323,6 +323,14 @@ NodeReference_Render :: proc(state: ^EditorState) {
 	imgui.SetNextWindowSize({620, 720}, .FirstUseEver)
 	visible := imgui.Begin(fmt.ctprintf("%s  Node Reference###NodeReference", ICON_FA_BOOK), &nodeRef.open)
 	defer imgui.End()
+	{
+		// (The title bar's close button, for drives.)
+		wp, ws := imgui.GetWindowPos(), imgui.GetWindowSize()
+		st := imgui.GetStyle()
+		fs := imgui.GetFontSize()
+		x := wp.x + ws.x - st.FramePadding.x - fs
+		Drive_ItemRect("noderef.close", {x, wp.y + st.FramePadding.y}, {x + fs, wp.y + st.FramePadding.y + fs})
+	}
 	if !visible do return
 	if UI_IconButton(ICON_FA_ARROW_LEFT, "noderef.back", "Back", size = 26) && len(nodeRef.history) > 0 {
 		prev := pop(&nodeRef.history)

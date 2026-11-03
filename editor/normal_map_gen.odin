@@ -128,6 +128,7 @@ NormalGen_Render :: proc(state: ^EditorState) {
 	open := true
 	visible := imgui.Begin(fmt.ctprintf("%s  Generate Normal Map: %s###NormalGen", ICON_FA_WAND_MAGIC_SPARKLES, gen.rel), &open, {})
 	defer imgui.End()
+	PanelHelp_Mark("normal-map")
 	if !open {
 		NormalGen_Close()
 		return

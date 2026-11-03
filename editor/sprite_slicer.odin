@@ -190,6 +190,7 @@ Slicer_Render :: proc(state: ^EditorState) {
 	imgui.SetNextWindowPos(center, .FirstUseEver, {0.5, 0.5})
 	defer imgui.End()
 	if !imgui.Begin(fmt.ctprintf("%s  Sprite Sheet Slicer###SpriteSlicer", ICON_FA_TABLE_CELLS), &slicer.open, {.NoCollapse}) do return
+	PanelHelp_Mark("sprite-slicer")
 
 	// --- settings column ---
 	if imgui.BeginChild("##slicer_side", {250, 0}, {}, {}) {

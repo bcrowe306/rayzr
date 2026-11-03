@@ -102,6 +102,7 @@ AtlasRegion_Render :: proc(state: ^EditorState) {
 	if !imgui.Begin(fmt.ctprintf("%s  Atlas Region Editor###AtlasRegionEditor", ICON_FA_CROP), &atlasDialog.open, {.NoCollapse}) {
 		return
 	}
+	PanelHelp_Mark("atlas-region")
 	atlasDialog.winPos = imgui.GetWindowPos()
 	if atlasDialog.openWinPos == {} do atlasDialog.openWinPos = atlasDialog.winPos
 
