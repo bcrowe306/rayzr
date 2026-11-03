@@ -1,0 +1,51 @@
+# #268: a shape's fill and line in the Inspector while drawing - a linear
+# gradient (a stop added on the bar, its end dragged with the Gradient
+# tool), dashes, a swatch added to the project's palette, the Eyedropper
+# copying a style onto another shape.
+wait 5
+key escape
+click @hier.add
+type vector
+click @addnode.create
+click @insp.vec.draw
+click @vd.tool:rect
+drag @node:VectorShape+-120,-60 @node:VectorShape+-20,20
+expect vd.shape == 0
+expect item:vd.style.for == visible
+
+# Fill: a linear gradient; a third stop clicked onto the bar.
+click @vd.style.fill.kind
+click @pick:Linear gradient
+expect vd.stops == 2
+expect file:art/vectorshape.svg contains <linearGradient
+click @vd.style.fill.stops
+expect vd.stops == 3
+expect file:art/vectorshape.svg contains <stop offset="0.5
+
+# The Gradient tool drags the gradient's end.
+click @vd.tool:gradient
+expect item:vd.grad:1 == visible
+drag @vd.grad:1 @vd.grad:1+-40,0
+expect vd.grad != 256,224
+screenshot gradient
+
+# Dashes on the line.
+click @vd.style.dash
+type 8 4
+key enter
+wait 2
+expect file:art/vectorshape.svg contains stroke-dasharray="8 4"
+
+# A swatch for the project.
+click @vd.swatch.add
+expect file:project.json contains "palette"
+
+# The Eyedropper: an ellipse takes the rectangle's style.
+click @vd.tool:ellipse
+drag @node:VectorShape+20,-60 @node:VectorShape+100,20
+expect vd.shape == 1
+click @vd.tool:eyedropper
+click @node:VectorShape+-100,-40
+expect vd.stops == 3
+screenshot eyedropper
+key escape

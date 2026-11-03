@@ -34,6 +34,7 @@ ProjectConfig :: struct {
 	debugDraw:     bool, // the running game draws colliders, joints and areas (physics.debug_draw)
 	collisionLayers: [16]string, // collision layer names ("" = unnamed; physics_extras.odin)
 	scenes:        [dynamic]string,
+	palette:       [dynamic][4]u8, // the project's swatches (the vector drawing tools; "palette": ["#rrggbbaa", ...])
 	icon:          string, // project-relative PNG: the game window's icon (and the exported app's)
 	language:      string, // starting language of the locale/ tables ("" = their first)
 	// The default scene transition (Scene.change_scene without options;
@@ -123,6 +124,7 @@ ProjectConfig_Destroy :: proc(cfg: ^ProjectConfig, allocator := context.allocato
 		delete(s, allocator)
 	}
 	delete(cfg.scenes)
+	delete(cfg.palette)
 	Input_ActionConfigs_Destroy(&cfg.actions, allocator)
 	if cfg.export.executableName != "" do delete(cfg.export.executableName, allocator)
 	if cfg.export.outputDir != "" do delete(cfg.export.outputDir, allocator)
@@ -468,6 +470,16 @@ Project_ParseConfig :: proc(jsonBytes: []u8, allocator := context.allocator) -> 
 		}
 	}
 
+	// Swatches.
+	if pal, ok := json_get_arr(rootObj, "palette"); ok {
+		cfg.palette = make([dynamic][4]u8, allocator)
+		for v in pal {
+			if s, isStr := v.(json.String); isStr {
+				if c, cok := Color_FromHex(string(s)); cok do append(&cfg.palette, [4]u8{c.r, c.g, c.b, c.a})
+			}
+		}
+	}
+
 	// Scenes
 	if sceneArr, ok := json_get_arr(rootObj, "scenes"); ok {
 		for sVal in sceneArr {
@@ -590,6 +602,11 @@ Project_SerializeToJSON :: proc(cfg: ^ProjectConfig, allocator := context.alloca
 			strings.write_string(&sb, "},\n" if i < len(cfg.globals) - 1 else "}\n")
 		}
 		strings.write_string(&sb, "  ],\n")
+	}
+	if len(cfg.palette) > 0 {
+		strings.write_string(&sb, "  \"palette\": [")
+		for c, i in cfg.palette do fmt.sbprintf(&sb, "%s\"#%02x%02x%02x%02x\"", ", " if i > 0 else "", c.r, c.g, c.b, c.a)
+		strings.write_string(&sb, "],\n")
 	}
 	strings.write_string(&sb, "  \"scenes\": [\n")
 	for sc, i in cfg.scenes {

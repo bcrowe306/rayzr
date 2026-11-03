@@ -45,6 +45,8 @@ Vector_Tool :: enum {
 	Pencil,
 	Brush,
 	Bucket,
+	Eyedropper,
+	Gradient,
 }
 
 @(private = "file")
@@ -57,6 +59,8 @@ Vd_Drag :: enum {
 	Pen,
 	Draw, // dragging out a shape tool's shape
 	Freehand, // the Pencil / Brush collecting samples
+	GradA,    // the Gradient tool's handles: a linear gradient's start / a radial's centre
+	GradB,    //   its end / its radius
 }
 
 @(private = "file")
@@ -72,9 +76,8 @@ vd: struct {
 	offset:   [2]f32, // document -> node, frozen while dragging
 	penShape: int,    // the path the pen is drawing (-1)
 	penOut:   [2]f32, // the pen's last anchor's out-handle (offset)
-	fill:     [4]u8,
-	stroke:   [4]u8,
-	width:    f32,
+	def:      e.Vector_Style, // new shapes' style (the toolbar's swatches and width; the Inspector's Fill / Stroke with nothing selected)
+	styleDirty: bool,         // the Inspector changed the selected shape's style (saved when the edit ends)
 	backedUp: map[string]bool, // files whose .bak was written this session
 	askFor:   ^e.VectorShapeNode, // the lossy-file question is open for it
 	menu:     int, // the anchor the right-click menu is for
@@ -121,7 +124,7 @@ VectorDraw_Enter :: proc(state: ^EditorState, v: ^e.VectorShapeNode) {
 
 @(private = "file")
 vectordraw_start :: proc(state: ^EditorState, v: ^e.VectorShapeNode) {
-	if vd.fill == {} do vd.fill, vd.stroke, vd.width = {255, 255, 255, 255}, {20, 20, 20, 255}, 2
+	if vd.def.miterLimit == 0 do vd.def = e.Vector_Style{fill = true, fillColor = {255, 255, 255, 255}, stroke = true, strokeColor = {20, 20, 20, 255}, strokeWidth = 2, join = .Round, cap = .Round, miterLimit = 4, opacity = 1}
 	if vd.sides == 0 do vd.sides, vd.points, vd.inner, vd.smooth, vd.brush = 5, 5, 0.5, 50, 12
 	vd.active, vd.node, vd.shape, vd.anchor, vd.drag, vd.penShape = true, v, -1, -1, .None, -1
 	vd.alloc = context.allocator
@@ -283,6 +286,8 @@ Viewport_VectorDraw :: proc(state: ^EditorState, dl: ^imgui.DrawList, mouseScree
 		if imgui.IsKeyPressed(.Y, false) do vectordraw_set_tool(state, .Pencil)
 		if imgui.IsKeyPressed(.B, false) do vectordraw_set_tool(state, .Brush)
 		if imgui.IsKeyPressed(.K, false) do vectordraw_set_tool(state, .Bucket)
+		if imgui.IsKeyPressed(.I, false) do vectordraw_set_tool(state, .Eyedropper)
+		if imgui.IsKeyPressed(.F, false) do vectordraw_set_tool(state, .Gradient)
 		if imgui.IsKeyPressed(.Escape, false) || imgui.IsKeyPressed(.Enter, false) {
 			if vd.penShape >= 0 do pen_finish(state)
 			else if imgui.IsKeyPressed(.Escape, false) {vectordraw_exit(state); return true}
@@ -324,6 +329,8 @@ Viewport_VectorDraw :: proc(state: ^EditorState, dl: ^imgui.DrawList, mouseScree
 	case .Rect, .Ellipse, .Polygon, .Star: tool_shape(state, dl, r, mouse, tol)
 	case .Pencil, .Brush: tool_freehand(state, dl, r, mouse, tol)
 	case .Bucket: tool_bucket(state, r, mouse, tol)
+	case .Eyedropper: tool_eyedropper(state, r, mouse, tol)
+	case .Gradient: tool_gradient(state, dl, r, mouse, tol)
 	}
 	anchor_menu(state, r)
 	// Where the last snap went (an anchor): a ring there while dragging.
@@ -344,7 +351,7 @@ vectordraw_set_tool :: proc(state: ^EditorState, t: Vector_Tool) {
 vectordraw_toolbar :: proc(state: ^EditorState) {
 	imgui.SetCursorScreenPos(state.viewportPos + {10, 10})
 	imgui.BeginGroup()
-	tools := [10]struct {t: Vector_Tool, icon, id, tip: string}{
+	tools := [12]struct {t: Vector_Tool, icon, id, tip: string}{
 		{.Select, ICON_FA_ARROW_POINTER, "vd.tool:select", "Select (V): click a shape, drag to move it"},
 		{.Node, ICON_FA_BEZIER_CURVE, "vd.tool:node", "Nodes (A): drag anchors and handles; double-click a segment to add one"},
 		{.Pen, ICON_FA_PEN, "vd.tool:pen", "Pen (P): click for corners, drag for curves; click the first point to close"},
@@ -355,6 +362,8 @@ vectordraw_toolbar :: proc(state: ^EditorState) {
 		{.Pencil, ICON_FA_PENCIL, "vd.tool:pencil", "Pencil (Y): draw a line freehand (smoothed: the slider beside the colours)"},
 		{.Brush, ICON_FA_PAINTBRUSH, "vd.tool:brush", "Brush (B): paint a filled stroke - thinner when you move fast"},
 		{.Bucket, ICON_FA_FILL_DRIP, "vd.tool:bucket", "Paint Bucket (K): click a shape to fill it, or a gap lines close in to fill it"},
+		{.Eyedropper, ICON_FA_EYE_DROPPER, "vd.tool:eyedropper", "Eyedropper (I): click a shape to copy its fill and line to the selected shape (or to new shapes); Alt+click: the colour on screen (Shift: as the line colour)"},
+		{.Gradient, ICON_FA_DROPLET, "vd.tool:gradient", "Gradient (F): drag the selected shape's gradient ends (a radial one: its centre and radius)"},
 	}
 	for t, i in tools {
 		if i > 0 do imgui.SameLine(0, 4)
@@ -367,13 +376,13 @@ vectordraw_toolbar :: proc(state: ^EditorState) {
 		Drive_Item(string(id))
 		UI_Tooltip(tip)
 	}
-	colour("##vdfill", "vd.fill", &vd.fill, "Fill colour of new closed shapes")
+	colour("##vdfill", "vd.def.fillColor", &vd.def.fillColor, "Fill colour of new closed shapes")
 	imgui.SameLine(0, 4)
-	colour("##vdstroke", "vd.stroke", &vd.stroke, "Line colour of new shapes")
+	colour("##vdstroke", "vd.def.strokeColor", &vd.def.strokeColor, "Line colour of new shapes")
 	imgui.SameLine(0, 4)
 	imgui.SetNextItemWidth(60)
-	imgui.DragFloat("##vdwidth", &vd.width, 0.1, 0, 64, "%.1f px")
-	Drive_Item("vd.width")
+	imgui.DragFloat("##vdwidth", &vd.def.strokeWidth, 0.1, 0, 64, "%.1f px")
+	Drive_Item("vd.def.strokeWidth")
 	UI_Tooltip("Line width of new shapes")
 	// The shape tool's settings.
 	#partial switch vd.tool {
@@ -702,7 +711,7 @@ tool_node :: proc(state: ^EditorState, dl: ^imgui.DrawList, r: ^e.Vector_Resourc
 								}
 							}
 						}
-					case .None, .Shape, .Pen, .Draw, .Freehand:
+					case .None, .Shape, .Pen, .Draw, .Freehand, .GradA, .GradB:
 					}
 					e.Vector_ResourceEdited(r)
 					vd.moved = true
@@ -919,8 +928,9 @@ pen_add :: proc(state: ^EditorState, r: ^e.Vector_Resource, q: [2]f32, tol: f32)
 		s: e.Vector_Shape
 		e.Vector_Path_Init(&s.path)
 		e.Vector_MoveTo(&s.path, q)
-		s.style = e.Vector_Style{stroke = true, strokeColor = vd.stroke, strokeWidth = vd.width, fillColor = vd.fill, join = .Round, cap = .Round, miterLimit = 4, opacity = 1}
-		s.style.stroke = vd.width > 0
+		s.style = vd.def
+		s.style.fill = false // (filled when it's closed)
+		s.style.stroke = vd.def.stroke && vd.def.strokeWidth > 0
 		vd.penShape = e.Vector_DocInsertShape(&r.doc, s, vd_target_group(r))
 		vd.shape, vd.penOut = vd.penShape, {}
 		vd.drag, vd.last = .Pen, q
@@ -938,7 +948,7 @@ pen_add :: proc(state: ^EditorState, r: ^e.Vector_Resource, q: [2]f32, tol: f32)
 	if closing {
 		pen_tidy_last(r)
 		append(&p.cmds, e.Vector_Cmd.Close)
-		r.doc.shapes[vd.penShape].style.fill = vd.fill.a > 0
+		r.doc.shapes[vd.penShape].style.fill = vd.def.fill
 		e.Vector_ResourceEdited(r)
 		vd.penShape = -1
 		vectordraw_save(state, r, "Pen")
@@ -1000,7 +1010,8 @@ tool_shape :: proc(state: ^EditorState, dl: ^imgui.DrawList, r: ^e.Vector_Resour
 		context.allocator = e.Vector_EditAllocator(&res.doc)
 		s: e.Vector_Shape
 		e.Vector_Path_Init(&s.path)
-		s.style = e.Vector_Style{fill = vd.fill.a > 0, fillColor = vd.fill, stroke = vd.width > 0, strokeColor = vd.stroke, strokeWidth = vd.width, join = .Miter, miterLimit = 4, opacity = 1}
+		s.style = vd.def
+		s.style.stroke = vd.def.stroke && vd.def.strokeWidth > 0
 		vd.shape = e.Vector_DocInsertShape(&res.doc, s, vd_target_group(res))
 		vd.anchor, vd.drag, vd.start = -1, .Draw, vd_snap(state, res, q, vd.shape)
 		return
@@ -1052,10 +1063,10 @@ tool_freehand :: proc(state: ^EditorState, dl: ^imgui.DrawList, r: ^e.Vector_Res
 	}
 	// The stroke so far, as drawn.
 	if vd.drag == .Freehand && len(vd.samples) > 1 {
-		col := col_u32({f32(vd.stroke.r) / 255, f32(vd.stroke.g) / 255, f32(vd.stroke.b) / 255, 1}) if vd.tool == .Pencil else col_u32({f32(vd.fill.r) / 255, f32(vd.fill.g) / 255, f32(vd.fill.b) / 255, 1})
+		col := col_u32({f32(vd.def.strokeColor.r) / 255, f32(vd.def.strokeColor.g) / 255, f32(vd.def.strokeColor.b) / 255, 1}) if vd.tool == .Pencil else col_u32({f32(vd.def.fillColor.r) / 255, f32(vd.def.fillColor.g) / 255, f32(vd.def.fillColor.b) / 255, 1})
 		scale := 1 / doc_per_px(state, v)
 		for i in 1 ..< len(vd.samples) {
-			w := vd.width * scale if vd.tool == .Pencil else vd.widths[i] * scale
+			w := vd.def.strokeWidth * scale if vd.tool == .Pencil else vd.widths[i] * scale
 			imgui.DrawList_AddLine(dl, doc_to_screen(state, v, vd.samples[i - 1]), doc_to_screen(state, v, vd.samples[i]), col, max(w, 1))
 		}
 	}
@@ -1100,7 +1111,9 @@ tool_freehand :: proc(state: ^EditorState, dl: ^imgui.DrawList, r: ^e.Vector_Res
 	e.Vector_Path_Init(&s.path)
 	if vd.tool == .Pencil {
 		e.Vector_FitCurve(vd.samples[:], err, &s.path)
-		s.style = e.Vector_Style{stroke = true, strokeColor = vd.stroke, strokeWidth = max(vd.width, 0.5), join = .Round, cap = .Round, miterLimit = 4, opacity = 1}
+		s.style = vd.def
+		s.style.fill, s.style.stroke = false, true
+		s.style.strokeWidth = max(vd.def.strokeWidth, 0.5)
 	} else {
 		// The ends taper a little (as a brush lifts).
 		n := len(vd.widths)
@@ -1110,8 +1123,9 @@ tool_freehand :: proc(state: ^EditorState, dl: ^imgui.DrawList, r: ^e.Vector_Res
 			vd.widths[n - 1 - i] *= f
 		}
 		e.Vector_BrushOutline(vd.samples[:], vd.widths[:], err, &s.path)
-		colour := vd.fill if vd.fill.a > 0 else vd.stroke
-		s.style = e.Vector_Style{fill = true, fillColor = colour, miterLimit = 4, opacity = 1}
+		s.style = vd.def
+		s.style.fill, s.style.stroke = true, false
+		if !vd.def.fill do s.style.fillColor, s.style.fillPaint = vd.def.strokeColor, {} // (no fill set: the line colour)
 	}
 	vd.shape = e.Vector_DocInsertShape(&res.doc, s, vd_target_group(res))
 	edit_commit(state, res, "Pencil" if vd.tool == .Pencil else "Brush")
@@ -1128,7 +1142,7 @@ tool_bucket :: proc(state: ^EditorState, r: ^e.Vector_Resource, mouse: [2]f32, t
 	for i := len(r.doc.shapes) - 1; i >= 0; i -= 1 {
 		s := &r.doc.shapes[i]
 		if s.style.fill && path_contains(&s.path, mouse) {
-			s.style.fill, s.style.fillColor, s.style.fillPaint = true, vd.fill, {}
+			s.style.fill, s.style.fillColor, s.style.fillPaint = true, vd.def.fillColor, vd.def.fillPaint
 			vd.shape = i
 			edit_commit(state, r, "Paint Bucket")
 			return
@@ -1143,12 +1157,138 @@ tool_bucket :: proc(state: ^EditorState, r: ^e.Vector_Resource, mouse: [2]f32, t
 		Editor_Log(state, .Info, "Paint Bucket: that area isn't closed in (draw lines round it, or click inside a shape)")
 		return
 	}
-	s.style = e.Vector_Style{fill = true, fillColor = vd.fill, fillRule = .EvenOdd, miterLimit = 4, opacity = 1}
+	s.style = vd.def
+	s.style.fill, s.style.stroke, s.style.fillRule = true, false, .EvenOdd
 	group := vd_target_group(r)
 	// (Under the lines: the group's first shape.)
 	first := r.doc.groups[group].first if group >= 0 else 0
 	vd.shape = e.Vector_DocInsertShape(&r.doc, s, group, first)
 	edit_commit(state, r, "Paint Bucket")
+}
+
+// --- Eyedropper -----------------------------------------------------------------------
+
+// tool_eyedropper: a click on a shape copies its style to the selected
+// shape (or, picked from the selected shape itself or with none, to new
+// shapes); Alt+click takes the colour on screen as the fill (Shift: the line).
+@(private = "file")
+tool_eyedropper :: proc(state: ^EditorState, r: ^e.Vector_Resource, mouse: [2]f32, tol: f32) {
+	if !state.viewportHovered || !vd_clicked() do return
+	io := imgui.GetIO()
+	to := -1
+	if r != nil && vd.shape >= 0 && vd.shape < len(r.doc.shapes) do to = vd.shape
+	style := vd.def if to < 0 else r.doc.shapes[to].style
+	if io.KeyAlt {
+		c := screen_colour(state, mouse_screen())
+		if io.KeyShift do style.stroke, style.strokeColor, style.strokePaint = true, c, {}
+		else do style.fill, style.fillColor, style.fillPaint = true, c, {}
+	} else {
+		if r == nil do return
+		src := shape_at(r, mouse, tol)
+		if src < 0 do return
+		if src == to do to = -1 // (from the selected shape itself: for new shapes)
+		style = r.doc.shapes[src].style
+	}
+	if to < 0 {
+		vd.def = style
+		Editor_Log(state, .Info, "New shapes take that style")
+		return
+	}
+	edit_begin(r)
+	r.doc.shapes[to].style = style
+	edit_commit(state, r, "Eyedropper")
+}
+
+// screen_colour: the viewport's pixel under a screen point.
+@(private = "file")
+screen_colour :: proc(state: ^EditorState, at: [2]f32) -> [4]u8 {
+	img := rl.LoadImageFromTexture(state.renderTexture.texture)
+	defer rl.UnloadImage(img)
+	x := i32(at.x - state.viewportPos.x)
+	y := i32(at.y - state.viewportPos.y)
+	if x < 0 || y < 0 || x >= img.width || y >= img.height do return {0, 0, 0, 255}
+	c := rl.GetImageColor(img, x, img.height - 1 - y) // (render textures are upside down)
+	return {c.r, c.g, c.b, 255}
+}
+
+// --- Gradient -------------------------------------------------------------------------
+
+// The paint the Gradient tool works on: the selected shape's fill gradient,
+// else its line's.
+@(private = "file")
+grad_paint :: proc(r: ^e.Vector_Resource) -> ^e.Vector_Paint {
+	if r == nil || vd.shape < 0 || vd.shape >= len(r.doc.shapes) do return nil
+	st := &r.doc.shapes[vd.shape].style
+	if st.fill && st.fillPaint.kind != .Solid do return &st.fillPaint
+	if st.stroke && st.strokePaint.kind != .Solid do return &st.strokePaint
+	return nil
+}
+
+@(private = "file")
+xf_of :: proc(p: ^e.Vector_Paint) -> [6]f32 {return p.transform if p.transform != {} else {1, 0, 0, 1, 0, 0}}
+
+@(private = "file")
+xf_apply :: proc(t: [6]f32, q: [2]f32) -> [2]f32 {return {t[0] * q.x + t[2] * q.y + t[4], t[1] * q.x + t[3] * q.y + t[5]}}
+
+@(private = "file")
+xf_inverse :: proc(t: [6]f32, q: [2]f32) -> [2]f32 {
+	det := t[0] * t[3] - t[1] * t[2]
+	if abs(det) < 1e-9 do return q
+	x, y := q.x - t[4], q.y - t[5]
+	return {(t[3] * x - t[2] * y) / det, (-t[1] * x + t[0] * y) / det}
+}
+
+// tool_gradient: the selected shape's gradient ends as handles - drag them
+// (a click elsewhere selects another shape).
+@(private = "file")
+tool_gradient :: proc(state: ^EditorState, dl: ^imgui.DrawList, r: ^e.Vector_Resource, mouse: [2]f32, tol: f32) {
+	if r == nil do return
+	v := vd.node
+	p := grad_paint(r)
+	a, b: [2]f32
+	if p != nil {
+		t := xf_of(p)
+		if p.kind == .Linear do a, b = xf_apply(t, p.p0), xf_apply(t, p.p1)
+		else do a, b = xf_apply(t, p.center), xf_apply(t, p.center + {p.radius, 0})
+		sa, sb := doc_to_screen(state, v, a), doc_to_screen(state, v, b)
+		imgui.DrawList_AddLine(dl, sa, sb, col_u32(UI_ACCENT), 1.5)
+		if p.kind == .Radial do imgui.DrawList_AddCircle(dl, sa, linalg.distance(sa, sb), col_u32(ui_line(0.6)), 64, 1)
+		for h, k in ([2][2]f32{sa, sb}) {
+			imgui.DrawList_AddCircleFilled(dl, h, 6, col_u32({1, 1, 1, 1}))
+			imgui.DrawList_AddCircle(dl, h, 6, col_u32(UI_ACCENT), 0, 2)
+			Drive_ItemRect(fmt.tprintf("vd.grad:%d", k), h - {7, 7}, h + {7, 7}, inWindow = true)
+		}
+	}
+	if !state.viewportHovered && vd.drag == .None do return
+	if vd_clicked() {
+		switch {
+		case p != nil && linalg.distance(mouse, a) <= tol * 1.5: vd.drag = .GradA
+		case p != nil && linalg.distance(mouse, b) <= tol * 1.5: vd.drag = .GradB
+		case:
+			vd.shape, vd.anchor = shape_at(r, mouse, tol), -1
+			if vd.shape >= 0 && grad_paint(r) == nil do Editor_Log(state, .Info, "Gradient: give the shape a gradient first (Inspector > Fill > Linear / Radial gradient)")
+			return
+		}
+		vd.moved = false
+		edit_begin(r)
+	}
+	if (vd.drag == .GradA || vd.drag == .GradB) && p != nil {
+		if imgui.IsMouseDown(.Left) {
+			q := xf_inverse(xf_of(p), vd_snap(state, r, mouse, vd.shape))
+			if p.kind == .Linear {
+				if vd.drag == .GradA do p.p0 = q
+				else do p.p1 = q
+			} else {
+				if vd.drag == .GradA do p.center = q
+				else do p.radius = max(linalg.distance(q, p.center), 0.5)
+			}
+			e.Vector_ResourceEdited(r)
+			vd.moved = true
+		} else {
+			if vd.moved do vectordraw_save(state, r, "Gradient")
+			vd.drag = .None
+		}
+	}
 }
 
 // --- layers (the Inspector, while drawing) -----------------------------------------------
@@ -1222,6 +1362,40 @@ VectorDraw_LayersUI :: proc(state: ^EditorState, v: ^e.VectorShapeNode) {
 		imgui.SameLine()
 		if UI_Button(fmt.tprintf("%s  Backward", ICON_FA_ARROW_DOWN), "vd.backward") do vd_move_shape(state, r, -1)
 		UI_Tooltip("Draw it under the one before (Ctrl+[)")
+	}
+}
+
+// VectorDraw_StyleUI: Fill / Stroke / Shape and the swatches - for the
+// selected shape, else for new shapes. It edits a copy and puts it in once
+// the background jobs reading the document are done; saved when the edit ends.
+VectorDraw_StyleUI :: proc(state: ^EditorState, v: ^e.VectorShapeNode) {
+	if !VectorDraw_IsActive(state) || vd.node != v do return
+	r := e.VectorShapeNode_Asset(v)
+	editing := r != nil && vd.shape >= 0 && vd.shape < len(r.doc.shapes)
+	imgui.Spacing()
+	UI_DimText(fmt.tprintf("Style of shape %d", vd.shape) if editing else "Style of new shapes (select a shape to change its own)")
+	Drive_Item("vd.style.for")
+	st := r.doc.shapes[vd.shape].style if editing else vd.def
+	bounds := [4]f32{0, 0, 100, 100}
+	if editing do bounds = e.Vector_ShapesBounds(r.doc.shapes[vd.shape:vd.shape + 1], false)
+	else if r != nil do bounds = {r.doc.min.x, r.doc.min.y, r.doc.min.x + r.doc.size.x, r.doc.min.y + r.doc.size.y}
+	changed := VectorStyle_Edit(state, &st, bounds)
+	used: [][4]u8
+	if r != nil do used = VectorStyle_UsedColours(&r.doc)
+	changed |= VectorStyle_Swatches(state, &st, used)
+	if changed {
+		if editing {
+			edit_begin(r)
+			r.doc.shapes[vd.shape].style = st
+			e.Vector_ResourceEdited(r)
+			vd.styleDirty = true
+		} else {
+			vd.def = st
+		}
+	}
+	if vd.styleDirty && !imgui.IsAnyItemActive() {
+		vd.styleDirty = false
+		if r != nil do vectordraw_save(state, r, "Style")
 	}
 }
 
@@ -1306,6 +1480,12 @@ VectorDraw_DriveQuery :: proc(state: ^EditorState, q: string) -> (string, bool) 
 	case "vd.file":   return vd.node.file if vd.node != nil else "", true
 	case "vd.shape":  return fmt.tprint(vd.shape), true
 	case "vd.layer":  return fmt.tprint(vd.layer), true
+	case "vd.stops":
+		if p := grad_paint(r); p != nil do return fmt.tprint(p.stopCount), true
+		return "0", true
+	case "vd.grad":
+		if p := grad_paint(r); p != nil do return fmt.tprintf("%.0f,%.0f", p.p1.x, p.p1.y) if p.kind == .Linear else fmt.tprintf("r%.0f", p.radius), true
+		return "", true
 	case "vd.layers":
 		if r == nil do return "", true
 		sb := strings.builder_make(context.temp_allocator)
