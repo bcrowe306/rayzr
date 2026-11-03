@@ -154,67 +154,79 @@ UI_IsShiftDown :: proc(gameContext: ^GameContext) -> bool {
 	return rl.IsWindowReady() && (rl.IsKeyDown(.LEFT_SHIFT) || rl.IsKeyDown(.RIGHT_SHIFT))
 }
 
+// ui_key: a key pressed this frame for the widgets - a simulated one (the
+// engine's input layer: --input-script keys, Test.press_key; #362) or the
+// keyboard's (`repeat`: its auto-repeat too).
+@(private = "file")
+ui_key :: proc(gameContext: ^GameContext, key: rl.KeyboardKey, repeat := false) -> bool {
+	if gameContext != nil && gameContext.game != nil {
+		input := &gameContext.game.input
+		if input.useSimulatedInput && Input_SimulatedKeyPressed(input, key) do return true
+	}
+	return rl.IsWindowReady() && (rl.IsKeyPressed(key) || (repeat && rl.IsKeyPressedRepeat(key)))
+}
+
 UI_IsKeyPressedEnter :: proc(gameContext: ^GameContext) -> bool {
 	if gameContext != nil && gameContext.game != nil && gameContext.game.uiTestInputEnabled {
 		return gameContext.game.uiTestKeyEnter
 	}
-	return rl.IsWindowReady() && (rl.IsKeyPressed(.ENTER) || rl.IsKeyPressed(.KP_ENTER) || uiPad.confirm)
+	return ui_key(gameContext, .ENTER) || ui_key(gameContext, .KP_ENTER) || uiPad.confirm
 }
 
 UI_IsKeyPressedSpace :: proc(gameContext: ^GameContext) -> bool {
 	if gameContext != nil && gameContext.game != nil && gameContext.game.uiTestInputEnabled {
 		return gameContext.game.uiTestKeySpace
 	}
-	return rl.IsWindowReady() && rl.IsKeyPressed(.SPACE)
+	return ui_key(gameContext, .SPACE)
 }
 
 UI_IsKeyPressedTab :: proc(gameContext: ^GameContext) -> bool {
 	if gameContext != nil && gameContext.game != nil && gameContext.game.uiTestInputEnabled {
 		return gameContext.game.uiTestKeyTab
 	}
-	return rl.IsWindowReady() && rl.IsKeyPressed(.TAB)
+	return ui_key(gameContext, .TAB)
 }
 
 UI_IsKeyPressedUp :: proc(gameContext: ^GameContext) -> bool {
 	if gameContext != nil && gameContext.game != nil && gameContext.game.uiTestInputEnabled {
 		return gameContext.game.uiTestKeyUp
 	}
-	return rl.IsWindowReady() && (rl.IsKeyPressed(.UP) || rl.IsKeyPressedRepeat(.UP) || uiPad.fire[0])
+	return ui_key(gameContext, .UP, true) || uiPad.fire[0]
 }
 
 UI_IsKeyPressedDown :: proc(gameContext: ^GameContext) -> bool {
 	if gameContext != nil && gameContext.game != nil && gameContext.game.uiTestInputEnabled {
 		return gameContext.game.uiTestKeyDown
 	}
-	return rl.IsWindowReady() && (rl.IsKeyPressed(.DOWN) || rl.IsKeyPressedRepeat(.DOWN) || uiPad.fire[1])
+	return ui_key(gameContext, .DOWN, true) || uiPad.fire[1]
 }
 
 UI_IsKeyPressedLeft :: proc(gameContext: ^GameContext) -> bool {
 	if gameContext != nil && gameContext.game != nil && gameContext.game.uiTestInputEnabled {
 		return gameContext.game.uiTestKeyLeft
 	}
-	return rl.IsWindowReady() && (rl.IsKeyPressed(.LEFT) || rl.IsKeyPressedRepeat(.LEFT) || uiPad.fire[2])
+	return ui_key(gameContext, .LEFT, true) || uiPad.fire[2]
 }
 
 UI_IsKeyPressedRight :: proc(gameContext: ^GameContext) -> bool {
 	if gameContext != nil && gameContext.game != nil && gameContext.game.uiTestInputEnabled {
 		return gameContext.game.uiTestKeyRight
 	}
-	return rl.IsWindowReady() && (rl.IsKeyPressed(.RIGHT) || rl.IsKeyPressedRepeat(.RIGHT) || uiPad.fire[3])
+	return ui_key(gameContext, .RIGHT, true) || uiPad.fire[3]
 }
 
 UI_IsKeyPressedBackspace :: proc(gameContext: ^GameContext) -> bool {
 	if gameContext != nil && gameContext.game != nil && gameContext.game.uiTestInputEnabled {
 		return gameContext.game.uiTestKeyBackspace
 	}
-	return rl.IsWindowReady() && rl.IsKeyPressed(.BACKSPACE)
+	return ui_key(gameContext, .BACKSPACE)
 }
 
 UI_IsKeyPressedEscape :: proc(gameContext: ^GameContext) -> bool {
 	if gameContext != nil && gameContext.game != nil && gameContext.game.uiTestInputEnabled {
 		return gameContext.game.uiTestKeyEscape
 	}
-	return rl.IsWindowReady() && rl.IsKeyPressed(.ESCAPE)
+	return ui_key(gameContext, .ESCAPE)
 }
 
 UI_PopCharPressed :: proc(gameContext: ^GameContext) -> u8 {
