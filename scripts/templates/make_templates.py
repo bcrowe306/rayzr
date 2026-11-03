@@ -1036,8 +1036,273 @@ def hex_island():
     return t
 
 
+# --- vector character (#272) -------------------------------------------------------
+#
+# Pip: one hand-drawn SVG (scripts/vector_character/pip.svg) cut into a
+# Vector Shape per part under a Skeleton whose bones-only Spine rig is
+# written below; a Lip Sync node moves the mouth with a synthesized mumble
+# timed to a hand-written Rhubarb cue file.
+
+PIP_ORIGIN = (150, 400)  # the SVG point at the Skeleton's origin: between the feet, on the ground
+PIP_PARTS = [  # (part, its bones, skinSmooth), back to front: the SVG's top-level groups
+    ("arm_back", "arm_back_upper, arm_back_lower", 14),
+    ("leg_back", "leg_back_upper, leg_back_lower", 12),
+    ("leg_front", "leg_front_upper, leg_front_lower", 12),
+    ("body", "torso", 0),
+    ("head", "head", 0),
+    ("eyes", "head", 0),
+    ("mouth", "head", 0),
+    ("arm_front", "arm_front_upper, arm_front_lower", 14),
+]
+
+
+def svg_group_boxes(path):
+    """The box of each top-level group of an SVG, as the engine measures a
+    part (Vector_PartBox: every point of its paths - curve handles too - and
+    no stroke width; hidden frames count). Reads what pip.svg uses: rect,
+    circle, ellipse and paths of absolute M L C Q Z."""
+    import re
+    import xml.etree.ElementTree as ET
+    ns = "{http://www.w3.org/2000/svg}"
+    boxes = {}
+    for g in ET.parse(path).getroot():
+        if g.tag != ns + "g":
+            continue
+        xs, ys = [], []
+        for el in g.iter():
+            tag = el.tag[len(ns):]
+            f = lambda k: float(el.get(k, 0))  # noqa: E731
+            if tag == "rect":
+                xs += [f("x"), f("x") + f("width")]; ys += [f("y"), f("y") + f("height")]
+            elif tag == "circle":
+                xs += [f("cx") - f("r"), f("cx") + f("r")]; ys += [f("cy") - f("r"), f("cy") + f("r")]
+            elif tag == "ellipse":
+                xs += [f("cx") - f("rx"), f("cx") + f("rx")]; ys += [f("cy") - f("ry"), f("cy") + f("ry")]
+            elif tag == "path":
+                d = el.get("d")
+                assert not re.search(r"[^MLCQZ0-9.,\s-]", d), f"svg_group_boxes: {d!r} (absolute M L C Q Z only)"
+                nums = [float(n) for n in re.findall(r"-?\d+(?:\.\d+)?", d)]
+                xs += nums[0::2]; ys += nums[1::2]
+        boxes[g.get("id")] = (min(xs), min(ys), max(xs), max(ys))
+    return boxes
+
+
+def ease_keys(keys, field="value"):
+    """Spine 4 keys with ease-in-out Bezier curves (flat at both keys)."""
+    out = []
+    for i, k in enumerate(keys):
+        k = dict(k)
+        if i + 1 < len(keys):
+            t0, t1 = k["time"], keys[i + 1]["time"]
+            v0, v1 = k.get(field, 0), keys[i + 1].get(field, 0)
+            dt = t1 - t0
+            k["curve"] = [round(t0 + dt / 3, 4), v0, round(t1 - dt / 3, 4), v1]
+        out.append(k)
+    return out
+
+
+def rot(*tv):
+    """rotate keys from (time, degrees) pairs (Spine's: counter-clockwise, relative to the setup pose)."""
+    return ease_keys([{"time": t, "value": v} for t, v in zip(tv[0::2], tv[1::2])])
+
+
+def pip_rig():
+    """Pip's bones-only Spine rig. Spine is y-up with counter-clockwise
+    angles (the engine flips it on load). Bones point along their x axis:
+    the torso and head up (90), arms and legs down (the arms 180 from the
+    torso, the legs -90 from the hip). Lengths reach the next joint."""
+    bones = [
+        {"name": "root"},
+        {"name": "hip", "parent": "root", "y": 130},                                   # (150, 270) in the SVG
+        {"name": "torso", "parent": "hip", "rotation": 90, "length": 90},              # up to the neck (150, 180)
+        {"name": "head", "parent": "torso", "x": 90, "length": 130},
+        {"name": "arm_back_upper", "parent": "torso", "x": 78, "rotation": 180, "length": 55},  # shoulder (150, 192)
+        {"name": "arm_back_lower", "parent": "arm_back_upper", "x": 55, "length": 48},
+        {"name": "arm_front_upper", "parent": "torso", "x": 78, "rotation": 180, "length": 55},
+        {"name": "arm_front_lower", "parent": "arm_front_upper", "x": 55, "length": 48},
+        {"name": "leg_back_upper", "parent": "hip", "x": -7, "rotation": -90, "length": 62},   # hip joint (143, 270)
+        {"name": "leg_back_lower", "parent": "leg_back_upper", "x": 62, "length": 52},
+        {"name": "leg_front_upper", "parent": "hip", "x": 7, "rotation": -90, "length": 62},   # (157, 270)
+        {"name": "leg_front_lower", "parent": "leg_front_upper", "x": 62, "length": 52},
+    ]
+    # A positive rotation swings a hanging limb forward (Pip faces right).
+    idle = {  # breathing, 2 s
+        "hip": {"translate": ease_keys([{"time": 0, "x": 0, "y": 0}, {"time": 1, "x": 0, "y": 2}, {"time": 2, "x": 0, "y": 0}], "x")},
+        "torso": {"rotate": rot(0, 0, 1, -1.5, 2, 0)},
+        "head": {"rotate": rot(0, 0, 1, 3, 2, 0)},
+        "arm_front_upper": {"rotate": rot(0, 2, 1, 5, 2, 2)},
+        "arm_front_lower": {"rotate": rot(0, 6, 1, 10, 2, 6)},
+        "arm_back_upper": {"rotate": rot(0, -2, 1, -5, 2, -2)},
+        "arm_back_lower": {"rotate": rot(0, 6, 1, 10, 2, 6)},
+    }
+    W = [0, 0.2, 0.4, 0.6, 0.8]  # a step each 0.4 s: contact, passing, contact, passing, contact
+
+    def cycle(*vals):
+        return rot(*[x for pair in zip(W, vals) for x in pair])
+    walk = {
+        # Lower at the contacts (legs apart), higher passing.
+        "hip": {"translate": ease_keys([{"time": t, "x": 0, "y": y} for t, y in zip(W, (-7, 0, -7, 0, -7))], "x")},
+        "torso": {"rotate": cycle(-5, -3, -5, -3, -5)},
+        "head": {"rotate": cycle(3, 1, 3, 1, 3)},
+        "leg_front_upper": {"rotate": cycle(25, 5, -25, 0, 25)},
+        "leg_front_lower": {"rotate": cycle(-5, -10, -15, -55, -5)},
+        "leg_back_upper": {"rotate": cycle(-25, 0, 25, 5, -25)},
+        "leg_back_lower": {"rotate": cycle(-15, -55, -5, -10, -15)},
+        "arm_front_upper": {"rotate": cycle(-25, 0, 25, 0, -25)},
+        "arm_front_lower": {"rotate": cycle(10, 20, 35, 20, 10)},
+        "arm_back_upper": {"rotate": cycle(25, 0, -25, 0, 25)},
+        "arm_back_lower": {"rotate": cycle(35, 20, 10, 20, 35)},
+    }
+    talk = {  # head bobs and a hand that gestures, 1.2 s
+        "head": {"rotate": rot(0, 0, 0.2, 5, 0.45, -2, 0.7, 4, 0.95, -1, 1.2, 0)},
+        "torso": {"rotate": rot(0, 0, 0.6, -2, 1.2, 0)},
+        "arm_front_upper": {"rotate": rot(0, 5, 0.4, 30, 0.8, 20, 1.2, 5)},
+        "arm_front_lower": {"rotate": rot(0, 10, 0.4, 70, 0.8, 50, 1.2, 10)},
+        "arm_back_upper": {"rotate": rot(0, -3, 0.6, -6, 1.2, -3)},
+    }
+    return {
+        "skeleton": {"spine": "4.2.22", "width": 300, "height": 420,
+                     "$comment": "Pip's rig: bones only (the art is art/pip.svg, bent by them). Written by scripts/templates/make_templates.py."},
+        "bones": bones,
+        "slots": [],
+        "skins": [{"name": "default", "attachments": {}}],
+        "animations": {"idle": {"bones": idle}, "walk": {"bones": walk}, "talk": {"bones": talk}},
+    }
+
+
+# Rhubarb's mouth shapes as the mumble's sounds: (loudness, formants in Hz).
+MUMBLE_SOUNDS = {
+    "A": (0.25, (250,)),        # a hum: lips closed
+    "B": (0.5, (300, 2300)),    # "ee", a consonant's edge
+    "C": (0.8, (530, 1850)),    # "eh"
+    "D": (1.0, (750, 1200)),    # "ah"
+    "E": (0.85, (500, 900)),    # "oh"
+    "F": (0.6, (320, 800)),     # "oo"
+    "X": (0.0, ()),             # rest
+}
+
+
+def mumble_wav(cues_tsv, path, rate=22050):
+    """A cartoon mumble that says the cue file: each cue's vowel (MUMBLE_SOUNDS)
+    as a voice of harmonics shaped by its formants, the pitch wandering round
+    a phrase's intonation, gliding from cue to cue; 16-bit mono WAV."""
+    import math
+    import random
+    import struct
+    import wave
+    cues = []
+    for line in cues_tsv.strip().splitlines():
+        t, shape = line.split()
+        cues.append((float(t), shape))
+    end = cues[-1][0] + 0.15
+    n = int(end * rate)
+    rnd = random.Random(272)
+    H = 18  # harmonics
+    BLOCK = 64
+
+    def weights(shape, f0):
+        loud, formants = MUMBLE_SOUNDS[shape]
+        w = []
+        for k in range(1, H + 1):
+            f = k * f0
+            peak = sum(math.exp(-((f - F) / 140.0) ** 2) for F in formants) if formants else 0
+            w.append(loud * (0.15 + peak) / math.sqrt(k) if formants else 0.0)
+        return w
+    # Each cue's pitch: a phrase falling from 240 to 190 Hz, with a wobble.
+    pitch = [240 - 50 * (t / end) + rnd.uniform(-18, 18) for t, _ in cues]
+    phases = [0.0] * H
+    cur = [0.0] * H
+    f0 = pitch[0]
+    samples = []
+    ci = 0
+    for b in range(0, n, BLOCK):
+        t = b / rate
+        while ci + 1 < len(cues) and cues[ci + 1][0] <= t:
+            ci += 1
+        target_f0 = pitch[ci]
+        target = weights(cues[ci][1], target_f0)
+        # (Glide over ~15 ms: no clicks between shapes.)
+        k = 1 - math.exp(-BLOCK / (rate * 0.015))
+        f0 += (target_f0 - f0) * k
+        cur = [c + (w - c) * k for c, w in zip(cur, target)]
+        for i in range(b, min(b + BLOCK, n)):
+            vib = 1 + 0.02 * math.sin(2 * math.pi * 5.5 * i / rate)
+            s = 0.0
+            for h in range(H):
+                if cur[h] < 1e-4:
+                    continue
+                phases[h] += 2 * math.pi * (h + 1) * f0 * vib / rate
+                s += cur[h] * math.sin(phases[h])
+            samples.append(s)
+    peak = max(abs(s) for s in samples) or 1
+    with wave.open(path, "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(rate)
+        w.writeframes(b"".join(struct.pack("<h", int(s / peak * 0.6 * 32767)) for s in samples))
+
+
+def vector_character():
+    t = Template("vector_character", "Vector Character",
+                 "Pip, a cartoon character drawn as vector art and rigged with bones: walk left and right, "
+                 "talk with lip-sync, blink. One SVG cut into parts, a Skeleton, a Lip Sync node.", "bezier-curve", 8)
+    t.begin()
+    src = os.path.join(SCRIPTS, "vector_character")
+    for name, rel in (("pip.svg", "art/pip.svg"), ("backdrop.svg", "art/backdrop.svg"),
+                      ("pip_mumble.tsv", "audio/pip_mumble.tsv")):
+        with open(os.path.join(src, name)) as f:
+            t.write(rel, f.read())
+    with open(os.path.join(src, "pip_mumble.tsv")) as f:
+        mumble_wav(f.read(), os.path.join(t.dir, "audio", "pip_mumble.wav"))
+    t.json("rigs/pip.json", pip_rig())
+    t.script("pip")
+    t.write("art/LICENSE-ART.txt", "Pip and the backdrop were drawn for Rayzr: the same licence as the engine.\n"
+                                   "The voice is synthesized by scripts/templates/make_templates.py.\n"
+                                   "Font (fonts/): Kenney Pixel by Kenney (www.kenney.nl), CC0.\n")
+    os.rmdir(os.path.join(t.dir, "textures"))  # (no textures: vector art)
+    os.rmdir(os.path.join(t.dir, "components"))
+
+    boxes = svg_group_boxes(os.path.join(src, "pip.svg"))
+    ox, oy = PIP_ORIGIN
+    parts = []
+    for name, bones, smooth in PIP_PARTS:
+        x0, y0, x1, y1 = boxes[name]
+        # Explode into Parts' layout: the part's centre, where it was drawn.
+        props = {"file": "art/pip.svg", "group": name, "skinBones": bones, "skinSmooth": smooth}
+        if name in ("eyes", "mouth"):
+            props["frame"] = 0  # (eyes open, the mouth at rest)
+        parts.append({"type": "VectorShapeNode", "name": "".join(w.title() for w in name.split("_")),
+                      "position": [(x0 + x1) / 2 - ox, (y0 + y1) / 2 - oy], "properties": props})
+    children = [
+        {"type": "CameraNode", "name": "Camera", "position": [640, 360], "properties": {"isCurrent": True}},
+        {"type": "VectorShapeNode", "name": "Backdrop", "position": [0, 0], "pivot": [0, 0], "layer": 0,
+         "properties": {"file": "art/backdrop.svg"}},
+        {"type": "Node", "name": "Pip", "position": [640, 640], "layer": 2,
+         "script": {"path": "scripts/pip.lua"},
+         "children": [
+             {"type": "SkeletonNode", "name": "Rig",
+              "properties": {"file": "rigs/pip.json", "animation": "idle", "loop": True, "autoplay": True,
+                             "mixTime": 0.2},
+              "children": parts},
+             {"type": "LipSyncNode", "name": "LipSync",
+              "properties": {"mouth": "../Rig/Mouth", "sound": "audio/pip_mumble.wav"}},
+         ]},
+        text("Help", "A / D or arrows: walk    T: talk", (640, 40), size=32, align="Center", pivot=(0.5, 0.5),
+             color="#24425cff"),
+    ]
+    sc = with_touch(scene("pip", children, background=(143, 208, 242, 255)), (1280, 720),
+                    stick=("move_left", "move_right", "", ""), buttons=(("talk", "T"),))
+    t.json("scenes/pip.scene.json", sc)
+    t.json("project.json", project("Vector Character", ["scenes/pip.scene.json"], MOVE_ACTIONS[:2] + [
+        action("talk", "T", "pad:RIGHT_FACE_DOWN"),
+    ], virtual=(1280, 720), pixel=False))
+    with open(os.path.join(src, "README.md")) as f:
+        t.write("README.md", f.read())
+    return t
+
+
 TEMPLATES = {"platformer": platformer, "rpg": rpg, "shmup": shmup, "puzzle": puzzle, "adventure": adventure,
-             "visual_novel": visual_novel, "dungeon": dungeon, "hex": hex_island}
+             "visual_novel": visual_novel, "dungeon": dungeon, "hex": hex_island, "vector_character": vector_character}
 
 if __name__ == "__main__":
     which = sys.argv[1:] or list(TEMPLATES)

@@ -32,14 +32,14 @@ Library_Payload :: struct {
 @(private = "file")
 lib: struct {
 	file:     string,
-	thumbs:   map[string]rl.Texture2D, // "file|group|version" -> preview
+	thumbs:   map[string]^rl.Texture2D, // "file|group|version" -> preview (on the heap: ImGui keeps the pointer until the frame is drawn)
 	renameOf: int,
 	nameBuf:  [64]u8,
 	menuFor:  int,
 }
 
 LibraryPanel_Render :: proc(state: ^EditorState) {
-	if lib.thumbs == nil do lib.thumbs = make(map[string]rl.Texture2D)
+	if lib.thumbs == nil do lib.thumbs = make(map[string]^rl.Texture2D)
 	// The file: the selected Vector Shape's, else the picked one.
 	if sel := state.selectedNode; sel != nil && sel.typeId == e.VectorShapeNode {
 		if f := (cast(^e.VectorShapeNode)sel).file; f != "" && f != lib.file do library_set_file(f)
@@ -84,8 +84,9 @@ LibraryPanel_Render :: proc(state: ^EditorState) {
 			s := min(f32(TILE - 8) / f32(tex.width), f32(TILE - 8) / f32(tex.height))
 			sz := [2]f32{f32(tex.width) * s, f32(tex.height) * s}
 			p := at + ([2]f32{TILE, TILE} - sz) * 0.5
-			t := tex
-			imgui.DrawList_AddImage(dl, transmute(imgui.TextureID)&t, p, p + sz)
+			// (The texture's own address: the draw list is drawn after this
+			// function returns, so a local copy's would dangle.)
+			imgui.DrawList_AddImage(dl, transmute(imgui.TextureID)tex, p, p + sz)
 		}
 		imgui.DrawList_AddRect(dl, at, at + {TILE, TILE}, col_u32(UI_ACCENT if hovered else ui_line(0.25)), 4)
 		// Drag into the viewport: an instance.
@@ -134,15 +135,15 @@ library_resource :: proc(state: ^EditorState, rel: string) -> ^e.Vector_Resource
 }
 
 @(private = "file")
-library_thumb :: proc(r: ^e.Vector_Resource, g: int) -> rl.Texture2D {
+library_thumb :: proc(r: ^e.Vector_Resource, g: int) -> ^rl.Texture2D {
 	key := fmt.tprintf("%s|%d|%d", r.path, g, r.version)
 	if t, ok := lib.thumbs[key]; ok do return t
 	img := e.Vector_PartImage(r, g, 128)
 	defer if img.data != nil do rl.UnloadImage(img)
-	t: rl.Texture2D
+	t := new(rl.Texture2D)
 	if img.data != nil {
-		t = rl.LoadTextureFromImage(img)
-		rl.SetTextureFilter(t, .BILINEAR)
+		t^ = rl.LoadTextureFromImage(img)
+		rl.SetTextureFilter(t^, .BILINEAR)
 	}
 	lib.thumbs[strings.clone(key)] = t
 	return t

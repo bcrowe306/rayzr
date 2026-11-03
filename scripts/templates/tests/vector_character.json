@@ -1,0 +1,47 @@
+[
+ {
+  "name": "D walks right, facing right",
+  "frames": 60,
+  "input": ["10 D down"],
+  "expect": [
+   ["Pip", "x", ">", 740],
+   ["Rig", "scale", "==", [1, 1]],
+   ["Rig", "animation", "==", "walk"]
+  ]
+ },
+ {
+  "name": "left arrow walks left, turned round",
+  "frames": 60,
+  "input": ["10 LEFT down"],
+  "expect": [
+   ["Pip", "x", "<", 540],
+   ["Rig", "scale", "==", [-1, 1]]
+  ]
+ },
+ {
+  "name": "the left edge stops him",
+  "frames": 90,
+  "input": ["5 A down"],
+  "patch": {"Pip": {"position": [160, 640]}},
+  "expect": [
+   ["Pip", "x", "==", 120]
+  ]
+ },
+ {
+  "name": "T talks: the mouth moves with the voice",
+  "frames": 50,
+  "input": ["5 T tap"],
+  "expect": [
+   ["Mouth", "frame", ">", 0],
+   ["Eyes", "frame", "==", 0]
+  ]
+ },
+ {
+  "name": "the mouth rests when the voice ends",
+  "frames": 240,
+  "input": ["5 T tap"],
+  "expect": [
+   ["Mouth", "frame", "==", 0]
+  ]
+ }
+]

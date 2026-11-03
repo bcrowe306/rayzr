@@ -105,6 +105,7 @@ template_icon :: proc(name: string) -> string {
 	case "gamepad": return ICON_FA_GAMEPAD
 	case "book": return ICON_FA_BOOK
 	case "map": return ICON_FA_MAP
+	case "bezier-curve": return ICON_FA_BEZIER_CURVE
 	}
 	return ICON_FA_FILE
 }

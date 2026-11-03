@@ -1,0 +1,3 @@
+Pip and the backdrop were drawn for Rayzr: the same licence as the engine.
+The voice is synthesized by scripts/templates/make_templates.py.
+Font (fonts/): Kenney Pixel by Kenney (www.kenney.nl), CC0.

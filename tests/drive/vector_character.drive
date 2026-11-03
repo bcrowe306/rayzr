@@ -1,0 +1,120 @@
+# The Vector Character template (#272) in the editor, and the screenshots of
+# docs/getting-started/vector-character.md: shapes drawn with Edit Art and
+# turned into a symbol (F8); then Pip's scene (the template's files copied
+# in) - the Library tab with pip.svg's parts, the Rig (a Skeleton) with a
+# Vector Shape per part and their Bend with bones, the Mouth's frames, the
+# Lip Sync node; in Simulate the voice moves the mouth and the rig walks.
+# drive: copy templates/vector_character/art art
+# drive: copy templates/vector_character/rigs rigs
+# drive: copy templates/vector_character/audio audio
+# drive: copy templates/vector_character/scripts scripts
+# drive: copy templates/vector_character/scenes scenes
+# drive: copy templates/vector_character/fonts fonts
+wait 5
+key escape
+
+# 1. Drawing: a Vector Shape, Edit Art, an ellipse and a rectangle, a brush stroke.
+click @hier.add
+type vector
+click @addnode.create
+click @insp.vec.draw
+expect vd.active == true
+click @vd.tool:ellipse
+drag @node:VectorShape+-60,-90 @node:VectorShape+60,30
+click @vd.tool:rect
+drag @node:VectorShape+-40,30 @node:VectorShape+40,140
+click @vd.tool:brush
+drag @node:VectorShape+-30,-40 @node:VectorShape+30,-30 12
+click @vd.tool:select
+drag @node:VectorShape+-90,-110 @node:VectorShape+90,160
+expect vd.selected == 3
+screenshot draw
+key f8
+wait 1
+key cmd+a
+type Buddy
+screenshot convert_symbol
+key enter
+wait 2
+expect file:art/vectorshape.svg contains id="Buddy"
+key escape
+
+# 2. Pip's scene: the parts on the rig.
+dblclick @asset:scenes/pip.scene.json
+wait 20
+expect scene contains pip.scene.json
+expect node:Rig.type == SkeletonNode
+expect node:Rig.parent == Pip
+expect node:Rig.prop.file == rigs/pip.json
+expect node:Mouth.parent == Rig
+expect node:Mouth.prop.group == mouth
+expect node:Eyes.prop.frame == 0
+expect node:Body.prop.skinBones == torso
+expect node:ArmFront.prop.skinBones == arm_front_upper, arm_front_lower
+expect node:LipSync.type == LipSyncNode
+expect node:LipSync.prop.mouth == ../Rig/Mouth
+click @hier:Pip/Rig
+click @insp.prop:showBones
+wait 3
+expect node:Rig.prop.showBones == true
+# (the view on Pip's middle, zoomed out to show all of him)
+click @hier:Pip/Rig/Body
+key f
+scroll @viewport -3
+wait 3
+screenshot rig
+
+# The Library tab: pip.svg's symbols (the selected part's file).
+click @hier:Pip/Rig/Head
+click @bottom:library
+drag 640,592 640,330
+wait 5
+expect item:library.symbol:mouth == visible
+expect item:library.symbol:arm_front == visible
+screenshot library
+
+# Bend with: the bones a part follows.
+click @hier:Pip/Rig/ArmFront
+click @insp.vec.skin
+wait 2
+screenshot bend_with
+click @insp.vec.skin
+wait 1
+
+# The mouth's frames (part swapping).
+click @hier:Pip/Rig/Mouth
+click @insp.vec.frame
+wait 2
+screenshot mouth_frames
+click @pick:vec-frame:D
+wait 2
+expect node:Mouth.prop.frame == 4
+key cmd+z
+wait 1
+expect node:Mouth.prop.frame == 0
+
+# The Lip Sync node.
+click @hier:Pip/LipSync
+hover @insp.prop:mouth
+wait 2
+expect item:insp.prop:sound == visible
+screenshot lipsync
+
+# Simulate: the voice moves the mouth, the rig walks.
+click @menu:Game
+click @menu:Game/Simulate in Editor
+wait 30
+click @bottom:console
+click @console.lua
+type Scene.find_node("LipSync"):lipsync_play("audio/pip_mumble.wav")
+key enter
+wait 40
+type local r = Scene.find_node("Rig"); r:skeleton_play("walk"); print("PIP mouth=" .. Scene.find_node("Mouth").frame .. " talking=" .. tostring(Scene.find_node("LipSync"):lipsync_is_playing()) .. " anims=" .. #r:skeleton_animations())
+key enter
+wait 20
+expect log contains talking=true anims=3
+expect log !contains PIP mouth=0
+screenshot simulating
+click @menu:Game
+click @menu:Game/Simulate in Editor
+wait 5

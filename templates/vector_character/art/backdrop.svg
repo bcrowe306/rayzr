@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- The Vector Character template's backdrop (drawn for Rayzr; the repo's
+     licence): a sky, two rows of hills, a path to walk on. 1280 x 720, the
+     screen; the path's top edge is at y = 640, where Pip's feet are. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8fd0f2"/>
+      <stop offset="1" stop-color="#e6f6ff"/>
+    </linearGradient>
+    <linearGradient id="far" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a6d98f"/>
+      <stop offset="1" stop-color="#86c06f"/>
+    </linearGradient>
+    <linearGradient id="near" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6fbf5a"/>
+      <stop offset="1" stop-color="#4f9e43"/>
+    </linearGradient>
+  </defs>
+  <g id="sky">
+    <rect x="0" y="0" width="1280" height="720" fill="url(#sky)"/>
+    <circle cx="1080" cy="120" r="54" fill="#fff3b0"/>
+    <path d="M180 150 C180 126 214 116 230 132 C242 108 290 110 296 140 C322 138 330 166 306 172 L190 172 C170 172 166 154 180 150 Z" fill="#ffffff" opacity="0.9"/>
+    <path d="M700 96 C700 78 726 70 738 82 C748 64 784 66 788 88 C808 86 814 108 796 112 L708 112 C692 112 690 98 700 96 Z" fill="#ffffff" opacity="0.8"/>
+  </g>
+  <g id="hills">
+    <path d="M0 520 C160 420 300 430 440 500 C580 400 760 390 900 480 C1020 420 1160 410 1280 470 L1280 720 L0 720 Z" fill="url(#far)"/>
+    <path d="M0 600 C200 520 380 540 560 590 C760 520 980 520 1280 580 L1280 720 L0 720 Z" fill="url(#near)"/>
+  </g>
+  <g id="ground">
+    <rect x="0" y="636" width="1280" height="84" fill="#c99a63"/>
+    <rect x="0" y="632" width="1280" height="10" rx="5" fill="#6a9e3f"/>
+    <path d="M60 670 h40 M260 690 h60 M520 668 h36 M760 694 h50 M980 672 h44 M1180 690 h40" fill="none" stroke="#b08452" stroke-width="5" stroke-linecap="round"/>
+  </g>
+</svg>
