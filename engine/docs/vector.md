@@ -87,6 +87,20 @@ Shapes become ordinary paths: edit their corners with the node tool.
 The toolbar's two colour swatches and the width field set the fill, line
 colour and line width of new shapes.
 
+- **Snapping**: points snap onto other shapes' anchors within a few pixels.
+  With the viewport's snap (the magnet) on, they also snap to the grid and to
+  the viewport's guides. Hold **Ctrl** to place a point freely. This applies
+  to the pen, the shape tools and dragged anchors.
+- **Layers**: while you draw, the Inspector's Vector section lists the
+  file's layers, which are its top-level groups (Inkscape's layers). Add
+  one with **+**. The round button picks the layer new shapes go into; the
+  eye hides a layer (saved hidden) and the lock stops its shapes being
+  picked. Type in the name field and press Enter to rename. The arrows move
+  a layer above or below the next.
+- **Draw order**: **Ctrl+]** draws the selected shape over the next one and
+  **Ctrl+[** under the one before, within its group. The Inspector's
+  **Forward** and **Backward** buttons do the same.
+
 - **Starting from nothing**: a Vector Shape with no file creates
   `art/<node name>.svg` the first time you click with the pen.
 - **What's saved**: clean SVG that Inkscape, Illustrator and Affinity open
@@ -614,7 +628,7 @@ The benchmark: `tests/vector/project`, scene `scenes/bench.scene.json`
   (see above); group opacity is applied to each shape (overlapping shapes
   in a half-transparent group show through each other).
 - The Paint Bucket doesn't close small gaps between lines yet (Flash's gap
-  size); snapping and layers in the drawing tools come next (#267).
+  size). Layer locks are kept while drawing only (not saved in the file).
 - Hidden layers (`display:none`) aren't imported, so keep swap frames
   visible in the file; a whole-file instance draws every frame at once
   (explode it, or pick the symbol).

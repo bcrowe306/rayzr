@@ -58,6 +58,7 @@ inspector_vector :: proc(state: ^EditorState, v: ^e.VectorShapeNode) {
 	}
 	UI_Tooltip("Draw in the viewport: select, node and pen tools; the edits are saved into the SVG (double-click the shape does the same)")
 	UI_EndProps()
+	if drawing do VectorDraw_LayersUI(state, v)
 	if v.file == "" {
 		UI_DimText("Draws its preset. Pick an SVG, drag one from Assets into the viewport, or Edit Art to draw one.")
 		return

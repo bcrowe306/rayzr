@@ -5,6 +5,7 @@ import "core:math/linalg"
 import os "osx"
 import "core:time"
 import "core:mem"
+import "core:strings"
 import vmem "core:mem/virtual"
 
 // ============================================================================
@@ -250,3 +251,71 @@ Vector_PathMove :: proc(p: ^Vector_Path, d: [2]f32) {
 }
 
 _ :: math.PI
+
+// --- layers (the document's top-level groups) and draw order ---------------------------
+
+// Vector_DocAddGroup: a new empty group at the end of `parent` (-1: a
+// top-level group - a layer); its index.
+Vector_DocAddGroup :: proc(doc: ^Vector_Doc, name: string, parent := -1) -> int {
+	context.allocator = Vector_EditAllocator(doc)
+	at := len(doc.shapes)
+	if parent >= 0 && parent < len(doc.groups) do at = doc.groups[parent].first + doc.groups[parent].count
+	append(&doc.groups, Vector_Group{name = strings.clone(name), parent = parent, first = at})
+	return len(doc.groups) - 1
+}
+
+// Vector_DocLayers: the top-level groups, in drawing order (back first).
+Vector_DocLayers :: proc(doc: ^Vector_Doc, allocator := context.temp_allocator) -> []int {
+	out := make([dynamic]int, allocator)
+	for g, i in doc.groups do if g.parent == -1 do append(&out, i)
+	// (By where their shapes start; empty ones by when they were made.)
+	for i in 1 ..< len(out) {
+		for j := i; j > 0 && doc.groups[out[j]].first < doc.groups[out[j - 1]].first; j -= 1 do out[j], out[j - 1] = out[j - 1], out[j]
+	}
+	return out[:]
+}
+
+// Vector_DocMoveLayer swaps a top-level group with the next one up (+1,
+// drawn later) or down (-1) - their shapes and groups move together; false
+// when there is none that way.
+Vector_DocMoveLayer :: proc(doc: ^Vector_Doc, g, dir: int) -> bool {
+	if g < 0 || g >= len(doc.groups) || doc.groups[g].parent != -1 do return false
+	// The neighbour: the top-level group whose range is right after / before.
+	other := -1
+	for o, i in doc.groups {
+		if o.parent != -1 || i == g do continue
+		if dir > 0 && o.first == doc.groups[g].first + doc.groups[g].count && o.count > 0 do other = i
+		if dir < 0 && o.first + o.count == doc.groups[g].first && o.count > 0 do other = i
+	}
+	if other < 0 || doc.groups[g].count == 0 do return false
+	lo, hi := g, other
+	if dir < 0 do lo, hi = other, g
+	a, b := doc.groups[lo], doc.groups[hi] // a's range, then b's: becomes b's, then a's
+	context.allocator = Vector_EditAllocator(doc)
+	moved := make([]Vector_Shape, a.count + b.count, context.temp_allocator)
+	copy(moved, doc.shapes[b.first:b.first + b.count])
+	copy(moved[b.count:], doc.shapes[a.first:a.first + a.count])
+	copy(doc.shapes[a.first:], moved)
+	for &x, i in doc.groups {
+		if vector_group_in(doc, i, lo) do x.first += b.count
+		else if vector_group_in(doc, i, hi) do x.first -= a.count
+	}
+	return true
+}
+
+// vector_group_in: `g` is `top` or inside it.
+@(private = "file")
+vector_group_in :: proc(doc: ^Vector_Doc, g, top: int) -> bool {
+	for k := g; k >= 0; k = doc.groups[k].parent do if k == top do return true
+	return false
+}
+
+// Vector_DocMoveShape moves shape `i` one step up (+1: drawn later) or down
+// within its group (not past a child group); its new index (i: it can't).
+Vector_DocMoveShape :: proc(doc: ^Vector_Doc, i, dir: int) -> int {
+	j := i + (1 if dir > 0 else -1)
+	if i < 0 || j < 0 || j >= len(doc.shapes) do return i
+	if Vector_DocShapeGroup(doc, i) != Vector_DocShapeGroup(doc, j) do return i
+	doc.shapes[i], doc.shapes[j] = doc.shapes[j], doc.shapes[i]
+	return j
+}
