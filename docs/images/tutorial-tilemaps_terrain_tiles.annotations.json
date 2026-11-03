@@ -1,0 +1,8 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "A pattern: green the cell, blue its Stone neighbours (here east and south)", "x": 278, "y": 220, "w": 70, "h": 38},
+    {"label": "Its tile: the top-left corner", "x": 678, "y": 176, "w": 32, "h": 32}
+  ]
+}

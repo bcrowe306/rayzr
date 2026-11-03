@@ -1,0 +1,8 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "The player next to the door; its tile erased from the Lua line", "x": 741, "y": 248, "w": 56, "h": 56},
+    {"label": "tilemap_set_tile(19, 5, -1): the door's cell emptied", "x": 207, "y": 422, "w": 834, "h": 270}
+  ]
+}

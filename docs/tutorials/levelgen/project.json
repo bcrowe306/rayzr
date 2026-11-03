@@ -1,0 +1,26 @@
+{
+ "name": "Crystal Cave",
+ "version": "0.1.0",
+ "initial_scene": "scenes/main.scene.json",
+ "window": {
+  "title": "Crystal Cave",
+  "width": 1280,
+  "height": 720,
+  "virtual_width": 640,
+  "virtual_height": 360,
+  "target_fps": 60
+ },
+ "video": {
+  "resizable": true,
+  "sharp_scaling": true,
+  "integer_scaling": true,
+  "pixel_snap": true
+ },
+ "physics": {
+  "gravity": [0, 0],
+  "debug_draw": false
+ },
+ "scenes": [
+  "scenes/main.scene.json"
+ ]
+}

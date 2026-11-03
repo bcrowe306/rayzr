@@ -1,0 +1,9 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "Noise: smooth values from 0 to 1", "x": 173, "y": 242, "w": 134, "h": 19},
+    {"label": "Threshold: 1 (rock) from 0.47 up, else 0", "x": 173, "y": 482, "w": 134, "h": 19},
+    {"label": "Cellular Automaton: smooths the rock into cave walls", "x": 337, "y": 273, "w": 134, "h": 19}
+  ]
+}

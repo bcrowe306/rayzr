@@ -1,0 +1,3 @@
+Art: Kenney (www.kenney.nl), Creative Commons Zero (CC0) - free for any
+use, no attribution required. Packs: Tiny Dungeon (dungeon.png), Pixel
+Platformer (coin.png: two of its tiles).

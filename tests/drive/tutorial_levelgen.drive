@@ -1,0 +1,218 @@
+# The Level generator tutorial (docs/tutorials/levelgen.md, #295): its steps,
+# in a copy of the finished project (docs/tutorials/levelgen/), and its
+# screenshots (scripts/docs/screenshots.sh tutorial_levelgen copies them to
+# docs/images/tutorial-levelgen_*.png).
+# drive: project docs/tutorials/levelgen
+wait 5
+key escape
+
+# 1. A new generator: the cave template, in the Level Generator window.
+click @asset.add
+click @ctx:add-new-levelgen
+wait 3
+expect lge.open == true
+expect lge.path == levels/new_level.levelgen.json
+expect lge.nodes == 5
+expect lge.errors == 0
+
+# 2. Noise -> Threshold instead of the Random Fill.
+click @lge.node:1
+key delete
+wait 1
+expect lge.nodes == 4
+rclick @lge.node:2+-230,-40
+click @ctx:lge-add:noise
+wait 1
+rclick @lge.node:2+-230,200
+click @ctx:lge-add:threshold
+wait 1
+expect lge.nodes == 6
+drag @lge.out:6 @lge.in:7:0
+drag @lge.out:7 @lge.in:2:0
+wait 2
+expect lge.input:7:0 == 6
+expect lge.input:2:0 == 7
+click @lge.node:6
+dblclick @lge.param:scale
+key ctrl+a
+type 6
+key enter
+click @lge.node:7
+dblclick @lge.param:value
+key ctrl+a
+type 0.47
+key enter
+wait 3
+expect lge.text contains "type": "threshold"
+expect lge.errors == 0
+annotate @lge.node:6 Noise: smooth values from 0 to 1
+annotate @lge.node:7 Threshold: 1 (rock) from 0.47 up, else 0
+annotate @lge.node:2 Cellular Automaton: smooths the rock into cave walls
+screenshot tutorial-levelgen_graph
+
+# 3. The Tile Output: the tileset, 16 x 16 tiles, the Stone terrain for rock.
+click @lge.node:5
+wait 1
+click @lge.tileset
+click @pick:textures/dungeon.png
+wait 1
+dblclick @lge.param:tile_w
+key ctrl+a
+type 16
+key enter
+dblclick @lge.param:tile_h
+key ctrl+a
+type 16
+key enter
+click @lge.rule-terrain:0
+click @pick:Terrain: Stone
+wait 5
+expect lge.text contains "terrain": "Stone"
+expect lge.text contains "tileset": "textures/dungeon.png"
+expect lge.errors == 0
+annotate @lge.tileset The tileset the tiles come from
+annotate @lge.rule-terrain:0 Rock (0.5 to 1) becomes the Stone terrain: auto-tiled edges
+screenshot tutorial-levelgen_tiles
+key ctrl+s
+wait 1
+expect file:levels/new_level.levelgen.json contains "terrain": "Stone"
+click @lge.close
+wait 2
+expect lge.open == false
+
+# 4. The finished generator: Connect Regions, Check (refusing a level with
+# too little open), the start point and the coins.
+dblclick @asset:levels/cave.levelgen.json
+wait 5
+expect lge.open == true
+expect lge.nodes == 14
+expect lge.errors == 0
+click @lge.node:7
+dblclick @lge.param:min_open
+key ctrl+a
+type 0.9
+key enter
+wait 5
+expect lge.errors >= 1
+annotate @lge.node:7 Check: an error when less than min_open of the level is open
+screenshot tutorial-levelgen_check
+key ctrl+z
+wait 5
+expect lge.errors == 0
+click @lge.node:14
+wait 2
+annotate @lge.component The component on each point: a coin
+annotate @lge.node:13 Poisson Scatter: evenly spaced points on the floor
+screenshot tutorial-levelgen_entities
+click @lge.close
+wait 2
+click @lge.close-discard
+wait 2
+expect lge.open == false
+
+# 5. A Level Generator node with two TileMap children (Walls, then Floor:
+# the Floor layer), the generator picked; Generate Now.
+click @asset.new-scene
+click @hier.add
+type level generator
+click @addnode.create
+wait 2
+expect node:LevelGenerator.type == LevelGeneratorNode
+dblclick @insp.position.x
+key ctrl+a
+type 0
+key enter
+dblclick @insp.position.y
+key ctrl+a
+type 0
+key enter
+click @hier.add
+type tile map
+click @addnode.create
+wait 2
+expect node:TileMap.parent == LevelGenerator
+dblclick @insp.name
+key ctrl+a
+type Walls
+key enter
+dblclick @insp.position.x
+key ctrl+a
+type 0
+key enter
+dblclick @insp.position.y
+key ctrl+a
+type 0
+key enter
+click @tile.tileset
+click @pick:textures/dungeon.png
+wait 2
+dblclick @tile.size-x
+key cmd+a
+type 16
+key enter
+dblclick @tile.size-y
+key cmd+a
+type 16
+key enter
+click @insp.prop:solid
+click @hier:LevelGenerator
+click @hier.add
+type tile map
+click @addnode.create
+wait 2
+dblclick @insp.name
+key ctrl+a
+type Floor
+key enter
+dblclick @insp.position.x
+key ctrl+a
+type 0
+key enter
+dblclick @insp.position.y
+key ctrl+a
+type 0
+key enter
+click @tile.tileset
+click @pick:textures/dungeon.png
+wait 2
+dblclick @tile.size-x
+key cmd+a
+type 16
+key enter
+dblclick @tile.size-y
+key cmd+a
+type 16
+key enter
+expect node:Floor.parent == LevelGenerator
+click @hier:LevelGenerator
+wait 1
+click @insp.levelgen.file
+click @pick:levels/cave.levelgen.json
+wait 2
+expect node:LevelGenerator.prop.generator == levels/cave.levelgen.json
+click @insp.prop:randomSeed
+expect node:LevelGenerator.prop.randomSeed == true
+click @insp.levelgen.generate
+wait 3
+expect log contains Generated cave.levelgen.json into Walls
+expect node:Walls.tiles >= 100
+expect node:Floor.tiles >= 100
+click @hier:LevelGenerator/Walls
+key shift+f
+wait 3
+click @hier:LevelGenerator
+wait 1
+annotate @insp.levelgen.generate Generate Now: a level in the editor, to see or paint over
+annotate @insp.prop:randomSeed Random Seed: a new level each time (Last Seed: the one made)
+screenshot tutorial-levelgen_node
+key ctrl+s
+expect file:scenes/new_scene.scene.json contains "type": "LevelGeneratorNode"
+
+# 6. Played: a cave made when the scene starts, the player on its start point.
+dblclick @asset:scenes/main.scene.json
+wait 10
+expect scene contains main.scene.json
+game-args --frames 60 --screenshot $SHOTS/07_tutorial-levelgen_game.png --dump-scene $SHOTS/game_scene.json
+key f5
+wait-until game == stopped timeout=900
+expect abs-file:$SHOTS/game_scene.json contains Cave 1 - seed

@@ -165,5 +165,240 @@
     0.3
    ]
   ]
+ },
+ {
+  "name": "tilemaps tutorial (#295): the room plays; the player walks the stone path at its path speed",
+  "project": "docs/tutorials/tilemaps",
+  "frames": 70,
+  "input": [
+   "10 RIGHT down",
+   "70 RIGHT up"
+  ],
+  "expect": [
+   [
+    "Player",
+    "x",
+    ">",
+    125
+   ],
+   [
+    "Hint",
+    "text",
+    "==",
+    ""
+   ]
+  ]
+ },
+ {
+  "name": "tilemaps tutorial (#295): the Solid Walls map stops the player at the top wall",
+  "project": "docs/tutorials/tilemaps",
+  "frames": 60,
+  "patch": {
+   "Player": {
+    "position": [
+     40,
+     40
+    ]
+   }
+  },
+  "input": [
+   "5 UP down"
+  ],
+  "expect": [
+   [
+    "Player",
+    "y",
+    ">",
+    18
+   ],
+   [
+    "Player",
+    "y",
+    "<",
+    30
+   ]
+  ]
+ },
+ {
+  "name": "tilemaps tutorial (#295): E erases the door tile (tilemap_set_tile) and the player walks out",
+  "project": "docs/tutorials/tilemaps",
+  "frames": 90,
+  "patch": {
+   "Player": {
+    "position": [
+     296,
+     88
+    ]
+   }
+  },
+  "input": [
+   "10 E tap 2",
+   "20 RIGHT down"
+  ],
+  "expect": [
+   [
+    "Hint",
+    "text",
+    "==",
+    "The door is open"
+   ],
+   [
+    "Player",
+    "x",
+    ">",
+    322
+   ]
+  ]
+ },
+ {
+  "name": "tilemaps tutorial (#295): next to the closed door the hint shows; without E it stays shut",
+  "project": "docs/tutorials/tilemaps",
+  "frames": 60,
+  "patch": {
+   "Player": {
+    "position": [
+     296,
+     88
+    ]
+   }
+  },
+  "input": [
+   "20 RIGHT down"
+  ],
+  "expect": [
+   [
+    "Hint",
+    "text",
+    "==",
+    "E: open the door"
+   ],
+   [
+    "Player",
+    "x",
+    "<",
+    304
+   ]
+  ]
+ },
+ {
+  "name": "levelgen tutorial (#295): a cave is generated at start (Random Seed); the player is put on its start point",
+  "project": "docs/tutorials/levelgen",
+  "frames": 30,
+  "expect": [
+   [
+    "Info",
+    "text",
+    "contains",
+    "Cave 1 - seed "
+   ],
+   [
+    "Coins",
+    "text",
+    "contains",
+    "Coins: 0 / "
+   ],
+   [
+    "Player",
+    "x",
+    "!=",
+    320
+   ],
+   [
+    "Start",
+    "exists",
+    "==",
+    true
+   ],
+   [
+    "Coin",
+    "exists",
+    "==",
+    true
+   ]
+  ]
+ },
+ {
+  "name": "levelgen tutorial (#295): R makes a new cave (levelgen_generate, the generated event)",
+  "project": "docs/tutorials/levelgen",
+  "frames": 60,
+  "input": [
+   "30 R tap 2"
+  ],
+  "expect": [
+   [
+    "Info",
+    "text",
+    "contains",
+    "Cave 2 - seed "
+   ]
+  ]
+ },
+ {
+  "name": "levelgen tutorial (#295): a fixed seed makes the same cave every time; R makes it again (the last one's coins and start point replaced)",
+  "project": "docs/tutorials/levelgen",
+  "frames": 60,
+  "patch": {
+   "Generator": {
+    "randomSeed": false,
+    "seed": 7
+   }
+  },
+  "expect": [
+   [
+    "Info",
+    "text",
+    "==",
+    "Cave 2 - seed 7 - R: a new cave"
+   ],
+   [
+    "Coins",
+    "text",
+    "==",
+    "Coins: 0 / 9"
+   ],
+   [
+    "Player",
+    "x",
+    "==",
+    152
+   ],
+   [
+    "Player",
+    "y",
+    "==",
+    328
+   ]
+  ],
+  "input": [
+   "30 R tap 2"
+  ]
+ },
+ {
+  "name": "levelgen tutorial (#295): seed 7 - walking left from the start collects the coin the Entity Output put there",
+  "project": "docs/tutorials/levelgen",
+  "frames": 70,
+  "patch": {
+   "Generator": {
+    "randomSeed": false,
+    "seed": 7
+   }
+  },
+  "input": [
+   "10 LEFT down"
+  ],
+  "expect": [
+   [
+    "Coins",
+    "text",
+    "==",
+    "Coins: 1 / 9"
+   ],
+   [
+    "Player",
+    "x",
+    "<",
+    72
+   ]
+  ]
  }
 ]

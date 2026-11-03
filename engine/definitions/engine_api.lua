@@ -9471,7 +9471,7 @@ function LevelGeneratorNode:is_generating() end
 
 ---Sets a parameter of one of the generator's nodes for this node's levels (from the next generate): one generator file, many levels.
 ---
----Example: `gen:levelgen_set_param(1, "density", 0.4 + level * 0.02); gen:generate()`
+---Example: `gen:levelgen_set_param(1, "density", 0.4 + level * 0.02); gen:levelgen_generate()`
 ---@param node_id integer The id of a node in the generator file (.levelgen.json)
 ---@param name string Its parameter's name
 ---@param value number|boolean A number, or a boolean (stored as 1 or 0); used from the next generate

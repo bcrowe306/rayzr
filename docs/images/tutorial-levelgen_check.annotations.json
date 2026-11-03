@@ -1,0 +1,7 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "Check: an error when less than min_open of the level is open", "x": 583, "y": 257, "w": 74, "h": 10}
+  ]
+}
