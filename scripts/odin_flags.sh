@@ -8,10 +8,15 @@
 # raylib.dll doesn't export.) And the C runtime stays static (#330): Odin's
 # raylib.lib is built against the DLL one (/MD: its /DEFAULTLIB:MSVCRT), which
 # made every exe - the editor, the runners, exported games - need
-# VCRUNTIME140.dll and VCRUNTIME140_1.dll, which a fresh Windows doesn't have;
-# /NODEFAULTLIB:msvcrt.lib leaves the static one (LIBCMT) the rest links.
-# (Both flags in a linker response file: `odin build` takes one
-# -extra-linker-flags and the callers split this script's output on spaces.)
+# VCRUNTIME140.dll and VCRUNTIME140_1.dll, which a fresh Windows doesn't have.
+# /NODEFAULTLIB:msvcrt.lib drops the DLL one, and the static one (what /MT
+# links: libcmt, libvcruntime, libucrt) is named as input libraries - not
+# /DEFAULTLIB: Odin's raylib bindings say /NODEFAULTLIB:libcmt (vendor/raylib/
+# raylib.odin), which removes libcmt from the default libraries, but not an
+# input named on the command line. (raylib's /MD objects call the CRT through
+# __imp_ pointers; the linker points those at the static functions, LNK4217.)
+# (All in a linker response file: `odin build` takes one -extra-linker-flags
+# and the callers split this script's output on spaces.)
 # macOS in CI (release builds): the oldest macOS the app runs on, as its
 # Info.plist says (LSMinimumSystemVersion, scripts/package_editor.sh) -
 # without it Odin targets the build machine's macOS (0.6.0 needed 14).
@@ -23,7 +28,7 @@ case "$(uname -s)" in
 	MINGW*|MSYS*|CYGWIN*)
 		rsp="$(cd "$(dirname "$0")/.." && pwd)/bin/windows_link.rsp"
 		mkdir -p "$(dirname "$rsp")"
-		printf '/WHOLEARCHIVE:"%s"\n/NODEFAULTLIB:msvcrt.lib\n/DEFAULTLIB:libcmt.lib\n/DEFAULTLIB:libvcruntime.lib\n/DEFAULTLIB:libucrt.lib\n/VERBOSE:LIB\n' "$(cygpath -w "$(odin root)/vendor/raylib/windows/raylib.lib")" > "$rsp.$$"
+		printf '/WHOLEARCHIVE:"%s"\n/NODEFAULTLIB:msvcrt.lib\nlibcmt.lib\nlibvcruntime.lib\nlibucrt.lib\n' "$(cygpath -w "$(odin root)/vendor/raylib/windows/raylib.lib")" > "$rsp.$$"
 		mv -f "$rsp.$$" "$rsp" # (whole: builds run this in parallel)
 		echo "-extra-linker-flags:@$(cygpath -w "$rsp")" ;;
 	Darwin)
