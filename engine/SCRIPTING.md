@@ -1174,7 +1174,10 @@ starts: `generate([seed])` for another, `set_level_param(node_id, name,
 value)` to change a generator node's parameter for this node's levels,
 `level_param`, `clear_level_params`, `is_generating` (with **Background**
 on). Events `generated` (the seed) and `generation_failed` (why); a signal
-can call its `generate` with no script. Guide:
+can call its `generate` with no script. For a loading bar: `node.progress`
+(0 to 1) and the `generation_progress` event (the fraction, each time it
+moves by 1% or more; 1 when the level is in). **Rebake Navigation** bakes
+the scene's Navigation Regions again before `generated`. Guide:
 [`docs/level_generator.md`](docs/level_generator.md).
 
 #### Visibility (VisibilityNotifierNode)

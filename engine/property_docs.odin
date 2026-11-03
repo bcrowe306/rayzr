@@ -639,6 +639,8 @@ PROPERTY_DOCS := [?]Property_Doc_Entry {
 	{"LevelGeneratorNode.attempts", "With Random Seed: seeds tried when the generator refuses a level (a Check node: too little open, in pieces) before it gives up."},
 	{"LevelGeneratorNode.background", "Generate on a worker thread while the game runs; the level goes in when it is done (generated)."},
 	{"LevelGeneratorNode.lastSeed", "The seed of the last level made (runtime, read-only)."},
+	{"LevelGeneratorNode.rebakeNavigation", "Bake the scene's Navigation Regions again once a level is in (before generated): agents find paths through the new map."},
+	{"LevelGeneratorNode.progress", "How far the generation is, 0 to 1 (1: the level is in) - for a loading bar; generation_progress follows it (runtime, read-only)."},
 	{"SpawnerNode.mode", "What one spawn makes: Single (the first entry), All (every entry), Random (one by weight), Sequential (the next each time), Shuffle (random, all once before repeats)."},
 	{"SpawnerNode.sequenceEnd", "Sequential, after the last entry: Loop (the first again), Ping Pong (back down the list), Stop (no more; spawn_reset() starts over)."},
 	{"SpawnerNode.count", "How many picks one spawn makes (a burst): with Random, Sequential and Shuffle each pick is its own."},

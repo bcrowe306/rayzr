@@ -190,6 +190,136 @@ Scenes define the active camera, debug boundaries, and hierarchical node graphs.
 
 ---
 
+## 5b. Level Generator Schema (`*.levelgen.json`)
+
+A procedural level generator (#142, #171): a graph of nodes whose output is
+a level. Each node makes or changes a grid of numbers the size of the level
+(0 = empty / low, 1 = solid / high); outputs turn grids into tiles,
+components or entities. The guide is [`docs/level_generator.md`](docs/level_generator.md);
+this is the file's full shape. Code: `Gen_GraphParse` / `Gen_GraphSerialize`
+(`engine/level_gen.odin`).
+
+```json
+{
+  "format": 1,
+  "size": [64, 40],
+  "seed": 7,
+  "output": 5,
+  "nodes": [
+    {"id": 1, "type": "random_fill", "params": {"density": 0.48}, "pos": [40, 60]},
+    {"id": 2, "type": "cellular", "inputs": {"in": 1}, "params": {"iterations": 5}},
+    {"id": 5, "type": "tile_output", "inputs": {"in": 2},
+     "params": {"empty": -1, "tile_w": 16, "tile_h": 16},
+     "rules": [{"min": 0.5, "max": 1, "tiles": [12, 13, 14]}],
+     "tileset": "textures/cave.png"}
+  ],
+  "frames": [{"title": "Caves", "pos": [20, 20], "size": [420, 260], "color": [0.35, 0.55, 0.85, 1]}]
+}
+```
+
+### Top level
+
+| Key | Type | Required | |
+|---|---|---|---|
+| `format` | integer | no | The file format (currently 1; a file without it is format 0, read the same). Newer than the reader: read as well as possible, the editor opens it read-only. |
+| `size` | `[w, h]` | no | The level in cells, 1-4096 each (default `[32, 24]`). |
+| `seed` | integer | no | The default seed (0 when missing). A seed passed when generating replaces it. |
+| `output` | integer | no | The id of the node whose result is the level (its tiles fill the main TileMap). Missing or 0: the last `tile_output` that writes tiles, else the last `tile_output`, else the last node. |
+| `nodes` | array | no | The nodes (below), in any order. |
+| `frames` | array | no | The editor's comment frames (#171, part 1). Generation ignores them. Written only when there are any. |
+
+### A node
+
+| Key | Type | | |
+|---|---|---|---|
+| `id` | integer > 0 | required | Unique in the file; links and `output` name nodes by it. |
+| `type` | string | required | A built-in type (below) or the name of a type registered from Odin (`Gen_RegisterNode`). An unknown type fails the whole file. |
+| `inputs` | object | optional | Port name -> the id of the node it reads. A port not listed reads zeros. A cycle is an error when generating. |
+| `params` | object | optional | Parameter name -> value. A number; `true` / `false` for toggles (also 1 / 0); a choice parameter by name (`"op": "max"`; its index also works). Missing parameters take their defaults; unknown ones are ignored. Writers write every parameter (except a `tile_output`'s `writes` when it is `tiles`). |
+| `pos` | `[x, y]` | optional | Where the editor draws it (canvas units); not written when `[0, 0]`. |
+| `rules`, `patterns`, `tileset`, `layer` | | `tile_output` | Below. |
+| `component` | string | `entity_output` | The `.component.json` it places. |
+| `script` | string | `script` | The `.lua` file (returning `function(ctx)`). |
+
+### Node types and parameters
+
+Defaults in brackets; choices list their names (the first is the default).
+`seed` parameters are added to the graph's seed (each node's own seed also
+mixes in its id).
+
+| Type | Inputs | Parameters |
+|---|---|---|
+| `constant` | | `value` (1) |
+| `noise` | | `type`: `value` / `perlin` / `simplex` (#171, part 2), `scale` (16), `octaves` (3, 1-8), `persistence` (0.5), `seed` (0) |
+| `random_fill` | | `density` (0.45), `seed` (0) |
+| `gradient` | | `direction`: `horizontal` / `vertical` / `radial` |
+| `border` | | `width` (1) |
+| `rect` | | `x` (0), `y` (0), `w` (8), `h` (8), `value` (1) |
+| `rooms` | | `min_size` (4), `max_size` (10), `corridor` (1), `seed` (0) |
+| `walker` | | `steps` (400), `walkers` (1), `brush` (1), `seed` (0) |
+| `lines` | | `count` (6), `min_length` (6), `max_length` (20), `thickness` (1), `direction`: `horizontal` / `vertical` / `both` / `any` (default `both`), `seed` (0) |
+| `rectangles` | | `count` (5), `min_size` (4), `max_size` (12), `thickness` (1), `filled` (false), `seed` (0) |
+| `circles` | | `count` (5), `min_radius` (3), `max_radius` (8), `thickness` (1), `filled` (false), `seed` (0) |
+| `threshold` | `in` | `value` (0.5), `invert` (false) |
+| `invert` | `in` | |
+| `remap` | `in` | `from_min` (0), `from_max` (1), `to_min` (0), `to_max` (1) |
+| `blur` | `in` | `radius` (1) |
+| `cellular` | `in` | `iterations` (4), `birth` (5), `survive` (4), `edge_solid` (true) |
+| `dilate`, `erode` | `in` | `iterations` (1) |
+| `combine` | `a`, `b` | `op`: `add` / `subtract` / `multiply` / `min` / `max` / `mask` / `average` |
+| `scatter` | `in` | `chance` (0.05), `spacing` (4), `seed` (0) |
+| `poisson_scatter` | `mask` | `radius` (4, 1-256), `attempts` (30, 1-100), `seed` (0) (#171, part 2) |
+| `surface` | `in` | `side`: `top` / `bottom` / `any` |
+| `flood_fill` | `in` | `x` (-1), `y` (-1), `open`: `low` / `high`, `diagonal` (false) |
+| `regions` | `in` | `mode`: `keep_largest` / `remove_small`, `min_size` (20), `open`, `diagonal` |
+| `connect_regions` | `in` | `width` (1), `min_size` (0), `open`, `diagonal` |
+| `path` | `in` | `placement`: `left_right` / `top_bottom` / `farthest` / `custom`, `start_x`, `start_y`, `end_x`, `end_y` (0), `width` (1), `open`, `output`: `level` / `path` / `start` / `end` |
+| `check` | `in` | `min_open` (0.25), `connected` (true), `open`, `diagonal` |
+| `script` | `a`, `b` | `p1`..`p4` (0), `seed` (0); and `script` |
+| *(registered)* | as registered | as registered |
+| `tile_output` | `in` | `empty` (-1), `tile_w` (16), `tile_h` (16), `writes`: `tiles` / `components` (#171, part 3) |
+| `entity_output` | `in` | `max` (0 = every point); and `component` |
+
+### Tile output
+
+| Key | | |
+|---|---|---|
+| `rules` | array | Each `{"min", "max", "tiles", "terrain", "component"}`: a cell whose value is in `min`..`max` (defaults 0..1) takes the first rule that holds it. `tiles`: tile indices, one picked per cell by the seed (`"tile": n` is read as a one-tile list). `terrain` (optional): a terrain of the output's tileset instead of tiles - auto-tiled by neighbours. `component` (optional, #171): the `.component.json` the cell gets when the output writes components. Writers write `min`, `max` and `tiles` always, the others when set. |
+| `patterns` | array | Optional; applied after the rules. Each `{"min", "max", "chance", "cells", "tiles"}`: `cells` are the 3 x 3 around a cell, row by row (`1` in `min`..`max`, `-1` not, `0` any; the middle is the cell), `chance` 0..1 (default 1), defaults `min` 0.5, `max` 1. Written only when there are any. |
+| `tileset` | string | Optional: the image its tile numbers count in (the editor's palette and previews; its terrains come from `<image>.tileset.json`). |
+| `layer` | string | Optional: the TileMap it fills, by name, next to the main one (its sibling, else its child). Missing: the main TileMap. |
+
+`params.writes` picks what it writes (#171, part 3):
+
+- `tiles` (the default, not written): tile indices into the map's cells.
+- `components`: components painted on the **component layer** of the map
+  (`layer` names which; missing: the main one) - each cell the first rule
+  with a `component` whose range holds its value, the rule's tiles unused.
+  A component bigger than a cell covers its footprint (centred on the
+  cell, kept inside the map); cells an earlier one covers are skipped, and
+  instances already under a footprint are replaced. The map's tiles stay.
+  What a generation paints is tagged `levelgen` and replaced by the next.
+  Such an output is never the default `output`.
+
+### Frames
+
+Each `{"title", "pos", "size", "color"}`: the title (string), the top-left
+and size in canvas units (`size` at least 40 x 40; default 300 x 200) and
+the colour `[r, g, b, a]` 0-1 (three values: alpha 1; default
+`[0.35, 0.55, 0.85, 1]`). Moving a frame in the editor moves the nodes whose
+middles are inside it.
+
+### Compatibility
+
+Format 1 since #326. The keys added later - `frames`, `noise.type`,
+`poisson_scatter`, `params.writes` and a rule's `component` - are optional
+and additive: a file without them reads as before, so they didn't change
+the format number. Graphs that use none of them save exactly as before. An
+older Rayzr reads a newer graph without them: it ignores frames and the
+`writes` parameter, and fails on a node type it doesn't know.
+
+---
+
 ## 6. Engine API Usage in Odin
 
 ```odin

@@ -1,0 +1,71 @@
+# #171 (part 3): a tile output that writes components (a rule's component
+# painted on the TileMap's component layer), saved; then a Level Generator
+# node with Rebake Navigation on generating it into its TileMap child.
+wait 5
+exec mkdir -p $PROJECT/levels
+exec cp tests/drive/fixtures/runtime_zz.levelgen.json $PROJECT/levels/runtime_zz.levelgen.json
+wait-until item:asset:levels/runtime_zz.levelgen.json == visible timeout=300
+dblclick @asset:levels/runtime_zz.levelgen.json
+wait 5
+expect lge.open == true
+expect lge.errors == 0
+
+# Node 4 writes components: the rules take a component instead of tiles.
+click @lge.node:4
+wait 1
+click @lge.param:writes
+click @pick:components
+wait 2
+expect lge.text contains "writes": "components"
+screenshot writes_components
+click @lge.rule-component:0
+click @pick:components/AsteroidSmall.component.json
+wait 3
+expect lge.text contains "component": "components/AsteroidSmall.component.json"
+expect lge.errors == 0
+screenshot component_rule
+key ctrl+s
+wait 1
+expect file:levels/runtime_zz.levelgen.json contains "writes": "components"
+expect file:levels/runtime_zz.levelgen.json contains "component": "components/AsteroidSmall.component.json"
+# The output stays node 2 (tiles); its preview the tiles.
+click @lge.node:2
+wait 2
+screenshot tiles_output
+
+# Closed (saved: no prompt), out of the Inspector's way.
+click @lge.close
+wait 2
+expect lge.open == false
+
+# A Level Generator node with a TileMap child, the generator picked.
+click @hier.add
+type level generator
+click @addnode.create
+wait 2
+expect node:LevelGenerator.type == LevelGeneratorNode
+click @hier:LevelGenerator
+click @hier.add
+type tile map
+click @addnode.create
+wait 2
+expect node:TileMap.parent == LevelGenerator
+click @hier:LevelGenerator
+wait 1
+click @insp.levelgen.file
+click @pick:levels/runtime_zz.levelgen.json
+wait 2
+expect node:LevelGenerator.prop.generator == levels/runtime_zz.levelgen.json
+# Rebake Navigation: on.
+expect node:LevelGenerator.prop.rebakeNavigation == false
+click @insp.prop:rebakeNavigation
+wait 1
+expect node:LevelGenerator.prop.rebakeNavigation == true
+screenshot rebake_on
+# Generate Now: the border's tiles, an asteroid on the component layer.
+click @insp.levelgen.generate
+wait 3
+expect log contains Generated runtime_zz.levelgen.json into TileMap
+expect node:TileMap.tiles >= 44
+expect node:TileMap.tile-components >= 1
+screenshot generated

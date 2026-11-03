@@ -92,6 +92,9 @@ GEN_COMBINE_OPS := []string{"add", "subtract", "multiply", "min", "max", "mask",
 GEN_GRADIENT_DIRS := []string{"horizontal", "vertical", "radial"}
 GEN_SURFACE_SIDES := []string{"top", "bottom", "any"}
 GEN_LINE_DIRS := []string{"horizontal", "vertical", "both", "any"}
+// What a tile output writes (#171): tiles, or components on its map's
+// component layer (each rule's `component`).
+GEN_OUTPUT_WRITES := []string{"tiles", "components"}
 
 GEN_KINDS := [Gen_Kind]Gen_Kind_Info{
 	.Constant = {"constant", "Constant", {}, {{name = "value", default_ = 1, doc = "Every cell's value"}}, "The same value everywhere."},
@@ -214,7 +217,8 @@ GEN_KINDS := [Gen_Kind]Gen_Kind_Info{
 		{name = "empty", default_ = -1, doc = "The tile for cells no rule takes (-1 = none)", integer = true},
 		{name = "tile_w", default_ = 16, doc = "Tile width in the tileset (pixels): the tile picker and previews", integer = true},
 		{name = "tile_h", default_ = 16, doc = "Tile height in the tileset (pixels)", integer = true},
-	}, "Rules turn value ranges into tiles (a random one of each rule's tiles, the same for a seed); written into a TileMap - or, as IntGrid values, into an LDtk layer. With a Layer name, into the TileMap of that name next to the main one."},
+		{name = "writes", default_ = 0, choices = GEN_OUTPUT_WRITES, doc = "tiles: the map's tiles; components: its component layer - each rule's component painted on its cells (the tiles stay)"},
+	}, "Rules turn value ranges into tiles (a random one of each rule's tiles, the same for a seed); written into a TileMap - or, as IntGrid values, into an LDtk layer. With a Layer name, into the TileMap of that name next to the main one. Writes components: each rule paints a component on the map's component layer instead."},
 	.Scatter = {"scatter", "Scatter", {"in"}, {
 		{name = "chance", default_ = 0.05, doc = "Chance of a point on each allowed cell"},
 		{name = "spacing", default_ = 4, doc = "At least this many cells between points", integer = true},
@@ -246,6 +250,7 @@ Gen_Tile_Rule :: struct {
 	min, max: f32,
 	tiles:    [dynamic]i32,
 	terrain:  string, // instead of tiles: a terrain of the output's tileset (auto-tiled; the graph's allocator)
+	component: string, // an output that writes components: what the rule's cells get (a .component.json; the graph's allocator)
 }
 
 // A pattern rule (a tile output's; #171): where the 3x3 cells around a
@@ -401,11 +406,26 @@ Gen_NodeClearRules :: proc(n: ^Gen_Node, allocator := context.allocator) {
 	n.patterns = nil
 }
 
-// Gen_RuleFree: a tile rule's tiles and terrain name (allocator: the graph's).
+// Gen_RuleFree: a tile rule's tiles, terrain and component names (allocator:
+// the graph's).
 Gen_RuleFree :: proc(r: ^Gen_Tile_Rule, allocator := context.allocator) {
 	delete(r.tiles)
 	if r.terrain != "" do delete(r.terrain, allocator)
-	r.tiles, r.terrain = nil, ""
+	if r.component != "" do delete(r.component, allocator)
+	r.tiles, r.terrain, r.component = nil, "", ""
+}
+
+// Gen_RuleSetComponent: the component an output that writes components puts
+// on the rule's cells ("": none).
+Gen_RuleSetComponent :: proc(g: ^Gen_Graph, r: ^Gen_Tile_Rule, path: string) {
+	if r.component != "" do delete(r.component, g.allocator)
+	r.component = strings.clone(path, g.allocator) if path != "" else ""
+}
+
+// Gen_WritesComponents: a tile output that paints components on its map's
+// component layer (its `writes` parameter) instead of writing tiles.
+Gen_WritesComponents :: proc(n: ^Gen_Node) -> bool {
+	return n != nil && n.kind == .Tile_Output && int(Gen_Param(n, "writes")) == 1
 }
 
 // Gen_RuleSetTerrain: the rule's terrain ("": its tiles instead).
@@ -510,6 +530,7 @@ Gen_GraphParse :: proc(data: []u8, allocator := context.allocator) -> (g: Gen_Gr
 				if t, tok := json_number(ro["tile"]); tok do append(&r.tiles, i32(t))
 				if ts, tok := ro["tiles"].(json.Array); tok do for tv in ts do if t, isNum := json_number(tv); isNum do append(&r.tiles, i32(t))
 				if tn, tok := ro["terrain"].(json.String); tok && tn != "" do r.terrain = strings.clone(string(tn), allocator)
+				if cn, cok := ro["component"].(json.String); cok && cn != "" do r.component = strings.clone(string(cn), allocator)
 				append(&n.rules, r)
 			}
 		}
@@ -562,8 +583,13 @@ Gen_GraphSerialize :: proc(g: ^Gen_Graph, allocator := context.allocator) -> str
 		}
 		if len(info.params) > 0 {
 			strings.write_string(&w.sb, ", \"params\": {")
+			k := 0
 			for p, pi in info.params {
-				if pi > 0 do strings.write_string(&w.sb, ", ")
+				// (A tile output's `writes` only when it isn't tiles: graphs
+				// without component outputs save as before.)
+				if n.kind == .Tile_Output && p.name == "writes" && n.params[pi] == 0 do continue
+				if k > 0 do strings.write_string(&w.sb, ", ")
+				k += 1
 				Json_String(&w, p.name)
 				strings.write_string(&w.sb, ": ")
 				if len(p.choices) > 0 do Json_String(&w, p.choices[clamp(int(n.params[pi]), 0, len(p.choices) - 1)])
@@ -585,6 +611,10 @@ Gen_GraphSerialize :: proc(g: ^Gen_Graph, allocator := context.allocator) -> str
 				if r.terrain != "" {
 					strings.write_string(&w.sb, ", \"terrain\": ")
 					Json_String(&w, r.terrain)
+				}
+				if r.component != "" {
+					strings.write_string(&w.sb, ", \"component\": ")
+					Json_String(&w, r.component)
 				}
 				strings.write_byte(&w.sb, '}')
 			}
@@ -707,6 +737,7 @@ Gen_DuplicateNode :: proc(g: ^Gen_Graph, id: int, offset := [2]f32{30, 30}) -> ^
 		n.rules = make([dynamic]Gen_Tile_Rule, g.allocator)
 		for r in copied.rules {
 			c := Gen_Tile_Rule{min = r.min, max = r.max, tiles = make([dynamic]i32, g.allocator), terrain = strings.clone(r.terrain, g.allocator) if r.terrain != "" else ""}
+			if r.component != "" do c.component = strings.clone(r.component, g.allocator)
 			append(&c.tiles, ..r.tiles[:])
 			append(&n.rules, c)
 		}
@@ -841,9 +872,11 @@ Gen_Connect :: proc(g: ^Gen_Graph, dst: int, port: int, src: int) -> bool {
 	return true
 }
 
-// Gen_OutputNode: the node whose grid is the graph's result.
+// Gen_OutputNode: the node whose grid is the graph's result (by default the
+// last tile output that writes tiles, else the last tile output).
 Gen_OutputNode :: proc(g: ^Gen_Graph) -> ^Gen_Node {
 	if g.output != 0 do if n := Gen_FindNode(g, g.output); n != nil do return n
+	#reverse for &n in g.nodes do if n.kind == .Tile_Output && !Gen_WritesComponents(&n) do return &n
 	#reverse for &n in g.nodes do if n.kind == .Tile_Output do return &n
 	return &g.nodes[len(g.nodes) - 1] if len(g.nodes) > 0 else nil
 }
@@ -860,11 +893,12 @@ Gen_ApplyTileMap :: proc(g: ^Gen_Graph, tm: ^TileMapNode, seed: u64 = 0, ctx: ^G
 
 // Gen_ApplyResult writes a generated level into a tile map (tiles,
 // colliders) - and each layer into the TileMap of its name next to it (a
-// sibling, or a child) - and spawns its entities under it (those of the
-// last generation go first). A layer without its TileMap is an error (the
-// rest is written).
+// sibling, or a child) - paints the components of outputs that write them
+// on their maps' component layers, and spawns its entities under it (those
+// of the last generation go first). A layer without its TileMap is an
+// error (the rest is written).
 Gen_ApplyResult :: proc(r: ^Gen_Result, tm: ^TileMapNode, ctx: ^GameContext = nil, scene: ^Scene = nil) -> string {
-	gen_apply_tiles(tm, r.tiles, r.size, ctx)
+	if r.tiles != nil do gen_apply_tiles(tm, r.tiles, r.size, ctx)
 	missing := ""
 	for ly in r.layers {
 		target := Gen_LayerTileMap(tm, ly.name)
@@ -875,12 +909,46 @@ Gen_ApplyResult :: proc(r: ^Gen_Result, tm: ^TileMapNode, ctx: ^GameContext = ni
 		gen_apply_tiles(target, ly.tiles, r.size, ctx)
 	}
 
-	// Entities: children of the map, at their cells' centres; those of the
-	// last generation go first.
 	sc := scene
 	if sc == nil && ctx != nil do sc = ctx.scene if ctx.scene != nil else (ctx.game.sceneManager.currentScene if ctx.game != nil else nil)
 	if sc == nil do return missing
-	for c in GetChildrenTemp(sc.manager, tm) do if c != nil && !c.removing && Node_HasTag(c, GEN_ENTITY_TAG) do RemoveNode(sc.manager, c)
+	// What the last generation placed goes: the main map's entities and
+	// components, and the components of the maps outputs paint on.
+	clear_generated :: proc(m: ^NodeManager, target: ^TileMapNode) {
+		for c in GetChildrenTemp(m, target) do if c != nil && !c.removing && Node_HasTag(c, GEN_ENTITY_TAG) do RemoveNode(m, c)
+	}
+	clear_generated(sc.manager, tm)
+	if len(r.components) > 0 {
+		// Components, by map (in the order the outputs come).
+		Group :: struct {target: ^TileMapNode, items: [dynamic]Tile_Component_Place}
+		groups := make([dynamic]Group, context.temp_allocator)
+		for pc in r.components {
+			target := tm if pc.layer == "" else Gen_LayerTileMap(tm, pc.layer)
+			if target == nil {
+				if missing == "" do missing = fmt.tprintf("no TileMap %q next to %s for its layer", pc.layer, tm.name)
+				continue
+			}
+			gi := -1
+			for gr, i in groups do if gr.target == target do gi = i
+			if gi < 0 {
+				if target != tm do clear_generated(sc.manager, target)
+				append(&groups, Group{target, make([dynamic]Tile_Component_Place, context.temp_allocator)})
+				gi = len(groups) - 1
+			}
+			append(&groups[gi].items, Tile_Component_Place{pc.component, pc.cell})
+		}
+		for gr in groups {
+			if gr.target.mapSize.x < r.size.x || gr.target.mapSize.y < r.size.y {
+				// (A map whose tiles stay: at least the level's size.)
+				gr.target.mapSize = {max(gr.target.mapSize.x, r.size.x), max(gr.target.mapSize.y, r.size.y)}
+			}
+			placed, perr := TileMapNode_PlaceComponents(gr.target, gr.items[:], sc, ctx)
+			for n in placed do Node_AddTag(n, GEN_ENTITY_TAG)
+			if perr != "" && missing == "" do missing = perr
+		}
+	}
+
+	// Entities: children of the map, at their cells' centres.
 	for en in r.entities {
 		n := Scene_InstantiateComponent(sc, en.component, tm, ctx)
 		if n == nil do return fmt.tprintf("no component %s", en.component)

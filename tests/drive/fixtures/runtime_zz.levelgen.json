@@ -1,0 +1,6 @@
+{"size": [16, 10], "seed": 2, "output": 2, "nodes": [
+  {"id": 1, "type": "border", "params": {"width": 1}, "pos": [0, 0]},
+  {"id": 2, "type": "tile_output", "inputs": {"in": 1}, "params": {"tile_w": 16, "tile_h": 16}, "rules": [{"min": 0.5, "max": 1, "tiles": [1]}], "tileset": "textures/Tiles.png", "pos": [220, 0]},
+  {"id": 3, "type": "rect", "params": {"x": 4, "y": 4, "w": 2, "h": 2}, "pos": [0, 160]},
+  {"id": 4, "type": "tile_output", "inputs": {"in": 3}, "rules": [{"min": 0.5, "max": 1, "tiles": [2]}], "pos": [220, 160]}
+]}
