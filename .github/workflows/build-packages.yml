@@ -1,0 +1,182 @@
+# Builds the release packages of one commit - called by release.yml (which
+# publishes them) and install-check.yml (which installs them on fresh
+# machines, #330) - and uploads them as artifacts:
+#   1. the runners on each platform (macOS, Linux, Windows), the web runner
+#      and the Android runner (runners-<platform>);
+#   2. the editor packaged on each platform with every platform's runners in
+#      it (any editor exports every desktop target, the web and Android), as
+#      users download it (scripts/ci/archive_editor.sh): editor-macos (.dmg),
+#      editor-linux (.tar.gz, .AppImage, .deb), editor-windows (.zip).
+# Signing: macOS packages are ad-hoc signed unless the caller passes the
+# MACOS_* secrets (Developer ID + notarization: TODO C.4); Windows ones are
+# unsigned unless WINDOWS_CERTIFICATE is passed (TODO C.5).
+# Every third-party action is pinned to a commit (its tag in the comment).
+name: Build packages
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: "The version the packages say they are (RAYZR_RELEASE)"
+        required: true
+        type: string
+      sha:
+        description: "The commit to build"
+        required: true
+        type: string
+    secrets:
+      MACOS_CERTIFICATE: { required: false }
+      MACOS_CERTIFICATE_PASSWORD: { required: false }
+      MACOS_SIGNING_IDENTITY: { required: false }
+      MACOS_NOTARY_APPLE_ID: { required: false }
+      MACOS_NOTARY_TEAM_ID: { required: false }
+      MACOS_NOTARY_PASSWORD: { required: false }
+      WINDOWS_CERTIFICATE: { required: false }
+      WINDOWS_CERTIFICATE_PASSWORD: { required: false }
+
+permissions:
+  contents: read
+
+env:
+  ODIN_RELEASE: dev-2026-03
+  APP_NAME: Rayzr Editor
+
+jobs:
+  runners:
+    name: Runner (${{ matrix.platform }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - { os: macos-15, platform: macos }
+          - { os: ubuntu-22.04, platform: linux }
+          - { os: windows-2022, platform: windows }
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ inputs.sha }}
+      - run: git submodule update --init --depth 1 ui odin_editor ldtk
+      - uses: laytan/setup-odin@8536d8fa450ec6f1bd9ddc84bbaaf16296c0051d # v2.12.2
+        with:
+          release: ${{ env.ODIN_RELEASE }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
+      - run: scripts/ci/setup_deps.sh
+      - run: scripts/build_runners.sh -define:RAYZR_RELEASE=${{ inputs.version }}
+      # (A tarball: artifacts lose the executable bit.)
+      - run: tar -C bin/runners -czf runners-${{ matrix.platform }}.tar.gz ${{ matrix.platform }}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: runners-${{ matrix.platform }}
+          path: runners-${{ matrix.platform }}.tar.gz
+
+  web-runner:
+    name: Runner (web)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ inputs.sha }}
+      - run: git submodule update --init --depth 1 ui odin_editor ldtk
+      - uses: laytan/setup-odin@8536d8fa450ec6f1bd9ddc84bbaaf16296c0051d # v2.12.2
+        with:
+          release: ${{ env.ODIN_RELEASE }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: mymindstorm/setup-emsdk@6ab9eb1bda2574c4ddb79809fc9247783eaf9021 # v14
+      - run: scripts/build_web_runner.sh -define:RAYZR_RELEASE=${{ inputs.version }}
+      - run: tar -C bin/runners -czf runners-web.tar.gz web
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: runners-web
+          path: runners-web.tar.gz
+
+  android-runner:
+    name: Runner (Android)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ inputs.sha }}
+      - run: git submodule update --init --depth 1 ui odin_editor ldtk
+      - uses: laytan/setup-odin@8536d8fa450ec6f1bd9ddc84bbaaf16296c0051d # v2.12.2
+        with:
+          release: ${{ env.ODIN_RELEASE }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - run: scripts/build_android_runner.sh -define:RAYZR_RELEASE=${{ inputs.version }}
+      - run: tar -C bin/runners -czf runners-android.tar.gz android
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: runners-android
+          path: runners-android.tar.gz
+
+  package:
+    name: Editor (${{ matrix.platform }})
+    needs: [runners, web-runner, android-runner]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - { os: macos-15, platform: macos }
+          - { os: ubuntu-22.04, platform: linux }
+          - { os: windows-2022, platform: windows }
+    defaults:
+      run:
+        shell: bash
+    env:
+      VERSION: ${{ inputs.version }}
+      # (Secrets can't be tested in a step's `if`: flags.)
+      HAS_MACOS_CERT: ${{ secrets.MACOS_CERTIFICATE != '' }}
+      HAS_WINDOWS_CERT: ${{ secrets.WINDOWS_CERTIFICATE != '' }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ inputs.sha }}
+      - run: git submodule update --init --depth 1 ui odin_editor ldtk
+      - uses: laytan/setup-odin@8536d8fa450ec6f1bd9ddc84bbaaf16296c0051d # v2.12.2
+        with:
+          release: ${{ env.ODIN_RELEASE }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
+      - run: scripts/ci/setup_deps.sh
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: runners-*
+          path: runner-archives
+          merge-multiple: true
+      - name: Every platform's runners
+        run: |
+          mkdir -p bin/runners
+          for a in runner-archives/*.tar.gz; do tar -C bin/runners -xzf "$a"; done
+          ls bin/runners
+      - run: scripts/ci/fetch_luals.sh
+      - run: scripts/package_editor.sh --out dist --version "$VERSION" --name "$APP_NAME"
+
+      - name: Sign and notarize (macOS, with a Developer ID)
+        if: runner.os == 'macOS' && env.HAS_MACOS_CERT == 'true'
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+          MACOS_SIGNING_IDENTITY: ${{ secrets.MACOS_SIGNING_IDENTITY }}
+          MACOS_NOTARY_APPLE_ID: ${{ secrets.MACOS_NOTARY_APPLE_ID }}
+          MACOS_NOTARY_TEAM_ID: ${{ secrets.MACOS_NOTARY_TEAM_ID }}
+          MACOS_NOTARY_PASSWORD: ${{ secrets.MACOS_NOTARY_PASSWORD }}
+        run: scripts/ci/sign_macos.sh "dist/$APP_NAME.app"
+
+      - name: Sign (Windows, with a code-signing certificate)
+        if: runner.os == 'Windows' && env.HAS_WINDOWS_CERT == 'true'
+        env:
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        run: scripts/ci/sign_windows.sh dist/rayzr-editor-windows
+
+      - name: Archive
+        run: scripts/ci/archive_editor.sh "$VERSION" dist "$APP_NAME"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: editor-${{ matrix.platform }}
+          path: rayzr-editor-*

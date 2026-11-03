@@ -1,0 +1,21 @@
+# Install check, part 2 (scripts/ci/install_check.sh, #330): the installed
+# editor on the project install_create.drive made (its export targets set by
+# the script): Play runs the bundled runner (nothing built), then Export
+# writes every target with the bundled runners. The script then runs the
+# exports.
+wait 5
+screenshot opened
+game-args --frames 60 --dump-scene $SHOTS/played.json
+click @toolbar.play
+wait-until game == stopped timeout=900
+expect abs-file:$SHOTS/played.json contains "TileMapNode"
+expect log !contains Building game
+
+click @toolbar.settings
+click @settings.page:Export
+screenshot export_settings
+click @settings.export-now
+wait 10
+expect log contains Standalone game ready
+expect log !contains building it once
+key escape

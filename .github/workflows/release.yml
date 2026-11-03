@@ -4,11 +4,13 @@
 #     pre-release tagged on that commit (VERSION: the next release);
 #   - a release when a version tag is pushed (v1.2.3, v0.4.0-beta.1) - then
 #     bump VERSION so the dev builds after it sort above it.
-# Each one builds:
+# Each one builds (build-packages.yml - the install checks build the same,
+# install-check.yml):
 #   1. the runners on each platform (macOS, Linux, Windows), the web runner
 #      and the Android runner;
 #   2. the editor packaged on each platform with every platform's runners in
 #      it (any editor exports every desktop target and the web);
+# then publishes:
 #   3. a GitHub Release with the packages and their SHA-256 checksums
 #      (a pre-release when the version has a suffix, e.g. -beta.1);
 #   4. the website: the packages uploaded to its downloads (R2; the newest 3
@@ -44,10 +46,6 @@ permissions:
 concurrency:
   group: release-${{ github.event.workflow_run.head_sha || github.sha }}
 
-env:
-  ODIN_RELEASE: dev-2026-03
-  APP_NAME: Rayzr Editor
-
 jobs:
   version:
     runs-on: ubuntu-22.04
@@ -59,7 +57,7 @@ jobs:
       sha: ${{ steps.v.outputs.sha }}
       publish: ${{ steps.v.outputs.publish }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
           fetch-depth: 0 # (the commit count, the tags)
@@ -94,176 +92,31 @@ jobs:
           case "$v" in *-*) echo "prerelease=true" >> "$GITHUB_OUTPUT" ;; *) echo "prerelease=false" >> "$GITHUB_OUTPUT" ;; esac
           echo "Version: $v ($(git rev-parse --short HEAD))"
 
-  runners:
-    name: Runner (${{ matrix.platform }})
+  # The packages (build-packages.yml, also run by install-check.yml):
+  # editor-macos, editor-linux, editor-windows artifacts.
+  packages:
+    name: Packages
     needs: version
     if: needs.version.outputs.version != ''
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - { os: macos-15, platform: macos }
-          - { os: ubuntu-22.04, platform: linux }
-          - { os: windows-2022, platform: windows }
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ needs.version.outputs.sha }}
-      - run: git submodule update --init --depth 1 ui odin_editor ldtk
-      - uses: laytan/setup-odin@v2
-        with:
-          release: ${{ env.ODIN_RELEASE }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - if: runner.os == 'Windows'
-        uses: ilammy/msvc-dev-cmd@v1
-      - run: scripts/ci/setup_deps.sh
-      - run: scripts/build_runners.sh -define:RAYZR_RELEASE=${{ needs.version.outputs.version }}
-      # (A tarball: artifacts lose the executable bit.)
-      - run: tar -C bin/runners -czf runners-${{ matrix.platform }}.tar.gz ${{ matrix.platform }}
-      - uses: actions/upload-artifact@v4
-        with:
-          name: runners-${{ matrix.platform }}
-          path: runners-${{ matrix.platform }}.tar.gz
-
-  web-runner:
-    name: Runner (web)
-    needs: version
-    if: needs.version.outputs.version != ''
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ needs.version.outputs.sha }}
-      - run: git submodule update --init --depth 1 ui odin_editor ldtk
-      - uses: laytan/setup-odin@v2
-        with:
-          release: ${{ env.ODIN_RELEASE }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: mymindstorm/setup-emsdk@v14
-      - run: scripts/build_web_runner.sh -define:RAYZR_RELEASE=${{ needs.version.outputs.version }}
-      - run: tar -C bin/runners -czf runners-web.tar.gz web
-      - uses: actions/upload-artifact@v4
-        with:
-          name: runners-web
-          path: runners-web.tar.gz
-
-  android-runner:
-    name: Runner (Android)
-    needs: version
-    if: needs.version.outputs.version != ''
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ needs.version.outputs.sha }}
-      - run: git submodule update --init --depth 1 ui odin_editor ldtk
-      - uses: laytan/setup-odin@v2
-        with:
-          release: ${{ env.ODIN_RELEASE }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - run: scripts/build_android_runner.sh -define:RAYZR_RELEASE=${{ needs.version.outputs.version }}
-      - run: tar -C bin/runners -czf runners-android.tar.gz android
-      - uses: actions/upload-artifact@v4
-        with:
-          name: runners-android
-          path: runners-android.tar.gz
-
-  package:
-    name: Editor (${{ matrix.platform }})
-    needs: [version, runners, web-runner, android-runner]
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - { os: macos-15, platform: macos }
-          - { os: ubuntu-22.04, platform: linux }
-          - { os: windows-2022, platform: windows }
-    defaults:
-      run:
-        shell: bash
-    env:
-      VERSION: ${{ needs.version.outputs.version }}
-      # (Secrets can't be tested in a step's `if`: flags.)
-      HAS_MACOS_CERT: ${{ secrets.MACOS_CERTIFICATE != '' }}
-      HAS_WINDOWS_CERT: ${{ secrets.WINDOWS_CERTIFICATE != '' }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ needs.version.outputs.sha }}
-      - run: git submodule update --init --depth 1 ui odin_editor ldtk
-      - uses: laytan/setup-odin@v2
-        with:
-          release: ${{ env.ODIN_RELEASE }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - if: runner.os == 'Windows'
-        uses: ilammy/msvc-dev-cmd@v1
-      - run: scripts/ci/setup_deps.sh
-      - uses: actions/download-artifact@v4
-        with:
-          pattern: runners-*
-          path: runner-archives
-          merge-multiple: true
-      - name: Every platform's runners
-        run: |
-          mkdir -p bin/runners
-          for a in runner-archives/*.tar.gz; do tar -C bin/runners -xzf "$a"; done
-          ls bin/runners
-      - run: scripts/ci/fetch_luals.sh
-      - run: scripts/package_editor.sh --out dist --version "$VERSION" --name "$APP_NAME"
-
-      - name: Sign and notarize (macOS, with a Developer ID)
-        if: runner.os == 'macOS' && env.HAS_MACOS_CERT == 'true'
-        env:
-          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
-          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
-          MACOS_SIGNING_IDENTITY: ${{ secrets.MACOS_SIGNING_IDENTITY }}
-          MACOS_NOTARY_APPLE_ID: ${{ secrets.MACOS_NOTARY_APPLE_ID }}
-          MACOS_NOTARY_TEAM_ID: ${{ secrets.MACOS_NOTARY_TEAM_ID }}
-          MACOS_NOTARY_PASSWORD: ${{ secrets.MACOS_NOTARY_PASSWORD }}
-        run: scripts/ci/sign_macos.sh "dist/$APP_NAME.app"
-
-      - name: Sign (Windows, with a code-signing certificate)
-        if: runner.os == 'Windows' && env.HAS_WINDOWS_CERT == 'true'
-        env:
-          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
-          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
-        run: scripts/ci/sign_windows.sh dist/rayzr-editor-windows
-
-      - name: Archive
-        run: |
-          base="rayzr-editor-$VERSION-${{ matrix.platform }}"
-          case "${{ matrix.platform }}" in
-            macos)   hdiutil create -volname "$APP_NAME" -srcfolder "dist/$APP_NAME.app" -ov -format UDZO "$base.dmg" ;;
-            linux)
-              tar -C dist -czf "$base.tar.gz" rayzr-editor-linux
-              scripts/ci/appimage_editor.sh "$VERSION" dist
-              mv "dist/Rayzr_Editor-$VERSION-x86_64.AppImage" "$base-x86_64.AppImage"
-              scripts/ci/deb_editor.sh "$VERSION" dist
-              mv dist/rayzr-editor_*_amd64.deb "$base-amd64.deb" ;;
-            windows) (cd dist && 7z a -bd "../$base.zip" rayzr-editor-windows > /dev/null) ;;
-          esac
-          ls -la rayzr-editor-*
-      - uses: actions/upload-artifact@v4
-        with:
-          name: editor-${{ matrix.platform }}
-          path: rayzr-editor-*
+    uses: ./.github/workflows/build-packages.yml
+    with:
+      version: ${{ needs.version.outputs.version }}
+      sha: ${{ needs.version.outputs.sha }}
+    secrets: inherit
 
   publish:
     name: GitHub Release
-    needs: [version, package]
+    needs: [version, packages]
     if: needs.version.outputs.publish == 'true'
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           pattern: editor-*
           path: release
           merge-multiple: true
       - run: (cd release && sha256sum rayzr-editor-* > SHA256SUMS.txt && cat SHA256SUMS.txt)
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
           # (A dev build's tag is made here, on its commit.)
           tag_name: v${{ needs.version.outputs.version }}
@@ -276,12 +129,12 @@ jobs:
       # The website's downloads (https://rayzr.app/download): the packages on
       # R2 (downloads.rayzr.app), the newest 3 releases and the latest dev
       # build kept (scripts/ci/publish_r2.py).
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           ref: ${{ needs.version.outputs.sha }}
           path: src
           sparse-checkout: scripts/ci
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: "3.12"
       - name: Publish to the website's downloads (R2)
