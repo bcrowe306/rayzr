@@ -369,3 +369,53 @@ test_level_gen_generated_global_positions :: proc(t: ^testing.T) {
 	testing.expect_value(t, seen.placed, 4)
 	testing.expectf(t, seen.wrong == 0, "global positions composed before generated (%d wrong)", seen.wrong)
 }
+
+// #356: when "generated" fires after a regeneration, the previous level's
+// entities (queued for removal at the end of the frame) aren't found.
+@(test)
+test_level_gen_generated_old_level_gone :: proc(t: ^testing.T) {
+	game, scene := lgr_game()
+	defer os.remove_all(LGR_DIR)
+	defer game->terminate()
+	ctx := &game.gameContext
+	_ = os.write_entire_file(LGR_DIR + "/levels/coins.levelgen.json", transmute([]u8)string(`{"size": [10, 4], "nodes": [
+		{"id": 1, "type": "rect", "params": {"x": 0, "y": 3, "w": 10, "h": 1}},
+		{"id": 2, "type": "surface", "inputs": {"in": 1}},
+		{"id": 3, "type": "entity_output", "inputs": {"in": 2}, "params": {"max": 4}, "component": "components/coin.component.json"},
+		{"id": 4, "type": "tile_output", "inputs": {"in": 1}, "rules": [{"min": 0.5, "max": 1, "tile": 2}]}]}`))
+	_ = os.write_entire_file(LGR_DIR + "/components/coin.component.json", transmute([]u8)string(`{"type": "Node", "name": "Coin", "tags": ["coin"]}`))
+	lgr_node(scene, ctx, "levels/coins.levelgen.json")
+
+	L := game.scriptManager.L
+	code := `
+local gen = Scene.find_node("Gen")
+gen:connect("generated", function()
+	tagged = #Scene.find_by_tag("levelgen")
+	local n = 0
+	for _, c in ipairs(Scene.find_node("Ground"):get_children()) do if c:has_tag("levelgen") then n = n + 1 end end
+	children = n
+	local all = 0
+	for _, c in ipairs(Scene.get_nodes()) do if c:has_tag("levelgen") then all = all + 1 end end
+	nodes = all
+end)
+gen:levelgen_generate(1)
+first = tagged
+gen:levelgen_generate(2) -- (no end of frame between)
+`
+	res := lua.L_dostring(L, strings.clone_to_cstring(code, context.temp_allocator))
+	testing.expectf(t, res == 0, "lua: %s", lua.tostring(L, -1) if res != 0 else "")
+	get :: proc(L: ^lua.State, name: cstring) -> int {
+		lua.getglobal(L, name)
+		defer lua.pop(L, 1)
+		return int(lua.tointeger(L, -1))
+	}
+	testing.expect_value(t, get(L, "first"), 4)
+	testing.expectf(t, get(L, "tagged") == 4, "find_by_tag: only the new level's (%d)", get(L, "tagged"))
+	testing.expectf(t, get(L, "children") == 4, "get_children: only the new level's (%d)", get(L, "children"))
+	testing.expectf(t, get(L, "nodes") <= 4, "get_nodes: not the old level's (%d)", get(L, "nodes"))
+	testing.expect_value(t, len(Scene_FindByTag(scene, GEN_ENTITY_TAG)), 4)
+	for n in scene.manager.nodes do if n != nil && n.removing && n.name == "Coin" {
+		testing.expect(t, Scene_FindNodeByName(scene, "Coin") != n, "find_node: not a removed coin")
+		break
+	}
+}
