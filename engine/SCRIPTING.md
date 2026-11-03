@@ -1013,7 +1013,7 @@ rather than re-pathing every frame.
   are large: new joints default to 5,000,000.
 - **One Way** on a StaticBody: bodies pass through from below and land on
   top ("top" turns with the node). LDtk one-way colliders use the same.
-- **Collision layers** can be named in Project Settings > Physics; shapes
+- **Collision layers** can be named in Project Settings > General > Collision Layers; shapes
   list them by name, and scripts use them:
   ```lua
   self.node:set_collision_layer("Player")
@@ -1576,7 +1576,7 @@ Guide with tutorials: [`docs/advanced_camera.md`](docs/advanced_camera.md).
 Physics.set_gravity(0.0, 500.0)
 local gx, gy = Physics.get_gravity()
 Physics.set_paused(false)
-Physics.set_debug_draw(false)   -- hide colliders / joints / areas (Project Settings > Physics: Show Colliders)
+Physics.set_debug_draw(false)   -- hide colliders / joints / areas (Project Settings > General > Physics: Show Colliders)
 
 -- Cast ray across world coordinates
 local hit = Physics.raycast(100.0, 100.0, 100.0, 600.0)

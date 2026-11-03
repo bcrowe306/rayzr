@@ -34,7 +34,7 @@ Use it for the ground, walls, ceilings, ledges and any solid scenery.
 4. Add a sprite (or a nine-slice) as a child to draw it.
 5. Collision layers decide what collides with it: each shape's
    **Category Layers** are the layers it's on, its **Mask Layers** the
-   layers it collides with. Name the layers in Project Settings > Physics.
+   layers it collides with. Name the layers in Project Settings > General > Collision Layers.
 6. For a jump-through platform, tick **One Way**.
 
 ## How it works

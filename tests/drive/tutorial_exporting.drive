@@ -59,6 +59,8 @@ wait 10
 expect log contains Exported Web (web):
 expect abs-file:$PROJECT_standalone/Web/index.html contains <title>Gem Clicker (web)</title>
 expect abs-file:$PROJECT_standalone/Web/index.html contains odin.js
+expect abs-file:$PROJECT_standalone/Web/index.html contains <link rel="icon" href="favicon.png">
+exec test -s $PROJECT_standalone/Web/favicon.png
 wait 3
 click @menu:File
 click @menu:File/Export

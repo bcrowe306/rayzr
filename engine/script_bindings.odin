@@ -2431,7 +2431,7 @@ lua_physics_raycast :: proc "c" (L: ^lua.State) -> c.int {
 	filter := b2.DefaultQueryFilter()
 	if after <= lua.gettop(L) && !lua.isnil(L, after) {
 		set, valid := layers_arg(L, after)
-		if !valid do lua.L_error(L, "unknown collision layer (names from Project Settings > Physics, or 1-16)")
+		if !valid do lua.L_error(L, "unknown collision layer (names from Project Settings > General > Collision Layers, or 1-16)")
 		filter.maskBits = CollisionLayerSet_ToBits(set)
 	}
 	_ = b2.World_CastRay(sm.game.physicsWorld.worldId, origin, translation, filter, world_raycast_callback, &query)
@@ -3627,7 +3627,7 @@ set_layers :: proc(L: ^lua.State, mask: bool) -> c.int {
 	node, ok := to_node_userdata(L, 1)
 	if !ok do return 0
 	set, valid := layers_arg(L, 2)
-	if !valid do lua.L_error(L, "unknown collision layer (names from Project Settings > Physics, or 1-16)")
+	if !valid do lua.L_error(L, "unknown collision layer (names from Project Settings > General > Collision Layers, or 1-16)")
 	if node.typeId == CharacterMoverNode {
 		cm := cast(^CharacterMoverNode)node
 		if mask do cm.maskLayers = set

@@ -188,7 +188,7 @@ Toolbar_PlayControls :: proc(state: ^EditorState, width: f32) {
 			Editor_PlayGameProcess(state, .CurrentScene)
 		}
 	}
-	// Show Colliders in the game (Project Settings > Physics); also switches
+	// Show Colliders in the game (Project Settings > General > Physics); also switches
 	// a running game.
 	if !state.buildRunning {
 		imgui.SameLine()

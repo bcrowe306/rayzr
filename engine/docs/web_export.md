@@ -35,6 +35,8 @@ HTML project, tick "This file will be played in the browser".
   like the desktop runner.
 - **Saves** (`Save.*`, input bindings, accessibility settings) go to
   `/save`, kept in the browser's IndexedDB - they survive reloads, per site.
+  `Save` data is written on `Save.flush()` and when the tab is hidden; the
+  page copies `/save` to IndexedDB every 2 seconds and on hiding.
 - Keyboard, mouse, gamepads (the browser's Gamepad API), audio (all
   formats, the mixer and its effects), Lua scripts, physics, shaders
   (materials, post effects, lighting - converted to WebGL 2's GLSL ES 300),

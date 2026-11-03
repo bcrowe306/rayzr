@@ -31,8 +31,9 @@ User plugins (every project) go in `~/.config/rayzr_editor/plugins/<id>/`
 - **An error stops only your plugin** (shown in Settings > Plugins and the
   console); fix and save to restart it.
 - **A panel's `draw` runs every frame**: cache what's expensive (walking the
-  scene, reading files) and redo it on an event or a button. Slow panels
-  (over 4 ms) are flagged in Settings > Plugins.
+  scene, reading files) and redo it on an event or a button. A panel whose
+  `draw` takes over 4 ms is noted once in its plugin's **Log** (Settings >
+  Plugins).
 - **Dialogs are async**: `Editor.prompt`, `Editor.confirm`,
   `Editor.pick_file`, `Editor.run` and `Editor.http` call you back later.
   Capture what you need (`local nodes = Editor.selection()`) before asking.

@@ -67,6 +67,6 @@ em++ -o "$OUT/index.html" "$BUILD/game.wasm.o" \
 	-O2 -sUSE_GLFW=3 -sUSE_ZLIB=1 -sWARN_ON_UNDEFINED_SYMBOLS=0 -sALLOW_MEMORY_GROWTH=1 \
 	-sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2 -sSTACK_SIZE=2MB \
 	-sFORCE_FILESYSTEM=1 -lidbfs.js -sEXPORTED_RUNTIME_METHODS=FS,IDBFS,HEAPF32,HEAP8,HEAPU8,HEAP16,HEAPU16,HEAP32,HEAPU32 \
-	-sEXPORTED_FUNCTIONS=_main_start,_main_start_test,_main_update,_main_resize,_malloc,_free
+	-sEXPORTED_FUNCTIONS=_main_start,_main_start_test,_main_update,_main_resize,_main_flush_saves,_malloc,_free
 echo "Web runner: $OUT"
 ls -la "$OUT"
