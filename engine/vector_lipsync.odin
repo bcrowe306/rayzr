@@ -134,27 +134,36 @@ LipSyncNode_Create :: proc(scene: ^Scene, name: string = "LipSync", parent: ^Nod
 	return l
 }
 
-// lip_cue_path: where a sound's cues are - `cues`, else the sound's .json /
-// .tsv / .txt beside it.
+// lip_read_cues: a sound's cues - `cues`, else the sound's .json / .tsv /
+// .txt beside it - from the game's package (an exported game, the web,
+// Android) or the disk.
 @(private = "file")
-lip_cue_path :: proc(l: ^LipSyncNode, sound: string) -> string {
-	if l.cues != "" do return Project_ResolveAssetPath(l.gameContext, l.cues)
-	full := Project_ResolveAssetPath(l.gameContext, sound)
-	stem := strings.trim_suffix(full, filepath.ext(full))
-	for ext in ([]string{".json", ".tsv", ".txt"}) {
-		p := strings.concatenate({stem, ext}, context.temp_allocator)
-		if os.is_file(p) do return p
+lip_read_cues :: proc(l: ^LipSyncNode, sound: string) -> (string, bool) {
+	paths := make([dynamic]string, context.temp_allocator)
+	if l.cues != "" {
+		append(&paths, l.cues)
+	} else {
+		stem := strings.trim_suffix(sound, filepath.ext(sound))
+		for ext in ([]string{".json", ".tsv", ".txt"}) do append(&paths, strings.concatenate({stem, ext}, context.temp_allocator))
 	}
-	return ""
+	gc := l.gameContext
+	for p in paths {
+		if gc != nil && gc.game != nil {
+			if b, ok := AssetManager_ReadFileBytes(&gc.game.assetManager, p, context.temp_allocator); ok do return string(b), true
+		}
+		full := Project_ResolveAssetPath(gc, p)
+		if os.is_file(full) {
+			if data, err := os.read_entire_file(full, context.temp_allocator); err == nil do return string(data), true
+		}
+	}
+	return "", false
 }
 
 // LipSyncNode_LoadCues reads a sound's cues; false when there are none.
 LipSyncNode_LoadCues :: proc(l: ^LipSyncNode, sound: string) -> bool {
-	path := lip_cue_path(l, sound)
-	if path == "" do return false
-	data, err := os.read_entire_file(path, context.temp_allocator)
-	if err != nil do return false
-	return Lip_ParseCues(string(data), &l.cueList)
+	text, ok := lip_read_cues(l, sound)
+	if !ok do return false
+	return Lip_ParseCues(text, &l.cueList)
 }
 
 // LipSyncNode_Play plays a voice and moves the mouth with its cues.
