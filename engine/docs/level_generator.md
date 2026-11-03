@@ -24,9 +24,29 @@ the game, the Lua module and the **Level Generator** window in the editor.
   drag from a node's **output** (the green dot on its right) onto another's
   **input** (a dot on its left) to connect them - a link that would make a
   loop is refused; right-click an input to disconnect it. Right-click the
-  canvas to add a node; right-click a node to duplicate it, delete it or
-  use it as the output. Delete removes the selected node. The wheel pans,
-  Ctrl/Cmd+wheel zooms, F frames everything.
+  canvas to add a node; right-click a node to copy, duplicate or delete it,
+  frame it or use it as the output. The wheel pans, Ctrl/Cmd+wheel zooms,
+  F frames everything.
+- **Searching for a node**: the add menu opens with a search field. Type
+  part of a node's name to filter every type (built-in, Lua Script and
+  types registered from Odin); **Enter** adds the first match.
+- **Several nodes**: Shift+click or Cmd/Ctrl+click adds a node to the
+  selection or takes it out, and dragging a box on the empty canvas selects
+  the nodes it touches (Shift: adds them). Ctrl/Cmd+A selects every node.
+  Dragging one selected node moves them all; Delete removes them.
+- **Copy and paste**: Ctrl/Cmd+C copies the selected nodes, with the links
+  between them; links to nodes you didn't copy are dropped. Ctrl/Cmd+V
+  pastes them at the mouse, with new ids, into this generator or another
+  one you open. The copy is also on the system clipboard (as JSON), so it
+  pastes in a later editor session too. Ctrl/Cmd+D duplicates the
+  selection beside itself without touching the clipboard.
+- **Comment frames**: a titled, coloured box to group nodes. **Frame
+  Selection** (a node's menu) or the toolbar's frame button puts one around
+  the selected nodes; **Add Frame** (the canvas's menu) adds an empty one.
+  Drag its title bar to move it with the nodes inside it (a node is inside
+  when its middle is), and its bottom-right corner to resize it. Click its
+  title bar to set the title and colour in the side panel; Delete or
+  right-click > **Delete Frame** removes the frame and keeps the nodes.
 - **The side panel**: the level's **size**, **seed** (the dice picks a new
   one) and **output**; the selected node's parameters and, for a tile
   output, its **Tileset** (the picture its tile numbers count in; the grid
@@ -37,7 +57,8 @@ the game, the Lua module and the **Level Generator** window in the editor.
   **preview** of the selected node (or the output). A tile output with a
   tileset previews with its real tiles.
 - **The toolbar**: **Save** (Ctrl/Cmd+S), **Undo** / **Redo**
-  (Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z: every change), and **Apply to TileMap**,
+  (Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z: every change, including pastes and
+  frames), **Copy**, **Paste** and **Frame**, and **Apply to TileMap**,
   which writes the level into the TileMap selected in the scene - baked
   into the scene to paint over by hand; the scene's undo takes it back.
 
@@ -117,6 +138,7 @@ grass (tile 1) and deeper ones dirt (tile 2); above stays empty.
 | `seed` | The default seed (scripts can pass another). |
 | `output` | The id of the node whose result is the level (default: the last tile output). |
 | `nodes` | Each with an `id` (a positive number), its `type`, `inputs` (port -> id of the node it reads), `params` (missing ones take their defaults), and for the tile output `rules`; `pos` is where the editor draws it. |
+| `frames` | Optional: the editor's comment frames, each with a `title`, `pos` and `size` (canvas units) and `color` (`[r, g, b, a]`, 0-1). Generation ignores them. |
 
 Every port carries a grid of numbers the size of the level - usually 0
 (empty / low) to 1 (solid / high). An input that isn't connected reads 0

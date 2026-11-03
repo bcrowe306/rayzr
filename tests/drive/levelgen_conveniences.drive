@@ -1,0 +1,153 @@
+# #171: the Level Generator window's conveniences - several nodes selected
+# (Shift+click, a box), copied and pasted at the mouse with their links,
+# duplicated; a comment frame around nodes, dragged (they follow), resized,
+# titled, saved; nodes pasted into a second generator; the add menu's
+# search (Enter adds the first match). Each undone.
+wait 5
+click @asset.add
+click @ctx:add-new-levelgen
+wait 3
+expect lge.open == true
+expect lge.nodes == 5
+# The second generator, for later (the window covers Assets then): a copy
+# of the new one as it's created.
+exec cp $PROJECT/levels/new_level.levelgen.json $PROJECT/levels/second_zz.levelgen.json
+
+# Shift+click: cellular (2) and combine (4), which reads it.
+click @lge.node:2
+hold shift
+click @lge.node:4
+release
+expect lge.selection == 2
+
+# Copy, paste at the mouse: new ids 6 and 7; 7 reads 6 (the kept link),
+# 6 reads nothing (its source wasn't copied).
+key ctrl+c
+expect log contains Copied 2 nodes
+move @lge.canvas+-150,190
+key ctrl+v
+wait 2
+expect lge.nodes == 7
+expect lge.selection == 2
+expect lge.input:7:0 == 6
+expect lge.input:6:0 == 0
+expect lge.input:7:1 == 0
+screenshot pasted
+
+# Duplicate (Ctrl/Cmd+D) the pasted pair: 9 reads 8. Undo both, redo one.
+key ctrl+d
+wait 1
+expect lge.nodes == 9
+expect lge.input:9:0 == 8
+key ctrl+z
+wait 1
+expect lge.nodes == 7
+key ctrl+z
+wait 1
+expect lge.nodes == 5
+key ctrl+shift+z
+wait 1
+expect lge.nodes == 7
+key ctrl+z
+wait 1
+expect lge.nodes == 5
+
+# A box from above-left of the random fill (1) to the border (3) selects
+# 1, 2 and 3; the toolbar's frame button puts a frame around them.
+drag @lge.node:1+-70,-25 @lge.node:3
+wait 1
+expect lge.selection == 3
+click @lge.frame
+wait 1
+expect lge.frames == 1
+expect lge.frame-selected == 0
+screenshot framed
+
+# Dragging the frame's title moves the nodes inside (not the combine).
+drag @lge.frame:0 @lge.frame:0+120,60
+wait 1
+expect lge.pos:1 != 0,0
+expect lge.pos:3 != 220,170
+expect lge.pos:4 == 440,60
+screenshot frame_dragged
+key ctrl+z
+wait 1
+expect lge.pos:1 == 0,0
+expect lge.pos:3 == 220,170
+expect lge.frames == 1
+
+# Resized from its corner, titled in the side panel.
+click @lge.frame:0
+drag @lge.frame-size:0 @lge.frame-size:0+80,40
+wait 1
+expect lge.frame-size:0 != 0,0
+dblclick @lge.frame-title
+key ctrl+a
+type Caves
+key enter
+wait 1
+expect lge.frame-title:0 == Caves
+key ctrl+s
+wait 1
+expect file:levels/new_level.levelgen.json contains "frames": [
+expect file:levels/new_level.levelgen.json contains "title": "Caves"
+screenshot frame_titled
+
+# Copy the combine (4) and the tile output (5) and paste them into a new
+# generator: the link 4 -> 5 comes along as 6 -> 7.
+click @lge.node:4
+hold shift
+click @lge.node:5
+release
+expect lge.selection == 2
+key ctrl+c
+key ctrl+p
+wait 2
+type second_zz
+wait 2
+key enter
+wait 3
+expect lge.path == levels/second_zz.levelgen.json
+expect lge.nodes == 5
+expect lge.frames == 0
+
+# The add menu's search: typing filters, Enter adds the first match.
+rclick @lge.canvas
+wait 1
+type cellu
+wait 1
+expect item:ctx:lge-add:cellular == visible
+expect item:ctx:lge-add:noise != visible
+screenshot search
+key enter
+wait 1
+expect lge.nodes == 6
+expect lge.text contains "id": 6, "type": "cellular"
+key ctrl+z
+wait 1
+expect lge.nodes == 5
+# The Lua Script node is found by its label too.
+rclick @lge.canvas
+wait 1
+type lua
+wait 1
+expect item:ctx:lge-add:script == visible
+key enter
+wait 1
+expect lge.nodes == 6
+expect lge.text contains "type": "script"
+key ctrl+z
+wait 1
+expect lge.nodes == 5
+
+# Paste the nodes from the first generator.
+move @lge.canvas+-150,190
+key ctrl+v
+wait 2
+expect lge.nodes == 7
+expect lge.input:7:0 == 6
+expect lge.text contains "id": 7, "type": "tile_output"
+screenshot pasted_other
+key ctrl+z
+wait 1
+expect lge.nodes == 5
