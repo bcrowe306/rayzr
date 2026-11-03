@@ -17,6 +17,8 @@ for a new level.
 | **Random Seed** | A new level every time. **Last Seed** is the one used: show it to the player, save it, `levelgen_generate(seed)` replays it. |
 | **Background** | Makes the level on a worker thread while the game keeps running (a loading screen stays smooth); `generated` fires when it is in. |
 | **Attempts** | With **Random Seed**: how many seeds it tries when the generator refuses a level - a **Check** node finding too little open, or the level in pieces - before it reports `generation_failed` (10). **Last Seed** is the one that worked. |
+| **Rebake Navigation** | Once the level is in, bake the scene's **Navigation Regions** again (before `generated`): agents find their way through the new map at once. |
+| **Progress** | 0 to 1 while a level is made (read-only) - for a loading bar, with the `generation_progress` event (each 1% or more; 1 when the level is in). |
 
 ## Level parameters
 
@@ -33,6 +35,16 @@ function Level:ready()
     gen:connect("generated", function(seed) Log.info("level " .. seed) end)
     gen:levelgen_generate()
 end
+```
+
+## A loading bar
+
+With **Background** on, the game keeps running while the level is made:
+
+```lua
+gen:connect("generation_progress", function(p) bar.value = p * 100 end)
+gen:connect("generated", function() loading.visible = false end)
+gen:levelgen_generate()
 ```
 
 **Generate Now** in the Inspector writes a level into the TileMap in the

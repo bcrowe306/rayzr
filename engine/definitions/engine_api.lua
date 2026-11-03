@@ -182,7 +182,7 @@ local PathFollowNode = {}
 ---@class SpawnerNode : Node
 local SpawnerNode = {}
 
----Generates a level from a generator (.levelgen.json) into a TileMap (its `tilemap` path, else its first TileMap child, else its parent) - when the scene starts, on generate() or a signal; seed / randomSeed (lastSeed: the one used), the generator's parameters set on the node, background generation. "generated" (the seed) / "generation_failed" (why).
+---Generates a level from a generator (.levelgen.json) into a TileMap (its `tilemap` path, else its first TileMap child, else its parent) - when the scene starts, on generate() or a signal; seed / randomSeed (lastSeed: the one used), the generator's parameters set on the node, background generation with `progress` (0..1) and "generation_progress" for a loading bar, rebakeNavigation (Navigation Regions baked again over the new level). "generated" (the seed) / "generation_failed" (why).
 ---@class LevelGeneratorNode : Node
 local LevelGeneratorNode = {}
 
@@ -589,8 +589,8 @@ function TimerNode:connect(event, handler) end
 ---@return integer id Connection id for `disconnect`
 function SpawnerNode:connect(event, handler) end
 
----@alias LevelGeneratorNodeEvent NodeTreeEvent|"generated"|"generation_failed"|ProjectEvent
----Connects a handler to one of this node's events: generated (The level generator's level is in (its seed)), generation_failed (The level generator couldn't make the level (why)); the tree events; custom ones.
+---@alias LevelGeneratorNodeEvent NodeTreeEvent|"generated"|"generation_failed"|"generation_progress"|ProjectEvent
+---Connects a handler to one of this node's events: generated (The level generator's level is in (its seed)), generation_failed (The level generator couldn't make the level (why)), generation_progress (The level generator's progress moved (0 to 1, by 1% or more; 1 when the level is in)); the tree events; custom ones.
 ---
 ---Example: `self.node:connect("generated", function(value, source) Log.info("generated") end)`
 ---@param event LevelGeneratorNodeEvent|string The event's name (the Signals tab lists them)
@@ -1530,8 +1530,11 @@ function SpawnerNode:set_property(path, value, y) end
 ---@field generateOnReady boolean Same as generate_on_ready (the Inspector's name)
 ---@field background boolean Generate on a worker thread while the game runs; the level goes in when it is done (gen...
 ---@field attempts integer With Random Seed: seeds tried when the generator refuses a level (a Check node: too lit...
+---@field rebake_navigation boolean Bake the scene's Navigation Regions again once a level is in (before generated): agents...
+---@field rebakeNavigation boolean Same as rebake_navigation (the Inspector's name)
 ---@field last_seed integer The seed of the last level made (runtime, read-only).
 ---@field lastSeed integer Same as last_seed (the Inspector's name)
+---@field progress number How far the generation is, 0 to 1 (1: the level is in) - for a loading bar; generation_...
 
 ---@alias LevelGeneratorNodeProperty
 ---| "position" # Vec2 - Position relative to the parent, in pixels (+y is down).
@@ -1552,7 +1555,9 @@ function SpawnerNode:set_property(path, value, y) end
 ---| "generate_on_ready" # boolean - Generate when the scene starts (else call generate() or connect a signal to it).
 ---| "background" # boolean - Generate on a worker thread while the game runs; the level goes in when it is done (gen...
 ---| "attempts" # integer - With Random Seed: seeds tried when the generator refuses a level (a Check node: too lit...
+---| "rebake_navigation" # boolean - Bake the scene's Navigation Regions again once a level is in (before generated): agents...
 ---| "last_seed" # integer (runtime) - The seed of the last level made (runtime, read-only).
+---| "progress" # number (runtime) - How far the generation is, 0 to 1 (1: the level is in) - for a loading bar; generation_...
 
 ---Reads an Inspector property by its path (vectors and colours as tables); "script.<name>" reads a field of the node's script.
 ---
@@ -1577,7 +1582,9 @@ function SpawnerNode:set_property(path, value, y) end
 ---@overload fun(self: LevelGeneratorNode, path: "generate_on_ready"): boolean
 ---@overload fun(self: LevelGeneratorNode, path: "background"): boolean
 ---@overload fun(self: LevelGeneratorNode, path: "attempts"): integer
+---@overload fun(self: LevelGeneratorNode, path: "rebake_navigation"): boolean
 ---@overload fun(self: LevelGeneratorNode, path: "last_seed"): integer
+---@overload fun(self: LevelGeneratorNode, path: "progress"): number
 function LevelGeneratorNode:get_property(path) end
 
 ---Sets an Inspector property by its path: vectors as {x, y} or x, y; colours as {r, g, b[, a]} 0..1 or "#rrggbb[aa]"; enums by name; "script.<name>" a field of the node's script.
@@ -1604,7 +1611,9 @@ function LevelGeneratorNode:get_property(path) end
 ---@overload fun(self: LevelGeneratorNode, path: "generate_on_ready", value: boolean)
 ---@overload fun(self: LevelGeneratorNode, path: "background", value: boolean)
 ---@overload fun(self: LevelGeneratorNode, path: "attempts", value: integer)
+---@overload fun(self: LevelGeneratorNode, path: "rebake_navigation", value: boolean)
 ---@overload fun(self: LevelGeneratorNode, path: "last_seed", value: integer)
+---@overload fun(self: LevelGeneratorNode, path: "progress", value: number)
 function LevelGeneratorNode:set_property(path, value, y) end
 
 ---@class TextureNode

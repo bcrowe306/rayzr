@@ -593,6 +593,11 @@ lge_job_free :: proc(j: ^Lge_Job) {
 // output its tiles in colours (none: transparent).
 @(private = "file")
 lge_grid_pixels :: proc(g: ^e.Gen_Graph, n: ^e.Gen_Node, grid: e.Gen_Grid, pixels: []rl.Color) {
+	if e.Gen_WritesComponents(n) {
+		// (A colour per rule: where its component goes.)
+		for k, i in e.Gen_ComponentsOf(n, grid, context.temp_allocator) do pixels[i] = lge_tile_color(i32(k)) if k >= 0 else {}
+		return
+	}
 	if n.kind == .Tile_Output {
 		for t, i in e.Gen_TilesOf(n, grid, g.seed, context.temp_allocator) do pixels[i] = lge_tile_color(t) if t >= 0 else {}
 		return
@@ -641,7 +646,7 @@ lge_refresh :: proc(state: ^EditorState) {
 			// (A tile output with its tileset: drawn with its tiles.)
 			pixels: []rl.Color
 			pw, ph := en.grid.w, en.grid.h
-			if ts := lge_tileset(state, n.tileset); n.kind == .Tile_Output && ts != nil {
+			if ts := lge_tileset(state, n.tileset); n.kind == .Tile_Output && !e.Gen_WritesComponents(&n) && ts != nil {
 				pixels, pw, ph = lge_tile_pixels(ts, lge_tile_size(&n), e.Gen_TilesOf(&n, en.grid, j.graph.seed, context.temp_allocator, Editor_Terrains(state, n.tileset)), en.grid.w, en.grid.h)
 			} else {
 				pixels = make([]rl.Color, len(en.grid.v), context.temp_allocator)
@@ -701,6 +706,14 @@ LevelGenEditor_Render :: proc(state: ^EditorState) {
 	title := fmt.ctprintf("%s  %s%s###LevelGenWindow", ICON_FA_SHUFFLE, filepath.base(lge.path), " *" if lge.dirty else "")
 	visible := imgui.Begin(title, &open, {.NoScrollbar, .NoScrollWithMouse})
 	defer imgui.End()
+	{
+		// (The title bar's close button, for drives.)
+		wp, ws := imgui.GetWindowPos(), imgui.GetWindowSize()
+		st := imgui.GetStyle()
+		fs := imgui.GetFontSize()
+		x := wp.x + ws.x - st.FramePadding.x - fs
+		Drive_ItemRect("lge.close", {x, wp.y + st.FramePadding.y}, {x + fs, wp.y + st.FramePadding.y + fs})
+	}
 	// Shown again partly off the editor (a layout saved on a bigger screen):
 	// moved back inside it.
 	if imgui.IsWindowAppearing() && !imgui.IsWindowDocked() {
@@ -1480,28 +1493,32 @@ lge_new_script :: proc(state: ^EditorState, id: int) -> string {
 @(private = "file")
 lge_tile_output :: proc(state: ^EditorState, n: ^e.Gen_Node) {
 	g := &lge.graph
-	imgui.SeparatorText("Tiles")
+	// (writes components: no tileset; the layer names whose component layer.)
+	comps := e.Gen_WritesComponents(n)
+	imgui.SeparatorText("Components" if comps else "Tiles")
 	if UI_BeginProps("##lge_tiles") {
-		UI_PropLabel("Tileset")
-		imgui.SetNextItemWidth(imgui.GetContentRegionAvail().x - 34)
-		if path, ok := asset_picker("lge.tileset", n.tileset, Editor_ListProjectFiles(state, "", TEXTURE_EXTS)); ok {
-			lge_change()
-			e.Gen_SetTileset(g, n, path)
-			lge.scriptsStale = true // (its terrains read)
+		if !comps {
+			UI_PropLabel("Tileset")
+			imgui.SetNextItemWidth(imgui.GetContentRegionAvail().x - 34)
+			if path, ok := asset_picker("lge.tileset", n.tileset, Editor_ListProjectFiles(state, "", TEXTURE_EXTS)); ok {
+				lge_change()
+				e.Gen_SetTileset(g, n, path)
+				lge.scriptsStale = true // (its terrains read)
+			}
+			Drive_Item("lge.tileset")
+			UI_Tooltip("The image its tile numbers count in (left to right, top to bottom, tile_w x tile_h each): pick tiles from it, see real tiles in the previews")
+			imgui.SameLine(0, 4)
+			tm := cast(^e.TileMapNode)state.selectedNode if state.selectedNode != nil && state.selectedNode.typeId == e.TileMapNode else nil
+			imgui.BeginDisabled(tm == nil || tm.tilesetPath == "")
+			if UI_IconButton(ICON_FA_TABLE_CELLS_LARGE, "lge.tileset-from-map", "Use the tileset and tile size of the TileMap selected in the scene", size = 26) {
+				lge_change()
+				e.Gen_SetTileset(g, n, tm.tilesetPath)
+				lge.scriptsStale = true
+				e.Gen_SetParam(n, "tile_w", f64(tm.tileSize.x))
+				e.Gen_SetParam(n, "tile_h", f64(tm.tileSize.y))
+			}
+			imgui.EndDisabled()
 		}
-		Drive_Item("lge.tileset")
-		UI_Tooltip("The image its tile numbers count in (left to right, top to bottom, tile_w x tile_h each): pick tiles from it, see real tiles in the previews")
-		imgui.SameLine(0, 4)
-		tm := cast(^e.TileMapNode)state.selectedNode if state.selectedNode != nil && state.selectedNode.typeId == e.TileMapNode else nil
-		imgui.BeginDisabled(tm == nil || tm.tilesetPath == "")
-		if UI_IconButton(ICON_FA_TABLE_CELLS_LARGE, "lge.tileset-from-map", "Use the tileset and tile size of the TileMap selected in the scene", size = 26) {
-			lge_change()
-			e.Gen_SetTileset(g, n, tm.tilesetPath)
-			lge.scriptsStale = true
-			e.Gen_SetParam(n, "tile_w", f64(tm.tileSize.x))
-			e.Gen_SetParam(n, "tile_h", f64(tm.tileSize.y))
-		}
-		imgui.EndDisabled()
 		UI_PropLabel("Layer")
 		// (The name being typed keeps its own buffer until Enter or leaving.)
 		local: [64]u8
@@ -1522,10 +1539,11 @@ lge_tile_output :: proc(state: ^EditorState, n: ^e.Gen_Node) {
 		}
 		if imgui.IsItemDeactivated() && lge.layerFor == n.id do lge.layerFor = 0
 		Drive_Item("lge.layer")
-		UI_Tooltip("Empty: the main TileMap (the output's). A name: the TileMap of that name next to the main one (its sibling) - one generator fills ground, walls and decoration at once")
+		if comps do UI_Tooltip("Empty: the main TileMap's component layer. A name: the component layer of the TileMap of that name next to the main one (its sibling); its tiles stay")
+		else do UI_Tooltip("Empty: the main TileMap (the output's). A name: the TileMap of that name next to the main one (its sibling) - one generator fills ground, walls and decoration at once")
 		UI_EndProps()
 	}
-	if n.tileset != "" && lge_tileset(state, n.tileset) == nil do imgui.TextColored(UI_WARNING, "Can't read the tileset image")
+	if !comps && n.tileset != "" && lge_tileset(state, n.tileset) == nil do imgui.TextColored(UI_WARNING, "Can't read the tileset image")
 }
 
 // lge_rule_terrain: the rule's terrain (of the output's tileset; None: its
@@ -1624,6 +1642,10 @@ slice_index_i32 :: proc(a: []i32, v: i32) -> (int, bool) {
 // lge_rules: a tile output's rules - range and tiles ("3, 4": one of them).
 @(private = "file")
 lge_rules :: proc(state: ^EditorState, n: ^e.Gen_Node) {
+	if e.Gen_WritesComponents(n) {
+		lge_component_rules(state, n)
+		return
+	}
 	imgui.SeparatorText("Rules")
 	UI_DimTextWrapped("Each cell takes the first rule whose range holds its value: one of its tiles.")
 	remove := -1
@@ -1694,6 +1716,52 @@ lge_rules :: proc(state: ^EditorState, n: ^e.Gen_Node) {
 		append(&n.rules, r)
 	}
 	lge_pattern_rules(state, n)
+}
+
+// lge_component_rules: an output that writes components - each rule a
+// value range and the component its cells get on the map's component layer.
+@(private = "file")
+lge_component_rules :: proc(state: ^EditorState, n: ^e.Gen_Node) {
+	imgui.SeparatorText("Rules")
+	UI_DimTextWrapped("Each cell takes the first rule whose range holds its value: its component, painted on the map's component layer (a bigger one covers its footprint; cells it covers are skipped). The tiles stay.")
+	files := make([dynamic]string, context.temp_allocator)
+	for f in Editor_ListProjectFiles(state, "", {".component.json"}) do append(&files, f)
+	remove := -1
+	for &r, i in n.rules {
+		imgui.PushIDInt(i32(i))
+		w := (imgui.GetContentRegionAvail().x - 34) / 3
+		imgui.SetNextItemWidth(w)
+		imgui.DragFloat("##min", &r.min, 0.01, 0, 0, "from %.2f")
+		lge_undo_on_activate()
+		imgui.SameLine(0, 4)
+		imgui.SetNextItemWidth(w)
+		imgui.DragFloat("##max", &r.max, 0.01, 0, 0, "to %.2f")
+		lge_undo_on_activate()
+		imgui.SameLine(0, 4)
+		imgui.SetNextItemWidth(w)
+		if path, ok := asset_picker(fmt.tprintf("lge.rule-component:%d", i), r.component, files[:]); ok {
+			lge_change()
+			e.Gen_RuleSetComponent(&lge.graph, &r, path)
+		}
+		Drive_Item(fmt.tprintf("lge.rule-component:%d", i))
+		UI_Tooltip(r.component if r.component != "" else "The component the rule's cells get (a .component.json)")
+		imgui.SameLine(0, 4)
+		if UI_IconButton(ICON_FA_XMARK, fmt.tprintf("lge.rule-remove:%d", i), "Remove the rule", size = 24) do remove = i
+		imgui.PopID()
+	}
+	if remove >= 0 {
+		lge_change()
+		e.Gen_RuleFree(&n.rules[remove], lge.graph.allocator)
+		ordered_remove(&n.rules, remove)
+	}
+	if UI_Button(fmt.tprintf("%s  Add Rule", ICON_FA_PLUS), "lge.rule-add") {
+		lge_change()
+		if n.rules == nil do n.rules = make([dynamic]e.Gen_Tile_Rule, lge.graph.allocator)
+		append(&n.rules, e.Gen_Tile_Rule{min = 0.5, max = 1, tiles = make([dynamic]i32, lge.graph.allocator)})
+	}
+	missing := len(n.rules) == 0
+	for r in n.rules do if r.component == "" do missing = true
+	if missing do imgui.TextColored(UI_WARNING, "Pick each rule's component")
 }
 
 // lge_pattern_rules: a tile output's pattern rules - a value range, a 3x3

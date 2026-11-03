@@ -29,6 +29,15 @@ import lua "lua54"
 //   once.
 // - Events: "generated" (the seed) when the level is in, "generation_failed"
 //   (why); the event bus gets "level_generated" (the map's name) too.
+// - Progress (#171): `progress`, 0..1 - the generator's nodes computed (a
+//   seed tried again counts on: Gen_Progress) - and "generation_progress"
+//   (the fraction) when it moves by 1% or more (at most once a frame), 0 at
+//   the start and 1 when the level is in, for a loading bar. The worker
+//   writes the fraction (atomic); the main thread reads it in update and
+//   emits.
+// - `rebakeNavigation`: the scene's Navigation Regions are baked again once
+//   the level is in (tiles, colliders, components, entities), before
+//   "generated" - agents find paths through the new map at once.
 //
 // The parameters are saved as "level_generator": {"params": [{"node",
 // "name", "value"}]} next to the reflected properties.
@@ -50,13 +59,17 @@ LevelGeneratorNode :: struct {
 	generateOnReady: bool `gui:"true"`,
 	background:      bool `gui:"true"`,
 	attempts:        int `gui:"true" min:"1" max:"100"`,
+	rebakeNavigation: bool `gui:"true"`,
 	params:          [dynamic]Gen_Param_Override, // (node arena)
 	// Runtime.
 	lastSeed:        int `gui:"true" save:"false"`,
+	progress:        f32 `gui:"true" save:"false"`, // 0..1: the generation's (1: the level is in)
+	progressSent:    f32, // the last "generation_progress" emitted
 	started:         bool, // the first update ran (generateOnReady)
 	job:             ^Gen_Job, // a background generation in flight (heap)
 	onGenerated:     EventSubject, // "generated" (the seed)
 	onFailed:        EventSubject, // "generation_failed" (why)
+	onProgress:      EventSubject, // "generation_progress" (0..1)
 }
 
 // A background generation: the worker owns `graph` and fills `result` /
@@ -65,6 +78,7 @@ Gen_Job :: struct {
 	graph:  Gen_Graph, // (heap)
 	seed:   u64, // (the seed of the level made)
 	attempts: int,
+	progress: Gen_Progress, // (the worker writes, the main thread reads its value)
 	result: Gen_Result, // (heap)
 	err:    string,     // (heap)
 	thread: ^thread.Thread,
@@ -80,6 +94,7 @@ LevelGeneratorNode_Create :: proc(scene: ^Scene, name: string = "LevelGenerator"
 	lg.onDestroy = LevelGeneratorNode_Destroy
 	InitializeSubject(&lg.onGenerated, "generated", lg)
 	InitializeSubject(&lg.onFailed, "generation_failed", lg)
+	InitializeSubject(&lg.onProgress, "generation_progress", lg)
 	scene->addNode(lg, parent)
 	return lg
 }
@@ -90,6 +105,7 @@ LevelGeneratorNode_Destroy :: proc(node: ^Node, ctx: ^GameContext) {
 	lg.job = nil
 	DestroySubject(&lg.onGenerated)
 	DestroySubject(&lg.onFailed)
+	DestroySubject(&lg.onProgress)
 }
 
 // The first update generates (generateOnReady: before the first frame is
@@ -102,12 +118,14 @@ LevelGeneratorNode_Update :: proc(node: ^Node, ctx: ^GameContext, dt: f32) {
 		if lg.generateOnReady && lg.generator != "" do LevelGeneratorNode_Generate(lg, ctx)
 	}
 	if lg.job == nil do return
+	levelgen_progress(lg, f32(Gen_ProgressValue(&lg.job.progress)), ctx)
 	when ODIN_OS != .JS do if !thread.is_done(lg.job.thread) do return
 	sync.atomic_thread_fence(.Acquire)
 	j := lg.job
 	lg.job = nil
 	defer gen_job_free(j)
 	if j.err != "" {
+		levelgen_progress(lg, f32(Gen_ProgressValue(&j.progress)), ctx) // (where it stopped)
 		levelgen_failed(lg, j.err, ctx)
 		return
 	}
@@ -136,6 +154,8 @@ LevelGeneratorNode_Generate :: proc(lg: ^LevelGeneratorNode, ctx: ^GameContext, 
 	used := u64(s) if s != 0 else g.seed
 	// Other seeds only when it picks them (not a seed asked for).
 	attempts := clamp(lg.attempts, 1, 100) if seed == 0 && lg.seed == 0 && lg.randomSeed else 1
+	lg.progress, lg.progressSent = 0, 0
+	lg.onProgress->notify(lg, f64(0), ctx)
 	when ODIN_OS != .JS {
 		if lg.background {
 			j := new(Gen_Job, Engine_HeapAllocator())
@@ -148,9 +168,13 @@ LevelGeneratorNode_Generate :: proc(lg: ^LevelGeneratorNode, ctx: ^GameContext, 
 		}
 	}
 	defer Gen_GraphDestroy(&g)
-	r, made, gerr := levelgen_generate(&g, used, attempts, context.temp_allocator)
+	progress: Gen_Progress
+	r, made, gerr := levelgen_generate(&g, used, attempts, context.temp_allocator, &progress)
 	used = made
-	if gerr != "" do return levelgen_failed(lg, gerr, ctx), gerr
+	if gerr != "" {
+		lg.progress = f32(Gen_ProgressValue(&progress)) // (where it stopped)
+		return levelgen_failed(lg, gerr, ctx), gerr
+	}
 	if aerr := levelgen_apply(lg, &r, used, ctx, scene); aerr != "" do return false, aerr
 	return true, ""
 }
@@ -220,24 +244,64 @@ levelgen_apply :: proc(lg: ^LevelGeneratorNode, r: ^Gen_Result, seed: u64, ctx: 
 		levelgen_failed(lg, "its TileMap is gone", ctx)
 		return "its TileMap is gone"
 	}
-	if err := Gen_ApplyResult(r, tm, ctx, scene if scene != nil else levelgen_scene(ctx)); err != "" {
+	sc := scene if scene != nil else levelgen_scene(ctx)
+	if err := Gen_ApplyResult(r, tm, ctx, sc); err != "" {
 		levelgen_failed(lg, err, ctx)
 		return err
 	}
 	lg.lastSeed = int(seed)
+	if lg.rebakeNavigation do LevelGeneratorNode_RebakeNavigation(sc, ctx)
+	levelgen_progress(lg, 1, ctx)
 	lg.onGenerated->notify(lg, int(seed), ctx)
 	if ctx != nil && ctx.game != nil do EventBus_Publish(&ctx.game.events, "level_generated", tm.name, tm)
 	return ""
 }
 
+// LevelGeneratorNode_RebakeNavigation bakes the scene's Navigation Regions
+// again (after a level went in: its tiles, colliders and spawned nodes in
+// place - the queues are processed and the positions composed first).
+// Returns how many it baked.
+LevelGeneratorNode_RebakeNavigation :: proc(sc: ^Scene, ctx: ^GameContext) -> int {
+	if sc == nil || sc.manager == nil do return 0
+	c: GameContext
+	if ctx != nil {
+		ProcessNodeQueues(sc.manager, ctx)
+		c = ctx^
+	}
+	c.scene = sc // (the regions read this scene's nodes)
+	Node_SetGlobalPositions(sc.manager, sc.rootNode)
+	baked := 0
+	for n in sc.manager.navRegions {
+		if n == nil || !n.enabled || n.removing do continue
+		NavRegion_Bake(cast(^NavigationRegionNode)n, &c)
+		baked += 1
+	}
+	return baked
+}
+
+// levelgen_progress: the progress now; "generation_progress" when it moved
+// by 1% or more since the last one emitted, or reached 1.
+@(private = "file")
+levelgen_progress :: proc(lg: ^LevelGeneratorNode, value: f32, ctx: ^GameContext) {
+	v := clamp(value, lg.progress, 1) // (it only grows)
+	lg.progress = v
+	if v - lg.progressSent >= 0.01 || (v >= 1 && lg.progressSent < 1) {
+		lg.progressSent = v
+		lg.onProgress->notify(lg, f64(v), ctx)
+	}
+}
+
 // levelgen_generate: the level for a seed; one the generator refuses is
 // tried again with the next seeds (each made from the last), `attempts` in
 // all. The seed of the level made; the last error when none was.
+// `progress`: follows it (each attempt Gen_ProgressAttempt).
 @(private = "file")
-levelgen_generate :: proc(g: ^Gen_Graph, seed: u64, attempts: int, allocator := context.allocator) -> (r: Gen_Result, used: u64, err: string) {
+levelgen_generate :: proc(g: ^Gen_Graph, seed: u64, attempts: int, allocator := context.allocator, progress: ^Gen_Progress = nil) -> (r: Gen_Result, used: u64, err: string) {
 	used = seed
+	needed := Gen_NeededNodes(g) if progress != nil else 0
 	for i in 0 ..< max(attempts, 1) {
-		r, err = Gen_Generate(g, used, allocator)
+		if progress != nil do Gen_ProgressAttempt(progress, needed, i == max(attempts, 1) - 1)
+		r, err = Gen_Generate(g, used, allocator, progress)
 		if err == "" do return
 		used = 1 + gen_mix(used, u64(i) + 0xa77e) % (1 << 30)
 	}
@@ -250,7 +314,7 @@ levelgen_generate :: proc(g: ^Gen_Graph, seed: u64, attempts: int, allocator := 
 gen_job_run :: proc(t: ^thread.Thread) {
 	context.allocator = Engine_HeapAllocator()
 	j := cast(^Gen_Job)t.data
-	r, used, err := levelgen_generate(&j.graph, j.seed, j.attempts, Engine_HeapAllocator())
+	r, used, err := levelgen_generate(&j.graph, j.seed, j.attempts, Engine_HeapAllocator(), &j.progress)
 	j.seed = used
 	if err != "" do j.err = strings.clone(err, Engine_HeapAllocator())
 	else do j.result = r

@@ -94,6 +94,7 @@ Event_Describe :: proc(name: string) -> (param: string, doc: string) {
 	case "list_finished":      return "", "A Sequential spawner (Stop) spawned its last entry"
 	case "generated":          return "seed", "The level generator's level is in (its seed)"
 	case "generation_failed":  return "why", "The level generator couldn't make the level (why)"
+	case "generation_progress": return "progress", "The level generator's progress moved (0 to 1, by 1% or more; 1 when the level is in)"
 	}
 	return "value", ""
 }

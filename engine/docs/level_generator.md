@@ -7,10 +7,12 @@ and the **tile output** turns values into tiles and writes them into a
 TileMap. The same generator and **seed** always give the same level, on
 every platform - so a seed is a level you can share, replay or test.
 
-So far (#142): the generator file, the nodes (terrain, caves, rooms and
-corridors, walkers), placing entities, TileMap and LDtk output, your own
-nodes (Lua or Odin), the **Level Generator** node that makes levels in
-the game, the Lua module and the **Level Generator** window in the editor.
+So far (#142, #171): the generator file, the nodes (terrain, caves, rooms
+and corridors, walkers), placing entities, TileMap, component-layer and
+LDtk output, your own nodes (Lua or Odin), the **Level Generator** node
+that makes levels in the game (with progress for a loading bar and
+navigation baked again), the Lua module and the **Level Generator** window
+in the editor.
 
 ## In the editor
 
@@ -55,7 +57,9 @@ the game, the Lua module and the **Level Generator** window in the editor.
   one of them per cell - or **Pick** them from the tileset: click tiles to
   add or remove them; the rule shows them as small pictures); a large
   **preview** of the selected node (or the output). A tile output with a
-  tileset previews with its real tiles.
+  tileset previews with its real tiles. With **writes** set to
+  `components`, its rules pick a component each instead of tiles (the
+  preview colours each rule's cells).
 - **The toolbar**: **Save** (Ctrl/Cmd+S), **Undo** / **Redo**
   (Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z: every change, including pastes and
   frames), **Copy**, **Paste** and **Frame**, and **Apply to TileMap**,
@@ -144,6 +148,10 @@ grass (tile 1) and deeper ones dirt (tile 2); above stays empty.
 | `nodes` | Each with an `id` (a positive number), its `type`, `inputs` (port -> id of the node it reads), `params` (missing ones take their defaults), and for the tile output `rules`; `pos` is where the editor draws it. |
 | `frames` | Optional: the editor's comment frames, each with a `title`, `pos` and `size` (canvas units) and `color` (`[r, g, b, a]`, 0-1). Generation ignores them. |
 
+The full schema - every key, node type, parameter and default, and what
+changed when - is in the file format reference:
+[`RAYZR_FORMAT.md`, Level Generator Schema](../RAYZR_FORMAT.md#5b-level-generator-schema-levelgenjson).
+
 Every port carries a grid of numbers the size of the level - usually 0
 (empty / low) to 1 (solid / high). An input that isn't connected reads 0
 everywhere. A node may feed any number of others (computed once); a cycle
@@ -207,7 +215,7 @@ merge). Mix them with the rest: `combine` (max) adds ledges to a cave,
 
 | Type | | |
 |---|---|---|
-| `tile_output` | `empty` (-1), `tile_w`, `tile_h` (16), `rules`, `tileset`, `layer` | Each cell takes the first rule whose `min`..`max` holds its value: one of its `tiles` (or `tile`), picked by the cell and the seed. Cells no rule takes get `empty` (-1: none). `tileset` (a project image) and the tile size are for picking tiles and previews; `layer` is where it goes (below). |
+| `tile_output` | `empty` (-1), `tile_w`, `tile_h` (16), `writes` (`tiles`), `rules`, `tileset`, `layer` | Each cell takes the first rule whose `min`..`max` holds its value: one of its `tiles` (or `tile`), picked by the cell and the seed. Cells no rule takes get `empty` (-1: none). `tileset` (a project image) and the tile size are for picking tiles and previews; `layer` is where it goes (below). `writes`: `components` paints components on a map's component layer instead (below). |
 
 **Terrains.** A rule can name a **terrain** of the tile output's tileset
 (`{"min": 0.5, "max": 1, "terrain": "Grass"}`; in the editor, the rule's
@@ -240,6 +248,31 @@ main one (a sibling, else a child) - one generator fills ground, walls and
 decoration at once, each from its own tileset: e.g. a cave's rock into
 `Ground`, the Surface node's cells into `Grass`. A layer whose TileMap
 isn't there is reported (the others are still written).
+
+**Component layers.** A TileMap's **Components** layer (the Tile Map tab)
+holds component instances on its cells - coins, crates, trees - one per
+cell, a bigger one covering its footprint. A tile output with **writes**
+set to `components` paints on that layer instead of writing tiles: each
+rule maps a value range to a **component** (a `.component.json`), and each
+cell gets the component of the first rule whose range holds its value.
+The **layer** name picks the map (empty: the main one), whose tiles stay.
+
+```json
+{"id": 9, "type": "tile_output", "inputs": {"in": 6}, "params": {"writes": "components"}, "layer": "Props",
+ "rules": [{"min": 0.5, "max": 1, "component": "components/crate.component.json"}]}
+```
+
+A component bigger than a cell (a 2 x 2 crate) covers its footprint,
+centred on the cell and kept inside the map; cells a footprint already
+covers are skipped, so a filled area gets crates side by side. Instances
+painted by hand under a footprint are replaced; what a generation painted
+is tagged `levelgen` and replaced by the next one. In the window: pick
+**writes** in the output's parameters, then each rule's component (the
+preview shows each rule's cells in a colour). An output that writes
+components never becomes the default output - the main map's tiles come
+from one that writes tiles. Unlike an **entity output** (a component on
+points, at the cells' centres), this one follows the layer's one-per-cell
+footprints, as painting by hand does.
 | `entity_output` | `max` (0 = all), `component` | Its component (a `.component.json`) on every point of its input (cells >= 0.5) - `max` of them picked by the seed. A graph can have several (enemies, coins, the player's start). |
 
 ## Playable levels
@@ -374,6 +407,8 @@ entities). No script needed.
 | Generate On Ready | Make a level when the scene starts. |
 | Background | Make it on a worker thread while the game runs; `generated` fires when it is in. |
 | Attempts | With Random Seed: seeds tried when the generator refuses a level (a `check` node) before it gives up (10). |
+| Rebake Navigation | Once the level is in - tiles, colliders, components, entities - bake every Navigation Region of the scene again, before `generated`: agents find paths through the new map at once. Off by default. |
+| Progress | 0 to 1 while it generates (runtime, read-only; below). |
 
 **Level Parameters** in the Inspector: change a generator node's value for
 this node only - one generator file, many levels (denser caves later on).
@@ -389,11 +424,38 @@ gen:levelgen_generate()                              -- a new level (or levelgen
 A signal can call `generate` with no script (a "next level" button's
 `clicked`). Node reference: Level Generator.
 
+**A loading bar.** `progress` goes from 0 to 1 while a level is made:
+the generator's nodes computed, of those the outputs need. With Random
+Seed, a seed the generator refuses is tried again and the bar carries on
+from where it stopped (each attempt fills most of what is left; the last
+allowed one all of it), so it only ever grows. `generation_progress` fires
+with the fraction at the start (0), each time it moves by 1% or more (at
+most once a frame) and with 1 when the level is in, just before
+`generated`. With **Background** on the game keeps running meanwhile;
+without it the level is made at once and the event fires with 0 and 1.
+
+```lua
+local gen = self.node:get_node("Generator")
+local bar = self.node:get_node("Loading/Bar")
+gen:connect("generation_progress", function(p) bar.value = p * 100 end)
+gen:connect("generated", function() self.node:get_node("Loading").visible = false end)
+gen.background = true
+gen:levelgen_generate()
+-- or read it each frame: bar.value = gen.progress * 100
+```
+
+**Navigation.** A Navigation Region bakes when the scene starts - before
+the level exists. Turn on **Rebake Navigation** and the scene's regions are
+baked again once the level is in (the TileMap's solid tiles, static bodies
+among the components and entities), before `generated` - so a `generated`
+handler can send agents across the new level at once. The region must
+cover the map ([`navigation.md`](navigation.md)).
+
 ## Lua
 
 | Function | |
 |---|---|
-| `LevelGen.generate(file, tilemap [, seed])` -> ok, why | Writes the level into a TileMap node - tiles and entities; `level_generated` (the map's name) is emitted on the event bus. |
+| `LevelGen.generate(file, tilemap [, seed])` -> ok, why | Writes the level into a TileMap node - tiles, components and entities; `level_generated` (the map's name) is emitted on the event bus. |
 | `LevelGen.values(file [, seed [, node_id]])` -> `{width, height, values}` | The grid without a tile map (row-major: `values[y * width + x + 1]`) - any node's with `node_id`. |
 | `LevelGen.entities(file [, seed])` -> `{{component, x, y}, ...}` | The entity outputs' placements (cells), to spawn yourself. |
 
@@ -421,7 +483,7 @@ defer Gen_GraphDestroy(&g)
 Gen_ApplyTileMap(&g, tilemap, seed, ctx)               // into a TileMapNode
 grid, _ := Gen_Evaluate(&g, 0, seed)                   // the output's values (any node: its id)
 tiles, size, _ := Gen_Tiles(&g, 0, seed)               // tile indices (-1 = none)
-r, _ := Gen_Generate(&g, seed)                         // tiles and entities, the graph computed once
+r, _ := Gen_Generate(&g, seed)                         // tiles, components and entities, the graph computed once
 text := Gen_GraphSerialize(&g)                         // back to .levelgen.json
 ```
 
@@ -434,6 +496,16 @@ cache: Gen_Cache
 Gen_CacheInit(&cache)
 defer Gen_CacheDestroy(&cache)
 grid, _ := Gen_Evaluate(&g, id, seed, context.temp_allocator, &cache)
+```
+
+Following a generation on another thread: give `Gen_Generate` a
+`Gen_Progress` and read `Gen_ProgressValue` (0..1, any thread):
+
+```odin
+p: Gen_Progress
+Gen_ProgressAttempt(&p, Gen_NeededNodes(&g), last = true)
+r, _ := Gen_Generate(&g, seed, allocator, &p)          // (on the worker)
+fraction := Gen_ProgressValue(&p)                      // (on the main thread, meanwhile)
 ```
 
 A registered node's proc may run while other evaluations do (the editor's

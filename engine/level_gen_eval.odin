@@ -81,6 +81,63 @@ Gen_Eval :: struct {
 	err:    string,
 	L:      ^lua.State,   // Script nodes' (made by the first one, closed at the end)
 	fns:    map[string]c.int, // script file -> its function (a registry ref in L)
+	progress: ^Gen_Progress, // counts the nodes computed (nil: not followed)
+}
+
+// Gen_Progress follows a generation (#171): nodes computed of those it
+// needs, mapped to a fraction 0..1 that only grows - readable from another
+// thread while a worker generates (Gen_ProgressValue). Each attempt (a seed
+// tried again after a Check refused one) fills most of what is left - the
+// last allowed one all of it - so a retry carries on from where the failed
+// attempt stopped.
+Gen_Progress :: struct {
+	done, total: int, // nodes computed / needed (this attempt)
+	base, span:  f64, // this attempt's part of 0..1
+	value:       u32, // the fraction in millionths (atomic)
+}
+
+GEN_PROGRESS_ONE :: 1_000_000
+
+// Gen_ProgressValue: the fraction done, 0..1 (any thread).
+Gen_ProgressValue :: proc(p: ^Gen_Progress) -> f64 {
+	return f64(sync.atomic_load(&p.value)) / GEN_PROGRESS_ONE
+}
+
+// Gen_ProgressAttempt starts an attempt: `total` nodes to compute, filling
+// all that is left when it is the last one allowed, else 90% of it.
+Gen_ProgressAttempt :: proc(p: ^Gen_Progress, total: int, last: bool) {
+	p.done, p.total = 0, max(total, 1)
+	p.base = Gen_ProgressValue(p)
+	p.span = (1 - p.base) * (1 if last else 0.9)
+}
+
+// gen_progress_step: one more node computed.
+@(private)
+gen_progress_step :: proc(p: ^Gen_Progress) {
+	if p == nil do return
+	p.done = min(p.done + 1, p.total)
+	v := u32(clamp(p.base + p.span * f64(p.done) / f64(p.total), 0, 1) * GEN_PROGRESS_ONE)
+	if v > sync.atomic_load(&p.value) do sync.atomic_store(&p.value, v)
+}
+
+// Gen_NeededNodes: how many nodes a generation (Gen_Generate) computes -
+// those its outputs read, each once.
+Gen_NeededNodes :: proc(g: ^Gen_Graph) -> int {
+	seen := make(map[int]bool, allocator = context.temp_allocator)
+	visit :: proc(g: ^Gen_Graph, id: int, seen: ^map[int]bool) {
+		if id == 0 || id in seen^ do return
+		n := Gen_FindNode(g, id)
+		if n == nil do return
+		seen[id] = true
+		for src in n.inputs do visit(g, src, seen)
+	}
+	main := Gen_OutputNode(g)
+	if main != nil do visit(g, main.id, &seen)
+	for &n in g.nodes {
+		if n.kind == .Tile_Output && (n.layer != "" || Gen_WritesComponents(&n)) do visit(g, n.id, &seen)
+		if n.kind == .Entity_Output && n.component != "" do visit(g, n.id, &seen)
+	}
+	return len(seen)
 }
 
 @(private)
@@ -182,6 +239,7 @@ gen_eval :: proc(ev: ^Gen_Eval, id: int) -> (result: Gen_Grid, ok: bool) {
 	defer delete_key(&ev.active, id)
 	out := gen_new(ev)
 	gen_compute(ev, n, out) or_return
+	gen_progress_step(ev.progress)
 	if ev.cache != nil {
 		// Kept for the next evaluation (replacing the node's last grid).
 		Gen_CacheForget(ev.cache, id)
@@ -471,9 +529,19 @@ gen_pattern_rules :: proc(out: ^Gen_Node, grid: Gen_Grid, tiles: []i32, seed: u6
 // until the result is applied.
 Gen_Result :: struct {
 	size:     [2]int,
-	tiles:    []i32, // the output's (the main map)
+	tiles:    []i32, // the output's (the main map; nil when the output writes components)
 	layers:   [dynamic]Gen_Layer_Tiles, // the other tile outputs with a layer
 	entities: [dynamic]Gen_Entity,
+	components: [dynamic]Gen_Layer_Component, // tile outputs that write components (#171)
+}
+
+// A component an output that writes components paints on the component
+// layer of its map (`layer`: the TileMap of that name next to the main
+// one; "": the main one), at a cell.
+Gen_Layer_Component :: struct {
+	layer:     string, // (the graph's)
+	component: string, // (the graph's)
+	cell:      [2]int,
 }
 
 // A layer's tiles: for the TileMap named `name` next to the main one.
@@ -482,15 +550,35 @@ Gen_Layer_Tiles :: struct {
 	tiles: []i32,
 }
 
-// Gen_Generate: the level's tiles and entities, the graph evaluated once.
-Gen_Generate :: proc(g: ^Gen_Graph, seed: u64 = 0, allocator := context.allocator) -> (r: Gen_Result, err: string) {
+// Gen_Generate: the level's tiles, components and entities, the graph
+// evaluated once. `progress`: counts the nodes computed (for a loading bar;
+// Gen_ProgressAttempt first).
+Gen_Generate :: proc(g: ^Gen_Graph, seed: u64 = 0, allocator := context.allocator, progress: ^Gen_Progress = nil) -> (r: Gen_Result, err: string) {
 	ev := gen_eval_begin(g, seed)
+	ev.progress = progress
 	defer gen_eval_end(&ev)
-	r.tiles, r.size, err = gen_tiles(&ev, 0, allocator)
 	main := Gen_OutputNode(g)
 	r.layers = make([dynamic]Gen_Layer_Tiles, allocator)
+	r.components = make([dynamic]Gen_Layer_Component, allocator)
+	if main != nil && Gen_WritesComponents(main) {
+		r.size = g.size // (the main map's tiles stay)
+	} else {
+		r.tiles, r.size, err = gen_tiles(&ev, 0, allocator)
+	}
 	if err == "" do for &n in g.nodes {
-		if n.kind != .Tile_Output || n.layer == "" || (main != nil && n.id == main.id) do continue
+		if n.kind != .Tile_Output do continue
+		if Gen_WritesComponents(&n) {
+			grid, ok := gen_eval(&ev, n.id)
+			if !ok {
+				err = ev.err
+				break
+			}
+			for k, i in Gen_ComponentsOf(&n, grid, context.temp_allocator) {
+				if k >= 0 do append(&r.components, Gen_Layer_Component{n.layer, n.rules[k].component, {i % grid.w, i / grid.w}})
+			}
+			continue
+		}
+		if n.layer == "" || (main != nil && n.id == main.id) do continue
 		tiles: []i32
 		tiles, _, err = gen_tiles(&ev, n.id, allocator)
 		if err != "" do break
@@ -501,11 +589,27 @@ Gen_Generate :: proc(g: ^Gen_Graph, seed: u64 = 0, allocator := context.allocato
 	return
 }
 
+// Gen_ComponentsOf: for an output that writes components, each cell's rule
+// (an index into its rules: the first whose range holds the value and that
+// names a component; -1: none).
+Gen_ComponentsOf :: proc(out: ^Gen_Node, grid: Gen_Grid, allocator := context.allocator) -> []int {
+	ks := make([]int, len(grid.v), allocator)
+	#no_bounds_check for v, i in grid.v {
+		ks[i] = -1
+		for r, k in out.rules do if r.component != "" && v >= r.min && v <= r.max {
+			ks[i] = k
+			break
+		}
+	}
+	return ks
+}
+
 Gen_ResultDestroy :: proc(r: ^Gen_Result, allocator := context.allocator) {
 	delete(r.tiles, allocator)
 	for ly in r.layers do delete(ly.tiles, allocator)
 	delete(r.layers)
 	delete(r.entities)
+	delete(r.components)
 	r^ = {}
 }
 

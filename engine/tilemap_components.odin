@@ -280,6 +280,93 @@ TileMapNode_FillComponents :: proc(tm: ^TileMapNode, cell: [2]int, path: string)
 	return placed
 }
 
+// Tile_Component_Place: a component to paint on a cell (TileMapNode_PlaceComponents).
+Tile_Component_Place :: struct {
+	component: string,
+	cell:      [2]int,
+}
+
+// TileMapNode_PlaceComponents paints many components at once (a level
+// generator's output that writes components, #171), in order: each takes
+// its footprint centred on its cell (kept inside the map) unless that
+// overlaps one placed earlier in the call - then it is skipped. Instances
+// already on the layer under a footprint go. The queues are processed once,
+// at the end. Returns the instances placed (temp) and the first component
+// that couldn't load.
+TileMapNode_PlaceComponents :: proc(tm: ^TileMapNode, items: []Tile_Component_Place, scene: ^Scene, ctx: ^GameContext) -> (placed: []^Node, err: string) {
+	out := make([dynamic]^Node, context.temp_allocator)
+	gc := ctx if ctx != nil else tm.gameContext
+	if scene == nil || scene.manager == nil || len(items) == 0 do return out[:], ""
+	m := scene.manager
+	TileMapNode_Layout(tm)
+	top_node := tm.parent if tm.parent != nil else scene.rootNode
+	// What is on the layer now, and the children's names.
+	occ := make(map[[2]int]^Node, allocator = context.temp_allocator)
+	names := make(map[string]bool, allocator = context.temp_allocator)
+	for ch in GetChildrenView(m, tm) {
+		if ch == nil || ch.removing do continue
+		names[ch.name] = true
+		if ch.componentPath == "" do continue
+		size := TileMapNode_ComponentFootprint(tm, ch.componentPath, ch)
+		top := tilemap_block_of(tm, ch.position, size)
+		for y in 0 ..< size.y do for x in 0 ..< size.x do occ[top + {x, y}] = ch
+	}
+	taken := make(map[[2]int]bool, allocator = context.temp_allocator)
+	bad := make(map[string]bool, allocator = context.temp_allocator)
+	for it in items {
+		if it.component == "" || it.component in bad || !in_map(tm, it.cell) || it.cell in taken do continue
+		size, known := tm.compFootprints[tilemap_fp_key(tm, it.component)]
+		n: ^Node
+		if !known {
+			// Measured on a first instance (in the tree, placed).
+			n = Scene_InstantiateComponent(scene, it.component, tm, gc)
+			if n == nil {
+				bad[it.component] = true
+				if err == "" do err = fmt.tprintf("no component %s", it.component)
+				continue
+			}
+			n.position = TileMapNode_BlockCenter(tm, it.cell, {1, 1})
+			ProcessNodeQueues(m, gc)
+			Node_SetGlobalPositions(m, top_node)
+			size = TileMapNode_ComponentFootprint(tm, it.component, n)
+		}
+		top := TileMapNode_BlockFor(it.cell, size)
+		top = {clamp(top.x, 0, max(tm.mapSize.x - size.x, 0)), clamp(top.y, 0, max(tm.mapSize.y - size.y, 0))}
+		free := true
+		for y in 0 ..< size.y do for x in 0 ..< size.x do if top + {x, y} in taken do free = false
+		if !free {
+			if n != nil do RemoveNode(m, n)
+			continue
+		}
+		if n == nil {
+			n = Scene_InstantiateComponent(scene, it.component, tm, gc)
+			if n == nil {
+				bad[it.component] = true
+				if err == "" do err = fmt.tprintf("no component %s", it.component)
+				continue
+			}
+		}
+		for y in 0 ..< size.y do for x in 0 ..< size.x {
+			c := top + {x, y}
+			taken[c] = true
+			if o, ok := occ[c]; ok && !o.removing do RemoveNode(m, o)
+		}
+		n.position = TileMapNode_BlockCenter(tm, top, size)
+		base := filepath.stem(filepath.stem(it.component))
+		name := fmt.tprintf("%s_%d_%d", base, top.x, top.y)
+		for k := 2; (name in names); k += 1 {
+			name = fmt.tprintf("%s_%d_%d_%d", base, top.x, top.y, k)
+		}
+		n.name = strings.clone(name, n.allocator)
+		names[n.name] = true
+		append(&out, n)
+	}
+	ProcessNodeQueues(m, gc)
+	Node_SetGlobalPositions(m, top_node)
+	TileMapNode_Changed(tm)
+	return out[:], err
+}
+
 // --- Lua -----------------------------------------------------------------------------
 // map:tilemap_component_at(x, y) -> node | nil          (cells, 0-based)
 // map:tilemap_set_component(x, y, "components/Coin.component.json") -> node | nil
