@@ -32,9 +32,13 @@ git push origin v0.1.0
 Then bump `VERSION` (`0.2.0`) on main: dev builds stop until it's bumped
 (they'd sort below the release). Release editors only offer releases.
 
+Before tagging, install the candidate on fresh machines: the **Install
+check** workflow (Actions > Install check > Run workflow) and the checklist
+of what it can't check ([Install checks](docs/contributing/install-checks.md)).
+
 ## What a build contains
 
-The workflow builds:
+The workflow builds (`build-packages.yml`, shared with the install checks):
 
 1. the game runners on macOS, Linux and Windows, and the web runner;
 2. the editor on each platform, with **every** platform's runners inside (any
