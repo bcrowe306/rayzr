@@ -329,15 +329,11 @@ class Android:
                 time.sleep(0.25)
             log = self.adb_("logcat", "-d", "-v", "brief", "-s", "Rayzr:V", "libc:V", "DEBUG:V").stdout.splitlines()
             if gone:
-                # (#329: the runner aborts in its shutdown on Android - after the game
-                # and its saves are done - "pthread_mutex_lock called on a destroyed
-                # mutex": an engine bug, noted, not this test's failure.)
-                finished = any("Lua scripting engine terminated" in l for l in log)
-                code = 0 if finished else -1
-                if finished and any("destroyed mutex" in l for l in log):
-                    self.notes.add("the app aborted in its shutdown after the game ended "
-                                   "(FORTIFY: pthread_mutex_lock called on a destroyed mutex) - engine bug")
-                    log = [l for l in log if not l.startswith(("F/libc", "F/DEBUG", "I/DEBUG", "W/DEBUG"))]
+                # (The process ended: exit.txt written just before, or a crash -
+                # the log says.)
+                got = self.app(pkg, "cat", ext + "/exit.txt")
+                ok = got.returncode == 0 and got.stdout.strip().lstrip("-").isdigit()
+                code = int(got.stdout.strip()) if ok else -1
             self.sh("am", "force-stop", pkg)
             self.app(pkg, "rm", "-f", ext + "/exit.txt")
             self.get(pkg, f"{ext}/dump{i}.json", r["dump"])

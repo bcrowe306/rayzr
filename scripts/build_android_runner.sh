@@ -58,10 +58,21 @@ lib() { # out.a  cc  flags...  -- sources...
 	"$AR" rcs "$out" "$objdir"/*.o
 }
 R="$DEPS/raylib-5.5/src"
-if [ ! -f "$DEPS/libraylib.a" ]; then
+# raudio.c patched (#384): raylib 5.5's CloseAudioDevice destroys its audio
+# mutex before it stops the device, so an audio callback in between locks a
+# destroyed mutex - Android's libc aborts the app on that (FORTIFY). The
+# device goes first here. (raudio_rayzr.c missing: an older build - rebuilt.)
+RAUDIO="$DEPS/raudio_rayzr.c"
+if [ ! -f "$DEPS/libraylib.a" ] || [ ! -f "$RAUDIO" ]; then
 	echo "Building raylib (android)"
+	perl -0pe 's/(\n\s*)ma_mutex_uninit\(&AUDIO\.System\.lock\);(\n\s*)ma_device_uninit\(&AUDIO\.System\.device\);/$1ma_device_uninit(&AUDIO.System.device);$2ma_mutex_uninit(&AUDIO.System.lock);/' \
+		"$R/raudio.c" > "$RAUDIO.tmp"
+	grep -A1 'ma_device_uninit(&AUDIO.System.device);' "$RAUDIO.tmp" | grep -q 'ma_mutex_uninit(&AUDIO.System.lock);' ||
+		{ echo "raudio.c: the CloseAudioDevice patch didn't apply" >&2; exit 1; }
+	mv "$RAUDIO.tmp" "$RAUDIO"
+	rm -f "$DEPS/libraylib.a"
 	lib "$DEPS/libraylib.a" "$CC" -O2 -fPIC -DPLATFORM_ANDROID -DGRAPHICS_API_OPENGL_ES3 -I"$R" -I"$GLUE" -- \
-		"$R/rcore.c" "$R/rshapes.c" "$R/rtextures.c" "$R/rtext.c" "$R/rmodels.c" "$R/utils.c" "$R/raudio.c" "$GLUE/android_native_app_glue.c"
+		"$R/rcore.c" "$R/rshapes.c" "$R/rtextures.c" "$R/rtext.c" "$R/rmodels.c" "$R/utils.c" "$RAUDIO" "$GLUE/android_native_app_glue.c"
 fi
 L="$DEPS/lua-5.4.7/src"
 if [ ! -f "$DEPS/liblua.a" ]; then

@@ -741,7 +741,6 @@ Runner_Stop :: proc(rs: ^Runner_State) {
 	delete(rs.inputEvents)
 	Pixel_Release()
 	if rs.fontsLoaded do UnloadEngineFonts()
-	if rs.audioOpen do rl.CloseAudioDevice()
 	Post_Unload()
 	Render_ReleaseBatching()
 	if runnerTarget.id != 0 {
@@ -753,6 +752,10 @@ Runner_Stop :: proc(rs: ^Runner_State) {
 	if Tests_Active() do Tests_Shutdown(rs.game)
 	Recorder_Discard()
 	rs.game->terminate()
+	// (After the game: its teardown stops the mixer's stream and unloads its
+	// sounds, which lock raylib's audio mutex - gone once the device is
+	// closed: Android's libc aborts on that, #384.)
+	if rs.audioOpen do rl.CloseAudioDevice()
 	free(rs)
 }
 
