@@ -151,3 +151,38 @@ return M
 	testing.expectf(t, strings.contains(text, `"exited": true`), "on_exited_tree ran at quit (the scene still there): %s", text)
 	testing.expectf(t, strings.contains(text, `"destroyed": 3`), "on_destroy's Save.set kept: %s", text)
 }
+
+// #370: an empty slot only read (Save.get), then left (Save.slot) or quit,
+// isn't written as {}; one emptied is.
+@(test)
+test_save_empty_slot_not_written :: proc(t: ^testing.T) {
+	dir, _ := filepath.join({Engine_TempDir(), "rayzr_save_empty_test"}, context.temp_allocator)
+	_ = os.remove_all(dir)
+	defer os.remove_all(dir)
+	Save_SetDirectory(dir)
+	defer Save_Reset()
+	path :: proc(dir, name: string) -> string {
+		p, _ := filepath.join({dir, name}, context.temp_allocator)
+		return p
+	}
+	game := new(Game)
+	InitializeGame(game)
+	L := game.scriptManager.L
+	code := `
+assert(Save.slot("slot_2") == "slot_2")
+peek = Save.get("game")
+Save.slot("save")
+Save.set("coins", 1)
+Save.flush()
+Save.set("coins", nil) -- emptied: written as {}
+Save.slot("slot_3")
+Save.has("anything")
+`
+	res := lua.L_dostring(L, strings.clone_to_cstring(code, context.temp_allocator))
+	testing.expectf(t, res == 0, "lua: %s", lua.tostring(L, -1) if res != 0 else "")
+	game->terminate()
+	testing.expect(t, !os.exists(path(dir, "slot_2.json")), "slot_2 only read, then left: not written")
+	testing.expect(t, !os.exists(path(dir, "slot_3.json")), "slot_3 only read at quit: not written")
+	data, _ := os.read_entire_file(path(dir, "save.json"), context.temp_allocator)
+	testing.expectf(t, strings.trim_space(string(data)) == "{}", "emptied: rewritten (%s)", string(data))
+}

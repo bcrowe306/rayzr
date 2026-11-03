@@ -264,10 +264,16 @@ Save_Flush :: proc(L: ^lua.State) -> bool {
 	lua.getfield(L, lua.REGISTRYINDEX, SAVE_REGISTRY_KEY)
 	defer lua.pop(L, 1)
 	if lua.type(L, -1) != .TABLE do return true // never used: nothing to write
+	path := Save_FilePath()
+	// Empty and no file yet (an empty slot only read): nothing to write -
+	// the slot stays empty, not "{}" (#370). (Emptied, a file is rewritten.)
+	lua.pushnil(L)
+	empty := lua.next(L, -2) == 0
+	if !empty do lua.pop(L, 2)
+	if empty && !os.exists(path) do return true
 	sb := strings.builder_make(context.temp_allocator)
 	write_lua(L, -1, &sb, 0, "Save")
 	strings.write_byte(&sb, '\n')
-	path := Save_FilePath()
 	_ = os.make_directory_all(filepath.dir(path, context.temp_allocator))
 	// Written next to it, then renamed over it: a crash mid-write keeps the old file.
 	tmp := strings.concatenate({path, ".tmp"}, context.temp_allocator)

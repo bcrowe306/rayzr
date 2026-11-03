@@ -8,7 +8,7 @@
 - **Writing at the right moment**: data is written when the game quits;
   call `Save.flush` at checkpoints or level ends so a crash loses nothing.
 - **Several save files**: `Save.slot("slot_2")` switches to another file
-  (writing the current one first) for a "pick a save" menu; `Save.path`
+  (writing the current one first) for a "pick a save" menu; `Save.get_path()`
   shows where it lives.
 - **Starting over**: `Save.delete` removes one key, `Save.clear` every key;
   `Save.has` and `Save.keys` look at what's there.
