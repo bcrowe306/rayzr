@@ -463,6 +463,13 @@ Runner_Start :: proc(opts: Run_Options) -> (^Runner_State, bool) {
 	rl.SetTraceLogLevel(.ERROR) // raylib warns once per oversized icon glyph (thousands of lines)
 	when ODIN_OS == .JS do rl.SetTraceLogLevel(.WARNING) // (the browser console: shader / GL problems)
 	titleC := strings.clone_to_cstring(winTitle, context.temp_allocator)
+	// (Asked first: raylib aborts inside InitWindow when GLFW can't make the
+	// window on a machine with a monitor - gl_window_check.odin.)
+	if glOk, why := Window_CanOpenGL(video.msaa); !glOk {
+		log.errorf("Could not open the game window (OpenGL 3.3 is needed): %s", why)
+		Runner_Stop(rs)
+		return nil, false
+	}
 	rl.InitWindow(winW, winH, titleC)
 	if Runner_AfterWindow != nil do Runner_AfterWindow()
 	if !rl.IsWindowReady() {

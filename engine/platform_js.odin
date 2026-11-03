@@ -92,3 +92,6 @@ Shader_Port :: proc(src: cstring) -> cstring {
 	if i := strings.index_byte(rest, '\n'); i >= 0 do rest = rest[i + 1:] // (drops "core" etc.)
 	return strings.clone_to_cstring(strings.concatenate({"#version 300 es\nprecision highp float;\nprecision highp int;\n", rest}, context.temp_allocator), context.temp_allocator)
 }
+
+// Window_CanOpenGL (gl_window_check.odin): the page's WebGL canvas - always.
+Window_CanOpenGL :: proc(msaa := false) -> (ok: bool, reason: string) {return true, ""}

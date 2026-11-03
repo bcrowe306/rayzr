@@ -44,8 +44,8 @@ Platforms (#329): the same tests play in the other runners too -
                 packaged (arm64) with a runner built with -define:RAYZR_TEST_HOOKS=true
                 (--android-runner libmain.so; default bin/runners/android-test - OUT=that
                 scripts/build_android_runner.sh -define:RAYZR_TEST_HOOKS=true) and
-                installed; a run is the app started with its arguments in its external
-                files folder (runner/android/main.odin), logcat is its log. An x86_64
+                installed (debuggable); a run is the app started with its arguments in
+                its own files folder (run-as; runner/android/main.odin), logcat is its log. An x86_64
                 emulator runs it through its ARM translation (API 30+ images)
 Tests with a "golden" image or an "env" run on the desktop only; ones that
 quit (Engine.quit: "quits", also in "before") are skipped on the web, where
@@ -252,13 +252,36 @@ class Android:
     def adb_(self, *cmd):
         return subprocess.run([self.adb] + list(cmd), capture_output=True, text=True, check=True, timeout=180)
 
+    # The test folder is the app's own (files/rayzr_test - runner/android/
+    # main.odin), reached as the app through run-as (the test APKs are
+    # debuggable): from Android 11 on adb can't make folders in shared
+    # storage's Android/data/<id>. (Names here are [a-z0-9._/] only: they go
+    # through the device's shell.)
+    def app(self, pkg, *cmd, check=False):
+        return self.sh("run-as", pkg, *cmd, check=check)
+
+    def put(self, pkg, local, rel):
+        """A local file -> the app's folder (rel: from its data folder)."""
+        with open(local, "rb") as f:
+            subprocess.run([self.adb, "exec-in", f"run-as {pkg} sh -c 'cat > {rel}'"], stdin=f,
+                           capture_output=True, check=True, timeout=180)
+
+    def get(self, pkg, rel, local):
+        """The app's file -> local (False: it has none)."""
+        if self.app(pkg, "ls", rel).returncode != 0:
+            return False
+        data = subprocess.run([self.adb, "exec-out", f"run-as {pkg} cat {rel}"], capture_output=True,
+                              check=True, timeout=180).stdout
+        open(local, "wb").write(data)
+        return True
+
     def install(self, tid):
         """The template's APK (once): id com.rayzr.test.<id>."""
         if tid not in self.installed:
             pkg = "com.rayzr.test." + re.sub(r"[^a-z0-9]", "", tid.lower())
             out = os.path.join(self.dir, "apk_" + tid)
             subprocess.run([os.path.join(ROOT, "scripts", "package_android.sh"), os.path.join(ROOT, "templates", tid), out,
-                            "--id", pkg, "--no-aab", "--runner", self.runner], check=True,
+                            "--id", pkg, "--no-aab", "--debuggable", "--runner", self.runner], check=True,
                            capture_output=True)
             apk = [f for f in os.listdir(out) if f.endswith(".apk")][0]
             self.adb_("install", "-r", os.path.join(out, apk))
@@ -268,23 +291,21 @@ class Android:
     def run_all(self, tid, proj, userdata, runs):
         pkg = self.install(tid)
         assert re.fullmatch(r"[a-z0-9.]+", pkg)
-        ext = f"/sdcard/Android/data/{pkg}/files/rayzr_test"
+        ext = "files/rayzr_test"
         self.sh("am", "force-stop", pkg)
-        self.sh("rm", "-r", "-f", ext)
-        self.sh("mkdir", "-p", ext + "/userdata", check=True)
-        # (Folders adb makes are the shell user's: open to the app - setgid kept,
-        # or adb push can't set its files' group. Pushed files are world-readable.)
-        self.sh("chmod", "2777", ext, ext + "/userdata", check=True)
+        self.app(pkg, "rm", "-r", "-f", ext)
+        self.app(pkg, "mkdir", "-p", ext + "/userdata", check=True)
         game = os.path.join(self.dir, "game.rayzr")
         pack(proj, game)
-        self.adb_("push", game, ext + "/game.rayzr")
+        self.put(pkg, game, ext + "/game.rayzr")
         for f in os.listdir(userdata):
-            self.adb_("push", os.path.join(userdata, f), ext + "/userdata/" + f)
+            assert re.fullmatch(r"[A-Za-z0-9._-]+", f), f
+            self.put(pkg, os.path.join(userdata, f), ext + "/userdata/" + f)
         out = []
         for i, r in enumerate(runs):
             inp = os.path.join(self.dir, "input.txt")
             open(inp, "w").write(r["input"])
-            self.adb_("push", inp, ext + "/input.txt")
+            self.put(pkg, inp, ext + "/input.txt")
             args = ["--project", "game.rayzr", "--user-data", "userdata", "--frames", str(r["frames"]),
                     "--input-script", "input.txt", "--dump-scene", f"dump{i}.json", "--scene", r["scene"]] + r["args"]
             if r.get("shot"):
@@ -292,13 +313,13 @@ class Android:
             ap = os.path.join(self.dir, "args.txt")
             open(ap, "w").write("\n".join(args) + "\n")
             self.adb_("logcat", "-c")
-            self.adb_("push", ap, ext + "/args.txt")  # (last: it makes the next start a test run)
+            self.put(pkg, ap, ext + "/args.txt")  # (last: it makes the next start a test run)
             self.sh("am", "start", "-W", "-n", pkg + "/android.app.NativeActivity", check=True)
             # Over: exit.txt written, or the app's process gone (it ended - a
             # clean exit writes exit.txt first - or crashed: the log tells).
             t0, code, gone = time.time(), None, False
             while time.time() - t0 < 120 + r["frames"] / 30:
-                got = self.sh("cat", ext + "/exit.txt")
+                got = self.app(pkg, "cat", ext + "/exit.txt")
                 if got.returncode == 0 and got.stdout.strip().lstrip("-").isdigit():
                     code = int(got.stdout.strip())
                     break
@@ -318,18 +339,20 @@ class Android:
                                    "(FORTIFY: pthread_mutex_lock called on a destroyed mutex) - engine bug")
                     log = [l for l in log if not l.startswith(("F/libc", "F/DEBUG", "I/DEBUG", "W/DEBUG"))]
             self.sh("am", "force-stop", pkg)
-            self.sh("rm", "-f", ext + "/exit.txt")
-            if self.sh("ls", f"{ext}/dump{i}.json").returncode == 0:
-                self.adb_("pull", f"{ext}/dump{i}.json", r["dump"])
-            if r.get("shot") and self.sh("ls", f"{ext}/shot{i}.png").returncode == 0:
-                self.adb_("pull", f"{ext}/shot{i}.png", r["shot"])
+            self.app(pkg, "rm", "-f", ext + "/exit.txt")
+            self.get(pkg, f"{ext}/dump{i}.json", r["dump"])
+            if r.get("shot"):
+                self.get(pkg, f"{ext}/shot{i}.png", r["shot"])
             # (The app's saves -> the local user-data folder: @file checks read it.)
-            pulled = os.path.join(self.dir, "pulled")
-            shutil.rmtree(pulled, ignore_errors=True)
-            os.makedirs(pulled)
-            self.adb_("pull", ext + "/userdata", pulled)
             shutil.rmtree(userdata)
-            shutil.copytree(os.path.join(pulled, "userdata"), userdata)
+            os.makedirs(userdata)
+            listed = self.app(pkg, "find", ext + "/userdata", "-type", "f", check=True).stdout.split()
+            for rel in listed:
+                sub = rel[len(ext + "/userdata/"):]
+                assert re.fullmatch(r"[A-Za-z0-9._/-]+", sub) and ".." not in sub, rel
+                dst = os.path.join(userdata, *sub.split("/"))
+                os.makedirs(os.path.dirname(dst), exist_ok=True)
+                self.get(pkg, rel, dst)
             errs = [l for l in log if l.startswith("E/") or "Lua error" in l or "[ERROR]" in l]
             out.append({"code": code if code is not None else -1, "errors": errs,
                         "tail": "" if code is not None else "the app didn't finish the run: " + " | ".join(log[-10:])})

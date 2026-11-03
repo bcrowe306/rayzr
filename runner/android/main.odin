@@ -24,12 +24,10 @@ import e "../../engine"
 @(default_calling_convention = "c")
 foreign {
 	rayzr_android_internal_path :: proc() -> cstring --- // (android_glue.c)
-	rayzr_android_external_path :: proc() -> cstring ---
 	rayzr_android_read_asset :: proc(name: cstring, size: ^i64) -> [^]u8 ---
 	free :: proc(p: rawptr) ---
 	rayzr_android_install_hooks :: proc() ---
 	__android_log_write :: proc(prio: c.int, tag: cstring, text: cstring) -> c.int ---
-	umask :: proc(mask: c.uint) -> c.uint ---
 }
 
 ANDROID_LOG_INFO :: 4
@@ -91,19 +89,20 @@ main :: proc() {
 
 // Scripted test runs (scripts/templates/test_templates.py --android; CI's
 // emulator job) - only in runners built with -define:RAYZR_TEST_HOOKS=true,
-// never in the runner games ship with. adb pushes rayzr_test/args.txt into
-// the app's external files folder: runner arguments, one a line (--frames,
-// --input-script, --dump-scene, --user-data, --scene, a game.rayzr), paths
-// relative to rayzr_test/. The file is used once (removed when read); when
-// the game is over rayzr_test/exit.txt holds its exit code (the harness also
-// takes the app's process ending as the end).
+// never in the runner games ship with (their APKs are debuggable:
+// package_android.sh --debuggable). The harness writes rayzr_test/args.txt
+// into the app's own folder (files/, through `adb shell run-as`: shared
+// storage's Android/data is closed to adb from Android 11 on): runner
+// arguments, one a line (--frames, --input-script, --dump-scene,
+// --user-data, --scene, a game.rayzr), paths relative to rayzr_test/. The
+// file is used once (removed when read); when the game is over
+// rayzr_test/exit.txt holds its exit code (the harness also takes the app's
+// process ending as the end).
 RAYZR_TEST_HOOKS :: #config(RAYZR_TEST_HOOKS, false)
 
 @(private = "file")
 test_run :: proc(game: string) -> bool {
-	ext := string(rayzr_android_external_path())
-	if ext == "" do return false
-	dir, _ := filepath.join({ext, "rayzr_test"}, context.allocator)
+	dir, _ := filepath.join({string(rayzr_android_internal_path()), "rayzr_test"}, context.allocator)
 	argsPath, _ := filepath.join({dir, "args.txt"}, context.allocator)
 	text, err := os.read_entire_file(argsPath, context.allocator)
 	if err != nil {
@@ -111,9 +110,6 @@ test_run :: proc(game: string) -> bool {
 		return false
 	}
 	_ = os.remove(argsPath)
-	// (What the game writes - the dump, its saves - adb reads back: files
-	// the app makes are otherwise private to it.)
-	umask(0)
 	args := make([dynamic]string)
 	for line in strings.split_lines(string(text)) do if line != "" do append(&args, line)
 	opts := e.Engine_ParseRunArgs(args[:])

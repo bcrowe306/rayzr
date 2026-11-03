@@ -30,14 +30,6 @@ const char *rayzr_android_internal_path(void) {
 	return ".";
 }
 
-// rayzr_android_external_path: the app's folder on shared storage
-// (Android/data/<id>/files) - adb can write there (test runs, main.odin).
-const char *rayzr_android_external_path(void) {
-	struct android_app *app = GetAndroidApp();
-	if (app && app->activity && app->activity->externalDataPath) return app->activity->externalDataPath;
-	return "";
-}
-
 // rayzr_android_read_asset: an asset of the APK, whole (malloc'd; free it),
 // or NULL. (Before InitWindow raylib's own asset reading isn't set up.)
 #include <android/asset_manager.h>
