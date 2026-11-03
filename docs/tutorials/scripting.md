@@ -193,7 +193,13 @@ end
 -- Moves the gem somewhere else on the screen and restarts the countdown.
 function Gem:hop()
     local w, h = Engine.get_virtual_size()
-    self.node:set_position(math.random(64, w - 64), math.random(64, h - 64))
+    -- A new place out of the player's reach (else it's caught again at once).
+    local x, y
+    for _ = 1, 20 do
+        x, y = math.random(64, w - 64), math.random(64, h - 64)
+        if not self.player or self.player.position:distance(Vec2(x, y)) > self.reach * 2 then break end
+    end
+    self.node:set_position(x, y)
     if self.timer then self.timer:timer_start() end
 end
 
