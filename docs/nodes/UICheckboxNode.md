@@ -17,7 +17,7 @@ on / off option such as Fullscreen, Subtitles or Invert Y. It raises
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *UI Checkbox*. It is 260 x 26, labelled
+1. **Add Node** (Cmd+A / Ctrl+A) > *UI Checkbox*. It is 260 x 26, labelled
    "Checkbox", unticked.
 2. Put it under a [Screen Layer](ScreenLayerNode.md) or in a
    [UI Container](UIContainerNode.md).

@@ -15,7 +15,7 @@ it's on.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *UI Toggle Switch*. It is 140 x 24, labelled
+1. **Add Node** (Cmd+A / Ctrl+A) > *UI Toggle Switch*. It is 140 x 24, labelled
    "Toggle", off.
 2. Put it under a [Screen Layer](ScreenLayerNode.md) or in a
    [UI Container](UIContainerNode.md).

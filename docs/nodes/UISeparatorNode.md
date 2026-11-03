@@ -17,7 +17,7 @@ draws only; it takes no input.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *UI Separator*. It starts 360 x 10 px with no
+1. **Add Node** (Cmd+A / Ctrl+A) > *UI Separator*. It starts 360 x 10 px with no
    label: a plain line.
 2. Put it in a [UI Container](UIContainerNode.md) between two groups of
    controls, or under a [Screen Layer](ScreenLayerNode.md).

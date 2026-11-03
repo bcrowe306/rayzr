@@ -20,7 +20,7 @@ can pause, disable or remove its parent while it's off screen.
 
 ## Using it
 
-1. Select the node it should watch and **Add Node** (Ctrl+A) >
+1. Select the node it should watch and **Add Node** (Cmd+A / Ctrl+A) >
    *Visibility Notifier*. It becomes a child, so it moves with its parent.
 2. Set **Size** to cover the parent's sprite (or a little more). The
    rectangle is centred on the notifier and scales with it.

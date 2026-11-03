@@ -25,7 +25,7 @@ with distance from the listener, panned to its side.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *Sound Effect*, under the node that makes the
+1. **Add Node** (Cmd+A / Ctrl+A) > *Sound Effect*, under the node that makes the
    sound.
 2. In the Inspector's **Audio** section, **Add Sound** picks an audio file
    from the project (or drop audio from Assets onto the list). Add more

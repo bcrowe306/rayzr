@@ -301,7 +301,7 @@ atlas_canvas :: proc(state: ^EditorState, node: ^e.AtlasSpriteNode) {
 	if UI_Button("1:1", "atlas.zoom-1") do zoomTo = 1
 	imgui.SameLine(0, UI_SPACE)
 	imgui.AlignTextToFramePadding()
-	UI_DimText("Cmd+wheel zooms · drag across to select region")
+	UI_DimText(CMD + "+wheel zooms · drag across to select region")
 
 	// --- Canvas Viewport ---
 	canvasOpen := imgui.BeginChild("##atlas_canvas", {0, 0}, {}, {.HorizontalScrollbar, .NoScrollWithMouse, .NoMove})

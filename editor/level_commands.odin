@@ -15,7 +15,7 @@ import imgui "lib/imgui"
 // ============================================================================
 
 LDTK_COMMAND_WHEN := [?]string{"Manual", "AfterLoad", "BeforeSave", "AfterSave"}
-LDTK_COMMAND_WHEN_LABELS := [?]string{"Run manually (Cmd+R)", "Run after loading", "Run before saving", "Run after saving"}
+LDTK_COMMAND_WHEN_LABELS := [?]string{"Run manually (" + CMD + "+R)", "Run after loading", "Run before saving", "Run after saving"}
 
 Level_Command_Then :: enum u8 {
 	None,

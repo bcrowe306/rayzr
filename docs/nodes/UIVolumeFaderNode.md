@@ -18,7 +18,7 @@ set the volume of a bus: Music, Effects, Voice.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *UI Volume Fader*. It starts 96 x 320 px, with
+1. **Add Node** (Cmd+A / Ctrl+A) > *UI Volume Fader*. It starts 96 x 320 px, with
    the label "Master", at 0 dB, ranging from -60 dB to +6 dB.
 2. Put it under a [Screen Layer](ScreenLayerNode.md), or in a
    [UI Container](UIContainerNode.md) with a row of faders.

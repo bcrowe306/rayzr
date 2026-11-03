@@ -76,6 +76,8 @@ TestDrive :: struct {
 	step:       int,      // sub-step of the current command
 	wait:       int,      // frames to wait before continuing
 	untilFrames: int,     // frames spent in the current wait-until
+	scrollLastY: f32,     // scrolling a target into view: where it was last frame
+	scrollStuck: int,     //   and for how many frames the wheel hasn't moved it
 	mouse:      [2]f32,
 	items:      map[string]Drive_Rect, // registered this frame
 	prevItems:  map[string]Drive_Rect, // registered last frame (used for lookups)
@@ -693,6 +695,15 @@ drive_scroll_into_view :: proc(d: ^TestDrive, target: string) -> (scrolling: boo
 	hiddenTop := r.min.y < r.clipMin.y + 20
 	hiddenBottom := r.max.y > r.clipMax.y - 2
 	if hiddenTop || hiddenBottom {
+		// The wheel not moving it (it's fixed at the window's edge, or the
+		// wheel scrolls a child window under the mouse instead): give up
+		// after a few frames rather than scroll that child away (#376).
+		if d.untilFrames == 0 do d.scrollStuck = 0
+		else if r.min.y == d.scrollLastY {
+			d.scrollStuck += 1
+			if d.scrollStuck >= 6 do return false, true
+		} else do d.scrollStuck = 0
+		d.scrollLastY = r.min.y
 		d.untilFrames += 1
 		if d.untilFrames > 120 do return false, true // give up; click anyway
 		centre := (r.clipMin + r.clipMax) * 0.5

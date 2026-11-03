@@ -17,7 +17,7 @@ Retry. It changes colour under the mouse and while pressed, and raises
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *UI Button*. It is 200 x 36 and says "Button".
+1. **Add Node** (Cmd+A / Ctrl+A) > *UI Button*. It is 200 x 36 and says "Button".
 2. Put it under a [Screen Layer](ScreenLayerNode.md), or in a
    [UI Container](UIContainerNode.md) to stack it with other buttons.
 3. In the Node tab's **Properties** section set **Text**, **Font Size** and

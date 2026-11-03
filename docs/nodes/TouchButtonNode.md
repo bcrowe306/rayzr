@@ -16,7 +16,7 @@ on a phone with no script changes.
 ## Using it
 
 1. Add a [Screen Layer](ScreenLayerNode.md) anchored **Bottom Right**,
-   then **Add Node** (Ctrl+A) > *Touch Button* under it, at for example
+   then **Add Node** (Cmd+A / Ctrl+A) > *Touch Button* under it, at for example
    (-110, -110).
 2. In the Node tab's **Properties** set **Action** (an input action's
    name), **Label**, **Radius** and the colours.

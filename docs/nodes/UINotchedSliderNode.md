@@ -19,7 +19,7 @@ a few steps: difficulty, quality presets, text speed, a 1-5 rating.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *UI Notched Slider*. It starts 360 x 48 px, with
+1. **Add Node** (Cmd+A / Ctrl+A) > *UI Notched Slider*. It starts 360 x 48 px, with
    the label "Detents", a range of 0 to 4 and five notches.
 2. Put it under a [Screen Layer](ScreenLayerNode.md) so it stays on screen,
    or inside a [UI Container](UIContainerNode.md) that lays it out with

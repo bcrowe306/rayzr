@@ -20,7 +20,7 @@ simple pick-one list: save slots, levels, a character roster.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *UI List View*. It starts 200 x 160 px with three
+1. **Add Node** (Cmd+A / Ctrl+A) > *UI List View*. It starts 200 x 160 px with three
    rows ("Option A", "Option B", "Option C"), the first one selected. Set
    your own in the Node tab's **Items** box, one a line, or from a script
    with `node:set_items({...})`.

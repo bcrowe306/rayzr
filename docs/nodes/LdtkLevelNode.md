@@ -25,7 +25,7 @@ show one level, or every level of a world at once.
 1. Import the `.ldtk` file: Assets **+** > Import, or drop it on the Assets
    panel (its tileset images come along).
 2. Double-click it under **Levels** in Assets, or drag it into the
-   viewport. This adds the level node. (Or **Add Node** (Ctrl+A) > *LDtk
+   viewport. This adds the level node. (Or **Add Node** (Cmd+A / Ctrl+A) > *LDtk
    Tilemap Level*, then pick the file in the Inspector's **LDtk Level**
    section > **Project**.)
 3. In the **LDtk Level** section, pick the **World** (when the project has

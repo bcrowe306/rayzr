@@ -22,7 +22,7 @@ carries whatever is under the follower.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *Path*. It starts as an arc between two points.
+1. **Add Node** (Cmd+A / Ctrl+A) > *Path*. It starts as an arc between two points.
 2. Select it and shape it in the viewport:
    - drag a **square** to move a point;
    - drag a **dot** to bend the curve (a point's two handles mirror each

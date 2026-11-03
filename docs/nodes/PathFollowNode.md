@@ -23,7 +23,7 @@ face the way it goes.
 
 ## Using it
 
-1. Select the Path, then **Add Node** (Ctrl+A) > *Path Follow*. It must be
+1. Select the Path, then **Add Node** (Cmd+A / Ctrl+A) > *Path Follow*. It must be
    a direct child of the path.
 2. Add what should travel under the follower. A physics body under it
    should sit at position 0, 0.

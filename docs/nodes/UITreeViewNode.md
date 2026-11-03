@@ -16,7 +16,7 @@ tool.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *UI Tree View*. It starts 220 x 200 px and
+1. **Add Node** (Cmd+A / Ctrl+A) > *UI Tree View*. It starts 220 x 200 px and
    empty: a dark box with a border.
 2. Put it under a [Screen Layer](ScreenLayerNode.md), or in a
    [UI Container](UIContainerNode.md).

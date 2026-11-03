@@ -215,7 +215,7 @@ Queries:
 - `game` (running/stopped), `build`, `log`, `last-log`
 - `add-node-open`, `project-settings-open`, `item:<id>`
 - `file:<project path>`, `abs-file:<path>`
-- `code.open` (tab count), `code.file`, `code.text`, `code.line` (caret line), `code.cursor` (`line:col`),
+- `code.open` (tab count), `code.file`, `code.text`, `code.line` (caret line), `code.cursor` (`line:col`), `code.top-row` (the display row at the top of the text),
   `code.dirty`, `code.focused`, `code.lsp` (off/starting/ready/failed), `code.completion` (visible items,
   comma-separated), `code.signature`, `code.errors`, `code.diagnostics`, `code.diagnostic-messages`, `code.hover`
 - `code.overlays` (`ok <n>` when every overlay is inside the Code area and bounded), `code.update-ms` (last line-state pass), `code.token-bench` (`full=<ms> cached=<ms> tokenized=<n> lines=<n>`), `code.token-speedup`
@@ -230,7 +230,7 @@ Queries:
 - `insp-help-path` (the path the help pane shows), `insp-flash` (the row Show in Inspector lit)
 - `particle-preview` (on / off; `node:<Name>.particles` = an emitter's live particles)
 - `ref-section`, `ref-api` (the Scripting Reference window's section and API entry)
-- `bottom-tab` (the bottom panel tab shown: Console, Profiler, Game, Animation, Particles, Ldtk, Search, StateGraph)
+- `bottom-tab` (the bottom panel tab shown: Console, Output, Profiler, Animation, Game, Particles, Ldtk, Search, StateGraph, Mixer, Library, TileMap, Files, Tests, BehaviorTree, Goap)
 - `search-total`, `search-files` (find in files)
 - `smg-selected` (the graph's selected state / `transition N`), `smg-zoom`, `smg-pan`, `smg-ways` (live ways out: `idle:Min_Time, run:waiting, ...`); `node:<Name>.path-points` (a PathNode's point count); `mixer-buses` (`Master:+0.0,Music:-6.0,...`), `mixer-voices`
 - `remote-debug-draw` (the running game's last debug-draw reply)

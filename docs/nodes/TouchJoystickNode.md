@@ -16,7 +16,7 @@ script changes.
 ## Using it
 
 1. Add a [Screen Layer](ScreenLayerNode.md) anchored **Bottom Left**,
-   then **Add Node** (Ctrl+A) > *Touch Joystick* under it.
+   then **Add Node** (Cmd+A / Ctrl+A) > *Touch Joystick* under it.
 2. Move it up and right from the corner, for example (130, -130), so the
    thumb reaches it.
 3. In the Node tab's **Properties** set **Radius** (a full push),

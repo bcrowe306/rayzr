@@ -386,6 +386,10 @@ Action_RecentRank :: proc(id: string) -> int {
 	return -1
 }
 
+// CMD: the primary modifier's name in hints - "Cmd" on macOS, "Ctrl"
+// elsewhere (as Chord_Text names .Primary): "Undo (" + CMD + "+Z)" (#376).
+CMD :: "Cmd" when ODIN_OS == .Darwin else "Ctrl"
+
 // Chord_Text: "Cmd+Shift+P" (macOS) / "Ctrl+Shift+P" (`mac`: the macOS names
 // anywhere, for the docs - shortcuts_doc.odin).
 Chord_Text :: proc(c: Chord, allocator := context.temp_allocator, mac := ODIN_OS == .Darwin) -> string {

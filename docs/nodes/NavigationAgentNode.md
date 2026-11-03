@@ -23,7 +23,7 @@ enemy and unit AI.
 
 1. Add a [Navigation Region](NavigationRegionNode.md) over the level (or
    use a tile map / LDtk level).
-2. Select the character and **Add Node** (Ctrl+A) > *Navigation Agent*. It
+2. Select the character and **Add Node** (Cmd+A / Ctrl+A) > *Navigation Agent*. It
    becomes a child of the character it moves.
 3. Set **Speed** (px/s) and **Radius** (the character's size: paths keep
    this far from walls, and agents this far from each other).

@@ -18,7 +18,7 @@ show a translation, and can type itself out letter by letter.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *Text*. It shows "Text" in the engine font.
+1. **Add Node** (Cmd+A / Ctrl+A) > *Text*. It shows "Text" in the engine font.
 2. Type in **Text** (the Inspector's Node tab, **Properties** section). With **Rich Text**
    on (the default) you can mark it up:
    `[color=yellow]gold[/color]`, `[size=40]big[/size]`, `[wave]...[/wave]`,

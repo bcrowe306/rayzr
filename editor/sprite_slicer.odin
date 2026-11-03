@@ -392,14 +392,14 @@ slicer_sheet :: proc(state: ^EditorState) {
 	fitScale := slicer_fit_scale(imgui.GetContentRegionAvail() - {0, previewH + 34})
 	scale := slicer.zoom if slicer.zoom > 0 else fitScale
 	zoomTo := f32(-1)
-	if UI_IconButton(ICON_FA_MINUS, "slicer.zoom-out", "Zoom out (Cmd+wheel)", size = 24) do zoomTo = scale / 1.25
+	if UI_IconButton(ICON_FA_MINUS, "slicer.zoom-out", "Zoom out (" + CMD + "+wheel)", size = 24) do zoomTo = scale / 1.25
 	imgui.SameLine(0, 2)
 	imgui.SetNextItemWidth(64)
 	pct := scale * 100
 	if imgui.DragFloat("##slicer_zoom", &pct, 1, SLICER_ZOOM_MIN * 100, SLICER_ZOOM_MAX * 100, "%.0f%%") do zoomTo = pct / 100
 	Drive_Item("slicer.zoom")
 	imgui.SameLine(0, 2)
-	if UI_IconButton(ICON_FA_PLUS, "slicer.zoom-in", "Zoom in (Cmd+wheel)", size = 24) do zoomTo = scale * 1.25
+	if UI_IconButton(ICON_FA_PLUS, "slicer.zoom-in", "Zoom in (" + CMD + "+wheel)", size = 24) do zoomTo = scale * 1.25
 	imgui.SameLine(0, UI_SPACE)
 	if UI_Button("Fit", "slicer.zoom-fit") do slicer.zoom = 0
 	UI_Tooltip("Fit the whole sheet in the view")
@@ -408,7 +408,7 @@ slicer_sheet :: proc(state: ^EditorState) {
 	UI_Tooltip("One screen pixel per texture pixel")
 	imgui.SameLine(0, UI_SPACE)
 	imgui.AlignTextToFramePadding()
-	UI_DimText("Cmd+wheel zooms · middle-drag pans")
+	UI_DimText(CMD + "+wheel zooms · middle-drag pans")
 
 	// --- the sheet: scrolls when zoomed in ---
 	avail := imgui.GetContentRegionAvail()

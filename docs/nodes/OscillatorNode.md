@@ -19,7 +19,7 @@ It saves keyframing anything that just goes back and forth.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *Oscillator*. Add it under the node it moves
+1. **Add Node** (Cmd+A / Ctrl+A) > *Oscillator*. Add it under the node it moves
    (a child's mappings point at `..`, its parent) or anywhere else.
 2. Pick a **Wave** and a **Rate**. **Rate Unit** says whether Rate is in
    Hertz (cycles a second) or Seconds (the length of one cycle).

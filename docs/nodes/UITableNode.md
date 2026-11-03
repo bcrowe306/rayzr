@@ -18,7 +18,7 @@ details, shop stock or a debug view of game data.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *UI Table*. It starts 540 x 280 px with no
+1. **Add Node** (Cmd+A / Ctrl+A) > *UI Table*. It starts 540 x 280 px with no
    columns and no rows.
 2. Put it under a [Screen Layer](ScreenLayerNode.md), or in a
    [UI Container](UIContainerNode.md).

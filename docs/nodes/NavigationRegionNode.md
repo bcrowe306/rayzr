@@ -25,7 +25,7 @@ cells, and scripts can ask it for a path directly.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *Navigation Region*.
+1. **Add Node** (Cmd+A / Ctrl+A) > *Navigation Region*.
 2. Place it: its **Position** is the rectangle's top-left corner, and
    **Size** its width and height (px). Cover everywhere the agents walk.
 3. Set **Cell Size**: 8-16 px follows tight corridors closely; 32 px finds

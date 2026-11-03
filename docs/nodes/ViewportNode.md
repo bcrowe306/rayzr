@@ -19,7 +19,7 @@ texture, or a material as a texture parameter.
 
 ## Using it
 
-1. **Add Node** (Ctrl+A) > *Viewport*. Set its **Size**, the size it's
+1. **Add Node** (Cmd+A / Ctrl+A) > *Viewport*. Set its **Size**, the size it's
    drawn at.
 2. **World** mode (the default): add a *Camera 2D* under it. That camera
    is the viewport's, not the scene's. Give it a **Follow Target**, a
