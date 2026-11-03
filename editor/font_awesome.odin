@@ -101,6 +101,7 @@ ICON_FA_COMMENT                   :: "\uF075" // Dialogue
 ICON_FA_MOUNTAIN                  :: "\uF6FC" // Parallax
 ICON_FA_VECTOR_SQUARE             :: "\uF5CB" // Nine-slice
 ICON_FA_SQUARE                    :: "\uF0C8" // Vector rectangle tool
+ICON_FA_PENCIL                    :: "\uF303" // Vector pencil tool
 ICON_FA_WIND                      :: "\uF72E" // Trail
 ICON_FA_FILTER                    :: "\uF0B0" // Post effect
 ICON_FA_LOCK                      :: "" // Viewport lock

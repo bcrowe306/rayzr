@@ -45,11 +45,13 @@ Vector_ResourceSaved :: proc(r: ^Vector_Resource) {
 }
 
 // Vector_DocInsertShape puts a shape at the end of `group` (-1: the
-// document's end), keeping every group's range right; its index.
-Vector_DocInsertShape :: proc(doc: ^Vector_Doc, shape: Vector_Shape, group := -1) -> int {
+// document's end) - or at `at` within it (its first shape: drawn under the
+// rest) - keeping every group's range right; its index.
+Vector_DocInsertShape :: proc(doc: ^Vector_Doc, shape: Vector_Shape, group := -1, at := -1) -> int {
 	context.allocator = Vector_EditAllocator(doc)
-	at := len(doc.shapes)
-	if group >= 0 && group < len(doc.groups) do at = doc.groups[group].first + doc.groups[group].count
+	lo, hi := 0, len(doc.shapes)
+	if group >= 0 && group < len(doc.groups) do lo, hi = doc.groups[group].first, doc.groups[group].first + doc.groups[group].count
+	at := clamp(at, lo, hi) if at >= 0 else hi
 	inject_at(&doc.shapes, at, shape)
 	for &g, gi in doc.groups {
 		if vector_group_within(doc, group, gi) do g.count += 1 // (the group and its ancestors grow)

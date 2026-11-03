@@ -78,6 +78,9 @@ and **Ctrl+Z** undoes it. Press **Esc** or **Done** to finish.
 | **Ellipse** | O | Drag one out. **Shift** makes a circle and **Alt** draws from the centre. |
 | **Polygon** | | Drag one out. The toolbar sets the number of sides. |
 | **Star** | | Drag one out. The toolbar sets the number of points and the inner radius. |
+| **Pencil** | Y | Draw a line freehand. When you let go it becomes a few smooth curves; the toolbar's **smooth** slider goes from 0 (every wiggle kept) to 100 (fewest, smoothest curves). |
+| **Brush** | B | Paint a filled stroke in the fill colour. It gets thinner when you move fast and tapers at both ends, like Flash's brush. The toolbar sets its **size** and smoothing. |
+| **Paint Bucket** | K | Click inside a filled shape to give it the fill colour. Click a gap that lines close in (crossing pencil strokes, an unfilled outline) to fill it with a new shape under the lines. Gaps that are still open don't fill. |
 
 Shapes become ordinary paths: edit their corners with the node tool.
 
@@ -610,8 +613,8 @@ The benchmark: `tests/vector/project`, scene `scenes/bench.scene.json`
 - SVG text, images, filters, masks, patterns and markers aren't imported
   (see above); group opacity is applied to each shape (overlapping shapes
   in a half-transparent group show through each other).
-- The editor's drawing tools are the selection, node, pen and shape tools;
-  the brush and paint bucket, and snapping, come next (#267).
+- The Paint Bucket doesn't close small gaps between lines yet (Flash's gap
+  size); snapping and layers in the drawing tools come next (#267).
 - Hidden layers (`display:none`) aren't imported, so keep swap frames
   visible in the file; a whole-file instance draws every frame at once
   (explode it, or pick the symbol).

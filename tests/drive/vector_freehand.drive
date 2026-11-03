@@ -1,0 +1,43 @@
+# #267 part 3: the Pencil draws a smoothed line, the Brush a filled stroke,
+# and the Paint Bucket fills a gap four pencil lines close in (a new shape
+# under them) and recolours a filled shape.
+wait 5
+key escape
+click @hier.add
+type vector
+click @addnode.create
+expect selected == VectorShape
+click @insp.vec.draw
+expect vd.active == true
+
+click @vd.tool:pencil
+drag @node:VectorShape+-150,-100 @node:VectorShape+-20,-60 30
+expect vd.shapes == 1
+expect vd.cmds contains MC
+
+click @vd.tool:brush
+drag @node:VectorShape+20,-100 @node:VectorShape+150,-60 30
+expect vd.shapes == 2
+expect vd.cmds contains Z
+screenshot pencil_brush
+
+# Four crossing lines: a closed-in square the bucket fills.
+click @vd.tool:pencil
+drag @node:VectorShape+-110,0 @node:VectorShape+-10,0 20
+drag @node:VectorShape+-20,-10 @node:VectorShape+-20,90 20
+drag @node:VectorShape+-10,80 @node:VectorShape+-110,80 20
+drag @node:VectorShape+-100,90 @node:VectorShape+-100,-10 20
+expect vd.shapes == 6
+click @vd.tool:bucket
+click @node:VectorShape+-60,40
+expect vd.shapes == 7
+expect vd.shape == 0
+# Outside every line: nothing.
+click @node:VectorShape+-200,40
+expect vd.shapes == 7
+# On the brush stroke: recoloured, not a new shape.
+click @node:VectorShape+85,-80
+expect vd.shapes == 7
+expect vd.shape == 2
+screenshot bucket
+key escape
