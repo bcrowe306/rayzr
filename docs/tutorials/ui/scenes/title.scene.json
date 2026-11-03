@@ -62,11 +62,28 @@
       }
      },
      {
+      "type": "UIButtonNode",
+      "name": "Quit",
+      "position": [
+       -100,
+       56
+      ],
+      "layer": 7,
+      "properties": {
+       "size": [
+        200,
+        36
+       ],
+       "text": "Quit",
+       "fontSize": 18
+      }
+     },
+     {
       "type": "TextNode",
       "name": "Hint",
       "position": [
        0,
-       80
+       120
       ],
       "pivot": [
        0.5,

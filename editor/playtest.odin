@@ -164,6 +164,16 @@ Editor_UpdatePlaytest :: proc(state: ^EditorState) {
 		}
 	}
 
+	// Engine.quit() in Simulate stops the run, not the editor (the game is
+	// the editor's own); elsewhere (the Lua line while editing) it's dropped.
+	if state.game != nil && state.game.shouldQuit {
+		state.game.shouldQuit = false
+		if state.isSimulating {
+			Editor_Log(state, .Info, "Engine.quit(): stopping the simulation (in the editor it ends the run, not the editor)")
+			Toolbar_StopSimulation(state)
+		}
+	}
+
 	if state.gameOutput != nil {
 		drain_pipe(state, &state.gameOutput, &state.gameLineBuf, "game")
 	}

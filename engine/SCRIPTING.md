@@ -1459,6 +1459,7 @@ local elapsed = Engine.get_time()
 local screen_w, screen_h = Engine.get_window_size()
 local virtual_w, virtual_h = Engine.get_virtual_size()
 Engine.set_fullscreen(not Engine.is_fullscreen())   -- e.g. an options menu toggle
+Engine.quit()   -- a Quit button: the game ends (in the editor: the run stops; on the web: nothing, false)
 ```
 
 ---

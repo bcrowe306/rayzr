@@ -3,6 +3,7 @@
   "height": 720,
   "callouts": [
     {"label": "Rendering: Auto, Sharp (MSDF) or Bitmap", "x": 1124, "y": 442, "w": 110, "h": 25},
-    {"label": "A UI Button: its clicked signal starts the game", "x": 499, "y": 345, "w": 56, "h": 56}
+    {"label": "A UI Button: its clicked signal starts the game (it has the focus: ui_focus)", "x": 499, "y": 345, "w": 56, "h": 56},
+    {"label": "Quit: Engine.quit() closes the game", "x": 499, "y": 397, "w": 56, "h": 56}
   ]
 }

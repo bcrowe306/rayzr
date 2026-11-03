@@ -252,7 +252,8 @@ wait 5
 hover @insp.prop:rendering
 wait 2
 annotate @insp.prop:rendering Rendering: Auto, Sharp (MSDF) or Bitmap
-annotate @node:Play A UI Button: its clicked signal starts the game
+annotate @node:Play A UI Button: its clicked signal starts the game (it has the focus: ui_focus)
+annotate @node:Quit Quit: Engine.quit() closes the game
 screenshot tutorial-ui_title
 
 # 6. Played (without the drives' Show Colliders): the game's own HUD.

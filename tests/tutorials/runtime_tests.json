@@ -605,6 +605,80 @@
   ]
  },
  {
+  "name": "ui tutorial (#295): Play has the focus on the title screen (ui_focus) - the gamepad's A starts the game",
+  "project": "docs/tutorials/ui",
+  "frames": 60,
+  "input": [
+   "5 pad1 connect",
+   "25 pad1 RIGHT_FACE_DOWN tap 3"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "main"
+   ]
+  ]
+ },
+ {
+  "name": "ui tutorial (#295): clicking Quit on the title screen ends the game (Engine.quit) before its frames run out",
+  "project": "docs/tutorials/ui",
+  "frames": 600,
+  "input": [
+   "20 mouse 320 254 click"
+  ],
+  "expect": [],
+  "quits": true
+ },
+ {
+  "name": "ui tutorial (#295): Down then A on the title screen quits (the focus moves on from Play)",
+  "project": "docs/tutorials/ui",
+  "frames": 600,
+  "input": [
+   "5 pad1 connect",
+   "20 pad1 LEFT_FACE_DOWN tap 3",
+   "35 pad1 RIGHT_FACE_DOWN tap 3"
+  ],
+  "expect": [],
+  "quits": true
+ },
+ {
+  "name": "ui tutorial (#295): ui_focus() is true on a button, false on a non-widget",
+  "project": "docs/tutorials/ui",
+  "frames": 20,
+  "args": [
+   "--console",
+   "Scene.find_node('Hint').text = tostring(Scene.find_node('Quit'):ui_focus()) .. ' ' .. tostring(Scene.find_node('Title'):ui_focus())"
+  ],
+  "expect": [
+   [
+    "Hint",
+    "text",
+    "==",
+    "true false"
+   ]
+  ]
+ },
+ {
+  "name": "ui tutorial (#295): ui_focus() is false on a UI label",
+  "project": "docs/tutorials/ui",
+  "scene": "scenes/main.scene.json",
+  "frames": 20,
+  "args": [
+   "--console",
+   "Scene.find_node('Score').text = tostring(Scene.find_node('Score'):ui_focus())"
+  ],
+  "expect": [
+   [
+    "Score",
+    "text",
+    "==",
+    "false"
+   ]
+  ]
+ },
+ {
   "name": "ui tutorial (#295): the game plays with a full health bar and Score: 0; the pause menu is off",
   "project": "docs/tutorials/ui",
   "scene": "scenes/main.scene.json",
@@ -769,6 +843,32 @@
   "input": [
    "20 ESCAPE tap 2",
    "35 mouse 320 168 click",
+   "45 RIGHT down"
+  ],
+  "expect": [
+   [
+    "Menu",
+    "enabled",
+    "==",
+    false
+   ],
+   [
+    "Player",
+    "x",
+    ">",
+    50
+   ]
+  ]
+ },
+ {
+  "name": "ui tutorial (#295): the pause menu focuses Resume when it opens - the gamepad's A resumes",
+  "project": "docs/tutorials/ui",
+  "scene": "scenes/main.scene.json",
+  "frames": 80,
+  "input": [
+   "5 pad1 connect",
+   "20 ESCAPE tap 2",
+   "35 pad1 RIGHT_FACE_DOWN tap 3",
    "45 RIGHT down"
   ],
   "expect": [

@@ -267,7 +267,12 @@ UI_IsBlockedByActiveDropdown :: proc(gameContext: ^GameContext, self: rawptr, mo
 
 UI_IsFocusable :: proc(elem: ^UIElement) -> bool {
 	if elem == nil || !elem.enabled || !elem.renderable || !elem.keyboardFocus do return false
-	#partial switch elem.widgetType {
+	return UI_IsFocusableType(elem.widgetType)
+}
+
+// UI_IsFocusableType: the widgets Tab, the arrows and node:ui_focus reach.
+UI_IsFocusableType :: proc(t: UIWidgetType) -> bool {
+	#partial switch t {
 	case .Button, .Slider, .Checkbox, .ToggleSwitch, .Knob,
 	     .TextInput, .Dropdown, .RadioGroup, .ListView, .TreeView, .TabContainer,
 	     .NotchedSlider, .VolumeFader, .UnorderedList, .OrderedList, .Table: // (#228: their keys work)
@@ -320,6 +325,50 @@ UI_SetFocus :: proc(scene: ^Scene, target: ^UIElement) {
 			}
 		}
 	}
+}
+
+// UI_FocusNode gives a widget the keyboard / gamepad focus, as Tab would
+// (node:ui_focus: a menu focuses its first button when it opens). "" when
+// it took it, else why not (nothing changes then).
+UI_FocusNode :: proc(game: ^Game, node: ^Node) -> string {
+	if node == nil do return "no node"
+	elem := cast(^UIElement)node
+	if !node.isUI || elem.widgetType == .None do return "is not a UI widget"
+	if !UI_IsFocusableType(elem.widgetType) do return fmt.tprintf("is a %s: it doesn't take the focus (buttons, sliders, checkboxes, inputs, dropdowns and lists do)", Node_TypeName(node))
+	if !elem.keyboardFocus do return "has Keyboard Focus off"
+	if !node.enabled do return "is disabled"
+	if !node.renderable do return "is hidden"
+	for p := node.parent; p != nil; p = p.parent {
+		if !p.enabled do return fmt.tprintf("is under a disabled node (%s)", p.name)
+	}
+	scene := ui_scene_of(game, node)
+	if scene == nil || node.removing do return "is not in a running scene"
+	UI_SetFocus(scene, elem)
+	return ""
+}
+
+// ui_scene_of: the loaded scene whose nodes include `node` (the current
+// one first; a scene being changed to runs its ready() before it's current).
+@(private = "file")
+ui_scene_of :: proc(game: ^Game, node: ^Node) -> ^Scene {
+	if game == nil do return nil
+	has :: proc(s: ^Scene, node: ^Node) -> bool {
+		if s == nil || s.manager == nil do return false
+		for n in s.manager.nodes do if n == node do return true
+		return false
+	}
+	sm := &game.sceneManager
+	if has(sm.currentScene, node) do return sm.currentScene
+	if has(sm.nextScene, node) do return sm.nextScene
+	for _, s in sm.scenes do if has(s, node) do return s
+	return nil
+}
+
+// UI_HasFocus: the widget has the keyboard / gamepad focus (node:ui_has_focus).
+UI_HasFocus :: proc(node: ^Node) -> bool {
+	if node == nil || !node.isUI do return false
+	elem := cast(^UIElement)node
+	return elem.widgetType != .None && elem.focused
 }
 
 UI_GetFocusedElement :: proc(scene: ^Scene) -> ^UIElement {

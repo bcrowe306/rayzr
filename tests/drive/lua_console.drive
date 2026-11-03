@@ -1,6 +1,7 @@
 # The Console's Lua line: disabled while editing; in Simulate it evaluates
 # in the editor's Lua state (expressions, statements, errors, history); in
-# a running game (Play) over the editor link.
+# a running game (Play) over the editor link. Engine.quit() stops Simulate
+# and ends Play's game, never the editor.
 wait 5
 expect item:console.lua == visible
 click @menu:Game
@@ -28,9 +29,14 @@ key enter
 wait 2
 expect last-log == = 42
 screenshot simulate
-click @menu:Game
-click @menu:Game/Simulate in Editor
-wait 2
+# Engine.quit() in Simulate stops the simulation, not the editor.
+expect simulating == true
+type Engine.quit()
+key enter
+wait 5
+expect simulating == false
+expect log contains Engine.quit(): stopping the simulation
+expect item:console.lua == visible
 
 # Play: the same line runs in the game.
 click @toolbar.play-scene
@@ -45,5 +51,10 @@ type Vec2(1, 2) * 3
 key enter
 wait-until log contains = Vec2(3, 6) timeout=300
 screenshot game
-click @toolbar.stop
+# Engine.quit() in Play ends the game process (cleanly), not the editor.
+type Engine.quit()
+key enter
 wait-until game == stopped timeout=300
+expect log contains Game process exited (exit code: 0)
+expect simulating == false
+expect item:console.lua == visible

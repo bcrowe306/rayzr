@@ -3,10 +3,10 @@
 This tutorial builds **Coin Run**: a short run past spikes and coins with
 a HUD - a health bar and a score that stay on the screen while the camera
 follows the player - a pause menu on Esc with **Resume** and **Quit**, and
-a title screen. On the way it covers the UI nodes, the Screen Layer,
-updating the HUD from Lua with events, fonts and how text is drawn,
-pausing the game, keyboard and gamepad focus, and on-screen touch
-controls. It takes about thirty minutes.
+a title screen with **Play** and **Quit**. On the way it covers the UI
+nodes, the Screen Layer, updating the HUD from Lua with events, fonts and
+how text is drawn, pausing the game, keyboard and gamepad focus, quitting
+the game, and on-screen touch controls. It takes about thirty minutes.
 
 [Download the finished project](ui/) to compare, or to start from the
 end: unzip it and open the folder with **File > Open Project...**.
@@ -270,6 +270,7 @@ local PauseMenu = {}
 function PauseMenu:ready()
     self.menu = self.node:get_node("Menu") ---@type UIContainerNode
     self.menu:get_node("Resume"):connect("clicked", function() self:show(false) end)
+    -- Quit leaves the level for the title screen (whose Quit closes the game).
     self.menu:get_node("Quit"):connect("clicked", function()
         Engine.set_paused(false)
         Scene.change_scene("scenes/title.scene.json")
@@ -288,15 +289,20 @@ function PauseMenu:show(open)
     Engine.set_paused(open)
     -- Disabled, the menu neither draws nor takes clicks.
     self.menu:set_enabled(open)
+    -- Opened, Resume has the focus: Enter resumes, Down and Enter quit.
+    if open then self.menu:get_node("Resume"):ui_focus() end
 end
 
 return PauseMenu
 ```
 
 `set_enabled(false)` hides the menu and its buttons and stops their
-clicks; `set_visible(false)` would only stop the drawing. **Quit** unpauses
-first - the pause belongs to the game, not to the scene - and goes back to
-the title screen.
+clicks; `set_visible(false)` would only stop the drawing. Opening it,
+`ui_focus()` gives **Resume** the keyboard and gamepad focus (section 6),
+so Enter resumes straight away. **Quit** unpauses first - the pause
+belongs to the game, not to the scene - and goes back to the title screen
+rather than closing the game: in a game, Quit in the pause menu leaves
+the level, and the title screen's Quit (section 7) leaves the game.
 
 ![The pause menu, opened from its script in Simulate](../images/tutorial-ui_pause.png)
 
@@ -307,7 +313,16 @@ and **Shift+Tab** move the focus from control to control, the **arrow
 keys** (or the D-pad and the left stick) move it to the nearest one in
 that direction, and **Enter**, **Space** or the gamepad's **A** clicks the
 focused button. A click focuses too; the focused button has a highlighted
-border. In the pause menu, press Esc, then the Down arrow and Enter.
+border.
+
+Nothing has the focus until a key or a click gives it, so a menu that
+opens should focus its first button itself: `button:ui_focus()` does what
+Tab would, and returns `true`. The pause menu focuses **Resume** when it
+opens and the title screen focuses **Play**, so Enter alone resumes or
+plays, and Down then Enter quits. `ui_focus()` returns `false` and warns
+in the console when the node can't take the focus - a label, a disabled
+or hidden button, or one inside a disabled container (call it after
+`set_enabled(true)`); `ui_has_focus()` tells whether a widget has it.
 
 Buttons beside gameplay keys (a pause button in a game that uses the
 arrows and Space) should have **Keyboard Focus** off: Tab and the arrows
@@ -317,13 +332,15 @@ game.
 ## 7. A title screen, and fonts
 
 `scenes/title.scene.json` is a centred Screen Layer `Menu` with a
-**Text** node `Title` (`Coin Run`, **Font Size** `48`), a UI Button `Play`
-at `-100, 10` and a Text `Hint` under it. `scripts/title.lua` on the layer
-starts the game and makes the title pulse with a tween:
+**Text** node `Title` (`Coin Run`, **Font Size** `48`), UI Buttons `Play`
+at `-100, 10` and `Quit` at `-100, 56`, and a Text `Hint` under them.
+`scripts/title.lua` on the layer starts the game, closes it with
+`Engine.quit()`, focuses Play and makes the title pulse with a tween:
 
 ```lua
--- The title screen: Play starts the game. The title pulses with a tween;
--- a Text node's Auto rendering keeps it sharp while it is scaled.
+-- The title screen: Play starts the game, Quit closes it. The title pulses
+-- with a tween; a Text node's Auto rendering keeps it sharp while it is
+-- scaled.
 
 ---@class Title : ScriptInstanceBase
 local Title = {}
@@ -331,9 +348,13 @@ local Title = {}
 function Title:ready()
     local title = self.node:get_node("Title")
     Tween.to(title, "scale", {1.1, 1.1}, 0.8, "in_out_sine", {loops = -1, yoyo = true})
-    self.node:get_node("Play"):connect("clicked", function()
+    local play = self.node:get_node("Play") ---@type UIButtonNode
+    play:connect("clicked", function()
         Scene.change_scene("scenes/main.scene.json", { transition = "fade", duration = 0.3 })
     end)
+    self.node:get_node("Quit"):connect("clicked", function() Engine.quit() end)
+    -- Play has the focus from the start: Enter plays, Down and Enter quit.
+    play:ui_focus()
 end
 
 return Title
@@ -341,6 +362,12 @@ return Title
 
 Make it the start: **Project Settings > General > Startup Scene**
 `scenes/title.scene.json`.
+
+`Engine.quit()` ends the game as closing its window does. In the editor
+it never closes the editor: in Simulate it stops the simulation, and in
+Play it ends the game window. A web page can't close itself: on the web
+it does nothing and returns `false`, so a Quit button can do something
+else there (`if not Engine.quit() then ... end`).
 
 UI widgets draw their text in the UI's built-in font. A **Text** node can
 use any font in the project (a `.ttf`, `.otf` or `.fnt` in its **Font**

@@ -37,7 +37,9 @@ Retry. It changes colour under the mouse and while pressed, and raises
   UI controls, and the arrow keys (or the D-pad and left stick) move it to
   the nearest control in that direction. A click also focuses. On the
   focused button, Enter, Space or the gamepad's A button clicks. The
-  focused button has a highlighted border.
+  focused button has a highlighted border. A script focuses it with
+  `button:ui_focus()` (a menu's first button when the menu opens) and asks
+  with `button:ui_has_focus()`.
 - **Keyboard Focus** (on by default): turn it off for buttons that sit
   beside gameplay keys, such as a toolbar over a game that uses the arrows
   and Space. Such a button only takes clicks: Tab and the arrows skip it,

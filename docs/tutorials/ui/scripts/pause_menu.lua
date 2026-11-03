@@ -8,6 +8,7 @@ local PauseMenu = {}
 function PauseMenu:ready()
     self.menu = self.node:get_node("Menu") ---@type UIContainerNode
     self.menu:get_node("Resume"):connect("clicked", function() self:show(false) end)
+    -- Quit leaves the level for the title screen (whose Quit closes the game).
     self.menu:get_node("Quit"):connect("clicked", function()
         Engine.set_paused(false)
         Scene.change_scene("scenes/title.scene.json")
@@ -26,6 +27,8 @@ function PauseMenu:show(open)
     Engine.set_paused(open)
     -- Disabled, the menu neither draws nor takes clicks.
     self.menu:set_enabled(open)
+    -- Opened, Resume has the focus: Enter resumes, Down and Enter quit.
+    if open then self.menu:get_node("Resume"):ui_focus() end
 end
 
 return PauseMenu
