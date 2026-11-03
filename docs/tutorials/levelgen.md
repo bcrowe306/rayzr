@@ -308,5 +308,7 @@ seed)` the placements, to spawn yourself.
   [Wave Function Collapse](../../engine/docs/level_generator.md#wave-function-collapse).
 - A level that never ends, made a chunk at a time around the camera:
   [Endless levels](../../engine/docs/level_generator.md#endless-levels-chunks).
+- Plateaus and cliffs from a height map, each level its own Tile Map:
+  [Height layers](../../engine/docs/level_generator.md#height-layers).
 - Your own nodes in Lua or Odin:
   [Your own nodes](../../engine/docs/level_generator.md#your-own-nodes).
