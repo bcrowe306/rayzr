@@ -188,6 +188,12 @@ log <text> | quit
   `@insp.position.x`, `@insp.prop:gravityScale`, `@addnode:Texture Sprite`,
   `@asset:scenes/main.scene.json`, `@menu:Game/Simulate in Editor`, `@pick:<value>`,
   `@ctx:duplicate`, `@settings.save`, `@code.area`, `@code.tab:<file>`, `@code.completion:<label>`, ...).
+- `@insp.prop:<name>`: an Inspector property row (a vector's `.x` / `.y`). A
+  collision shape's rows are `@insp.prop:shape.<name>` (the first shape) and
+  `@insp.prop:shape<n>.<name>` (shape n, from 2), e.g. a Character Mover's
+  capsule `@insp.prop:shape.radius` beside the node's own `@insp.prop:radius`;
+  the first shape's rows also answer to `@insp.prop:<name>` when the node has no
+  row of that name.
 - `@node:<Name>`: a node's position on screen.
 - `@world:x,y`: a world position.
 - `x,y`: raw window pixels.

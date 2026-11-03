@@ -156,6 +156,15 @@ Drive_Item :: proc(id: string) {
 	}
 }
 
+// Drive_Alias registers the item `from` (and its ".x" / ".y" parts) under
+// `to` as well (a second name for the same widget).
+Drive_Alias :: proc(from, to: string) {
+	if !GlobalDrive.enabled do return
+	for suffix in ([]string{"", ".x", ".y"}) {
+		if it, ok := GlobalDrive.items[fmt.tprintf("%s%s", from, suffix)]; ok do GlobalDrive.items[drive_id(fmt.tprintf("%s%s", to, suffix))] = it
+	}
+}
+
 // drive_id: a copy of `id` that lives until the end of the next frame.
 @(private = "file")
 drive_id :: proc(id: string) -> string {
