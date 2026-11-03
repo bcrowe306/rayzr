@@ -53,6 +53,11 @@ TileMapNode :: struct {
 	dataSize:    [2]int,
 	staticBody:  ^StaticBodyNode,
 	builtSize:   [2]int, // mapSize the storage was last made to cover
+	// An endless map (#171; runtime, not saved): a chunked level generator's.
+	// The storage needn't cover the map - its owner lays it out over what is
+	// in (TileMapNode_SetBlock, TileMapNode_FitStorage) - and the colliders
+	// are built per area (TileMapNode_BuildCollidersIn), not for the whole map.
+	unbounded:   bool,
 	// Chunk cache (tile_cache.odin): bumped when the tiles change; chunkVer
 	// per chunk for single-cell edits.
 	cacheVersion: u64,
@@ -90,6 +95,7 @@ TileMapNode_Create :: proc(scene: ^Scene, name: string = "TileMap", parent: ^Nod
 TileMapNode_Layout :: proc(tm: ^TileMapNode) {
 	w, h := max(tm.mapSize.x, 1), max(tm.mapSize.y, 1)
 	tm.mapSize = {w, h}
+	if tm.unbounded && len(tm.tiles) > 0 && len(tm.tiles) == tm.dataSize.x * tm.dataSize.y do return
 	if tm.builtSize == tm.mapSize && len(tm.tiles) == tm.dataSize.x * tm.dataSize.y && len(tm.tiles) > 0 do return
 	if len(tm.tiles) == 0 || len(tm.tiles) != tm.dataSize.x * tm.dataSize.y {
 		// (New / reset: just the map.)
@@ -143,9 +149,10 @@ tilemap_content :: proc(tm: ^TileMapNode) -> (lo, hi: [2]int, any: bool) {
 }
 
 // tilemap_restore re-lays the storage out as size cells from origin,
-// keeping every tile inside it.
+// keeping every tile inside it. keepCache: the cached drawing stays (every
+// cell keeps its tile; any dropped were empty).
 @(private = "file")
-tilemap_restore :: proc(tm: ^TileMapNode, origin, size: [2]int) {
+tilemap_restore :: proc(tm: ^TileMapNode, origin, size: [2]int, keepCache := false) {
 	size := [2]int{max(size.x, 1), max(size.y, 1)}
 	if origin == tm.dataOrigin && size == tm.dataSize && len(tm.tiles) == size.x * size.y do return
 	old := make([]i32, len(tm.tiles), context.temp_allocator)
@@ -161,7 +168,58 @@ tilemap_restore :: proc(tm: ^TileMapNode, origin, size: [2]int) {
 		}
 	}
 	tm.dataOrigin, tm.dataSize = origin, size
-	tm.cacheVersion += 1
+	if !keepCache do tm.cacheVersion += 1
+}
+
+// TileMapNode_FitStorage lays the storage out over exactly lo .. hi (max
+// exclusive; an unbounded map's: the chunks in), keeping the tiles inside
+// and dropping the rest.
+TileMapNode_FitStorage :: proc(tm: ^TileMapNode, lo, hi: [2]int) {
+	TileMapNode_Layout(tm)
+	dropped := false
+	w := tm.dataSize.x
+	if w > 0 do for t, i in tm.tiles {
+		if t < 0 do continue
+		c := tm.dataOrigin + {i % w, i / w}
+		if c.x < lo.x || c.y < lo.y || c.x >= hi.x || c.y >= hi.y {
+			dropped = true
+			break
+		}
+	}
+	tilemap_restore(tm, lo, hi - lo, keepCache = !dropped)
+	tm.builtSize = tm.mapSize
+}
+
+// TileMapNode_SetBlock writes size cells from origin (row-major; nil
+// tiles: empties them) - a chunk - growing the storage to take them. Only
+// the cache chunks it touches are drawn again.
+TileMapNode_SetBlock :: proc(tm: ^TileMapNode, origin, size: [2]int, tiles: []i32) {
+	if size.x <= 0 || size.y <= 0 do return
+	TileMapNode_Layout(tm)
+	lo, hi := tm.dataOrigin, tm.dataOrigin + tm.dataSize
+	bhi := origin + size
+	if tiles != nil && (origin.x < lo.x || origin.y < lo.y || bhi.x > hi.x || bhi.y > hi.y) {
+		nlo := [2]int{min(lo.x, origin.x), min(lo.y, origin.y)}
+		nhi := [2]int{max(hi.x, bhi.x), max(hi.y, bhi.y)}
+		tilemap_restore(tm, nlo, nhi - nlo, keepCache = true)
+		tm.builtSize = tm.mapSize
+		lo, hi = nlo, nhi
+	}
+	x0, x1 := max(origin.x, lo.x), min(bhi.x, hi.x)
+	if x1 <= x0 do return
+	dw := tm.dataSize.x
+	#no_bounds_check for y in max(origin.y, lo.y) ..< min(bhi.y, hi.y) {
+		dst := tm.tiles[(y - lo.y) * dw + x0 - lo.x:][:x1 - x0]
+		if tiles == nil do for &t in dst do t = -1
+		else do copy(dst, tiles[(y - origin.y) * size.x + x0 - origin.x:][:x1 - x0])
+	}
+	// The cache chunks it covers.
+	cs := tilemap_chunk_cells(tm)
+	if tm.chunkVer == nil do tm.chunkVer = make(map[[2]i32]u64, tm.allocator)
+	for cy in floor_div(origin.y, cs.y) ..= floor_div(bhi.y - 1, cs.y) do for cx in floor_div(origin.x, cs.x) ..= floor_div(bhi.x - 1, cs.x) {
+		c := [2]i32{i32(cx), i32(cy)}
+		tm.chunkVer[c] = tm.chunkVer[c] + 1
+	}
 }
 
 // tilemap_index: a cell's slot in the storage (false: outside it).
@@ -510,11 +568,35 @@ TileMapNode_BuildColliders :: proc(tm: ^TileMapNode, ctx: ^GameContext) {
 		RemoveNode(scene.manager, tm.staticBody)
 		ProcessNodeQueues(scene.manager, ctx)
 	}
+	tm.staticBody = nil
+	if tm.unbounded do return // (built per area by its owner: TileMapNode_BuildCollidersIn)
 	tm.staticBody = StaticBodyNode_Create(scene, fmt.tprintf("%s_Colliders", tm.name), tm)
 	tm.staticBody.position = {0, 0}
 	tm.staticBody.transient = true
 	tm.staticBody.gameContext = ctx
 	lo, hi := TileMapNode_Extent(tm) // (tiles beyond the map are solid too)
+	tilemap_add_colliders(tm, tm.staticBody, lo, hi, ctx)
+}
+
+// TileMapNode_BuildCollidersIn: a static body of its own (a transient
+// child of the map) with the colliders of the painted cells in lo .. hi -
+// an unbounded map's chunk; remove it when the chunk goes. nil: no scene.
+TileMapNode_BuildCollidersIn :: proc(tm: ^TileMapNode, lo, hi: [2]int, ctx: ^GameContext) -> ^StaticBodyNode {
+	scene := ctx.scene if ctx != nil else nil
+	if scene == nil && tm.gameContext != nil do scene = tm.gameContext.scene
+	if scene == nil do return nil
+	body := StaticBodyNode_Create(scene, fmt.tprintf("%s_Colliders_%d_%d", tm.name, lo.x, lo.y), tm)
+	body.position = {0, 0}
+	body.transient = true
+	body.gameContext = ctx
+	tilemap_add_colliders(tm, body, lo, hi, ctx)
+	return body
+}
+
+// tilemap_add_colliders: the painted cells' colliders in lo .. hi on a body
+// (square cells: horizontal runs merged into boxes).
+@(private = "file")
+tilemap_add_colliders :: proc(tm: ^TileMapNode, body: ^StaticBodyNode, lo, hi: [2]int, ctx: ^GameContext) {
 	cs := TileMapNode_CellSize(tm)
 	tw, th := cs.x, cs.y
 	switch tm.layout {
@@ -533,7 +615,7 @@ TileMapNode_BuildColliders :: proc(tm: ^TileMapNode, ctx: ^GameContext) {
 				for x < hi.x && TileMapNode_Get(tm, x, y) >= 0 do x += 1
 				a, _ := TileMapNode_CellOutline(tm, {start, y})
 				b, _ := TileMapNode_CellOutline(tm, {x - 1, y})
-				StaticBodyNode_AddShape(tm.staticBody, MakePolygonPhysicsShape({a[0], b[1], b[2], a[3]}), ctx)
+				StaticBodyNode_AddShape(body, MakePolygonPhysicsShape({a[0], b[1], b[2], a[3]}), ctx)
 			}
 		}
 		return
@@ -542,7 +624,7 @@ TileMapNode_BuildColliders :: proc(tm: ^TileMapNode, ctx: ^GameContext) {
 		for y in lo.y ..< hi.y do for x in lo.x ..< hi.x {
 			if TileMapNode_Get(tm, x, y) < 0 do continue
 			pts, n := TileMapNode_CellOutline(tm, {x, y})
-			StaticBodyNode_AddShape(tm.staticBody, MakePolygonPhysicsShape(pts[:n]), ctx)
+			StaticBodyNode_AddShape(body, MakePolygonPhysicsShape(pts[:n]), ctx)
 		}
 		return
 	}
@@ -557,7 +639,7 @@ TileMapNode_BuildColliders :: proc(tm: ^TileMapNode, ctx: ^GameContext) {
 			for x < hi.x && TileMapNode_Get(tm, x, y) >= 0 do x += 1
 			w := f32(x - start) * tw
 			shape := MakeBoxPhysicsShape(w, th, {f32(start) * tw + w * 0.5, f32(y) * th + th * 0.5}, 0)
-			StaticBodyNode_AddShape(tm.staticBody, shape, ctx)
+			StaticBodyNode_AddShape(body, shape, ctx)
 		}
 	}
 }

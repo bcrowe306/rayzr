@@ -199,6 +199,12 @@ components or entities. The guide is [`docs/level_generator.md`](docs/level_gene
 this is the file's full shape. Code: `Gen_GraphParse` / `Gen_GraphSerialize`
 (`engine/level_gen.odin`).
 
+A Level Generator node in **chunked** mode (#171) reads the same file: it
+makes the level a chunk at a time (`engine/level_gen_chunks.odin`), `size`
+then only the reference for `gradient`. Its settings are the node's own
+reflected properties in the scene (`chunked`, `chunkSize`, `chunkRadius`,
+`cameraPath`; missing: off, 32, 2, ""), additive - no format change.
+
 ```json
 {
   "format": 1,

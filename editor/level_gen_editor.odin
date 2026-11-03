@@ -90,6 +90,8 @@ lge: struct {
 	scriptsStale: bool, // the script nodes' files are read again before the next evaluation
 	terrainsSeen: int,  // terrainsVersion the graph's terrain files were read at
 	errors:    map[int]string, // node id -> why it can't be evaluated (heap)
+	chunked:   bool,          // a Level Generator in the scene makes this file's levels in chunks (#171)
+	unsafe:    map[int]bool,  // then: the nodes that aren't chunk-safe (this frame's)
 	cache:     e.Gen_Cache, // nodes' grids between evaluations (the job's while it runs)
 	job:       ^Lge_Job,
 	tilesets:  map[string]^Lge_Tileset, // tile outputs' tilesets by path (heap; nil texture: couldn't load)
@@ -752,6 +754,13 @@ LevelGenEditor_Render :: proc(state: ^EditorState) {
 	lge_refresh(state)
 	lge_keys(state)
 	lge_toolbar(state)
+	lge.chunked = lge_chunked_users(state, lge.path) > 0
+	clear(&lge.unsafe)
+	if lge.chunked {
+		info := e.Gen_ChunkInfo(&lge.graph, context.temp_allocator)
+		for id in info.unsafe do lge.unsafe[id] = true
+		lge_chunk_note(&lge.graph, "lge.chunks")
+	}
 	avail := imgui.GetContentRegionAvail()
 	// (NoMove: dragging a link or a node on the canvas must not move the
 	// floating window - #334.)
@@ -982,11 +991,13 @@ lge_canvas :: proc(state: ^EditorState) {
 		head := [2]f32{mx.x, mn.y + 24 * lge.zoom}
 		hcol := UI_ACCENT if n.kind == .Tile_Output else ui_line(0.12)
 		imgui.DrawList_AddRectFilled(dl, mn, head, col_u32(hcol if n.kind != .Tile_Output else ui_accent(0.35)), 6, imgui.DrawFlags_RoundCornersTop)
-		border := UI_ACCENT if sel else (UI_DANGER if n.id in lge.errors else ui_line(0.2))
+		border := UI_ACCENT if sel else (UI_DANGER if n.id in lge.errors else (UI_WARNING if n.id in lge.unsafe else ui_line(0.2)))
 		imgui.DrawList_AddRect(dl, mn, mx, col_u32(border), 6, imgui.DrawFlags(0), 2 if sel else 1)
 		if lge.zoom > 0.5 {
 			label := fmt.ctprintf("%s%s", info.label, "  (output)" if n.id == outputId else "")
 			imgui.DrawList_AddTextImFontPtr(dl, GlobalFonts.small, 13 * lge.zoom, mn + {8, 5} * lge.zoom, col_u32(UI_TEXT), label)
+			// (Chunked: not chunk-safe - a mark on its header.)
+			if n.id in lge.unsafe do imgui.DrawList_AddTextImFontPtr(dl, GlobalFonts.small, 13 * lge.zoom, {mx.x - 20 * lge.zoom, mn.y + 5 * lge.zoom}, col_u32(UI_WARNING), ICON_FA_TRIANGLE_EXCLAMATION)
 			for port, i in info.inputs do imgui.DrawList_AddTextImFontPtr(dl, GlobalFonts.small, 12 * lge.zoom, lge_in_port(mn, i) + {10 * lge.zoom, -7 * lge.zoom}, col_u32(UI_TEXT_DIM), fmt.ctprintf("%s", port))
 		}
 		// Thumbnail.
@@ -1319,6 +1330,7 @@ lge_side :: proc(state: ^EditorState) {
 		info := e.Gen_NodeInfo(n)
 		if UI_SectionHeader(fmt.tprintf("%s  (node %d)", info.label, n.id)) {
 			UI_DimTextWrapped(info.doc)
+			if n.id in lge.unsafe do imgui.TextColored(UI_WARNING, fmt.ctprintf("%s  Not chunk-safe: in a chunked level each chunk makes its own (seams)", ICON_FA_TRIANGLE_EXCLAMATION))
 			if why, bad := lge.errors[n.id]; bad {
 				// (Unformatted, wrapped: an error may hold a "%".)
 				imgui.PushStyleColorImVec4(.Text, UI_DANGER)
@@ -2156,6 +2168,7 @@ inspector_level_generator :: proc(state: ^EditorState, lg: ^e.LevelGeneratorNode
 		imgui.TextColored(UI_DANGER, fmt.ctprintf("%s", lgi.err))
 		return
 	}
+	if lg.chunked do lge_chunk_note(&lgi.graph, "insp.levelgen.chunks")
 	imgui.SeparatorText("Level Parameters")
 	UI_DimTextWrapped("The generator's own values; change one to set it for this node (the dot resets it).")
 	clear: struct {
@@ -2206,6 +2219,42 @@ inspector_level_generator :: proc(state: ^EditorState, lg: ^e.LevelGeneratorNode
 		Editor_RecordUndo(state, "Reset level parameter")
 		e.LevelGeneratorNode_ClearParam(lg, clear.id, clear.name)
 	}
+}
+
+// lge_chunk_note: for a generator a Level Generator makes in chunks (#171) -
+// the nodes that aren't chunk-safe (they run per chunk: seams between
+// chunks), or that it is safe and its apron.
+lge_chunk_note :: proc(g: ^e.Gen_Graph, driveId: string) {
+	info := e.Gen_ChunkInfo(g, context.temp_allocator)
+	if len(info.unsafe) == 0 {
+		UI_DimTextWrapped(fmt.tprintf("%s  Chunk-safe: no seams between chunks (each made with %d extra cells around it)", ICON_FA_CIRCLE_CHECK, info.apron))
+		Drive_Item(driveId)
+		return
+	}
+	names := make([dynamic]string, context.temp_allocator)
+	for id in info.unsafe do if n := e.Gen_FindNode(g, id); n != nil do append(&names, fmt.tprintf("%s (%d)", e.Gen_NodeInfo(n).label, id))
+	imgui.PushStyleColorImVec4(.Text, UI_WARNING)
+	imgui.PushTextWrapPos(0)
+	text := fmt.tprintf("%s  Not chunk-safe: %s. They look at the whole level, so each chunk makes its own - seams show between chunks.", ICON_FA_TRIANGLE_EXCLAMATION, strings.join(names[:], ", ", context.temp_allocator))
+	imgui.TextUnformatted(strings.clone_to_cstring(text, context.temp_allocator))
+	imgui.PopTextWrapPos()
+	imgui.PopStyleColor()
+	Drive_Item(driveId)
+	UI_Tooltip("Chunk-safe nodes give each cell the same value in a chunk as in one big level: noise, random fill, gradient, rectangle, threshold, invert, remap, combine, blur, cellular, dilate, erode, scatter, surface and the outputs. Others (rooms, walker, shapes, WFC, Poisson scatter, flood fill, regions, paths, check, border, scripts) still run in each chunk, with the chunk's own seed.")
+}
+
+// lge_chunked_users: Level Generator nodes of the open scene that make this
+// file's levels in chunks.
+@(private = "file")
+lge_chunked_users :: proc(state: ^EditorState, path: string) -> int {
+	if state.activeScene == nil || path == "" do return 0
+	count := 0
+	for n in state.activeScene.manager.nodes {
+		if n == nil || n.typeId != e.LevelGeneratorNode do continue
+		lg := cast(^e.LevelGeneratorNode)n
+		if lg.chunked && lg.generator == path do count += 1
+	}
+	return count
 }
 
 // lgi_load reads the generator the Inspector shows (again every second or

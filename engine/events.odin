@@ -28,6 +28,7 @@ EventValue :: union {
 	string,
 	^Node, // the other node of a collision / overlap / child event
 	Lua_Value_Ref, // a Lua table or function (node:emit; the registry ref lives while it's delivered)
+	[2]f32, // a point or a pair (a level generator's chunk: its x, y) - a Vec2 in Lua
 }
 
 // Lua_Value_Ref: a Lua value held in the registry (script_events.odin).

@@ -589,8 +589,8 @@ function TimerNode:connect(event, handler) end
 ---@return integer id Connection id for `disconnect`
 function SpawnerNode:connect(event, handler) end
 
----@alias LevelGeneratorNodeEvent NodeTreeEvent|"generated"|"generation_failed"|"generation_progress"|ProjectEvent
----Connects a handler to one of this node's events: generated (The level generator's level is in (its seed)), generation_failed (The level generator couldn't make the level (why)), generation_progress (The level generator's progress moved (0 to 1, by 1% or more; 1 when the level is in)); the tree events; custom ones.
+---@alias LevelGeneratorNodeEvent NodeTreeEvent|"generated"|"generation_failed"|"generation_progress"|"chunk_generated"|"chunk_unloaded"|ProjectEvent
+---Connects a handler to one of this node's events: generated (The level generator's level is in (its seed)), generation_failed (The level generator couldn't make the level (why)), generation_progress (The level generator's progress moved (0 to 1, by 1% or more; 1 when the level is in)), chunk_generated (A chunk of the chunked level went in (a Vec2: its x, y)), chunk_unloaded (A chunk of the chunked level was taken out, far from the camera (a Vec2: its x, y)); the tree events; custom ones.
 ---
 ---Example: `self.node:connect("generated", function(value, source) Log.info("generated") end)`
 ---@param event LevelGeneratorNodeEvent|string The event's name (the Signals tab lists them)
@@ -1532,9 +1532,18 @@ function SpawnerNode:set_property(path, value, y) end
 ---@field attempts integer With Random Seed: seeds tried when the generator refuses a level (a Check node: too lit...
 ---@field rebake_navigation boolean Bake the scene's Navigation Regions again once a level is in (before generated): agents...
 ---@field rebakeNavigation boolean Same as rebake_navigation (the Inspector's name)
+---@field chunked boolean An endless level: made a chunk at a time around the camera, far chunks taken out again ...
+---@field chunk_size integer Chunked: cells on each side of a chunk.
+---@field chunkSize integer Same as chunk_size (the Inspector's name)
+---@field chunk_radius integer Chunked: chunks kept in around the camera's (0: just its own; 2: 5 x 5); more than one ...
+---@field chunkRadius integer Same as chunk_radius (the Inspector's name)
+---@field camera_path string Chunked: the node the chunks follow, as a path from this node (a camera, the player); e...
+---@field cameraPath string Same as camera_path (the Inspector's name)
 ---@field last_seed integer The seed of the last level made (runtime, read-only).
 ---@field lastSeed integer Same as last_seed (the Inspector's name)
 ---@field progress number How far the generation is, 0 to 1 (1: the level is in) - for a loading bar; generation_...
+---@field loaded_chunks integer Chunked: how many chunks are in now (runtime, read-only).
+---@field loadedChunks integer Same as loaded_chunks (the Inspector's name)
 
 ---@alias LevelGeneratorNodeProperty
 ---| "position" # Vec2 - Position relative to the parent, in pixels (+y is down).
@@ -1556,8 +1565,13 @@ function SpawnerNode:set_property(path, value, y) end
 ---| "background" # boolean - Generate on a worker thread while the game runs; the level goes in when it is done (gen...
 ---| "attempts" # integer - With Random Seed: seeds tried when the generator refuses a level (a Check node: too lit...
 ---| "rebake_navigation" # boolean - Bake the scene's Navigation Regions again once a level is in (before generated): agents...
+---| "chunked" # boolean - An endless level: made a chunk at a time around the camera, far chunks taken out again ...
+---| "chunk_size" # integer - Chunked: cells on each side of a chunk.
+---| "chunk_radius" # integer - Chunked: chunks kept in around the camera's (0: just its own; 2: 5 x 5); more than one ...
+---| "camera_path" # string - Chunked: the node the chunks follow, as a path from this node (a camera, the player); e...
 ---| "last_seed" # integer (runtime) - The seed of the last level made (runtime, read-only).
 ---| "progress" # number (runtime) - How far the generation is, 0 to 1 (1: the level is in) - for a loading bar; generation_...
+---| "loaded_chunks" # integer (runtime) - Chunked: how many chunks are in now (runtime, read-only).
 
 ---Reads an Inspector property by its path (vectors and colours as tables); "script.<name>" reads a field of the node's script.
 ---
@@ -1583,8 +1597,13 @@ function SpawnerNode:set_property(path, value, y) end
 ---@overload fun(self: LevelGeneratorNode, path: "background"): boolean
 ---@overload fun(self: LevelGeneratorNode, path: "attempts"): integer
 ---@overload fun(self: LevelGeneratorNode, path: "rebake_navigation"): boolean
+---@overload fun(self: LevelGeneratorNode, path: "chunked"): boolean
+---@overload fun(self: LevelGeneratorNode, path: "chunk_size"): integer
+---@overload fun(self: LevelGeneratorNode, path: "chunk_radius"): integer
+---@overload fun(self: LevelGeneratorNode, path: "camera_path"): string
 ---@overload fun(self: LevelGeneratorNode, path: "last_seed"): integer
 ---@overload fun(self: LevelGeneratorNode, path: "progress"): number
+---@overload fun(self: LevelGeneratorNode, path: "loaded_chunks"): integer
 function LevelGeneratorNode:get_property(path) end
 
 ---Sets an Inspector property by its path: vectors as {x, y} or x, y; colours as {r, g, b[, a]} 0..1 or "#rrggbb[aa]"; enums by name; "script.<name>" a field of the node's script.
@@ -1612,8 +1631,13 @@ function LevelGeneratorNode:get_property(path) end
 ---@overload fun(self: LevelGeneratorNode, path: "background", value: boolean)
 ---@overload fun(self: LevelGeneratorNode, path: "attempts", value: integer)
 ---@overload fun(self: LevelGeneratorNode, path: "rebake_navigation", value: boolean)
+---@overload fun(self: LevelGeneratorNode, path: "chunked", value: boolean)
+---@overload fun(self: LevelGeneratorNode, path: "chunk_size", value: integer)
+---@overload fun(self: LevelGeneratorNode, path: "chunk_radius", value: integer)
+---@overload fun(self: LevelGeneratorNode, path: "camera_path", value: string)
 ---@overload fun(self: LevelGeneratorNode, path: "last_seed", value: integer)
 ---@overload fun(self: LevelGeneratorNode, path: "progress", value: number)
+---@overload fun(self: LevelGeneratorNode, path: "loaded_chunks", value: integer)
 function LevelGeneratorNode:set_property(path, value, y) end
 
 ---@class TextureNode
@@ -9487,6 +9511,29 @@ function LevelGeneratorNode:levelgen_clear_params(node_id, name) end
 ---@param node_id? integer Only this generator node's parameters; nil means every node
 ---@param name? string Only the parameter of this name; nil means all of them
 function LevelGeneratorNode:clear_level_params(node_id, name) end
+
+---Chunked: the chunks that are in now, row by row (each a Vec2 of the chunk's x, y; chunk x, y covers cells x * chunk_size .. and y * chunk_size ..).
+---
+---Example: `for _, c in ipairs(gen:levelgen_loaded_chunks()) do print(c.x, c.y) end`
+---@return Vec2[] chunks The chunks in (empty when not chunked or nothing is in yet)
+function LevelGeneratorNode:levelgen_loaded_chunks() end
+
+---Chunked: whether a chunk is in now.
+---
+---Example: `if gen:levelgen_is_chunk_loaded(gen:levelgen_chunk_at(player.position.x, player.position.y)) then player.enabled = true end`
+---@param x integer The chunk's x (cells x * chunk_size ..)
+---@param y integer The chunk's y
+---@return boolean loaded True when its tiles, colliders and entities are in
+function LevelGeneratorNode:levelgen_is_chunk_loaded(x, y) end
+
+---The chunk under a world position (on its TileMap's grid, with the Chunk Size).
+---
+---Example: `local cx, cy = gen:levelgen_chunk_at(player.position.x, player.position.y)`
+---@param wx number World x, in pixels
+---@param wy number World y, in pixels
+---@return integer? x The chunk's x (nil when the generator has no TileMap)
+---@return integer? y The chunk's y
+function LevelGeneratorNode:levelgen_chunk_at(wx, wy) end
 
 ---The path's length in pixels (along the curve).
 ---

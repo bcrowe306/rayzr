@@ -1,0 +1,70 @@
+# #171 (stretch): a Level Generator node in chunked mode - the Inspector's
+# chunk options, the warning for nodes that aren't chunk-safe (here Rooms &
+# Corridors) in the Inspector and in the Level Generator window (a mark on
+# the node), and Generate Now making the chunks around the camera.
+wait 5
+exec mkdir -p $PROJECT/levels
+exec cp tests/drive/fixtures/chunks_zz.levelgen.json $PROJECT/levels/chunks_zz.levelgen.json
+wait-until item:asset:levels/chunks_zz.levelgen.json == visible timeout=300
+
+# A Level Generator node with a TileMap child, the generator picked.
+click @hier.add
+type level generator
+click @addnode.create
+wait 2
+expect node:LevelGenerator.type == LevelGeneratorNode
+click @hier:LevelGenerator
+click @hier.add
+type tile map
+click @addnode.create
+wait 2
+expect node:TileMap.parent == LevelGenerator
+click @hier:LevelGenerator
+wait 1
+click @insp.levelgen.file
+click @pick:levels/chunks_zz.levelgen.json
+wait 2
+expect node:LevelGenerator.prop.generator == levels/chunks_zz.levelgen.json
+# Not chunked: no chunk note.
+expect item:insp.levelgen.chunks != visible
+expect node:LevelGenerator.prop.chunked == false
+expect node:LevelGenerator.prop.chunkSize == 32
+expect node:LevelGenerator.prop.chunkRadius == 2
+# Chunked: the warning names the rooms node.
+click @insp.prop:chunked
+wait 2
+expect node:LevelGenerator.prop.chunked == true
+wait-until item:insp.levelgen.chunks == visible timeout=60
+screenshot inspector_chunked
+# The chunk options take values.
+dblclick @insp.prop:chunkRadius
+key ctrl+a
+type 1
+key enter
+wait 1
+expect node:LevelGenerator.prop.chunkRadius == 1
+screenshot inspector_radius
+
+# The Level Generator window: the note and the mark on node 3.
+click @insp.levelgen.open
+wait 5
+expect lge.open == true
+expect lge.errors == 0
+wait-until item:lge.chunks == visible timeout=60
+click @lge.node:3
+wait 2
+screenshot window_warning
+click @lge.close
+wait 2
+expect lge.open == false
+
+# Generate Now: the 3 x 3 chunks around the camera, at once (an endless
+# map: 9 chunks of 32 x 32 cells, the rooms' floor and the noise's solid).
+click @hier:LevelGenerator
+wait 1
+click @insp.levelgen.generate
+wait 3
+expect log contains Generated chunks_zz.levelgen.json into TileMap
+expect node:TileMap.tiles >= 2000
+expect node:TileMap.tiles <= 9216
+screenshot generated
