@@ -1,5 +1,6 @@
 -- The player: platformer movement for a CharacterMover (Control Mode
--- "Script"), the sprite's animations, dying and finishing the level.
+-- "Script"), the sprite's animations, dying (a life: Game.lose_life) and
+-- finishing the level.
 --
 -- Movement is the engine's platformer template (Inspector: Add Script >
 -- Character > Platformer): run with acceleration, jump with coyote time,
@@ -44,13 +45,15 @@ end
 function Player:update(dt)
     local node = self.node
     if self.state ~= "playing" then
-        -- Dead or done: wait, then restart / go on (goal.lua decides where).
+        -- Dead or done: wait, then try again / go on (goal.lua decides where).
+        -- A death costs a life; the last one ends the game (Game: the result screen).
         self.timer = self.timer - dt
         local vx, vy = node:character_get_velocity()
         local _, gy = node:character_get_gravity()
         if self.state == "dead" then node:translate(0, vy * dt); node:character_set_velocity(0, vy + gy * dt) end
         if self.timer <= 0 then
-            if self.state == "dead" then Scene.reload() else self.on_done() end
+            if self.state ~= "dead" then self.on_done()
+            elseif Game:lose_life() then Scene.reload() end
             self.timer = 1e9
         end
         return
@@ -95,7 +98,8 @@ function Player:update(dt)
     if y > self.fall_limit then self:die() end
 end
 
--- die: spikes, an enemy, a fall. The scene restarts a moment later.
+-- die: spikes, an enemy, a fall. A moment later the level starts again
+-- (or, with no lives left, the game is over).
 function Player:die()
     if self.state ~= "playing" then return end
     self.state, self.timer = "dead", 1.0

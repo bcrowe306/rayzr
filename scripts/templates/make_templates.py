@@ -123,16 +123,18 @@ def with_touch(sc, size, stick=("move_left", "move_right", "move_up", "move_down
     vw, vh = size
     k = vh / 720
     kids = sc["root"]["children"]
-    left, right, up, down = stick
-    kids.append({"type": "ScreenLayerNode", "name": "TouchLeft", "properties": {"anchor": "BottomLeft"}, "children": [
-        {"type": "TouchJoystickNode", "name": "TouchStick", "position": [vw * 0.25, -vh * 0.3],
-         "properties": {"radius": 70 * k, "knobRadius": 30 * k, "floating": True, "area": [vw * 0.5, vh * 0.6],
-                        "actionLeft": left, "actionRight": right, "actionUp": up, "actionDown": down}}]})
+    if stick:  # (None: no joystick - a game played by tapping)
+        left, right, up, down = stick
+        kids.append({"type": "ScreenLayerNode", "name": "TouchLeft", "properties": {"anchor": "BottomLeft"}, "children": [
+            {"type": "TouchJoystickNode", "name": "TouchStick", "position": [vw * 0.25, -vh * 0.3],
+             "properties": {"radius": 70 * k, "knobRadius": 30 * k, "floating": True, "area": [vw * 0.5, vh * 0.6],
+                            "actionLeft": left, "actionRight": right, "actionUp": up, "actionDown": down}}]})
     places = [(-110, -110), (-240, -80), (-110, -240), (-240, -210)]
-    kids.append({"type": "ScreenLayerNode", "name": "TouchRight", "properties": {"anchor": "BottomRight"}, "children": [
-        {"type": "TouchButtonNode", "name": "Touch" + act.split(",")[0].title().replace("_", ""), "position": [x * k, y * k],
-         "properties": {"radius": 52 * k, "action": act, "label": lab, "fontSize": max(36 * k, 12)}}
-        for (act, lab), (x, y) in zip(buttons, places)]})
+    if buttons:
+        kids.append({"type": "ScreenLayerNode", "name": "TouchRight", "properties": {"anchor": "BottomRight"}, "children": [
+            {"type": "TouchButtonNode", "name": "Touch" + act.split(",")[0].title().replace("_", ""), "position": [x * k, y * k],
+             "properties": {"radius": 52 * k, "action": act, "label": lab, "fontSize": max(36 * k, 12)}}
+            for (act, lab), (x, y) in zip(buttons, places)]})
     if pause:
         kids.append({"type": "ScreenLayerNode", "name": "TouchTop", "properties": {"anchor": "TopRight"}, "children": [
             {"type": "TouchButtonNode", "name": "TouchPause", "position": [-60 * k, 60 * k],
@@ -510,58 +512,39 @@ def platformer():
 
 
 def adventure():
-    """A sample: the platformer grown into a small game - a title screen
-    (Play / Continue), two levels with saved progress, a pause menu."""
+    """A sample: the platformer grown into a small game - the shared title,
+    settings, pause and result screens (#329), lives, saved progress; each
+    door's Next Level routes the levels."""
     t = Template("adventure", "Platformer Adventure (sample)",
-                 "The platformer grown into a small game: a title screen, two levels, saved progress, "
-                 "a pause menu - how the pieces fit together.", "gamepad", 50)
+                 "The platformer grown into a small game: a title screen, settings, two levels routed by their "
+                 "doors, three lives, a game over, saved progress, a pause menu - how the pieces fit together.",
+                 "gamepad", 50)
     t.meta["kind"] = "sample"
     t.begin()
     platformer_art(t)
+    ink, red, sky = "#3c3c5aff", "#c0392bff", (223, 246, 245, 255)
+    levels = ["scenes/level1.scene.json", "scenes/level2.scene.json"]
+    # The routes: level 1's door leads to level 2, level 2's (none) to the result.
+    routes = ["scenes/level2.scene.json", ""]
+    side = ("move_left", "move_right", "move_up", "move_down")  # (up / down pick in the pause menu)
+    for i, rows in enumerate((PLATFORMER_LEVEL, PLATFORMER_LEVEL2)):
+        sc = platformer_scene(t, rows, f"level{i + 1}", routes[i], game_level=i + 1)
+        sc["root"]["children"].append(pause_menu(PIXEL_STYLE, red))
+        t.json(levels[i], with_touch(sc, (320, 180), stick=side, pause="pause"))
 
-    def with_pause(sc):
-        sc["root"]["children"].append({
-            "type": "Node", "name": "PauseMenu", "layer": 7, "pause_mode": "always", "visible": False,
-            "script": {"path": "scripts/menu.lua", "properties": {"kind": "pause"}},
-            "children": [
-                {"type": "UIContainerNode", "name": "Shade", "layer": 7, "position": [0, 0],
-                 "properties": {"size": [320, 180], "drawBackground": True, "drawBorder": False, "showHeader": False,
-                                "backgroundColor": "#14141ec8"}},
-                text("Title", "Paused", (160, 46), size=32, align="Center", pivot=(0.5, 0.5)),
-                text("Item1", "Resume", (160, 84), align="Center", pivot=(0.5, 0.5)),
-                text("Item2", "Restart level", (160, 102), align="Center", pivot=(0.5, 0.5)),
-                text("Item3", "Title screen", (160, 120), align="Center", pivot=(0.5, 0.5)),
-            ]})
-        return sc
-
-    side = ("move_left", "move_right", "move_up", "move_down") # (up / down pick in the pause menu)
-    t.json("scenes/level1.scene.json", with_touch(with_pause(platformer_scene(t, PLATFORMER_LEVEL, "level1", "scenes/level2.scene.json")),
-                                                  (320, 180), stick=side, pause="pause"))
-    t.json("scenes/level2.scene.json", with_touch(with_pause(platformer_scene(t, PLATFORMER_LEVEL2, "level2", "scenes/title.scene.json")),
-                                                  (320, 180), stick=side, pause="pause"))
-    t.json("scenes/title.scene.json", with_touch(scene("title", [
-        {"type": "CameraNode", "name": "Camera", "position": [160, 90], "properties": {"isCurrent": True}},
-        tilemap("Backdrop", "textures/backgrounds.png", 24, [[(9, 11)[c % 2] for c in range(15)]] + [[16 + c % 4 for c in range(15)] for _ in range(3)], layer=0, pos=(0, 84)),
-        {"type": "Node", "name": "Menu", "layer": 7, "script": {"path": "scripts/menu.lua", "properties": {"kind": "title"}},
-         "children": [
-             text("Title", "Platformer Adventure", (160, 40), size=32, align="Center", pivot=(0.5, 0.5), color="#3c3c5aff"),
-             text("Item1", "New game", (160, 88), align="Center", pivot=(0.5, 0.5), color="#3c3c5aff"),
-             text("Item2", "Continue", (160, 106), align="Center", pivot=(0.5, 0.5), color="#3c3c5aff"),
-             text("Hint", "", (160, 160), align="Center", pivot=(0.5, 0.5), color="#3c3c5a99"),
-         ]},
-    ], background=(223, 246, 245, 255)), (320, 180), buttons=(("confirm", "OK"),)))
-    t.json("project.json", project("Platformer Adventure",
-                                   ["scenes/title.scene.json", "scenes/level1.scene.json", "scenes/level2.scene.json"],
-                                   PLATFORMER_ACTIONS + [action("pause", "ESCAPE", "P", "pad:MIDDLE_RIGHT"),
-                                                         action("confirm", "ENTER", "SPACE", "pad:RIGHT_FACE_DOWN")]))
-    # (Its own player / hud / goal: the Platformer template's are a game of
-    # their own now - #329.)
+    def backdrop():
+        return tilemap("Backdrop", "textures/backgrounds.png", 24, [[(9, 11)[c % 2] for c in range(15)]] +
+                       [[16 + c % 4 for c in range(15)] for _ in range(3)], layer=0, pos=(0, 84))
+    t.json("scenes/title.scene.json", title_scene("Platformer Adventure", PIXEL_STYLE, ink, red, sky, [backdrop()]))
+    t.json("scenes/result.scene.json", result_scene(PIXEL_STYLE, ink, red, sky, [backdrop()]))
+    t.json("project.json", project("Platformer Adventure", ["scenes/title.scene.json"] + levels + ["scenes/result.scene.json"],
+                                   PLATFORMER_ACTIONS + GAME_ACTIONS, globals_=GAME_GLOBALS))
+    # The Platformer's scripts, but its own door (the routes).
     for s_ in PLATFORMER_SCRIPTS:
-        if s_ not in ("goal", "player", "hud"):
+        if s_ != "goal":
             t.script(s_, src="platformer")
-    for s_ in ("goal", "menu", "player", "hud"):
-        with open(os.path.join(SCRIPTS, "adventure", s_ + ".lua")) as f:
-            t.write(f"scripts/{s_}.lua", f.read())
+    t.script("goal")
+    game_scripts(t, levels, lives=3, score_name="Coins")
     with open(os.path.join(SCRIPTS, "adventure", "README.md")) as f:
         t.write("README.md", f.read())
     return t
@@ -569,6 +552,8 @@ def adventure():
 
 # --- top-down RPG -------------------------------------------------------------------
 
+# Floors as text: # wall, . floor, P player, N the wizard, s slime, p potion,
+# g gold, c the chest (the key), L the locked door, X the exit (the stairs).
 RPG_MAP = [
     "##############################",
     "#.......#..........#.........#",
@@ -576,24 +561,32 @@ RPG_MAP = [
     "#.......#.......s..#....X....#",
     "#...N...+..........L.........#",
     "#.......#....s.....#.........#",
-    "#.......#.........c#.........#",
-    "#..p....#..........#.........#",
+    "#.......#.........c#....g....#",
+    "#..p..g.#...g......#.........#",
     "#.......#..........#.........#",
     "##############################",
 ]
 
+RPG_MAP2 = [
+    "##############################",
+    "#......#..........s.#........#",
+    "#.P....#............#...g....#",
+    "#......+.....s......#........#",
+    "#..g...#............L....X...#",
+    "#......#....s.......#........#",
+    "####.##############.#........#",
+    "#c...s..............#........#",
+    "#p......g...s.......#...g....#",
+    "##############################",
+]
 
-def rpg():
-    t = Template("rpg", "Top-down RPG",
-                 "Explore a small dungeon: talk to a wizard, fight slimes with a sword, find the key in a "
-                 "chest, unlock the door and escape. Hearts, a potion, dialogue.", "dungeon", 2)
-    t.begin()
-    t.art("tiny-dungeon/tilemap_packed.png", "textures/dungeon.png")
-    t.art("pixel-platformer/tilemap_packed.png", "textures/ui.png")  # hearts
-    t.license("Tiny Dungeon", "Pixel Platformer (hearts)")
+
+def rpg_floor(rows, name, level):
+    """A floor (a scene) from a text map: the tile maps, the wizard, slimes,
+    potions, gold, the chest, the locked door, the exit, the player, the HUD."""
     T = 16
     SHEET, SG = "textures/dungeon.png", (12, 11)
-    rows = grid_of(RPG_MAP)
+    rows = grid_of(rows)
     H, W = len(rows), len(rows[0])
     walls = [[-1] * W for _ in range(H)]
     floor = [[-1] * W for _ in range(H)]
@@ -626,16 +619,20 @@ def rpg():
         tilemap("Floor", SHEET, T, floor, layer=1, z=-1),
         tilemap("Walls", SHEET, T, walls, solid=True, layer=1),
     ]
-    (nc, nr), = ents["N"]
-    children.append({"type": "Node", "name": "Wizard", "position": center(nc, nr), "tags": ["interactable"],
-                     "script": {"path": "scripts/npc.lua"},
-                     "children": [sprite("Sprite", SHEET, SG, {"idle": ([84], 1, True)}, pos=(0, -2), layer=2)]})
+    for (nc, nr) in ents.get("N", []):
+        children.append({"type": "Node", "name": "Wizard", "position": center(nc, nr), "tags": ["interactable"],
+                         "script": {"path": "scripts/npc.lua"},
+                         "children": [sprite("Sprite", SHEET, SG, {"idle": ([84], 1, True)}, pos=(0, -2), layer=2)]})
     for i, (c, r) in enumerate(ents.get("s", [])):
         children.append(char(f"Slime{i + 1}", 108, center(c, r), "scripts/slime.lua", tags=["enemy"]))
     for i, (c, r) in enumerate(ents.get("p", [])):
         children.append({"type": "AreaNode", "name": f"Potion{i + 1}", "position": center(c, r),
                          "shapes": [{"type": "Circle", "radius": 6}], "script": {"path": "scripts/potion.lua"},
                          "children": [sprite("Sprite", SHEET, SG, {"idle": ([115], 1, True)}, layer=2)]})
+    for i, (c, r) in enumerate(ents.get("g", [])):
+        children.append({"type": "AreaNode", "name": f"Gold{i + 1}", "position": center(c, r), "tags": ["gold"],
+                         "shapes": [{"type": "Circle", "radius": 6}], "script": {"path": "scripts/gold.lua"},
+                         "children": [sprite("Sprite", "textures/ui.png", (20, 9), {"spin": ([151, 152], 6, True)}, layer=2)]})
     (cc, cr), = ents["c"]
     children.append({"type": "Node", "name": "Chest", "position": center(cc, cr), "tags": ["interactable"],
                      "script": {"path": "scripts/chest.lua"},
@@ -653,23 +650,53 @@ def rpg():
     ]))
     hearts = [sprite(f"Heart{i + 1}", "textures/ui.png", (20, 9), {"full": ([44], 1, True), "empty": ([46], 1, True)},
                      pos=(10 + i * 14, 10), layer=7) for i in range(3)]
-    children.append({"type": "Node", "name": "HUD", "script": {"path": "scripts/hud.lua"}, "children": hearts + [
+    children.append({"type": "Node", "name": "HUD", "script": {"path": "scripts/hud.lua", "properties": {"level": level}},
+                     "children": hearts + [
         text("Key", "", (56, 2), color="#f5d76eff"),
+        text("FloorText", "", (160, 2), align="Center", pivot=(0.5, 0)),
+        text("Gold", "Gold 0", (312, 2), align="Right", pivot=(1, 0), color="#f5d76eff"),
         text("Hint", "", (160, 158), align="Center", pivot=(0.5, 0)),
         text("Message", "", (160, 60), size=32, align="Center", pivot=(0.5, 0.5)),
     ]})
     children.append({"type": "DialogueNode", "name": "Dialogue", "position": [10, 118], "layer": 7,
                      "properties": {"size": [300, 52], "font": PIXEL_FONT, "fontSize": 16, "padding": 6, "revealSpeed": 60,
                                     "panelColor": "#1c1820f5", "advanceAction": "confirm"}})
-    t.json("scenes/dungeon.scene.json", with_touch(scene("dungeon", children, background=(37, 19, 26, 255)), (320, 180),
-                                                   buttons=(("attack", "A"), ("interact, confirm", "E"))))
-    t.json("project.json", project("Top-down RPG", ["scenes/dungeon.scene.json"], MOVE_ACTIONS + [
+    children.append(pause_menu(PIXEL_STYLE, "#e74c3cff"))
+    return with_touch(scene(name, children, background=(37, 19, 26, 255)), (320, 180),
+                      buttons=(("attack", "A"), ("interact, confirm", "E")), pause="pause")
+
+
+def rpg():
+    t = Template("rpg", "Top-down RPG",
+                 "Explore two dungeon floors: talk to a wizard, fight slimes with a sword, collect gold, find "
+                 "each floor's key, unlock the door and take the stairs. A title screen, settings, a pause "
+                 "menu, saved progress.", "dungeon", 2)
+    t.begin()
+    t.art("tiny-dungeon/tilemap_packed.png", "textures/dungeon.png")
+    t.art("pixel-platformer/tilemap_packed.png", "textures/ui.png")  # hearts, gold
+    t.license("Tiny Dungeon", "Pixel Platformer (hearts, gold)")
+    # A small game (#329): two floors (the stairs lead down to the next), the
+    # hearts are your life - a defeat is game over; the furthest floor and
+    # the most gold saved; the title, a pause menu, the result screen.
+    levels = ["scenes/floor1.scene.json", "scenes/floor2.scene.json"]
+    for i, rows in enumerate((RPG_MAP, RPG_MAP2)):
+        t.json(levels[i], rpg_floor(rows, f"floor{i + 1}", i + 1))
+    white, red, dark = "#e9dcc2ff", "#e74c3cff", (37, 19, 26, 255)
+
+    def backdrop():  # (walls above and below)
+        return tilemap("Backdrop", "textures/dungeon.png", 16, [[40] * 20] + [[-1] * 20] * 9 + [[40] * 20] * 2,
+                       layer=0, z=-1)
+    t.json("scenes/title.scene.json", title_scene("Top-down RPG", PIXEL_STYLE, white, red, dark, [backdrop()], level_word="Floor"))
+    t.json("scenes/result.scene.json", result_scene(PIXEL_STYLE, white, red, dark, [backdrop()]))
+    t.json("project.json", project("Top-down RPG", ["scenes/title.scene.json"] + levels + ["scenes/result.scene.json"], MOVE_ACTIONS + [
         action("attack", "SPACE", "J", "pad:RIGHT_FACE_LEFT"),
         action("interact", "E", "K", "pad:RIGHT_FACE_DOWN"),
-        action("confirm", "E", "ENTER", "K", "pad:RIGHT_FACE_DOWN"),
-    ], gravity=(0, 0)))
-    for s_ in ("player", "slime", "npc", "chest", "locked_door", "potion", "exit", "hud"):
+        action("confirm", "E", "ENTER", "KP_ENTER", "K", "pad:RIGHT_FACE_DOWN"),
+        action("pause", "ESCAPE", "P", "pad:MIDDLE_RIGHT"),
+    ], gravity=(0, 0), globals_=GAME_GLOBALS))
+    for s_ in ("player", "slime", "npc", "chest", "locked_door", "potion", "gold", "exit", "hud"):
         t.script(s_)
+    game_scripts(t, levels, lives=None, score_name="Gold", level_word="Floor")
     with open(os.path.join(SCRIPTS, "rpg", "README.md")) as f:
         t.write("README.md", f.read())
     return t
@@ -978,35 +1005,57 @@ def visual_novel():
 
 # --- dungeon (isometric) ------------------------------------------------------------
 
-# The room, as text: one character a cell, rows are grid y, columns grid x
+# The rooms, as text: one character a cell, rows are grid y, columns grid x
 # (x runs down-right on screen, y down-left). The back walls are made from
 # the edges: x = 0 and y = 0.
-#   . floor   # inner wall (on the cell's upper-right edge)   C chest   D door (top wall)
-#   W window (top wall)   w window (left wall)   P pillar   b barrel   B barrels
-#   k crates   t table   p woodpile   @ the hero
-DUNGEON_ROOM = [
-    "...W..D...",
-    ".p......b.",
-    "..........",
-    "...P..P...",
-    "w.........",
-    "......@...",
-    ".###....C.",
-    ".......t..",
-    ".B.P......",
-    "........k.",
+#   . floor   # inner wall (on the cell's upper-right edge)   C chest   o a hole (no floor: falls in)
+#   D door (top wall)   d door (left wall)   W window (top wall)   w window (left wall)
+#   P pillar   b barrel   B barrels   k crates   t table   p woodpile   @ the hero
+DUNGEON_ROOMS = [
+    # (room, seconds to get out)
+    ([
+        "...W..D...",
+        ".p......b.",
+        "..........",
+        "...P..P...",
+        "w.........",
+        "....o.@...",
+        ".###....C.",
+        ".......t..",
+        ".B.P..oo..",
+        "........k.",
+    ], 60),
+    ([
+        "...W......",
+        "..C.......",
+        "....oo....",
+        ".P..oo..P.",
+        "w.........",
+        "d...oo....",
+        "..........",
+        ".###...b..",
+        "....@.....",
+        "..k....B..",
+    ], 50),
+    ([
+        "..W....D..",
+        "......o...",
+        "..oo..o.b.",
+        "..oo......",
+        "w.....oo..",
+        ".P....oo.C",
+        "..........",
+        ".oo.......",
+        ".oo..@..P.",
+        "......t...",
+    ], 45),
 ]
 
+DUNGEON_ACTIONS = MOVE_ACTIONS + [action("interact", "E", "ENTER", "SPACE", "pad:RIGHT_FACE_DOWN")]
 
-def dungeon():
-    t = Template("dungeon", "Isometric Dungeon",
-                 "Explore a small isometric dungeon: click to walk (path finding round the walls) or use WASD, "
-                 "walk behind pillars and walls, open the chest for the key, unlock the door.", "dungeon", 6)
-    t.begin()
-    t.art("iso-dungeon/tiles.png", "textures/dungeon.png")
-    t.art("iso-dungeon/hero.png", "textures/hero.png")
-    t.license("Isometric Miniature Dungeon")
-    rows = DUNGEON_ROOM
+
+def dungeon_room(rows, name, room, seconds, style, ink, selected):
+    """A room (a scene): the maps, the hero, the HUD, the pause menu."""
     H, W = len(rows), len(rows[0])
     CW, CH = 128, 64      # the diamond cell
     TILE = [128, 144]     # the tile images (taller: walls, pillars)
@@ -1014,7 +1063,7 @@ def dungeon():
     ORIGIN = (0, 0)
     FLOOR, FLOOR_VARIANTS = 0, [0, 0, 0, 0, 0, 1, 0]
     WALL_LEFT, WALL_TOP, CORNER_BACK = 9, 10, 14   # (stoneWall_E / _S, stoneWallCorner_S)
-    DOOR_TOP, WINDOW_LEFT, WINDOW_TOP = 18, 25, 26
+    DOOR_LEFT, DOOR_TOP, WINDOW_LEFT, WINDOW_TOP = 17, 18, 25, 26
     PROPS = {"P": 45, "b": 40, "B": 41, "k": 44, "t": 46, "p": 47, "C": 34}
 
     def center(x, y):
@@ -1033,11 +1082,13 @@ def dungeon():
             elif y == 0:
                 walls[y][x] = {"D": DOOR_TOP, "W": WINDOW_TOP}.get(ch, WALL_TOP)
             elif x == 0:
-                walls[y][x] = WINDOW_LEFT if ch == "w" else WALL_LEFT
+                walls[y][x] = {"d": DOOR_LEFT, "w": WINDOW_LEFT}.get(ch, WALL_LEFT)
             elif ch == "#":
                 walls[y][x] = WALL_TOP
             elif ch in PROPS:
                 props[y][x] = PROPS[ch]
+            elif ch == "o":
+                floor[y][x] = -1
             elif ch == "@":
                 hero = (x, y)
 
@@ -1060,7 +1111,8 @@ def dungeon():
     children = [
         {"type": "CameraNode", "name": "Camera", "position": [hx, hy], "follow": "../World/Hero",
          "properties": {"isCurrent": True, "followMode": "SingleTarget", "dragType": "SmoothDamp"}},
-        {"type": "Node", "name": "Dungeon", "script": {"path": "scripts/dungeon.lua"}},
+        {"type": "Node", "name": "Dungeon", "script": {"path": "scripts/dungeon.lua",
+                                                       "properties": {"room": room, "time_limit": seconds}}},
         imap("Floor", floor, 1),
         walk,
         {"type": "Node", "name": "Cursor", "layer": 1, "script": {"path": "scripts/cursor.lua"}},
@@ -1080,19 +1132,45 @@ def dungeon():
                                  "navMap": "../../../Walk", "moveParent": True, "avoidance": False}},
              ]},
         ]},
-        text("Title", "Find the key, open the door", (16, 12), size=32, color="#e9dcc2ff", layer=7),
+        text("RoomText", "", (16, 12), size=32, color=ink, layer=7),
         text("KeyIcon", "Key: no", (16, 52), size=32, color="#f5d76eff", layer=7),
+        text("Time", "", (16, 92), size=32, color=ink, layer=7),
+        text("Lives", "", (1264, 12), size=32, align="Right", pivot=(1, 0), color=ink, layer=7),
         text("Hint", "", (640, 640), size=32, align="Center", pivot=(0.5, 0), color="#ffffffff", layer=7),
-        text("Message", "", (640, 90), size=48, align="Center", pivot=(0.5, 0.5), color="#ffffffff", layer=7),
-        text("Help", "Click to walk   WASD / arrows walk   E open", (1264, 690), size=32, align="Right",
+        text("Message", "", (640, 120), size=48, align="Center", pivot=(0.5, 0.5), color="#ffffffff", layer=7),
+        text("Help", "Click to walk   WASD / arrows walk   E open   Esc pause", (1264, 690), size=32, align="Right",
              pivot=(1, 1), color="#ffffff99", layer=7),
+        pause_menu(style, selected),
     ]
-    t.json("scenes/dungeon.scene.json", scene("dungeon", children, background=(24, 20, 26, 255)))
-    t.json("project.json", project("Isometric Dungeon", ["scenes/dungeon.scene.json"], MOVE_ACTIONS + [
-        action("interact", "E", "ENTER", "SPACE", "pad:RIGHT_FACE_DOWN"),
-    ], virtual=(1280, 720), gravity=(0, 0), pixel=False))
+    return with_touch(scene(name, children, background=(24, 20, 26, 255)), style["size"], stick=None, buttons=(),
+                      pause="pause")
+
+
+def dungeon():
+    t = Template("dungeon", "Isometric Dungeon",
+                 "Escape three isometric rooms against the clock: click to walk (path finding round the walls) or "
+                 "use WASD, find each room's key, open its door, mind the holes. A title screen, settings, a pause "
+                 "menu, saved progress.", "dungeon", 6)
+    t.begin()
+    t.art("iso-dungeon/tiles.png", "textures/dungeon.png")
+    t.art("iso-dungeon/hero.png", "textures/hero.png")
+    t.license("Isometric Miniature Dungeon")
+    # A small game (#329): three rooms, each with its chest's key and its
+    # door, and a time limit; a hole costs a life (three a game), the clock
+    # running out ends it. The furthest room and the most time to spare are
+    # saved; the title, a pause menu, the result screen.
+    ink, red, dark = "#e9dcc2ff", "#e74c3cff", (24, 20, 26, 255)
+    levels = [f"scenes/room{i + 1}.scene.json" for i in range(len(DUNGEON_ROOMS))]
+    for i, (rows, seconds) in enumerate(DUNGEON_ROOMS):
+        t.json(levels[i], dungeon_room(rows, f"room{i + 1}", i + 1, seconds, HD_STYLE, ink, red))
+    t.json("scenes/title.scene.json", title_scene("Isometric Dungeon", HD_STYLE, ink, red, dark, level_word="Room"))
+    t.json("scenes/result.scene.json", result_scene(HD_STYLE, ink, red, dark))
+    t.json("project.json", project("Isometric Dungeon", ["scenes/title.scene.json"] + levels + ["scenes/result.scene.json"],
+                                   DUNGEON_ACTIONS + GAME_ACTIONS, virtual=(1280, 720), gravity=(0, 0), pixel=False,
+                                   globals_=GAME_GLOBALS))
     for s_ in ("dungeon", "hero", "cursor"):
         t.script(s_)
+    game_scripts(t, levels, lives=3, score_name="Time to spare", level_word="Room")
     with open(os.path.join(SCRIPTS, "dungeon", "README.md")) as f:
         t.write("README.md", f.read())
     return t

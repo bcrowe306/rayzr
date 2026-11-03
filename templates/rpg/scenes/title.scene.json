@@ -1,0 +1,295 @@
+{
+ "name": "title",
+ "background": [
+  37,
+  19,
+  26,
+  255
+ ],
+ "root": {
+  "type": "Node",
+  "name": "root",
+  "children": [
+   {
+    "type": "CameraNode",
+    "name": "Camera",
+    "position": [
+     160.0,
+     90.0
+    ],
+    "properties": {
+     "isCurrent": true
+    }
+   },
+   {
+    "type": "TileMapNode",
+    "name": "Backdrop",
+    "position": [
+     0,
+     0
+    ],
+    "layer": 0,
+    "z_index": -1,
+    "tilemap": {
+     "tileset": "textures/dungeon.png",
+     "tile_size": [
+      16,
+      16
+     ],
+     "map_size": [
+      20,
+      12
+     ],
+     "data": [
+      [
+       20,
+       40
+      ],
+      [
+       180,
+       -1
+      ],
+      [
+       40,
+       40
+      ]
+     ]
+    },
+    "properties": {
+     "solid": false
+    }
+   },
+   {
+    "type": "Node",
+    "name": "Menu",
+    "layer": 7,
+    "script": {
+     "path": "scripts/menu.lua",
+     "properties": {
+      "kind": "title",
+      "item_width": 170,
+      "item_height": 16,
+      "selected": "#e74c3cff"
+     }
+    },
+    "children": [
+     {
+      "type": "TextNode",
+      "name": "Title",
+      "position": [
+       160.0,
+       36.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Top-down RPG",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 32,
+       "align": "Center",
+       "color": "#e9dcc2ff"
+      }
+     },
+     {
+      "type": "TextNode",
+      "name": "Best",
+      "position": [
+       160.0,
+       62.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 16,
+       "align": "Center",
+       "color": "#e9dcc2ff"
+      }
+     },
+     {
+      "type": "TextNode",
+      "name": "Play",
+      "position": [
+       160.0,
+       88.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Play",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 16,
+       "align": "Center",
+       "color": "#e9dcc2ff"
+      },
+      "tags": [
+       "item"
+      ]
+     },
+     {
+      "type": "TextNode",
+      "name": "Level",
+      "position": [
+       160.0,
+       106.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Floor",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 16,
+       "align": "Center",
+       "color": "#e9dcc2ff"
+      },
+      "tags": [
+       "item"
+      ]
+     },
+     {
+      "type": "TextNode",
+      "name": "Settings",
+      "position": [
+       160.0,
+       124.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Settings",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 16,
+       "align": "Center",
+       "color": "#e9dcc2ff"
+      },
+      "tags": [
+       "item"
+      ]
+     },
+     {
+      "type": "TextNode",
+      "name": "Quit",
+      "position": [
+       160.0,
+       142.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Quit",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 16,
+       "align": "Center",
+       "color": "#e9dcc2ff"
+      },
+      "tags": [
+       "item"
+      ]
+     }
+    ]
+   },
+   {
+    "type": "Node",
+    "name": "SettingsMenu",
+    "layer": 7,
+    "script": {
+     "path": "scripts/menu.lua",
+     "properties": {
+      "kind": "settings",
+      "item_width": 170,
+      "item_height": 16,
+      "selected": "#e74c3cff"
+     }
+    },
+    "children": [
+     {
+      "type": "TextNode",
+      "name": "Heading",
+      "position": [
+       160.0,
+       50.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Settings",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 32,
+       "align": "Center",
+       "color": "#e9dcc2ff"
+      }
+     },
+     {
+      "type": "TextNode",
+      "name": "Volume",
+      "position": [
+       160.0,
+       96.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Volume",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 16,
+       "align": "Center",
+       "color": "#e9dcc2ff"
+      },
+      "tags": [
+       "item"
+      ]
+     },
+     {
+      "type": "TextNode",
+      "name": "Back",
+      "position": [
+       160.0,
+       114.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Back",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 16,
+       "align": "Center",
+       "color": "#e9dcc2ff"
+      },
+      "tags": [
+       "item"
+      ]
+     }
+    ],
+    "visible": false
+   }
+  ]
+ }
+}

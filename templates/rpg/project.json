@@ -1,7 +1,7 @@
 {
  "name": "Top-down RPG",
  "version": "0.1.0",
- "initial_scene": "scenes/dungeon.scene.json",
+ "initial_scene": "scenes/title.scene.json",
  "window": {
   "title": "Top-down RPG",
   "width": 1280,
@@ -149,16 +149,42 @@
       "key": "ENTER"
      },
      {
+      "key": "KP_ENTER"
+     },
+     {
       "key": "K"
      },
      {
       "button": "RIGHT_FACE_DOWN"
      }
     ]
+   },
+   {
+    "name": "pause",
+    "bindings": [
+     {
+      "key": "ESCAPE"
+     },
+     {
+      "key": "P"
+     },
+     {
+      "button": "MIDDLE_RIGHT"
+     }
+    ]
    }
   ]
  },
  "scenes": [
-  "scenes/dungeon.scene.json"
+  "scenes/title.scene.json",
+  "scenes/floor1.scene.json",
+  "scenes/floor2.scene.json",
+  "scenes/result.scene.json"
+ ],
+ "globals": [
+  {
+   "name": "Game",
+   "script": "scripts/game.lua"
+  }
  ]
 }

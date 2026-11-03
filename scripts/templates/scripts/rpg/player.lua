@@ -1,6 +1,7 @@
 -- The hero: moves in eight directions (a CharacterMover in "Script" mode,
 -- no gravity: project.json's gravity is 0), swings a sword, talks to /
--- opens what's nearby, takes damage with a short knockback.
+-- opens what's nearby, takes damage with a short knockback. Its hearts are
+-- its life: losing the last one is game over (Game.finish).
 -- Input actions: move_*, attack (Space / J), interact (E / K).
 
 ---@class Player : ScriptInstanceBase
@@ -45,9 +46,11 @@ end
 ---@param dt number
 function Player:update(dt)
     local node = self.node
-    if self.dead then
+    if self.dead or self.frozen then
+        node:character_set_velocity(0, 0)
+        if not self.dead then return end
         self.timer = self.timer - dt
-        if self.timer <= 0 then Scene.reload(); self.timer = 1e9 end
+        if self.timer <= 0 then Game:finish(false); self.timer = 1e9 end
         return
     end
     self.hurt_time = math.max(0, self.hurt_time - dt)
@@ -91,9 +94,15 @@ function Player:update(dt)
     end
 end
 
+-- freeze: stops (at the stairs).
+function Player:freeze()
+    self.frozen = true
+    self.hud:hint("")
+end
+
 -- hurt: a slime touched us (from: where it was). Knocked back, a heart less.
 function Player:hurt(fx, fy)
-    if self.hurt_time > 0 or self.dead then return end
+    if self.hurt_time > 0 or self.dead or self.frozen then return end
     self.hp = self.hp - 1
     self.hud:set_hearts(self.hp, self.max_hp)
     local x, y = self.node:get_position()

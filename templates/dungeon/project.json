@@ -1,7 +1,7 @@
 {
  "name": "Isometric Dungeon",
  "version": "0.1.0",
- "initial_scene": "scenes/dungeon.scene.json",
+ "initial_scene": "scenes/title.scene.json",
  "window": {
   "title": "Isometric Dungeon",
   "width": 1280,
@@ -127,10 +127,51 @@
       "button": "RIGHT_FACE_DOWN"
      }
     ]
+   },
+   {
+    "name": "confirm",
+    "bindings": [
+     {
+      "key": "ENTER"
+     },
+     {
+      "key": "KP_ENTER"
+     },
+     {
+      "key": "SPACE"
+     },
+     {
+      "button": "RIGHT_FACE_DOWN"
+     }
+    ]
+   },
+   {
+    "name": "pause",
+    "bindings": [
+     {
+      "key": "ESCAPE"
+     },
+     {
+      "key": "P"
+     },
+     {
+      "button": "MIDDLE_RIGHT"
+     }
+    ]
    }
   ]
  },
  "scenes": [
-  "scenes/dungeon.scene.json"
+  "scenes/title.scene.json",
+  "scenes/room1.scene.json",
+  "scenes/room2.scene.json",
+  "scenes/room3.scene.json",
+  "scenes/result.scene.json"
+ ],
+ "globals": [
+  {
+   "name": "Game",
+   "script": "scripts/game.lua"
+  }
  ]
 }

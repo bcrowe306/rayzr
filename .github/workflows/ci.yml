@@ -51,7 +51,7 @@ jobs:
           node-version: 22
       - run: scripts/ci/setup_deps.sh
       - name: Template play-throughs (web)
-        run: CHROME="$(command -v google-chrome)" python3 scripts/templates/test_templates.py --web platformer shmup puzzle
+        run: CHROME="$(command -v google-chrome)" python3 scripts/templates/test_templates.py --web platformer shmup puzzle adventure rpg dungeon
 
   # The Android runner (linux_arm64 / android + the NDK), as release.yml
   # builds it; then a test app packaged and checked (APK + AAB). The runner
@@ -116,7 +116,7 @@ jobs:
           arch: x86_64
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
           disable-animations: true
-          script: scripts/ci/android_playthroughs.sh platformer shmup puzzle
+          script: scripts/ci/android_playthroughs.sh platformer shmup puzzle adventure rpg dungeon
 
   build-test:
     name: ${{ matrix.name }}

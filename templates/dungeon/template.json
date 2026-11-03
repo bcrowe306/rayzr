@@ -1,6 +1,6 @@
 {
   "name": "Isometric Dungeon",
-  "description": "Explore a small isometric dungeon: click to walk (path finding round the walls) or use WASD, walk behind pillars and walls, open the chest for the key, unlock the door.",
+  "description": "Escape three isometric rooms against the clock: click to walk (path finding round the walls) or use WASD, find each room's key, open its door, mind the holes. A title screen, settings, a pause menu, saved progress.",
   "icon": "dungeon",
   "order": 6
 }

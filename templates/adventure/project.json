@@ -129,6 +129,23 @@
     ]
    },
    {
+    "name": "confirm",
+    "bindings": [
+     {
+      "key": "ENTER"
+     },
+     {
+      "key": "KP_ENTER"
+     },
+     {
+      "key": "SPACE"
+     },
+     {
+      "button": "RIGHT_FACE_DOWN"
+     }
+    ]
+   },
+   {
     "name": "pause",
     "bindings": [
      {
@@ -141,26 +158,19 @@
       "button": "MIDDLE_RIGHT"
      }
     ]
-   },
-   {
-    "name": "confirm",
-    "bindings": [
-     {
-      "key": "ENTER"
-     },
-     {
-      "key": "SPACE"
-     },
-     {
-      "button": "RIGHT_FACE_DOWN"
-     }
-    ]
    }
   ]
  },
  "scenes": [
   "scenes/title.scene.json",
   "scenes/level1.scene.json",
-  "scenes/level2.scene.json"
+  "scenes/level2.scene.json",
+  "scenes/result.scene.json"
+ ],
+ "globals": [
+  {
+   "name": "Game",
+   "script": "scripts/game.lua"
+  }
  ]
 }

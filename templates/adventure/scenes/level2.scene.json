@@ -3192,7 +3192,7 @@
     "script": {
      "path": "scripts/goal.lua",
      "properties": {
-      "next_level": "scenes/title.scene.json"
+      "next_level": ""
      }
     },
     "children": [
@@ -3382,7 +3382,10 @@
     "type": "Node",
     "name": "HUD",
     "script": {
-     "path": "scripts/hud.lua"
+     "path": "scripts/hud.lua",
+     "properties": {
+      "level": 2
+     }
     },
     "children": [
      {
@@ -3424,6 +3427,46 @@
        "align": "Center",
        "color": "#3c3c5aff"
       }
+     },
+     {
+      "type": "TextNode",
+      "name": "LevelText",
+      "position": [
+       160,
+       4
+      ],
+      "pivot": [
+       0.5,
+       0
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 16,
+       "align": "Center",
+       "color": "#3c3c5aff"
+      }
+     },
+     {
+      "type": "TextNode",
+      "name": "Lives",
+      "position": [
+       312,
+       4
+      ],
+      "pivot": [
+       1,
+       0
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 16,
+       "align": "Right",
+       "color": "#3c3c5aff"
+      }
      }
     ]
    },
@@ -3431,12 +3474,13 @@
     "type": "Node",
     "name": "PauseMenu",
     "layer": 7,
-    "pause_mode": "always",
-    "visible": false,
     "script": {
      "path": "scripts/menu.lua",
      "properties": {
-      "kind": "pause"
+      "kind": "pause",
+      "item_width": 170,
+      "item_height": 16,
+      "selected": "#c0392bff"
      }
     },
     "children": [
@@ -3461,10 +3505,10 @@
      },
      {
       "type": "TextNode",
-      "name": "Title",
+      "name": "Heading",
       "position": [
-       160,
-       46
+       160.0,
+       46.0
       ],
       "pivot": [
        0.5,
@@ -3481,10 +3525,10 @@
      },
      {
       "type": "TextNode",
-      "name": "Item1",
+      "name": "Resume",
       "position": [
-       160,
-       84
+       160.0,
+       84.0
       ],
       "pivot": [
        0.5,
@@ -3497,14 +3541,17 @@
        "fontSize": 16,
        "align": "Center",
        "color": "#ffffffff"
-      }
+      },
+      "tags": [
+       "item"
+      ]
      },
      {
       "type": "TextNode",
-      "name": "Item2",
+      "name": "Restart",
       "position": [
-       160,
-       102
+       160.0,
+       102.0
       ],
       "pivot": [
        0.5,
@@ -3517,14 +3564,17 @@
        "fontSize": 16,
        "align": "Center",
        "color": "#ffffffff"
-      }
+      },
+      "tags": [
+       "item"
+      ]
      },
      {
       "type": "TextNode",
-      "name": "Item3",
+      "name": "Title",
       "position": [
-       160,
-       120
+       160.0,
+       120.0
       ],
       "pivot": [
        0.5,
@@ -3537,9 +3587,14 @@
        "fontSize": 16,
        "align": "Center",
        "color": "#ffffffff"
-      }
+      },
+      "tags": [
+       "item"
+      ]
      }
-    ]
+    ],
+    "visible": false,
+    "pause_mode": "always"
    },
    {
     "type": "ScreenLayerNode",

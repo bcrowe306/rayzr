@@ -1,6 +1,6 @@
 {
   "name": "Top-down RPG",
-  "description": "Explore a small dungeon: talk to a wizard, fight slimes with a sword, find the key in a chest, unlock the door and escape. Hearts, a potion, dialogue.",
+  "description": "Explore two dungeon floors: talk to a wizard, fight slimes with a sword, collect gold, find each floor's key, unlock the door and take the stairs. A title screen, settings, a pause menu, saved progress.",
   "icon": "dungeon",
   "order": 2
 }
