@@ -292,7 +292,16 @@ RayzrPackage_OpenFromMemory :: proc(data: []byte, allocator := context.allocator
 }
 
 RayzrPackage_Open :: proc(path: string, allocator := context.allocator) -> (^RayzrPackage, bool) {
-	data, readErr := os.read_entire_file(path, allocator)
+	data: []byte
+	readErr: os.Error
+	if strings.has_suffix(path, APPENDED_PACKAGE_SUFFIX) {
+		// Inside a single-file game's executable (appended_payload.odin).
+		ok: bool
+		data, ok = Appended_PackageBytes(path, allocator)
+		if !ok do readErr = .Not_Exist
+	} else {
+		data, readErr = os.read_entire_file(path, allocator)
+	}
 	if readErr != nil {
 		log.errorf("[RayzrPackage] Failed to open .rayzr file at: %s", path)
 		return nil, false

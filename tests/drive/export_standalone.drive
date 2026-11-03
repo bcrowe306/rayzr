@@ -52,6 +52,12 @@ exec test -x $PROJECT_standalone/linux/SpaceGame.AppDir/usr/bin/SpaceGame
 exec test -s $PROJECT_standalone/linux/SpaceGame.AppDir/usr/bin/game.rayzr
 exec test -s $PROJECT_standalone/linux/SpaceGame.AppDir/SpaceGame.png
 expect abs-file:$PROJECT_standalone/linux/SpaceGame.AppDir/SpaceGame.desktop contains Exec=SpaceGame
+# Single files (#292, the default): the game and the font appended to the
+# Linux binary (besides the AppDir) and the Windows exe.
+exec test -x $PROJECT_standalone/linux/SpaceGame
+exec grep -q RAYZRAPP $PROJECT_standalone/linux/SpaceGame
 exec test -s $PROJECT_standalone/windows/SpaceGame.exe
-exec test -s $PROJECT_standalone/windows/game.rayzr
+exec grep -q RAYZRAPP $PROJECT_standalone/windows/SpaceGame.exe
+exec test ! -e $PROJECT_standalone/windows/game.rayzr
+exec test ! -e $PROJECT_standalone/windows/fonts
 exec rm -rf bin/runners/linux bin/runners/windows

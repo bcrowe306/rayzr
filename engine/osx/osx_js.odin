@@ -171,6 +171,10 @@ close :: proc(f: ^File) -> Error {return nil}
 
 read :: proc(f: ^File, buf: []byte) -> (int, Error) {return 0, .Unsupported}
 
+read_at :: proc(f: ^File, buf: []byte, offset: i64) -> (int, Error) {return 0, .Unsupported}
+
+file_size :: proc(f: ^File) -> (i64, Error) {return 0, .Unsupported}
+
 pipe_has_data :: proc(f: ^File) -> (bool, Error) {return false, .Unsupported}
 
 get_working_directory :: proc(allocator := context.allocator) -> (string, Error) {return strings.clone("/", allocator), nil}

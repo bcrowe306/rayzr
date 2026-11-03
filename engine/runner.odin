@@ -286,9 +286,11 @@ Engine_ParseRunArgs :: proc(args: []string) -> (opts: Run_Options) {
 	return
 }
 
-// Engine_FindBundledProject looks for a game shipped next to the runner:
-// game.rayzr, any other .rayzr, or a project/ directory (exe dir, then cwd).
+// Engine_FindBundledProject looks for a game shipped with the runner: one
+// appended to it (a single-file export: "<exe>#game.rayzr"), else next to
+// it - game.rayzr, any other .rayzr, or a project/ directory (exe dir, then cwd).
 Engine_FindBundledProject :: proc(exePath: string, allocator := context.allocator) -> string {
+	if _, ok := Appended_Find(exePath); ok do return strings.concatenate({exePath, APPENDED_PACKAGE_SUFFIX}, allocator)
 	dirs := make([dynamic]string, context.temp_allocator)
 	exeDir := filepath.dir(exePath, context.temp_allocator)
 	// macOS .app: Contents/MacOS/<exe> with the game in Contents/Resources.
@@ -330,6 +332,8 @@ runner_font_path :: proc() -> cstring {
 	when ODIN_OS == .JS do return "/fonts/OpenSans-Regular.ttf" // (the page fetches fonts/ next to it)
 	if Runner_FontPath != "" do return strings.clone_to_cstring(Runner_FontPath, context.temp_allocator)
 	if os.is_file(dev) || len(os.args) == 0 do return dev
+	// A single-file game: its font is appended to it (written out once).
+	if f := Appended_ExtractFont(os.args[0], context.temp_allocator); f != "" do return strings.clone_to_cstring(f, context.temp_allocator)
 	exeDir := filepath.dir(os.args[0], context.temp_allocator)
 	nextTo, _ := filepath.join({exeDir, "fonts", "OpenSans-Regular.ttf"}, context.temp_allocator)
 	inApp, _ := filepath.join({exeDir, "..", "Resources", "fonts", "OpenSans-Regular.ttf"}, context.temp_allocator)
