@@ -30,7 +30,9 @@ a small pull request. See [Writing documentation](docs.md).
 4. Document it: a guide in `engine/docs/`, the property help in
    `engine/property_docs.odin`, and Lua functions in
    `engine/definitions/engine_api.lua` (each with an example).
-5. Open a pull request. CI builds every platform and runs the tests.
+5. Open a pull request. CI builds every platform and runs the tests; a
+   change to the rendering, scene or viewport code also runs the
+   [performance checks](performance.md) on a deliberately slow machine.
 
 Every change merged into `main` becomes a development build within about
 half an hour ([Releases and dev builds](../../RELEASING.md)).

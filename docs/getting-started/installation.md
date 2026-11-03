@@ -28,6 +28,35 @@ Each release lists the SHA-256 checksum of every file (`SHA256SUMS.txt`).
   Xrandr, Xcursor, Xi and Xinerama, and ALSA for sound; the `.deb` installs
   them.
 
+### Minimum and recommended
+
+| | Minimum | Recommended |
+|---|---|---|
+| Processor | 2 cores, x64 or arm64 | 4 cores or more |
+| Graphics | OpenGL 3.3, a software renderer included (Mesa's llvmpipe) | Any integrated GPU from the last ten years (Intel UHD, AMD Radeon Vega, Apple silicon) or better |
+| Memory | 4 GB (the editor); 2 GB for a game | 8 GB |
+| Android (games) | Android 7 (API 24), arm64, 2 cores, 2 GB | Android 10 or newer, 4 cores |
+
+The minimum processor and graphics are what Rayzr is tested on (the editor
+itself uses a few hundred MB of memory; the rest is room for the system and
+your project): the Performance workflow
+([Performance checks](../contributing/performance.md)) runs every
+template game and the editor with a large scene on
+
+- GitHub's Ubuntu runner held to **2 cores** with **Mesa llvmpipe**
+  software OpenGL (no GPU at all), and
+- the **Android 14 (API 34) x86_64 emulator** with **2 cores and 2 GB** of
+  RAM (arm64 games through its ARM translation, software GL).
+
+There each template game holds **60 fps** (95 frames in 100 under
+16.7 ms; 20 ms on the emulator, where frames wait for its 60 Hz display)
+and starts in under 3 seconds (6 on the emulator); the editor stays
+responsive with a 5000-node scene, a 400x400 tile map or 5000 live
+particles open (30 fps or better idle, 20 fps or better while selecting
+and dragging), starts in under 8 seconds and plays a game in under 4. On
+the recommended machines the same numbers are many times better: an
+Apple M2 Pro plays every template at 1-2 ms a frame.
+
 ## macOS
 
 1. Open the `.dmg` and drag **Rayzr Editor** to Applications.
