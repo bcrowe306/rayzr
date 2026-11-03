@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A thorn bush, the stages' hazard (drawn for Rayzr; the repo's licence).
+     120 x 80; its foot on y = 80, where the path is. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="80" viewBox="0 0 120 80">
+  <g id="thorns">
+    <path d="M8 80 L14 50 L4 38 L22 40 L26 18 L38 34 L50 6 L58 30 L72 10 L76 34 L94 16 L92 40 L114 36 L104 52 L112 80 Z" fill="#3f6d2c" stroke="#24421a" stroke-width="3"/>
+    <path d="M20 80 C24 58 40 48 60 48 C80 48 96 58 100 80 Z" fill="#558f3a"/>
+    <path d="M30 60 L24 54 M46 54 L44 46 M66 52 L70 44 M84 58 L92 52 M56 66 L56 58" fill="none" stroke="#e8e0c8" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="40" cy="64" r="4" fill="#c0392b"/>
+    <circle cx="76" cy="62" r="4" fill="#c0392b"/>
+  </g>
+</svg>

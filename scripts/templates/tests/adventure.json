@@ -404,5 +404,16 @@
     120
    ]
   ]
+ },
+ {
+  "name": "preview: running and jumping on level 2",
+  "frames": 80,
+  "scene": "scenes/level2.scene.json",
+  "input": [
+   "10 RIGHT down",
+   "50 SPACE tap 12"
+  ],
+  "preview": true,
+  "expect": []
  }
 ]

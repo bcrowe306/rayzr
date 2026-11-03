@@ -1,7 +1,7 @@
 -- The explorer: walks a path hex by hex, from centre to centre. go_to finds
 -- the path in the Walk map (map:nav_find_path - on a hex map it steps to the
 -- sides) and the explorer follows it, telling the island each hex it
--- reaches.
+-- reaches (each one a step).
 
 ---@class Explorer : ScriptInstanceBase
 local Explorer = {}
@@ -26,6 +26,11 @@ function Explorer:busy()
     return self.path ~= nil and #self.path > 0
 end
 
+-- stop: no more steps (the island is over).
+function Explorer:stop()
+    self.path = nil
+end
+
 function Explorer:go_to(cx, cy)
     local x, y = self.node:get_position()
     local tx, ty = self.walk:tilemap_cell_position(cx, cy)
@@ -46,7 +51,7 @@ function Explorer:update(dt)
     if d <= step then
         self.node:set_position(p[1], p[2])
         table.remove(self.path, 1)
-        self.island:arrived(self.walk:tilemap_cell_at(p[1], p[2]))
+        self.island:arrived(self.walk:tilemap_cell_at(p[1], p[2])) -- (may stop the walk)
     else
         self.node:set_position(x + dx / d * step, y + dy / d * step)
     end

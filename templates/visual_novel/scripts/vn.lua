@@ -105,7 +105,7 @@ function VN:run(s)
         return true
     end
     if s.the_end then
-        self:the_end(s.the_end)
+        self:the_end(s.the_end, s.bad)
         return true
     end
     if s[1] then -- { "ada", "Hello!", pose = "cheer" }
@@ -148,15 +148,19 @@ function VN:finished()
     end
 end
 
-function VN:the_end(name)
+-- the_end: an ending reached - kept in the save data's "endings" (the
+-- title screen lists them: true, or "bad" for a bad ending - the story
+-- lost: other choices go further); back to the title.
+function VN:the_end(name, bad)
     self.ended = true
     local found = Save.get("endings", {})
-    found[name] = true
+    if found[name] == nil then found[name] = bad and "bad" or true end
     Save.set("endings", found)
     Save.delete("autosave")
     Save.flush()
     local banner = Scene.find_node("Ending")
-    banner.text = "The End\n[size=32]" .. name .. "[/size]"
+    banner.text = (bad and "[color=#c0392b]Bad End[/color]" or "The End") .. "\n[size=32]" .. name .. "[/size]"
+        .. "\n[size=24]" .. (bad and "Try other choices - " or "") .. "click or press Enter[/size]"
     banner:set_visible(true)
     self.box:dialogue_close()
 end

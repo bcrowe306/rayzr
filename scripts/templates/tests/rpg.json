@@ -664,5 +664,18 @@
    ]
   ],
   "scene": "scenes/floor1.scene.json"
+ },
+ {
+  "name": "preview: walking up to the wizard",
+  "frames": 45,
+  "scene": "scenes/floor1.scene.json",
+  "input": [
+   "5 RIGHT down",
+   "5 DOWN down",
+   "30 RIGHT up",
+   "30 DOWN up"
+  ],
+  "preview": true,
+  "expect": []
  }
 ]

@@ -1,47 +1,791 @@
 [
  {
+  "name": "play-through: the title's Play starts stage 1 (the clock running)",
+  "frames": 60,
+  "input": [
+   "10 ENTER tap"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "stage1"
+   ],
+   [
+    "StageText",
+    "text",
+    "==",
+    "Stage 1 / 3"
+   ],
+   [
+    "Time",
+    "text",
+    "==",
+    "Time 20"
+   ]
+  ]
+ },
+ {
+  "name": "play-through: from the title, stage 1 walked (the thorns jumped, a word with Pep) to the flag goes on to stage 2 (reached and saved, its best time)",
+  "frames": 601,
+  "input": [
+   "10 ENTER tap",
+   "40 D down",
+   "149 SPACE tap",
+   "255 ENTER tap",
+   "270 ENTER tap",
+   "370 SPACE tap"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "stage2"
+   ],
+   [
+    "StageText",
+    "text",
+    "==",
+    "Stage 2 / 3"
+   ],
+   [
+    "@file:save.json",
+    "progress.unlocked",
+    "==",
+    2
+   ],
+   [
+    "@file:save.json",
+    "progress.level_best.level1",
+    ">",
+    6
+   ],
+   [
+    "@file:save.json",
+    "progress.level_best.level1",
+    "<",
+    9
+   ]
+  ]
+ },
+ {
+  "name": "play-through: from the title, walking into the thorns is game over",
+  "frames": 330,
+  "input": [
+   "10 ENTER tap",
+   "40 D down"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "result"
+   ],
+   [
+    "Heading",
+    "text",
+    "==",
+    "Game over"
+   ],
+   [
+    "Score",
+    "text",
+    "==",
+    "Caught in the thorns on stage 1"
+   ],
+   [
+    "Again",
+    "text",
+    "contains",
+    "Retry stage 1"
+   ]
+  ]
+ },
+ {
+  "name": "play-through: the clock running out is game over",
+  "frames": 250,
+  "scene": "scenes/stage1.scene.json",
+  "patch": {
+   "Stage": {
+    "script.time_limit": 2
+   }
+  },
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "result"
+   ],
+   [
+    "Score",
+    "text",
+    "==",
+    "Out of time on stage 1"
+   ]
+  ]
+ },
+ {
+  "name": "play-through: stage 2 walked to the flag (thorns two at a time)",
+  "frames": 680,
+  "scene": "scenes/stage2.scene.json",
+  "input": [
+   "10 D down",
+   "94 SPACE tap",
+   "187 SPACE tap",
+   "293 ENTER tap",
+   "308 ENTER tap",
+   "408 SPACE tap",
+   "477 SPACE tap"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "stage3"
+   ],
+   [
+    "@file:save.json",
+    "progress.unlocked",
+    "==",
+    3
+   ]
+  ]
+ },
+ {
+  "name": "play-through: stage 3 walked to the flag (under the bees) wins the game",
+  "frames": 812,
+  "scene": "scenes/stage3.scene.json",
+  "input": [
+   "10 D down",
+   "105 SPACE tap",
+   "227 D up",
+   "271 D down",
+   "343 ENTER tap",
+   "351 ENTER tap",
+   "424 SPACE tap",
+   "506 D up",
+   "542 D down",
+   "637 SPACE tap"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "result"
+   ],
+   [
+    "Heading",
+    "text",
+    "==",
+    "You win!"
+   ],
+   [
+    "Score",
+    "text",
+    "contains",
+    "s in all"
+   ],
+   [
+    "Best",
+    "text",
+    "contains",
+    "3: 11."
+   ],
+   [
+    "@file:save.json",
+    "progress.level_best.level3",
+    ">",
+    10
+   ]
+  ]
+ },
+ {
+  "name": "a bee is game over too",
+  "frames": 300,
+  "scene": "scenes/stage3.scene.json",
+  "input": [
+   "10 D down",
+   "105 SPACE tap"
+  ],
+  "expect": [
+   [
+    "Message",
+    "text",
+    "==",
+    "Ouch!"
+   ],
+   [
+    "Pip",
+    "x",
+    "<",
+    1110
+   ]
+  ]
+ },
+ {
+  "name": "play-through: a slower time doesn't replace the best",
+  "frames": 601,
+  "user_files": {
+   "save.json": {
+    "progress": {
+     "unlocked": 1,
+     "best": 0,
+     "level_best": {
+      "level1": 5.5
+     }
+    }
+   }
+  },
+  "input": [
+   "10 ENTER tap",
+   "40 D down",
+   "149 SPACE tap",
+   "255 ENTER tap",
+   "270 ENTER tap",
+   "370 SPACE tap"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "stage2"
+   ],
+   [
+    "@file:save.json",
+    "progress.level_best.level1",
+    "==",
+    5.5
+   ]
+  ]
+ },
+ {
+  "name": "talking: Pip stops at Pep and says his line, lip-synced; the clock waits",
+  "audio_clock": true,
+  "frames": 250,
+  "scene": "scenes/stage1.scene.json",
+  "input": [
+   "10 D down",
+   "119 SPACE tap"
+  ],
+  "expect": [
+   [
+    "PipSays",
+    "text",
+    "==",
+    "Pep! Is the flag this way?"
+   ],
+   [
+    "PepSays",
+    "text",
+    "==",
+    ""
+   ],
+   [
+    "Pip",
+    "x",
+    "==",
+    890
+   ],
+   [
+    "Mouth",
+    "frame",
+    ">",
+    0
+   ],
+   [
+    "Time",
+    "text",
+    "==",
+    "Time 17"
+   ],
+   [
+    "Rig",
+    "animation",
+    "==",
+    "talk"
+   ]
+  ]
+ },
+ {
+  "name": "talking: Pep answers when Pip's voice ends, then Pip walks on",
+  "frames": 510,
+  "scene": "scenes/stage1.scene.json",
+  "input": [
+   "10 D down",
+   "119 SPACE tap"
+  ],
+  "expect": [
+   [
+    "PipSays",
+    "text",
+    "==",
+    ""
+   ],
+   [
+    "PepSays",
+    "text",
+    "==",
+    ""
+   ],
+   [
+    "Pip",
+    "x",
+    ">",
+    900
+   ]
+  ]
+ },
+ {
+  "name": "talking: Enter skips Pip's line - Pep answers (his own voice moves his mouth)",
+  "frames": 245,
+  "scene": "scenes/stage1.scene.json",
+  "input": [
+   "10 D down",
+   "119 SPACE tap",
+   "230 ENTER tap"
+  ],
+  "expect": [
+   [
+    "PepSays",
+    "text",
+    "==",
+    "Straight on. Jump the thorns!"
+   ],
+   [
+    "PepMouth",
+    "frame",
+    ">",
+    0
+   ],
+   [
+    "Pip",
+    "x",
+    "==",
+    890
+   ]
+  ]
+ },
+ {
+  "name": "play-through: the result screen's Retry plays the stage again",
+  "frames": 60,
+  "scene": "scenes/result.scene.json",
+  "input": [
+   "10 ENTER tap"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "stage1"
+   ],
+   [
+    "Time",
+    "text",
+    "==",
+    "Time 20"
+   ]
+  ]
+ },
+ {
+  "name": "play-through: the stage reached survives a restart - the title starts at stage 2",
+  "frames": 60,
+  "before": [
+   {
+    "frames": 601,
+    "input": [
+     "10 ENTER tap",
+     "40 D down",
+     "149 SPACE tap",
+     "255 ENTER tap",
+     "270 ENTER tap",
+     "370 SPACE tap"
+    ]
+   }
+  ],
+  "input": [
+   "10 ENTER tap"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "stage2"
+   ],
+   [
+    "@file:save.json",
+    "progress.unlocked",
+    "==",
+    2
+   ]
+  ]
+ },
+ {
+  "name": "play-through: the title shows each stage's best time",
+  "frames": 20,
+  "user_files": {
+   "save.json": {
+    "progress": {
+     "unlocked": 3,
+     "best": 0,
+     "level_best": {
+      "level1": 7.2,
+      "level2": 9
+     }
+    }
+   }
+  },
+  "expect": [
+   [
+    "Best",
+    "text",
+    "==",
+    "Best times  1: 7.2 s   2: 9.0 s   3: -"
+   ],
+   [
+    "Level",
+    "text",
+    "contains",
+    "Stage"
+   ]
+  ]
+ },
+ {
+  "name": "play-through: the volume set in Settings survives a restart",
+  "frames": 60,
+  "before": [
+   {
+    "frames": 120,
+    "input": [
+     "10 DOWN tap",
+     "20 DOWN tap",
+     "30 ENTER tap",
+     "45 LEFT tap",
+     "55 LEFT tap",
+     "65 LEFT tap",
+     "75 DOWN tap",
+     "85 ENTER tap"
+    ]
+   }
+  ],
+  "input": [
+   "10 DOWN tap",
+   "20 DOWN tap",
+   "30 ENTER tap"
+  ],
+  "expect": [
+   [
+    "Volume",
+    "text",
+    "==",
+    "Volume  < 50% >"
+   ],
+   [
+    "@file:save.json",
+    "settings.volume",
+    "==",
+    0.5
+   ]
+  ]
+ },
+ {
+  "name": "play-through: Quit on the title ends the game",
+  "frames": 120,
+  "quits": true,
+  "input": [
+   "10 UP tap",
+   "20 ENTER tap"
+  ]
+ },
+ {
+  "name": "pause: Esc pauses; Title screen goes back to the title",
+  "frames": 130,
+  "scene": "scenes/stage1.scene.json",
+  "input": [
+   "20 ESCAPE tap",
+   "40 DOWN tap",
+   "50 DOWN tap",
+   "60 ENTER tap"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "title"
+   ]
+  ]
+ },
+ {
+  "name": "pause: the clock and Pip stop; Resume plays on",
+  "frames": 200,
+  "scene": "scenes/stage1.scene.json",
+  "input": [
+   "10 D down",
+   "30 ESCAPE tap",
+   "150 ENTER tap",
+   "160 D up"
+  ],
+  "expect": [
+   [
+    "PauseMenu",
+    "visible",
+    "==",
+    false
+   ],
+   [
+    "Pip",
+    "x",
+    "<",
+    300
+   ],
+   [
+    "Pip",
+    "x",
+    ">",
+    230
+   ],
+   [
+    "Time",
+    "text",
+    "==",
+    "Time 19"
+   ]
+  ]
+ },
+ {
+  "name": "touch: tapping Play on the title starts stage 1",
+  "frames": 60,
+  "input": [
+   "10 touch1 640 352 tap"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "stage1"
+   ]
+  ]
+ },
+ {
+  "name": "touch: the pause button pauses",
+  "frames": 60,
+  "scene": "scenes/stage1.scene.json",
+  "input": [
+   "20 touch1 1220 60 tap"
+  ],
+  "expect": [
+   [
+    "PauseMenu",
+    "visible",
+    "==",
+    true
+   ]
+  ]
+ },
+ {
+  "name": "touch: the joystick walks, the A button jumps",
+  "frames": 60,
+  "scene": "scenes/stage1.scene.json",
+  "input": [
+   "10 touch1 300 500 down",
+   "12 touch1 400 500 move",
+   "40 touch2 1170 610 tap"
+  ],
+  "expect": [
+   [
+    "Pip",
+    "x",
+    ">",
+    250
+   ],
+   [
+    "Pip",
+    "y",
+    "<",
+    600
+   ],
+   [
+    "Rig",
+    "animation",
+    "==",
+    "jump"
+   ]
+  ]
+ },
+ {
   "name": "D walks right, facing right",
   "frames": 60,
-  "input": ["10 D down"],
+  "scene": "scenes/stage1.scene.json",
+  "input": [
+   "10 D down"
+  ],
   "expect": [
-   ["Pip", "x", ">", 740],
-   ["Rig", "scale", "==", [1, 1]],
-   ["Rig", "animation", "==", "walk"]
+   [
+    "Pip",
+    "x",
+    ">",
+    320
+   ],
+   [
+    "Rig",
+    "scale",
+    "==",
+    [
+     1,
+     1
+    ]
+   ],
+   [
+    "Rig",
+    "animation",
+    "==",
+    "walk"
+   ]
   ]
  },
  {
   "name": "left arrow walks left, turned round",
-  "frames": 60,
-  "input": ["10 LEFT down"],
+  "frames": 30,
+  "scene": "scenes/stage1.scene.json",
+  "input": [
+   "10 LEFT down"
+  ],
   "expect": [
-   ["Pip", "x", "<", 540],
-   ["Rig", "scale", "==", [-1, 1]]
+   [
+    "Pip",
+    "x",
+    "<",
+    160
+   ],
+   [
+    "Rig",
+    "scale",
+    "==",
+    [
+     -1,
+     1
+    ]
+   ]
   ]
  },
  {
   "name": "the left edge stops him",
-  "frames": 90,
-  "input": ["5 A down"],
-  "patch": {"Pip": {"position": [160, 640]}},
+  "frames": 60,
+  "scene": "scenes/stage1.scene.json",
+  "input": [
+   "5 A down"
+  ],
   "expect": [
-   ["Pip", "x", "==", 120]
+   [
+    "Pip",
+    "x",
+    "==",
+    60
+   ]
+  ]
+ },
+ {
+  "name": "jump: up in the air (the jump pose), down again",
+  "frames": 30,
+  "scene": "scenes/stage1.scene.json",
+  "input": [
+   "10 W tap"
+  ],
+  "expect": [
+   [
+    "Pip",
+    "y",
+    "<",
+    500
+   ],
+   [
+    "Rig",
+    "animation",
+    "==",
+    "jump"
+   ]
+  ]
+ },
+ {
+  "name": "jump: he lands on the path",
+  "frames": 80,
+  "scene": "scenes/stage1.scene.json",
+  "input": [
+   "10 SPACE tap"
+  ],
+  "expect": [
+   [
+    "Pip",
+    "y",
+    "==",
+    640
+   ],
+   [
+    "Rig",
+    "animation",
+    "==",
+    "idle"
+   ]
   ]
  },
  {
   "name": "T talks: the mouth moves with the voice",
+  "audio_clock": true,
   "frames": 50,
-  "input": ["5 T tap"],
+  "scene": "scenes/stage1.scene.json",
+  "input": [
+   "5 T tap"
+  ],
   "expect": [
-   ["Mouth", "frame", ">", 0],
-   ["Eyes", "frame", "==", 0]
+   [
+    "Mouth",
+    "frame",
+    ">",
+    0
+   ],
+   [
+    "Eyes",
+    "frame",
+    "==",
+    0
+   ]
   ]
  },
  {
   "name": "the mouth rests when the voice ends",
   "frames": 240,
-  "input": ["5 T tap"],
+  "scene": "scenes/stage1.scene.json",
+  "input": [
+   "5 T tap"
+  ],
   "expect": [
-   ["Mouth", "frame", "==", 0]
+   [
+    "Mouth",
+    "frame",
+    "==",
+    0
+   ]
   ]
+ },
+ {
+  "name": "preview: Pip talks to Pep on stage 1",
+  "frames": 250,
+  "scene": "scenes/stage1.scene.json",
+  "input": [
+   "10 D down",
+   "119 SPACE tap"
+  ],
+  "preview": true,
+  "expect": []
  }
 ]

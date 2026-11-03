@@ -535,6 +535,23 @@ test_vector_lipsync :: proc(t: ^testing.T) {
 	testing.expect_value(t, finished, 1)
 	// No cues: refuses.
 	testing.expect(t, !LipSyncNode_Follow(lips, strings.concatenate({dir, "/none.wav"}, context.temp_allocator), {}), "no cues")
+	// An exported game (the web, Android): the cues are read from its package.
+	pdir := strings.concatenate({dir, "/pkg"}, context.temp_allocator)
+	_ = os.make_directory_all(strings.concatenate({pdir, "/voice"}, context.temp_allocator))
+	_ = os.write_entire_file(strings.concatenate({pdir, "/voice/packed_hi.tsv"}, context.temp_allocator), transmute([]u8)string("0.00\tX\n0.05\tE\n0.30\tX\n"))
+	rayzr := strings.concatenate({dir, "/lips.rayzr"}, context.temp_allocator)
+	testing.expect(t, RayzrPackage_CreateFromDirectory(pdir, rayzr, true), "package")
+	if pkg, pok := RayzrPackage_Open(rayzr); pok {
+		game.assetManager.package_ = pkg
+		testing.expect(t, LipSyncNode_Follow(lips, "voice/packed_hi.wav", {}), "cues from the package")
+		LipSyncNode_Update(lips, &game.gameContext, 0.1)
+		testing.expect_value(t, mouth.frame, 5) // (E)
+		LipSyncNode_Stop(lips)
+		game.assetManager.package_ = nil
+		RayzrPackage_Close(pkg)
+	} else {
+		testing.fail_now(t, "the package opens")
+	}
 	// A dialogue line with that voice moves the mouth.
 	d := cast(^DialogueNode)Node_CreateByTypeName(scene, "DialogueNode", head)
 	d.gameContext = &game.gameContext

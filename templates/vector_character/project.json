@@ -1,7 +1,7 @@
 {
  "name": "Vector Character",
  "version": "0.1.0",
- "initial_scene": "scenes/pip.scene.json",
+ "initial_scene": "scenes/title.scene.json",
  "window": {
   "title": "Vector Character",
   "width": 1280,
@@ -29,7 +29,7 @@
  "physics": {
   "gravity": [
    0,
-   900
+   0
   ],
   "debug_draw": false
  },
@@ -74,19 +74,115 @@
     ]
    },
    {
+    "name": "move_up",
+    "bindings": [
+     {
+      "key": "W"
+     },
+     {
+      "key": "UP"
+     },
+     {
+      "button": "LEFT_FACE_UP"
+     },
+     {
+      "axis": "LEFT_Y",
+      "positive": false,
+      "deadzone": 0.3
+     }
+    ]
+   },
+   {
+    "name": "move_down",
+    "bindings": [
+     {
+      "key": "S"
+     },
+     {
+      "key": "DOWN"
+     },
+     {
+      "button": "LEFT_FACE_DOWN"
+     },
+     {
+      "axis": "LEFT_Y",
+      "positive": true,
+      "deadzone": 0.3
+     }
+    ]
+   },
+   {
+    "name": "jump",
+    "bindings": [
+     {
+      "key": "W"
+     },
+     {
+      "key": "UP"
+     },
+     {
+      "key": "SPACE"
+     },
+     {
+      "button": "RIGHT_FACE_DOWN"
+     }
+    ]
+   },
+   {
     "name": "talk",
     "bindings": [
      {
       "key": "T"
      },
      {
+      "button": "RIGHT_FACE_LEFT"
+     }
+    ]
+   },
+   {
+    "name": "confirm",
+    "bindings": [
+     {
+      "key": "ENTER"
+     },
+     {
+      "key": "KP_ENTER"
+     },
+     {
+      "key": "SPACE"
+     },
+     {
       "button": "RIGHT_FACE_DOWN"
+     }
+    ]
+   },
+   {
+    "name": "pause",
+    "bindings": [
+     {
+      "key": "ESCAPE"
+     },
+     {
+      "key": "P"
+     },
+     {
+      "button": "MIDDLE_RIGHT"
      }
     ]
    }
   ]
  },
  "scenes": [
-  "scenes/pip.scene.json"
+  "scenes/title.scene.json",
+  "scenes/stage1.scene.json",
+  "scenes/stage2.scene.json",
+  "scenes/stage3.scene.json",
+  "scenes/result.scene.json"
+ ],
+ "globals": [
+  {
+   "name": "Game",
+   "script": "scripts/game.lua"
+  }
  ]
 }

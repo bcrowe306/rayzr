@@ -1,15 +1,11 @@
 # The Vector Character template (#272) in the editor, and the screenshots of
 # docs/getting-started/vector-character.md: shapes drawn with Edit Art and
-# turned into a symbol (F8); then Pip's scene (the template's files copied
-# in) - the Library tab with pip.svg's parts, the Rig (a Skeleton) with a
-# Vector Shape per part and their Bend with bones, the Mouth's frames, the
-# Lip Sync node; in Simulate the voice moves the mouth and the rig walks.
-# drive: copy templates/vector_character/art art
-# drive: copy templates/vector_character/rigs rigs
-# drive: copy templates/vector_character/audio audio
-# drive: copy templates/vector_character/scripts scripts
-# drive: copy templates/vector_character/scenes scenes
-# drive: copy templates/vector_character/fonts fonts
+# turned into a symbol (F8); then Pip's first stage - the Library tab with
+# pip.svg's parts, the Rig (a Skeleton) with a Vector Shape per part and
+# their Bend with bones, the Mouth's frames, the Lip Sync node; in Simulate
+# the voice moves the mouth and the rig walks.
+# (A copy of the template itself: its stages need its Game global.)
+# drive: project templates/vector_character
 wait 5
 key escape
 
@@ -40,9 +36,9 @@ expect file:art/vectorshape.svg contains id="Buddy"
 key escape
 
 # 2. Pip's scene: the parts on the rig.
-dblclick @asset:scenes/pip.scene.json
+dblclick @asset:scenes/stage1.scene.json
 wait 20
-expect scene contains pip.scene.json
+expect scene contains stage1.scene.json
 expect node:Rig.type == SkeletonNode
 expect node:Rig.parent == Pip
 expect node:Rig.prop.file == rigs/pip.json
@@ -112,7 +108,7 @@ wait 40
 type local r = Scene.find_node("Rig"); r:skeleton_play("walk"); print("PIP mouth=" .. Scene.find_node("Mouth").frame .. " talking=" .. tostring(Scene.find_node("LipSync"):lipsync_is_playing()) .. " anims=" .. #r:skeleton_animations())
 key enter
 wait 20
-expect log contains talking=true anims=3
+expect log contains talking=true anims=4
 expect log !contains PIP mouth=0
 screenshot simulating
 click @menu:Game

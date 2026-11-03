@@ -1,6 +1,6 @@
 {
   "name": "Hex Island",
-  "description": "Explore a little island on a hex grid: click a hex to walk there (paths step hex by hex round water, trees and rocks) or step with the keys, and pick every flower.",
+  "description": "Explore three little islands on a hex grid: click a hex to walk there (paths step hex by hex round water, trees and rocks) or step with the keys, and pick every flower before your steps run out. A title screen, settings, a pause menu, the fewest steps saved.",
   "icon": "map",
   "order": 7
 }

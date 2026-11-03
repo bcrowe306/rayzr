@@ -232,8 +232,10 @@ GAME_ACTIONS = [action("confirm", "ENTER", "KP_ENTER", "SPACE", "pad:RIGHT_FACE_
 GAME_GLOBALS = [{"name": "Game", "script": "scripts/game.lua"}]
 
 
-def game_scripts(t, levels, lives=3, score_name="Score", lower_is_better=False, level_word="Level"):
-    """scripts/game.lua (the global Game, with this game's levels) and menu.lua."""
+def game_scripts(t, levels, lives=3, score_name="Score", lower_is_better=False, level_word="Level", extra=False):
+    """scripts/game.lua (the global Game, with this game's levels) and menu.lua.
+    extra: scripts/<template>/game_extra.lua is added to game.lua (this game's
+    own lines: the title's best, the result's score)."""
     cfg = "\n".join([
         "-- This game (make_templates.py writes it): its levels, in order; the lives a",
         "-- run starts with; what the score counts; whether a lower result is better;",
@@ -245,7 +247,11 @@ def game_scripts(t, levels, lives=3, score_name="Score", lower_is_better=False, 
         f'Game.LEVEL_WORD = "{level_word}"',
     ])
     with open(os.path.join(SCRIPTS, "common", "game.lua")) as f:
-        t.write("scripts/game.lua", f.read().replace("--$CONFIG$", cfg))
+        src = f.read().replace("--$CONFIG$", cfg)
+    if extra:
+        with open(os.path.join(SCRIPTS, t.id, "game_extra.lua")) as f:
+            src = src.replace("\nreturn Game\n", "\n" + f.read() + "\nreturn Game\n")
+    t.write("scripts/game.lua", src)
     t.script("menu", src="common")
 
 
@@ -894,8 +900,8 @@ def puzzle():
 def visual_novel():
     t = Template("visual_novel", "Visual Novel",
                  "A short branching story: characters, backgrounds, choices that change what happens, three "
-                 "endings. Save slots, a backlog, auto and skip, a title screen with settings. Write your own "
-                 "in story.lua.", "book", 5)
+                 "endings (one of them bad). Save slots, a backlog, auto and skip, a title screen with settings "
+                 "and the endings found. Write your own in story.lua.", "book", 5)
     t.begin()
     for who in ("ada", "theo", "unit"):
         for pose in ("idle", "talk", "think", "cheer", "hurt"):
@@ -961,7 +967,7 @@ def visual_novel():
          "properties": {"size": [1000, 180], "fontSize": 26, "padding": 22, "revealSpeed": 40,
                         "panelColor": PANEL, "borderColor": BORDER, "choiceColor": ACCENT, "advanceAction": "confirm"}},
         quick,
-        dict(label("Ending", "", (640, 300), size=64, layer=8, pivot=(0.5, 0.5)), visible=False),
+        dict(label("Ending", "", (640, 300), size=64, layer=8, pivot=(0.5, 0.5), color="#1e2840ff"), visible=False),
         label("Toast", "", (1260, 16), size=22, align="Right", pivot=(1, 0), layer=8),
         log, slots,
     ]
@@ -978,9 +984,10 @@ def visual_novel():
         figure("Ada", "ada", 260, True), figure("Theo", "theo", 1020, True),
         {"type": "Node", "name": "Title", "script": {"path": "scripts/title.lua"}},
         label("Name", "The Castle Road", (640, 60), size=80, color="#1e2840ff"),
-        label("Endings", "", (640, 660), size=22, color="#1e2840cc"),
-        column("Menu", (500, 220), (280, 300), [button("NewGame", "New game"), button("Continue", "Continue"),
-                                               button("Load", "Load"), button("Settings", "Settings")]),
+        label("Endings", "", (640, 640), size=22, color="#1e2840cc"),
+        column("Menu", (500, 220), (280, 360), [button("NewGame", "New game"), button("Continue", "Continue"),
+                                               button("Load", "Load"), button("Settings", "Settings"),
+                                               button("Quit", "Quit")]),
         column("SettingsPanel", (340, 190), (600, 300), sliders + [button("SettingsClose", "Done", w=160, h=40, size=20)],
                title="Settings"),
         slots,
@@ -1178,34 +1185,98 @@ def dungeon():
 
 # --- hex island ---------------------------------------------------------------------
 
-# The island, one character a hex (rows are grid y; odd rows are shifted
+# The islands, one character a hex (rows are grid y; odd rows are shifted
 # right by half a hex): ~ water, g grass, d dirt, s sand, r stone,
 # T tree, P pine, A autumn tree, R rock, b bush, f flower (red / yellow /
 # blue in turn), @ the explorer (on grass).
-HEX_ISLAND = [
-    "~~~~~~~~~~~~~",
-    "~~~ssggggs~~~",
-    "~~sgTgfggAss~",
-    "~sgPgggRgfs~~",
-    "~sgg@ggTgggs~",
-    "~~sgdddgbs~~~",
-    "~sgfgdPgRgfs~",
-    "~~ssgAfgss~~~",
-    "~~~~sssr~~~~~",
-    "~~~~~~~~~~~~~",
+HEX_ISLANDS = [
+    [
+        "~~~~~~~~~~~~~",
+        "~~~ssggggs~~~",
+        "~~sgTgfggAss~",
+        "~sgPgggRgfs~~",
+        "~sgg@ggTgggs~",
+        "~~sgdddgbs~~~",
+        "~sgfgdPgRgfs~",
+        "~~ssgAfgss~~~",
+        "~~~~sssr~~~~~",
+        "~~~~~~~~~~~~~",
+    ],
+    [  # two halves and a sand bridge
+        "~~~~~~~~~~~~~",
+        "~~ggf~~~sggf~",
+        "~sgTgs~~gRgg~",
+        "~gfgPgs~gTPf~",
+        "~sg@gdsssgg~~",
+        "~~gRgg~~sdgs~",
+        "~sggfg~~gAgg~",
+        "~~sbgs~~sgfs~",
+        "~~~ss~~~~ss~~",
+        "~~~~~~~~~~~~~",
+    ],
+    [  # a ring round a lagoon
+        "~~~~~~~~~~~~~",
+        "~~sfgggRgfs~~",
+        "~sgTg~~~gPgs~",
+        "~gg~~~~~~~gg~",
+        "~fR~~~~~~~bf~",
+        "~gg~~~~~~~gs~",
+        "~sgA~~~~~Tgs~",
+        "~~sgfg@gggf~~",
+        "~~~ssrsss~~~~",
+        "~~~~~~~~~~~~~",
+    ],
+]
+HEX_SLACK = [6, 6, 4]  # steps to spare over the shortest walk to every flower
+
+
+def hex_sides(x, y):
+    """The six hexes round (x, y) on a pointy map with odd rows shifted right."""
+    d = [(1, 0), (0, 1), (-1, 1), (-1, 0), (-1, -1), (0, -1)] if y % 2 == 0 else \
+        [(1, 0), (1, 1), (0, 1), (-1, 0), (0, -1), (1, -1)]
+    return [(x + a, y + b) for a, b in d]
+
+
+def hex_tour(rows):
+    """The fewest steps from the explorer to every flower (each hex walked
+    into is a step), and the flowers in that order."""
+    import collections
+    import itertools
+    H, W = len(rows), len(rows[0])
+    def ok(x, y):
+        return 0 <= x < W and 0 <= y < H and rows[y][x] in "gdsrf@"
+    flowers = [(x, y) for y in range(H) for x in range(W) if rows[y][x] == "f"]
+    start = next((x, y) for y in range(H) for x in range(W) if rows[y][x] == "@")
+
+    def bfs(s):
+        dist, q = {s: 0}, collections.deque([s])
+        while q:
+            c = q.popleft()
+            for n in hex_sides(*c):
+                if ok(*n) and n not in dist:
+                    dist[n] = dist[c] + 1
+                    q.append(n)
+        return dist
+    dist = {p: bfs(p) for p in [start] + flowers}
+    assert all(f in dist[start] for f in flowers), "hex: a flower can't be reached"
+    best = None
+    for order in itertools.permutations(flowers):
+        d = dist[start][order[0]] + sum(dist[a][b] for a, b in zip(order, order[1:]))
+        if best is None or d < best[0]:
+            best = (d, order)
+    return best
+
+
+HEX_INK, HEX_GOLD, HEX_SEA = "#ffffffff", "#ffe066ff", (64, 140, 196, 255)
+HEX_ACTIONS = [
+    action("step_e", "D", "RIGHT"), action("step_w", "A", "LEFT"),
+    action("step_ne", "E"), action("step_nw", "Q"),
+    action("step_se", "C"), action("step_sw", "Z"),
 ]
 
 
-def hex_island():
-    t = Template("hex", "Hex Island",
-                 "Explore a little island on a hex grid: click a hex to walk there (paths step hex by hex round "
-                 "water, trees and rocks) or step with the keys, and pick every flower.", "map", 7)
-    t.begin()
-    t.art("hexagon/tiles.png", "textures/hex_tiles.png")
-    t.art("hexagon/objects.png", "textures/hex_objects.png")
-    t.art("hexagon/alien.png", "textures/explorer.png")
-    t.license("Hexagon Tiles")
-    rows = HEX_ISLAND
+def hex_island_scene(rows, n, limit):
+    """An island (a scene): the maps, the explorer, the HUD, the pause menu."""
     H, W = len(rows), len(rows[0])
     CW, CH = 65, 66
     GROUND = {"~": 7, "g": 0, "d": 2, "s": 3, "r": 4}
@@ -1231,40 +1302,69 @@ def hex_island():
                 start = (x, y)
 
     def hmap(name, grid, tileset, tile, layer, offset, ysort=False):
-        n = tilemap(name, tileset, 0, grid, layer=layer, pos=ORIGIN)
-        n["tilemap"]["tile_size"] = tile
-        n["properties"].update({"layout": "HexPointy", "stagger": "Odd", "cellSize": [CW, CH], "tileOffset": offset})
+        m = tilemap(name, tileset, 0, grid, layer=layer, pos=ORIGIN)
+        m["tilemap"]["tile_size"] = tile
+        m["properties"].update({"layout": "HexPointy", "stagger": "Odd", "cellSize": [CW, CH], "tileOffset": offset})
         if ysort:
-            n["ySort"] = True
+            m["ySort"] = True
         if not tileset:
-            del n["tilemap"]["tileset"]
-        return n
+            del m["tilemap"]["tileset"]
+        return m
 
     sx, sy = center(*start)
     children = [
         {"type": "CameraNode", "name": "Camera", "position": [640, 360], "properties": {"isCurrent": True}},
         hmap("Ground", ground, "textures/hex_tiles.png", [65, 89], 1, [0, 23]),
         hmap("Walk", [[-1] * W for _ in range(H)], "", [65, 89], 1, [0, 0]),
-        {"type": "Node", "name": "Island", "layer": 1, "script": {"path": "scripts/island.lua"}},
+        {"type": "Node", "name": "Island", "layer": 1,
+         "script": {"path": "scripts/island.lua", "properties": {"island": n, "step_limit": limit}}},
         {"type": "Node", "name": "World", "ySort": True, "children": [
             hmap("Objects", objects, "textures/hex_objects.png", [65, 107], 2, [0, -25], ysort=True),
             {"type": "Node", "name": "Explorer", "position": [sx, sy], "script": {"path": "scripts/explorer.lua"},
              "children": [{"type": "TextureNode", "name": "Sprite", "position": [0, 6], "pivot": [0.5, 1], "layer": 2,
                            "texture": "textures/explorer.png"}]},
         ]},
-        text("Flowers", "Flowers 0 / 0", (16, 12), size=32, color="#ffffffff", layer=7),
-        text("Message", "", (640, 60), size=48, align="Center", pivot=(0.5, 0.5), color="#ffe066ff", layer=7),
-        text("Help", "Click a hex to walk   D A E Q C Z: one step", (1264, 690), size=32, align="Right",
+        text("IslandText", "", (16, 12), size=32, color=HEX_INK, layer=7),
+        text("Flowers", "Flowers 0 / 0", (16, 52), size=32, color=HEX_INK, layer=7),
+        text("Steps", "", (16, 92), size=32, color=HEX_INK, layer=7),
+        text("Message", "", (640, 60), size=48, align="Center", pivot=(0.5, 0.5), color=HEX_GOLD, layer=7),
+        text("Help", "Click a hex to walk   D A E Q C Z: one step   Esc pause", (1264, 690), size=32, align="Right",
              pivot=(1, 1), color="#ffffffaa", layer=7),
+        pause_menu(HD_STYLE, HEX_GOLD),
     ]
-    t.json("scenes/island.scene.json", scene("island", children, background=(64, 140, 196, 255)))
-    t.json("project.json", project("Hex Island", ["scenes/island.scene.json"], [
-        action("step_e", "D", "RIGHT"), action("step_w", "A", "LEFT"),
-        action("step_ne", "E"), action("step_nw", "Q"),
-        action("step_se", "C"), action("step_sw", "Z"),
-    ], virtual=(1280, 720), gravity=(0, 0), pixel=False))
+    return with_touch(scene(f"island{n}", children, background=HEX_SEA), (1280, 720), stick=None, buttons=(),
+                      pause="pause")
+
+
+def hex_island():
+    t = Template("hex", "Hex Island",
+                 "Explore three little islands on a hex grid: click a hex to walk there (paths step hex by hex "
+                 "round water, trees and rocks) or step with the keys, and pick every flower before your steps run "
+                 "out. A title screen, settings, a pause menu, the fewest steps saved.", "map", 7)
+    t.begin()
+    t.art("hexagon/tiles.png", "textures/hex_tiles.png")
+    t.art("hexagon/objects.png", "textures/hex_objects.png")
+    t.art("hexagon/alien.png", "textures/explorer.png")
+    t.license("Hexagon Tiles")
+    # A small game (#329): three islands; picking every flower clears one,
+    # and each has a step limit (the shortest walk to every flower and a few
+    # to spare) - out of steps is game over. The furthest island and each
+    # one's fewest steps are saved; the title, a pause menu, the result.
+    levels = [f"scenes/island{i + 1}.scene.json" for i in range(len(HEX_ISLANDS))]
+    for i, rows in enumerate(HEX_ISLANDS):
+        fewest, _ = hex_tour(rows)
+        t.json(levels[i], hex_island_scene(rows, i + 1, fewest + HEX_SLACK[i]))
+    explorer = {"type": "TextureNode", "name": "Explorer", "position": [250, 600], "pivot": [0.5, 1], "scale": [2, 2],
+                "layer": 2, "texture": "textures/explorer.png"}
+    t.json("scenes/title.scene.json", title_scene("Hex Island", HD_STYLE, HEX_INK, HEX_GOLD, HEX_SEA,
+                                                  decor=[explorer], level_word="Island"))
+    t.json("scenes/result.scene.json", result_scene(HD_STYLE, HEX_INK, HEX_GOLD, HEX_SEA))
+    t.json("project.json", project("Hex Island", ["scenes/title.scene.json"] + levels + ["scenes/result.scene.json"],
+                                   HEX_ACTIONS + MOVE_ACTIONS + GAME_ACTIONS, virtual=(1280, 720), gravity=(0, 0),
+                                   pixel=False, globals_=GAME_GLOBALS))
     for s_ in ("island", "explorer"):
         t.script(s_, src="hex")
+    game_scripts(t, levels, lives=None, score_name="Steps", lower_is_better=True, level_word="Island", extra=True)
     with open(os.path.join(SCRIPTS, "hex", "README.md")) as f:
         t.write("README.md", f.read())
     return t
@@ -1394,13 +1494,25 @@ def pip_rig():
         "arm_front_lower": {"rotate": rot(0, 10, 0.4, 70, 0.8, 50, 1.2, 10)},
         "arm_back_upper": {"rotate": rot(0, -3, 0.6, -6, 1.2, -3)},
     }
+    jump = {  # in the air: knees up, arms flung up (held)
+        "hip": {"translate": [{"time": 0, "x": 0, "y": 6}]},
+        "torso": {"rotate": [{"time": 0, "value": -4}]},
+        "leg_front_upper": {"rotate": [{"time": 0, "value": 50}]},
+        "leg_front_lower": {"rotate": [{"time": 0, "value": -75}]},
+        "leg_back_upper": {"rotate": [{"time": 0, "value": 10}]},
+        "leg_back_lower": {"rotate": [{"time": 0, "value": -60}]},
+        "arm_front_upper": {"rotate": [{"time": 0, "value": 140}]},
+        "arm_front_lower": {"rotate": [{"time": 0, "value": 20}]},
+        "arm_back_upper": {"rotate": [{"time": 0, "value": 120}]},
+        "arm_back_lower": {"rotate": [{"time": 0, "value": 20}]},
+    }
     return {
         "skeleton": {"spine": "4.2.22", "width": 300, "height": 420,
                      "$comment": "Pip's rig: bones only (the art is art/pip.svg, bent by them). Written by scripts/templates/make_templates.py."},
         "bones": bones,
         "slots": [],
         "skins": [{"name": "default", "attachments": {}}],
-        "animations": {"idle": {"bones": idle}, "walk": {"bones": walk}, "talk": {"bones": talk}},
+        "animations": {"idle": {"bones": idle}, "walk": {"bones": walk}, "talk": {"bones": talk}, "jump": {"bones": jump}},
     }
 
 
@@ -1416,7 +1528,7 @@ MUMBLE_SOUNDS = {
 }
 
 
-def mumble_wav(cues_tsv, path, rate=22050):
+def mumble_wav(cues_tsv, path, rate=22050, pitch_scale=1.0):
     """A cartoon mumble that says the cue file: each cue's vowel (MUMBLE_SOUNDS)
     as a voice of harmonics shaped by its formants, the pitch wandering round
     a phrase's intonation, gliding from cue to cue; 16-bit mono WAV."""
@@ -1443,7 +1555,7 @@ def mumble_wav(cues_tsv, path, rate=22050):
             w.append(loud * (0.15 + peak) / math.sqrt(k) if formants else 0.0)
         return w
     # Each cue's pitch: a phrase falling from 240 to 190 Hz, with a wobble.
-    pitch = [240 - 50 * (t / end) + rnd.uniform(-18, 18) for t, _ in cues]
+    pitch = [(240 - 50 * (t / end) + rnd.uniform(-18, 18)) * pitch_scale for t, _ in cues]
     phases = [0.0] * H
     cur = [0.0] * H
     f0 = pitch[0]
@@ -1476,27 +1588,29 @@ def mumble_wav(cues_tsv, path, rate=22050):
         w.writeframes(b"".join(struct.pack("<h", int(s / peak * 0.6 * 32767)) for s in samples))
 
 
-def vector_character():
-    t = Template("vector_character", "Vector Character",
-                 "Pip, a cartoon character drawn as vector art and rigged with bones: walk left and right, "
-                 "talk with lip-sync, blink. One SVG cut into parts, a Skeleton, a Lip Sync node.", "bezier-curve", 8)
-    t.begin()
-    src = os.path.join(SCRIPTS, "vector_character")
-    for name, rel in (("pip.svg", "art/pip.svg"), ("backdrop.svg", "art/backdrop.svg"),
-                      ("pip_mumble.tsv", "audio/pip_mumble.tsv")):
-        with open(os.path.join(src, name)) as f:
-            t.write(rel, f.read())
-    with open(os.path.join(src, "pip_mumble.tsv")) as f:
-        mumble_wav(f.read(), os.path.join(t.dir, "audio", "pip_mumble.wav"))
-    t.json("rigs/pip.json", pip_rig())
-    t.script("pip")
-    t.write("art/LICENSE-ART.txt", "Pip and the backdrop were drawn for Rayzr: the same licence as the engine.\n"
-                                   "The voice is synthesized by scripts/templates/make_templates.py.\n"
-                                   "Font (fonts/): Kenney Pixel by Kenney (www.kenney.nl), CC0.\n")
-    os.rmdir(os.path.join(t.dir, "textures"))  # (no textures: vector art)
-    os.rmdir(os.path.join(t.dir, "components"))
+# The stages (#329): side-on walks to a flag, as the stage's width, its
+# clock, the thorn bushes' x, the bees' x, where Pep (Pip's brother) waits
+# and what they say, the flag's x. Pip walks at 220 px/s and a jump
+# carries him ~185 px.
+PIP_GROUND = 640  # the path's top in backdrop.svg: everyone's feet
+VECTOR_STAGES = [
+    {"width": 1900, "time": 20, "thorns": [650, 1350], "bees": [], "friend": 1000, "goal": 1700,
+     "pip": "Pep! Is the flag this way?", "pep": "Straight on. Jump the thorns!"},
+    {"width": 2300, "time": 22, "thorns": [560, 900, 1600, 1850], "bees": [], "friend": 1250, "goal": 2100,
+     "pip": "More thorns? Really?", "pep": "Two at a time, now. Hop hop!"},
+    {"width": 2600, "time": 26, "thorns": [600, 1550, 2200], "bees": [1050, 1850], "friend": 1300, "goal": 2400,
+     "pip": "Pep, the bees!", "pep": "Walk under them when they fly up!"},
+]
+VECTOR_INK, VECTOR_ORANGE, VECTOR_SKY = "#24425cff", "#e5602aff", (143, 208, 242, 255)
+VECTOR_ACTIONS = MOVE_ACTIONS + [
+    action("jump", "W", "UP", "SPACE", "pad:RIGHT_FACE_DOWN"),
+    action("talk", "T", "pad:RIGHT_FACE_LEFT"),
+]
 
-    boxes = svg_group_boxes(os.path.join(src, "pip.svg"))
+
+def pip_parts(prefix="", tint=None):
+    """Pip's parts: a Vector Shape per group of pip.svg, placed over the rig's bones."""
+    boxes = svg_group_boxes(os.path.join(SCRIPTS, "vector_character", "pip.svg"))
     ox, oy = PIP_ORIGIN
     parts = []
     for name, bones, smooth in PIP_PARTS:
@@ -1505,31 +1619,131 @@ def vector_character():
         props = {"file": "art/pip.svg", "group": name, "skinBones": bones, "skinSmooth": smooth}
         if name in ("eyes", "mouth"):
             props["frame"] = 0  # (eyes open, the mouth at rest)
-        parts.append({"type": "VectorShapeNode", "name": "".join(w.title() for w in name.split("_")),
+        if tint:
+            props["tint"] = tint
+        parts.append({"type": "VectorShapeNode", "name": prefix + "".join(w.title() for w in name.split("_")),
                       "position": [(x0 + x1) / 2 - ox, (y0 + y1) / 2 - oy], "properties": props})
-    children = [
-        {"type": "CameraNode", "name": "Camera", "position": [640, 360], "properties": {"isCurrent": True}},
-        {"type": "VectorShapeNode", "name": "Backdrop", "position": [0, 0], "pivot": [0, 0], "layer": 0,
-         "properties": {"file": "art/backdrop.svg"}},
-        {"type": "Node", "name": "Pip", "position": [640, 640], "layer": 2,
-         "script": {"path": "scripts/pip.lua"},
+    return parts
+
+
+def pip_node(x, script_props=None, scale=0.6):
+    """Pip: the script, Rig (a Skeleton holding the parts) and LipSync."""
+    n = {"type": "Node", "name": "Pip", "position": [x, PIP_GROUND], "scale": [scale, scale], "layer": 2,
          "children": [
              {"type": "SkeletonNode", "name": "Rig",
               "properties": {"file": "rigs/pip.json", "animation": "idle", "loop": True, "autoplay": True,
                              "mixTime": 0.2},
-              "children": parts},
+              "children": pip_parts()},
              {"type": "LipSyncNode", "name": "LipSync",
               "properties": {"mouth": "../Rig/Mouth", "sound": "audio/pip_mumble.wav"}},
-         ]},
-        text("Help", "A / D or arrows: walk    T: talk", (640, 40), size=32, align="Center", pivot=(0.5, 0.5),
-             color="#24425cff"),
+         ]}
+    if script_props is not None:
+        n["script"] = {"path": "scripts/pip.lua", "properties": script_props}
+    return n
+
+
+def pep_node(x, scale=0.5):
+    """Pep, Pip's little brother: the same art, smaller and tinted, facing left, with a voice of his own."""
+    return {"type": "Node", "name": "Pep", "position": [x, PIP_GROUND], "scale": [scale, scale], "layer": 1,
+            "children": [
+                {"type": "SkeletonNode", "name": "PepRig", "scale": [-1, 1],
+                 "properties": {"file": "rigs/pip.json", "animation": "idle", "loop": True, "autoplay": True,
+                                "mixTime": 0.2},
+                 "children": pip_parts("Pep", tint="#dcecffff")},
+                {"type": "LipSyncNode", "name": "PepLipSync",
+                 "properties": {"mouth": "../PepRig/PepMouth", "sound": "audio/pep_mumble.wav"}},
+            ]}
+
+
+def vector_backdrop(width):
+    """backdrop.svg side by side (its hills' ends meet; 2 px over each other: no seam)."""
+    return [{"type": "VectorShapeNode", "name": f"Backdrop{i + 1}" if i else "Backdrop", "position": [i * 1278, 0],
+             "pivot": [0, 0], "layer": 0, "properties": {"file": "art/backdrop.svg"}}
+            for i in range((width + 1277) // 1278)]
+
+
+def vector_stage(n, st):
+    """A stage (a scene): the backdrop, the thorns and bees, Pep, the flag, Pip, the HUD."""
+    W = st["width"]
+    hazards = [{"type": "VectorShapeNode", "name": f"Thorns{i + 1}", "position": [x, PIP_GROUND + 4],
+                "pivot": [0.5, 1], "layer": 1, "tags": ["hazard"], "properties": {"file": "art/thorns.svg"},
+                "script": {"path": "scripts/hazard.lua", "properties": {"kind": "thorns", "width": 76, "height": 48}}}
+               for i, x in enumerate(st["thorns"])]
+    hazards += [{"type": "VectorShapeNode", "name": f"Bee{i + 1}", "position": [x, 430], "layer": 3,
+                 "tags": ["hazard"], "properties": {"file": "art/bee.svg"},
+                 "script": {"path": "scripts/hazard.lua",
+                            "properties": {"kind": "bee", "width": 50, "height": 36, "bob": 170, "period": 3,
+                                           "phase": 0.5 * i}}}
+                for i, x in enumerate(st["bees"])]
+    bubble = {"size": 32, "align": "Center", "pivot": (0.5, 1), "color": VECTOR_INK, "layer": 3}
+    children = [
+        {"type": "CameraNode", "name": "Camera", "position": [640, 360], "follow": "../Pip",
+         "properties": {"isCurrent": True, "followMode": "SingleTarget", "dragType": "SmoothDamp", "hasLimits": True,
+                        "leftLimit": 0, "rightLimit": W, "topLimit": 0, "bottomLimit": 720}},
+        {"type": "Node", "name": "Stage", "script": {"path": "scripts/stage.lua", "properties": {
+            "stage": n, "time_limit": st["time"], "pip_line": st["pip"], "pep_line": st["pep"]}}},
+    ] + vector_backdrop(W) + hazards + [
+        {"type": "VectorShapeNode", "name": "Goal", "position": [st["goal"], PIP_GROUND + 4], "pivot": [0.2, 1],
+         "layer": 1, "properties": {"file": "art/flag.svg"}},
+        pep_node(st["friend"]),
+        pip_node(160, {"min_x": 60, "max_x": W - 60}),
+        text("PipSays", "", (0, 0), **bubble),
+        text("PepSays", "", (0, 0), **bubble),
+        text("StageText", f"Stage {n} / {len(VECTOR_STAGES)}", (16, 12), size=32, color=VECTOR_INK),
+        text("Time", "", (16, 52), size=32, color=VECTOR_INK),
+        text("Message", "", (640, 140), size=48, align="Center", pivot=(0.5, 0.5), color=VECTOR_INK),
+        text("Help", "A / D walk   W / Space jump   T talk   Esc pause", (1264, 700), size=32, align="Right",
+             pivot=(1, 1), color="#24425caa"),
+        pause_menu(HD_STYLE, VECTOR_ORANGE),
     ]
-    sc = with_touch(scene("pip", children, background=(143, 208, 242, 255)), (1280, 720),
-                    stick=("move_left", "move_right", "", ""), buttons=(("talk", "T"),))
-    t.json("scenes/pip.scene.json", sc)
-    t.json("project.json", project("Vector Character", ["scenes/pip.scene.json"], MOVE_ACTIONS[:2] + [
-        action("talk", "T", "pad:RIGHT_FACE_DOWN"),
-    ], virtual=(1280, 720), pixel=False))
+    return with_touch(scene(f"stage{n}", children, background=VECTOR_SKY), (1280, 720),
+                      stick=("move_left", "move_right", "", ""), buttons=(("jump", "A"), ("talk", "T")), pause="pause")
+
+
+def vector_character():
+    t = Template("vector_character", "Vector Character",
+                 "Walk Pip, a cartoon character drawn as vector art and rigged with bones, through three short "
+                 "stages to the flag before the clock runs out: jump the thorns, dodge the bees, stop to talk "
+                 "(lip-synced) to his twin. One SVG cut into parts, a Skeleton, Lip Sync nodes; a title, settings, "
+                 "a pause menu, best times saved.", "bezier-curve", 8)
+    t.begin()
+    src = os.path.join(SCRIPTS, "vector_character")
+    for name, rel in (("pip.svg", "art/pip.svg"), ("backdrop.svg", "art/backdrop.svg"), ("thorns.svg", "art/thorns.svg"),
+                      ("bee.svg", "art/bee.svg"), ("flag.svg", "art/flag.svg"),
+                      ("pip_mumble.tsv", "audio/pip_mumble.tsv"), ("pep_mumble.tsv", "audio/pep_mumble.tsv")):
+        with open(os.path.join(src, name)) as f:
+            t.write(rel, f.read())
+    with open(os.path.join(src, "pip_mumble.tsv")) as f:
+        mumble_wav(f.read(), os.path.join(t.dir, "audio", "pip_mumble.wav"))
+    with open(os.path.join(src, "pep_mumble.tsv")) as f:
+        mumble_wav(f.read(), os.path.join(t.dir, "audio", "pep_mumble.wav"), pitch_scale=1.3)
+    t.json("rigs/pip.json", pip_rig())
+    for s_ in ("pip", "stage", "hazard"):
+        t.script(s_)
+    t.write("art/LICENSE-ART.txt", "Pip, Pep, the backdrop, the thorns, the bee and the flag were drawn for Rayzr: the\n"
+                                   "same licence as the engine.\n"
+                                   "The voices are synthesized by scripts/templates/make_templates.py.\n"
+                                   "Font (fonts/): Kenney Pixel by Kenney (www.kenney.nl), CC0.\n")
+    os.rmdir(os.path.join(t.dir, "textures"))  # (no textures: vector art)
+    os.rmdir(os.path.join(t.dir, "components"))
+
+    # A small game (#329): three stages, each a walk to the flag against the
+    # clock; a thorn bush or a bee touched is game over, and so is the clock
+    # running out. On the way Pip stops to talk to Pep (the clock waits).
+    # The furthest stage and each one's best time are saved; the title, a
+    # pause menu, the result screen.
+    levels = [f"scenes/stage{i + 1}.scene.json" for i in range(len(VECTOR_STAGES))]
+    for i, st in enumerate(VECTOR_STAGES):
+        t.json(levels[i], vector_stage(i + 1, st))
+    decor = vector_backdrop(1280) + [pip_node(230, scale=0.75), pep_node(1050, scale=0.62)]
+    t.json("scenes/title.scene.json", title_scene("Pip's Walk", HD_STYLE, VECTOR_INK, VECTOR_ORANGE, VECTOR_SKY,
+                                                  decor=decor, level_word="Stage"))
+    t.json("scenes/result.scene.json", result_scene(HD_STYLE, VECTOR_INK, VECTOR_ORANGE, VECTOR_SKY,
+                                                    decor=vector_backdrop(1280)))
+    t.json("project.json", project("Vector Character", ["scenes/title.scene.json"] + levels + ["scenes/result.scene.json"],
+                                   VECTOR_ACTIONS + GAME_ACTIONS, virtual=(1280, 720), gravity=(0, 0), pixel=False,
+                                   globals_=GAME_GLOBALS))
+    game_scripts(t, levels, lives=None, score_name="Time", lower_is_better=True, level_word="Stage", extra=True)
     with open(os.path.join(src, "README.md")) as f:
         t.write("README.md", f.read())
     return t

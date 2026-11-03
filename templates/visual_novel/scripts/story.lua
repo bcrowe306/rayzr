@@ -19,6 +19,7 @@
 --       { "Ask Unit", "ask", need = "kind" },      -- (only shown when a flag is set)
 --   } }
 --   { the_end = "The good ending" }         -- the end: back to the title screen
+--   { the_end = "Lost", bad = true }        -- a bad ending: the story lost (try other choices)
 --
 -- Text can use rich-text tags: [color=yellow]...[/color], [wave]...[/wave],
 -- [shake]...[/shake].
@@ -94,7 +95,7 @@ Story.chapters = {
         "Halfway up, a stone gives way.",
         { "ada", "Ow.", pose = "hurt" },
         { "theo", "Maybe we come back tomorrow. With a ladder.", pose = "think" },
-        { the_end = "The bumpy ending" },
+        { the_end = "The bumpy ending", bad = true },
     },
 
     wait = {

@@ -1,0 +1,180 @@
+{
+ "name": "result",
+ "background": [
+  143,
+  208,
+  242,
+  255
+ ],
+ "root": {
+  "type": "Node",
+  "name": "root",
+  "children": [
+   {
+    "type": "CameraNode",
+    "name": "Camera",
+    "position": [
+     640.0,
+     360.0
+    ],
+    "properties": {
+     "isCurrent": true
+    }
+   },
+   {
+    "type": "VectorShapeNode",
+    "name": "Backdrop",
+    "position": [
+     0,
+     0
+    ],
+    "pivot": [
+     0,
+     0
+    ],
+    "layer": 0,
+    "properties": {
+     "file": "art/backdrop.svg"
+    }
+   },
+   {
+    "type": "VectorShapeNode",
+    "name": "Backdrop2",
+    "position": [
+     1278,
+     0
+    ],
+    "pivot": [
+     0,
+     0
+    ],
+    "layer": 0,
+    "properties": {
+     "file": "art/backdrop.svg"
+    }
+   },
+   {
+    "type": "Node",
+    "name": "Menu",
+    "layer": 7,
+    "script": {
+     "path": "scripts/menu.lua",
+     "properties": {
+      "kind": "result",
+      "item_width": 640,
+      "item_height": 56,
+      "selected": "#e5602aff"
+     }
+    },
+    "children": [
+     {
+      "type": "TextNode",
+      "name": "Heading",
+      "position": [
+       640.0,
+       184.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 96,
+       "align": "Center",
+       "color": "#24425cff"
+      }
+     },
+     {
+      "type": "TextNode",
+      "name": "Score",
+      "position": [
+       640.0,
+       312.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 48,
+       "align": "Center",
+       "color": "#24425cff"
+      }
+     },
+     {
+      "type": "TextNode",
+      "name": "Best",
+      "position": [
+       640.0,
+       376.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 48,
+       "align": "Center",
+       "color": "#24425cff"
+      }
+     },
+     {
+      "type": "TextNode",
+      "name": "Again",
+      "position": [
+       640.0,
+       496.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Play again",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 48,
+       "align": "Center",
+       "color": "#24425cff"
+      },
+      "tags": [
+       "item"
+      ]
+     },
+     {
+      "type": "TextNode",
+      "name": "Title",
+      "position": [
+       640.0,
+       560.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Title screen",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 48,
+       "align": "Center",
+       "color": "#24425cff"
+      },
+      "tags": [
+       "item"
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

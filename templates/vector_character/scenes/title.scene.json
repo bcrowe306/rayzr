@@ -1,0 +1,601 @@
+{
+ "name": "title",
+ "background": [
+  143,
+  208,
+  242,
+  255
+ ],
+ "root": {
+  "type": "Node",
+  "name": "root",
+  "children": [
+   {
+    "type": "CameraNode",
+    "name": "Camera",
+    "position": [
+     640.0,
+     360.0
+    ],
+    "properties": {
+     "isCurrent": true
+    }
+   },
+   {
+    "type": "VectorShapeNode",
+    "name": "Backdrop",
+    "position": [
+     0,
+     0
+    ],
+    "pivot": [
+     0,
+     0
+    ],
+    "layer": 0,
+    "properties": {
+     "file": "art/backdrop.svg"
+    }
+   },
+   {
+    "type": "VectorShapeNode",
+    "name": "Backdrop2",
+    "position": [
+     1278,
+     0
+    ],
+    "pivot": [
+     0,
+     0
+    ],
+    "layer": 0,
+    "properties": {
+     "file": "art/backdrop.svg"
+    }
+   },
+   {
+    "type": "Node",
+    "name": "Pip",
+    "position": [
+     230,
+     640
+    ],
+    "scale": [
+     0.75,
+     0.75
+    ],
+    "layer": 2,
+    "children": [
+     {
+      "type": "SkeletonNode",
+      "name": "Rig",
+      "properties": {
+       "file": "rigs/pip.json",
+       "animation": "idle",
+       "loop": true,
+       "autoplay": true,
+       "mixTime": 0.2
+      },
+      "children": [
+       {
+        "type": "VectorShapeNode",
+        "name": "ArmBack",
+        "position": [
+         0.0,
+         -153.5
+        ],
+        "properties": {
+         "file": "art/pip.svg",
+         "group": "arm_back",
+         "skinBones": "arm_back_upper, arm_back_lower",
+         "skinSmooth": 14
+        }
+       },
+       {
+        "type": "VectorShapeNode",
+        "name": "LegBack",
+        "position": [
+         0.0,
+         -70.0
+        ],
+        "properties": {
+         "file": "art/pip.svg",
+         "group": "leg_back",
+         "skinBones": "leg_back_upper, leg_back_lower",
+         "skinSmooth": 12
+        }
+       },
+       {
+        "type": "VectorShapeNode",
+        "name": "LegFront",
+        "position": [
+         14.0,
+         -70.0
+        ],
+        "properties": {
+         "file": "art/pip.svg",
+         "group": "leg_front",
+         "skinBones": "leg_front_upper, leg_front_lower",
+         "skinSmooth": 12
+        }
+       },
+       {
+        "type": "VectorShapeNode",
+        "name": "Body",
+        "position": [
+         0.0,
+         -173.0
+        ],
+        "properties": {
+         "file": "art/pip.svg",
+         "group": "body",
+         "skinBones": "torso",
+         "skinSmooth": 0
+        }
+       },
+       {
+        "type": "VectorShapeNode",
+        "name": "Head",
+        "position": [
+         7.0,
+         -290.0
+        ],
+        "properties": {
+         "file": "art/pip.svg",
+         "group": "head",
+         "skinBones": "head",
+         "skinSmooth": 0
+        }
+       },
+       {
+        "type": "VectorShapeNode",
+        "name": "Eyes",
+        "position": [
+         37.5,
+         -292.0
+        ],
+        "properties": {
+         "file": "art/pip.svg",
+         "group": "eyes",
+         "skinBones": "head",
+         "skinSmooth": 0,
+         "frame": 0
+        }
+       },
+       {
+        "type": "VectorShapeNode",
+        "name": "Mouth",
+        "position": [
+         42.0,
+         -250.0
+        ],
+        "properties": {
+         "file": "art/pip.svg",
+         "group": "mouth",
+         "skinBones": "head",
+         "skinSmooth": 0,
+         "frame": 0
+        }
+       },
+       {
+        "type": "VectorShapeNode",
+        "name": "ArmFront",
+        "position": [
+         0.0,
+         -153.5
+        ],
+        "properties": {
+         "file": "art/pip.svg",
+         "group": "arm_front",
+         "skinBones": "arm_front_upper, arm_front_lower",
+         "skinSmooth": 14
+        }
+       }
+      ]
+     },
+     {
+      "type": "LipSyncNode",
+      "name": "LipSync",
+      "properties": {
+       "mouth": "../Rig/Mouth",
+       "sound": "audio/pip_mumble.wav"
+      }
+     }
+    ]
+   },
+   {
+    "type": "Node",
+    "name": "Pep",
+    "position": [
+     1050,
+     640
+    ],
+    "scale": [
+     0.62,
+     0.62
+    ],
+    "layer": 1,
+    "children": [
+     {
+      "type": "SkeletonNode",
+      "name": "PepRig",
+      "scale": [
+       -1,
+       1
+      ],
+      "properties": {
+       "file": "rigs/pip.json",
+       "animation": "idle",
+       "loop": true,
+       "autoplay": true,
+       "mixTime": 0.2
+      },
+      "children": [
+       {
+        "type": "VectorShapeNode",
+        "name": "PepArmBack",
+        "position": [
+         0.0,
+         -153.5
+        ],
+        "properties": {
+         "file": "art/pip.svg",
+         "group": "arm_back",
+         "skinBones": "arm_back_upper, arm_back_lower",
+         "skinSmooth": 14,
+         "tint": "#dcecffff"
+        }
+       },
+       {
+        "type": "VectorShapeNode",
+        "name": "PepLegBack",
+        "position": [
+         0.0,
+         -70.0
+        ],
+        "properties": {
+         "file": "art/pip.svg",
+         "group": "leg_back",
+         "skinBones": "leg_back_upper, leg_back_lower",
+         "skinSmooth": 12,
+         "tint": "#dcecffff"
+        }
+       },
+       {
+        "type": "VectorShapeNode",
+        "name": "PepLegFront",
+        "position": [
+         14.0,
+         -70.0
+        ],
+        "properties": {
+         "file": "art/pip.svg",
+         "group": "leg_front",
+         "skinBones": "leg_front_upper, leg_front_lower",
+         "skinSmooth": 12,
+         "tint": "#dcecffff"
+        }
+       },
+       {
+        "type": "VectorShapeNode",
+        "name": "PepBody",
+        "position": [
+         0.0,
+         -173.0
+        ],
+        "properties": {
+         "file": "art/pip.svg",
+         "group": "body",
+         "skinBones": "torso",
+         "skinSmooth": 0,
+         "tint": "#dcecffff"
+        }
+       },
+       {
+        "type": "VectorShapeNode",
+        "name": "PepHead",
+        "position": [
+         7.0,
+         -290.0
+        ],
+        "properties": {
+         "file": "art/pip.svg",
+         "group": "head",
+         "skinBones": "head",
+         "skinSmooth": 0,
+         "tint": "#dcecffff"
+        }
+       },
+       {
+        "type": "VectorShapeNode",
+        "name": "PepEyes",
+        "position": [
+         37.5,
+         -292.0
+        ],
+        "properties": {
+         "file": "art/pip.svg",
+         "group": "eyes",
+         "skinBones": "head",
+         "skinSmooth": 0,
+         "frame": 0,
+         "tint": "#dcecffff"
+        }
+       },
+       {
+        "type": "VectorShapeNode",
+        "name": "PepMouth",
+        "position": [
+         42.0,
+         -250.0
+        ],
+        "properties": {
+         "file": "art/pip.svg",
+         "group": "mouth",
+         "skinBones": "head",
+         "skinSmooth": 0,
+         "frame": 0,
+         "tint": "#dcecffff"
+        }
+       },
+       {
+        "type": "VectorShapeNode",
+        "name": "PepArmFront",
+        "position": [
+         0.0,
+         -153.5
+        ],
+        "properties": {
+         "file": "art/pip.svg",
+         "group": "arm_front",
+         "skinBones": "arm_front_upper, arm_front_lower",
+         "skinSmooth": 14,
+         "tint": "#dcecffff"
+        }
+       }
+      ]
+     },
+     {
+      "type": "LipSyncNode",
+      "name": "PepLipSync",
+      "properties": {
+       "mouth": "../PepRig/PepMouth",
+       "sound": "audio/pep_mumble.wav"
+      }
+     }
+    ]
+   },
+   {
+    "type": "Node",
+    "name": "Menu",
+    "layer": 7,
+    "script": {
+     "path": "scripts/menu.lua",
+     "properties": {
+      "kind": "title",
+      "item_width": 640,
+      "item_height": 56,
+      "selected": "#e5602aff"
+     }
+    },
+    "children": [
+     {
+      "type": "TextNode",
+      "name": "Title",
+      "position": [
+       640.0,
+       144.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Pip's Walk",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 96,
+       "align": "Center",
+       "color": "#24425cff"
+      }
+     },
+     {
+      "type": "TextNode",
+      "name": "Best",
+      "position": [
+       640.0,
+       248.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 48,
+       "align": "Center",
+       "color": "#24425cff"
+      }
+     },
+     {
+      "type": "TextNode",
+      "name": "Play",
+      "position": [
+       640.0,
+       352.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Play",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 48,
+       "align": "Center",
+       "color": "#24425cff"
+      },
+      "tags": [
+       "item"
+      ]
+     },
+     {
+      "type": "TextNode",
+      "name": "Level",
+      "position": [
+       640.0,
+       416.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Stage",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 48,
+       "align": "Center",
+       "color": "#24425cff"
+      },
+      "tags": [
+       "item"
+      ]
+     },
+     {
+      "type": "TextNode",
+      "name": "Settings",
+      "position": [
+       640.0,
+       480.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Settings",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 48,
+       "align": "Center",
+       "color": "#24425cff"
+      },
+      "tags": [
+       "item"
+      ]
+     },
+     {
+      "type": "TextNode",
+      "name": "Quit",
+      "position": [
+       640.0,
+       544.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Quit",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 48,
+       "align": "Center",
+       "color": "#24425cff"
+      },
+      "tags": [
+       "item"
+      ]
+     }
+    ]
+   },
+   {
+    "type": "Node",
+    "name": "SettingsMenu",
+    "layer": 7,
+    "script": {
+     "path": "scripts/menu.lua",
+     "properties": {
+      "kind": "settings",
+      "item_width": 640,
+      "item_height": 56,
+      "selected": "#e5602aff"
+     }
+    },
+    "children": [
+     {
+      "type": "TextNode",
+      "name": "Heading",
+      "position": [
+       640.0,
+       200.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Settings",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 96,
+       "align": "Center",
+       "color": "#24425cff"
+      }
+     },
+     {
+      "type": "TextNode",
+      "name": "Volume",
+      "position": [
+       640.0,
+       384.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Volume",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 48,
+       "align": "Center",
+       "color": "#24425cff"
+      },
+      "tags": [
+       "item"
+      ]
+     },
+     {
+      "type": "TextNode",
+      "name": "Back",
+      "position": [
+       640.0,
+       448.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Back",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 48,
+       "align": "Center",
+       "color": "#24425cff"
+      },
+      "tags": [
+       "item"
+      ]
+     }
+    ],
+    "visible": false
+   }
+  ]
+ }
+}

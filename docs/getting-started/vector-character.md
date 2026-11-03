@@ -5,7 +5,9 @@ template, from nothing: drawn with the editor's vector tools, cut into
 parts, put on a skeleton, animated, lip-synced to a voice and moved by a
 script. It takes about an hour. To see where it ends first, make a project
 from the template (**Help > Welcome > New Project > Vector Character**)
-and press **F5**: A / D walk, T talks.
+and press **F5**: the template is a small game, *Pip's Walk*. A / D walk,
+W or Space jumps, T talks, and on the way Pip stops to talk to his brother
+Pep.
 
 Vector art stays sharp at any zoom, and a character made of a few dozen
 shapes costs very little to draw. The [vector art guide](../../engine/docs/vector.md)
@@ -228,7 +230,8 @@ otherwise can be mapped (**Mapping** `A=MBP,B=etc`). A Dialogue node's
 ## 9. Script it
 
 Put the Skeleton and the Lip Sync node under a Node called `Pip` and give
-it a script (`scripts/pip.lua` in the template). Add `move_left`,
+it a script (`scripts/pip.lua` in the template, which also jumps; the
+template's stages are run by `scripts/stage.lua`). Add `move_left`,
 `move_right` and `talk` (T) in **Project Settings > Input**.
 
 ```lua
