@@ -1055,7 +1055,9 @@ export_presets_section :: proc(state: ^EditorState) {
 	d := &st.project
 	x := &d.export
 	imgui.SeparatorText("Presets")
-	platforms := []string{"macos", "windows", "linux", "web"}
+	// Every export target, in Export_Target order (Android too, #369).
+	platforms := make([]string, len(e.Export_Target), context.temp_allocator)
+	for t in e.Export_Target do platforms[int(t)] = e.export_target_name(t)
 	if len(x.presets) == 0 {
 		UI_DimText("One export per target above. Presets give each platform (or a demo / debug build) its own settings.")
 		if UI_Button(fmt.tprintf("%s  Use Presets", ICON_FA_PLUS), "settings.preset-convert") {

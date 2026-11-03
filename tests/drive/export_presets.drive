@@ -1,6 +1,7 @@
 # Export presets: turn the targets into presets, add a debug demo preset
 # with its own name, version, window title and excluded files, export only
-# that preset, and check what it wrote.
+# that preset, and check what it wrote. Then an Android preset (#369): its
+# Android settings show (the Targets row is hidden with presets).
 # drive: serial (touches bin/runners or other shared files; runs after the parallel drives)
 exec scripts/build_runners.sh --if-missing
 wait 5
@@ -36,3 +37,18 @@ expect abs-file:$PROJECT_standalone/Mac_Demo/AsteroidsSpaceCombatrayzr.app/Conte
 expect abs-file:$PROJECT_standalone/Mac_Demo/AsteroidsSpaceCombatrayzr.app/Contents/Info.plist contains <string>Space Demo</string>
 exec $PROJECT_standalone/Mac_Demo/AsteroidsSpaceCombatrayzr.app/Contents/MacOS/AsteroidsSpaceCombatrayzr --frames 20 --dump-scene $SHOTS/demo_scene.json
 expect abs-file:$SHOTS/demo_scene.json contains "PlayerShip"
+
+# An Android preset: Add Preset lists android, and the Android settings
+# (package, version code, keystore) are there for it. (Exporting closed
+# the dialog: open it again.)
+click @toolbar.settings
+click @settings.page:Export
+expect item:settings.preset:Mac Demo == visible
+expect item:settings.android-package == missing
+click @settings.preset-add
+click @pick:android
+expect item:settings.preset:android == visible
+expect item:settings.android-package == visible
+expect item:settings.android-code == visible
+expect item:settings.android-keystore == visible
+screenshot android_preset
