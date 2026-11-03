@@ -1,0 +1,7 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "print() and Log lines; the Lua line runs code in the game", "x": 258, "y": 380, "w": 764, "h": 312}
+  ]
+}

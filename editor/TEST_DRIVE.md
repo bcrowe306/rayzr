@@ -19,6 +19,12 @@ real project is never modified. Results go to `editor_screenshots/drive/<name>/`
 numbered screenshots plus an `index.md` report listing every check. The script
 exits non-zero if any check fails.
 
+Header lines change the copy: `# drive: copy <src> <dst>` copies a folder of
+the repository into it, `# drive: project <dir>` starts from a copy of that
+project instead of the demo project (the tutorials' drives,
+`tests/drive/tutorial_<name>.drive`, use their finished project in
+`docs/tutorials/<name>/`), and `# drive: serial` runs the drive alone.
+
 ## Suites
 
 | Drive | Covers |

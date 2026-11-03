@@ -1,0 +1,8 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "The Player's capsule; its GroundRay below it", "x": 532, "y": 333, "w": 56, "h": 56},
+    {"label": "Collision events printed by the crates", "x": 258, "y": 420, "w": 764, "h": 272}
+  ]
+}

@@ -12,6 +12,12 @@ The bundle:
     pages/<slug>.md      Starlight pages (frontmatter: title, description,
                          editUrl, lastUpdated); <slug> "" is pages/index.md
     pages/_images/...    images the pages use (relative links)
+    downloads/<name>.zip finished projects the pages link to: a link to a
+                         folder under docs/ holding a project.json (the
+                         tutorials' docs/tutorials/<name>/) becomes a zip of
+                         its committed files, linked as <base>downloads/<name>.zip;
+                         bundle.json lists them ("downloads") - the site
+                         serves the folder at <base>downloads/
 
 Pages come from docs/site.json: hand-written ones (docs/, engine/docs/,
 editor/...) and generated ones - the node reference
@@ -30,6 +36,7 @@ import re
 import shutil
 import subprocess
 import sys
+import zipfile
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 REPO = "https://github.com/bcrowe306/rayzr"
@@ -112,7 +119,15 @@ class Exporter:
             for it in sec["items"]:
                 if "file" in it:  # (generated pages may name a file too: links to it go to them)
                     self.file_slugs[it["file"]] = it["slug"]
+        # Node pages (docs/nodes/<Type>.md -> the generated node page) are known
+        # up front: pages before the reference in the sidebar link to them too.
+        for sec in self.site["sections"]:
+            for it in sec["items"]:
+                if it.get("generated") == "nodes":
+                    for n in json.loads(read("docs/generated/nodes.json"))["nodes"]:
+                        self.file_slugs[f"docs/nodes/{n['type']}.md"] = f"{it['slug']}/{kebab(n['type'])}"
         self.images = {}  # repository path -> bundle path under pages/
+        self.downloads = {}  # repository folder -> {"name", "path", "url", "source", "files"}
         self.warnings = []
         # Links to files go to GitHub: they must be committed (None: not a git checkout).
         listed = git("ls-files", default=None)
@@ -148,6 +163,40 @@ class Exporter:
         page_dir = os.path.dirname(slug_file(page_slug))
         return os.path.relpath(self.images[src_rel], page_dir or ".").replace(os.sep, "/")
 
+    def project_files(self, folder):
+        """The files of a project folder that go in its zip: the committed ones
+        (every file outside a git checkout), hidden ones left out."""
+        out = []
+        for d, dirs, files in os.walk(os.path.join(ROOT, folder)):
+            dirs[:] = sorted(x for x in dirs if not x.startswith("."))
+            for f in sorted(files):
+                rel = os.path.relpath(os.path.join(d, f), ROOT).replace(os.sep, "/")
+                if f.startswith(".") or (self.tracked is not None and rel not in self.tracked):
+                    continue
+                out.append(rel)
+        return out
+
+    def download(self, folder):
+        """Zips a project folder (once) into downloads/; its site URL."""
+        if folder not in self.downloads:
+            name = "-".join(folder.split("/")[1:]) or os.path.basename(folder)
+            files = self.project_files(folder)
+            if not any(f == folder + "/project.json" for f in files):
+                self.warnings.append(f"{folder}: project.json isn't committed (the download would be empty)")
+            dst = os.path.join(self.out, "downloads", name + ".zip")
+            os.makedirs(os.path.dirname(dst), exist_ok=True)
+            # (The same bytes for the same files: fixed dates, sorted names.)
+            with zipfile.ZipFile(dst, "w", zipfile.ZIP_DEFLATED) as z:
+                for rel in files:
+                    info = zipfile.ZipInfo(f"{name}/{rel[len(folder) + 1:]}", (2020, 1, 1, 0, 0, 0))
+                    info.compress_type = zipfile.ZIP_DEFLATED
+                    info.external_attr = 0o644 << 16
+                    with open(os.path.join(ROOT, rel), "rb") as f:
+                        z.writestr(info, f.read())
+            self.downloads[folder] = {"name": name, "path": f"downloads/{name}.zip",
+                                      "url": f"{self.base}downloads/{name}.zip", "source": folder, "files": len(files)}
+        return self.downloads[folder]["url"]
+
     def rewrite(self, text, rel_path, page_slug):
         """Page links -> site URLs, images -> the bundle, other files -> GitHub."""
         base_dir = os.path.dirname(rel_path)
@@ -172,6 +221,8 @@ class Exporter:
                 return m.group(0)
             if resolved in self.file_slugs:
                 return f"[{label}]({self.url(self.file_slugs[resolved], anchor)})"
+            if is_project_folder(resolved):
+                return f"[{label}]({self.download(resolved)})"
             if not self.exists(resolved):
                 self.warnings.append(f"{rel_path}: broken link {target}")
             kind = "tree" if os.path.isdir(full) or resolved in self.tracked_dirs else "blob"
@@ -489,11 +540,12 @@ class Exporter:
             "generated": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),
             "base": self.base,
             "sidebar": sidebar,
+            "downloads": sorted(self.downloads.values(), key=lambda d: d["name"]),
         }
         with open(os.path.join(self.out, "bundle.json"), "w") as f:
             json.dump(bundle, f, indent=2)
         n = sum(1 for _, _, fs in os.walk(self.pages_dir) for x in fs if x.endswith(".md"))
-        print(f"{self.out}: {n} pages, {len(self.images)} images ({self.version or 'unversioned'})")
+        print(f"{self.out}: {n} pages, {len(self.images)} images, {len(self.downloads)} downloads ({self.version or 'unversioned'})")
         for w in self.warnings:
             print("warning:", w, file=sys.stderr)
         return n
@@ -521,6 +573,12 @@ def annotated_figure(alt, src, a):
         *marks, "</div>",
         f'<figcaption><ol class="rz-annotated__legend">{"".join(items)}</ol></figcaption>',
         "</figure>"])
+
+
+def is_project_folder(rel):
+    """A Rayzr project kept with the docs (docs/tutorials/<name>/): links to
+    it become a download of the folder as a zip."""
+    return rel.startswith("docs/") and os.path.isfile(os.path.join(ROOT, rel, "project.json"))
 
 
 def slug_file(slug):

@@ -3,7 +3,8 @@
     python3 scripts/docs/test_export_site.py
 Helpers (slugs, fences, descriptions, annotated figures, Lua docs), a full
 export of this checkout (every page has a title, links point at site URLs or
-GitHub, images are copied), and the checks passing on it.
+GitHub, images are copied, tutorial projects are zipped), and the checks
+passing on it (a missing image fails them).
 """
 import json
 import os
@@ -74,7 +75,7 @@ class Export(unittest.TestCase):
         self.assertEqual(self.bundle["version"], "9.9.9")
         self.assertEqual(self.bundle["base"], "/docs/v9.9.9/")
         labels = [s["label"] for s in self.bundle["sidebar"]]
-        self.assertEqual(labels[:2], ["Start here", "Editor"])
+        self.assertEqual(labels[:3], ["Start here", "Tutorials", "Editor"])
         self.assertGreater(self.pages, 90)
         self.assertEqual(self.ex.warnings, [])
 
@@ -121,6 +122,33 @@ class Export(unittest.TestCase):
         self.assertIn('editUrl: "https://github.com/bcrowe306/rayzr/edit/main/docs/getting-started/installation.md"', text)
         self.assertIn('editUrl: false', self.read("reference/lua"))
 
+    def test_tutorial_downloads(self):
+        # A link to a project folder under docs/ (a tutorial's finished
+        # project) becomes a zip in downloads/, linked under the base.
+        import zipfile
+        names = {d["name"]: d for d in self.bundle["downloads"]}
+        for name, folder, slug in (("tutorials-scripting", "docs/tutorials/scripting", "tutorials/scripting"),
+                                   ("tutorials-physics", "docs/tutorials/physics", "tutorials/physics")):
+            d = names[name]
+            self.assertEqual(d["source"], folder)
+            self.assertEqual(d["url"], f"/docs/v9.9.9/downloads/{name}.zip")
+            path = os.path.join(self.out, d["path"])
+            self.assertTrue(os.path.isfile(path), path)
+            with zipfile.ZipFile(path) as z:
+                files = z.namelist()
+            self.assertIn(f"{name}/project.json", files)
+            self.assertIn(f"{name}/scenes/main.scene.json", files)
+            self.assertTrue(any(f.startswith(f"{name}/scripts/") and f.endswith(".lua") for f in files))
+            self.assertFalse(any(f.endswith(".md") for f in files))  # (the page itself isn't in it)
+            self.assertIn(f"]({d['url']})", self.read(slug))
+
+    def test_download_is_reproducible(self):
+        a = os.path.join(self.out, "downloads", "tutorials-scripting.zip")
+        ex = x.Exporter(os.path.join(self.tmp, "again"), "/docs/v9.9.9/", "v9.9.9", "9.9.9")
+        ex.download("docs/tutorials/scripting")
+        with open(a, "rb") as f1, open(os.path.join(self.tmp, "again", "downloads", "tutorials-scripting.zip"), "rb") as f2:
+            self.assertEqual(f1.read(), f2.read())
+
     def test_features(self):
         with open(os.path.join(self.out, "features.json")) as f:
             feats = json.load(f)
@@ -133,6 +161,18 @@ class Export(unittest.TestCase):
 
 
 class Checks(unittest.TestCase):
+    def test_missing_image_fails(self):
+        # A page showing an image that isn't there is an error (a tutorial's
+        # screenshot its drive didn't take, a typo).
+        with tempfile.TemporaryDirectory() as tmp:
+            ex = x.Exporter(os.path.join(tmp, "b"), "/docs/", "main", "t")
+            os.makedirs(ex.pages_dir)
+            ex.rewrite("Text.\n\n![Step 2](../images/tutorial-nothing_here.png)\n", "docs/tutorials/scripting.md", "tutorials/scripting")
+            self.assertEqual(ex.warnings, ["docs/tutorials/scripting.md: missing image ../images/tutorial-nothing_here.png"])
+            ex.warnings.clear()
+            ex.rewrite("![Fine](../images/tutorial-scripting_console.png)", "docs/tutorials/scripting.md", "tutorials/scripting")
+            self.assertEqual(ex.warnings, [])
+
     def test_this_checkout_passes(self):
         c = check_docs.Checker()
         c.nodes(None)

@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Runs editor test-drives: each tests/drive/<name>.drive operates the editor
 # through injected mouse/keyboard input against a fresh copy of the demo
-# project (the real project is never modified).
+# project (the real project is never modified; "# drive: project <dir>" in a
+# drive picks another project, e.g. a tutorial's docs/tutorials/<name>/).
 #   scripts/editor_drive.sh                 # all drives
 #   scripts/editor_drive.sh playtest nodes  # selected drives
 # Screenshots + a report per drive: editor_screenshots/drive/<name>/index.md
@@ -22,7 +23,10 @@ if [ "${1:-}" = --one ]; then
 	d="$2"
 	name="$(basename "$d" .drive)"
 	tmp="$(mktemp -d /tmp/rayzr_drive_${name}.XXXXXX)"
-	cp -R assets/demo_project "$tmp/project"
+	# "# drive: project <dir>": a copy of that project instead of the demo
+	# project (the tutorials' finished projects, docs/tutorials/<name>/).
+	src="$(grep -m1 '^# drive: project ' "$d" | awk '{print $4}')"
+	cp -R "${src:-assets/demo_project}" "$tmp/project"
 	# Scratch "new_scene*" scenes made while using the editor on the demo
 	# project would shift the drives' expected default names: drop them
 	# from the copy (the demo project itself is untouched).

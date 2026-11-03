@@ -1,0 +1,8 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "Gravity: pixels per second squared, +y down", "x": 636, "y": 190, "w": 445, "h": 25},
+    {"label": "The layers' names: World, Player, Props", "x": 636, "y": 373, "w": 445, "h": 25}
+  ]
+}

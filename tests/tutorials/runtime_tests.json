@@ -1,0 +1,169 @@
+[
+ {
+  "name": "scripting tutorial (#295): the player walks into the gem; its caught event adds to the score",
+  "project": "docs/tutorials/scripting",
+  "frames": 90,
+  "input": [
+   "10 RIGHT down",
+   "80 RIGHT up"
+  ],
+  "expect": [
+   [
+    "Score",
+    "text",
+    "==",
+    "Score: 10"
+   ],
+   [
+    "Player",
+    "x",
+    ">",
+    600
+   ]
+  ]
+ },
+ {
+  "name": "scripting tutorial (#295): clicking the gem catches it",
+  "project": "docs/tutorials/scripting",
+  "frames": 40,
+  "input": [
+   "20 mouse 760 360 click"
+  ],
+  "expect": [
+   [
+    "Score",
+    "text",
+    "==",
+    "Score: 10"
+   ],
+   [
+    "Player",
+    "x",
+    "==",
+    320
+   ]
+  ]
+ },
+ {
+  "name": "physics tutorial (#295): the scene plays; crates fall onto the ground, the player stands on it",
+  "project": "docs/tutorials/physics",
+  "frames": 120,
+  "expect": [
+   [
+    "Crate1",
+    "y",
+    ">",
+    560
+   ],
+   [
+    "Player",
+    "y",
+    ">",
+    590
+   ],
+   [
+    "Player",
+    "y",
+    "<",
+    640
+   ],
+   [
+    "Coins",
+    "text",
+    "==",
+    "Coins: 0 / 3"
+   ]
+  ]
+ },
+ {
+  "name": "physics tutorial (#295): Space jumps (a Character Mover in Script mode)",
+  "project": "docs/tutorials/physics",
+  "frames": 50,
+  "input": [
+   "30 SPACE tap 4"
+  ],
+  "expect": [
+   [
+    "Player",
+    "y",
+    "<",
+    540
+   ]
+  ]
+ },
+ {
+  "name": "physics tutorial (#295): the player touching a coin's Trigger Area collects it",
+  "project": "docs/tutorials/physics",
+  "frames": 30,
+  "patch": {
+   "Player": {
+    "position": [
+     560,
+     380
+    ]
+   }
+  },
+  "expect": [
+   [
+    "Coin1",
+    "exists",
+    "==",
+    false
+   ],
+   [
+    "Coins",
+    "text",
+    "==",
+    "Coins: 1 / 3"
+   ]
+  ]
+ },
+ {
+  "name": "physics tutorial (#295): a crate (layer Props) doesn't collect a coin (mask: Player)",
+  "project": "docs/tutorials/physics",
+  "frames": 30,
+  "patch": {
+   "Crate1": {
+    "position": [
+     960,
+     370
+    ]
+   }
+  },
+  "expect": [
+   [
+    "Coin2",
+    "exists",
+    "==",
+    true
+   ],
+   [
+    "Coins",
+    "text",
+    "==",
+    "Coins: 0 / 3"
+   ]
+  ]
+ },
+ {
+  "name": "physics tutorial (#295): the float zone's body_entered lightens the player",
+  "project": "docs/tutorials/physics",
+  "frames": 30,
+  "patch": {
+   "Player": {
+    "position": [
+     1150,
+     560
+    ]
+   }
+  },
+  "expect": [
+   [
+    "Player",
+    "gravityScale",
+    "==",
+    0.3
+   ]
+  ]
+ }
+]

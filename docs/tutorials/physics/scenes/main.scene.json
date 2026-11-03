@@ -1,0 +1,593 @@
+{
+ "name": "main",
+ "background": [
+  92,
+  148,
+  196,
+  255
+ ],
+ "root": {
+  "type": "Node",
+  "name": "root",
+  "children": [
+   {
+    "type": "StaticBodyNode",
+    "name": "Ground",
+    "position": [
+     640,
+     680
+    ],
+    "shapes": [
+     {
+      "type": "Box",
+      "size": [
+       1280,
+       80
+      ]
+     }
+    ],
+    "children": [
+     {
+      "type": "NineSliceNode",
+      "name": "Sprite",
+      "properties": {
+       "texturePath": "textures/wall.png",
+       "size": [
+        1280,
+        80
+       ],
+       "marginsLT": [
+        12,
+        12
+       ],
+       "marginsRB": [
+        12,
+        12
+       ]
+      },
+      "pivot": [
+       0.5,
+       0.5
+      ]
+     }
+    ]
+   },
+   {
+    "type": "StaticBodyNode",
+    "name": "WallLeft",
+    "position": [
+     16,
+     320
+    ],
+    "shapes": [
+     {
+      "type": "Box",
+      "size": [
+       32,
+       640
+      ]
+     }
+    ],
+    "children": [
+     {
+      "type": "NineSliceNode",
+      "name": "Sprite",
+      "properties": {
+       "texturePath": "textures/wall.png",
+       "size": [
+        32,
+        640
+       ],
+       "marginsLT": [
+        12,
+        12
+       ],
+       "marginsRB": [
+        12,
+        12
+       ]
+      },
+      "pivot": [
+       0.5,
+       0.5
+      ]
+     }
+    ]
+   },
+   {
+    "type": "StaticBodyNode",
+    "name": "WallRight",
+    "position": [
+     1264,
+     320
+    ],
+    "shapes": [
+     {
+      "type": "Box",
+      "size": [
+       32,
+       640
+      ]
+     }
+    ],
+    "children": [
+     {
+      "type": "NineSliceNode",
+      "name": "Sprite",
+      "properties": {
+       "texturePath": "textures/wall.png",
+       "size": [
+        32,
+        640
+       ],
+       "marginsLT": [
+        12,
+        12
+       ],
+       "marginsRB": [
+        12,
+        12
+       ]
+      },
+      "pivot": [
+       0.5,
+       0.5
+      ]
+     }
+    ]
+   },
+   {
+    "type": "StaticBodyNode",
+    "name": "Ledge",
+    "position": [
+     960,
+     430
+    ],
+    "shapes": [
+     {
+      "type": "Box",
+      "size": [
+       256,
+       24
+      ]
+     }
+    ],
+    "children": [
+     {
+      "type": "NineSliceNode",
+      "name": "Sprite",
+      "properties": {
+       "texturePath": "textures/wall.png",
+       "size": [
+        256,
+        24
+       ],
+       "marginsLT": [
+        12,
+        12
+       ],
+       "marginsRB": [
+        12,
+        12
+       ]
+      },
+      "pivot": [
+       0.5,
+       0.5
+      ]
+     }
+    ],
+    "properties": {
+     "oneWay": true
+    }
+   },
+   {
+    "type": "KinematicBodyNode",
+    "name": "Lift",
+    "position": [
+     560,
+     520
+    ],
+    "shapes": [
+     {
+      "type": "Box",
+      "size": [
+       160,
+       24
+      ]
+     }
+    ],
+    "children": [
+     {
+      "type": "NineSliceNode",
+      "name": "Sprite",
+      "properties": {
+       "texturePath": "textures/wall.png",
+       "size": [
+        160,
+        24
+       ],
+       "marginsLT": [
+        12,
+        12
+       ],
+       "marginsRB": [
+        12,
+        12
+       ]
+      },
+      "pivot": [
+       0.5,
+       0.5
+      ]
+     }
+    ],
+    "script": {
+     "path": "scripts/lift.lua"
+    }
+   },
+   {
+    "type": "AreaNode",
+    "name": "FloatZone",
+    "position": [
+     1150,
+     330
+    ],
+    "shapes": [
+     {
+      "type": "Box",
+      "size": [
+       160,
+       560
+      ],
+      "maskLayers": [
+       "Layer2"
+      ]
+     }
+    ],
+    "script": {
+     "path": "scripts/float_zone.lua"
+    }
+   },
+   {
+    "type": "DynamicBodyNode",
+    "name": "Crate1",
+    "position": [
+     360,
+     300
+    ],
+    "tags": [
+     "crate"
+    ],
+    "shapes": [
+     {
+      "type": "Box",
+      "size": [
+       48,
+       48
+      ],
+      "restitution": 0.1,
+      "categoryLayers": [
+       "Layer3"
+      ]
+     }
+    ],
+    "script": {
+     "path": "scripts/crate.lua"
+    },
+    "children": [
+     {
+      "type": "TextureNode",
+      "name": "Sprite",
+      "scale": [
+       0.75,
+       0.75
+      ],
+      "texture": "textures/crate.png"
+     }
+    ]
+   },
+   {
+    "type": "DynamicBodyNode",
+    "name": "Crate2",
+    "position": [
+     380,
+     200
+    ],
+    "tags": [
+     "crate"
+    ],
+    "shapes": [
+     {
+      "type": "Box",
+      "size": [
+       48,
+       48
+      ],
+      "restitution": 0.1,
+      "categoryLayers": [
+       "Layer3"
+      ]
+     }
+    ],
+    "script": {
+     "path": "scripts/crate.lua"
+    },
+    "children": [
+     {
+      "type": "TextureNode",
+      "name": "Sprite",
+      "scale": [
+       0.75,
+       0.75
+      ],
+      "texture": "textures/crate.png"
+     }
+    ]
+   },
+   {
+    "type": "DynamicBodyNode",
+    "name": "BouncyCrate",
+    "position": [
+     760,
+     100
+    ],
+    "tags": [
+     "crate"
+    ],
+    "shapes": [
+     {
+      "type": "Box",
+      "size": [
+       48,
+       48
+      ],
+      "restitution": 0.7,
+      "categoryLayers": [
+       "Layer3"
+      ]
+     }
+    ],
+    "script": {
+     "path": "scripts/crate.lua"
+    },
+    "children": [
+     {
+      "type": "TextureNode",
+      "name": "Sprite",
+      "scale": [
+       0.75,
+       0.75
+      ],
+      "texture": "textures/crate.png"
+     }
+    ]
+   },
+   {
+    "type": "AreaNode",
+    "name": "Coin1",
+    "position": [
+     560,
+     380
+    ],
+    "tags": [
+     "coin"
+    ],
+    "shapes": [
+     {
+      "type": "Circle",
+      "radius": 18,
+      "maskLayers": [
+       "Layer2"
+      ]
+     }
+    ],
+    "script": {
+     "path": "scripts/coin.lua"
+    },
+    "children": [
+     {
+      "type": "TextureNode",
+      "name": "Sprite",
+      "scale": [
+       1.5,
+       1.5
+      ],
+      "texture": "textures/coin.png"
+     }
+    ]
+   },
+   {
+    "type": "AreaNode",
+    "name": "Coin2",
+    "position": [
+     960,
+     370
+    ],
+    "tags": [
+     "coin"
+    ],
+    "shapes": [
+     {
+      "type": "Circle",
+      "radius": 18,
+      "maskLayers": [
+       "Layer2"
+      ]
+     }
+    ],
+    "script": {
+     "path": "scripts/coin.lua"
+    },
+    "children": [
+     {
+      "type": "TextureNode",
+      "name": "Sprite",
+      "scale": [
+       1.5,
+       1.5
+      ],
+      "texture": "textures/coin.png"
+     }
+    ]
+   },
+   {
+    "type": "AreaNode",
+    "name": "Coin3",
+    "position": [
+     1150,
+     200
+    ],
+    "tags": [
+     "coin"
+    ],
+    "shapes": [
+     {
+      "type": "Circle",
+      "radius": 18,
+      "maskLayers": [
+       "Layer2"
+      ]
+     }
+    ],
+    "script": {
+     "path": "scripts/coin.lua"
+    },
+    "children": [
+     {
+      "type": "TextureNode",
+      "name": "Sprite",
+      "scale": [
+       1.5,
+       1.5
+      ],
+      "texture": "textures/coin.png"
+     }
+    ]
+   },
+   {
+    "type": "CharacterMoverNode",
+    "name": "Player",
+    "position": [
+     160,
+     600
+    ],
+    "tags": [
+     "player"
+    ],
+    "shapes": [
+     {
+      "type": "Capsule",
+      "radius": 20,
+      "size": [
+       40,
+       12
+      ],
+      "offset": [
+       0,
+       4
+      ]
+     }
+    ],
+    "properties": {
+     "controlMode": "Script",
+     "categoryLayers": [
+      "Layer2"
+     ],
+     "maskLayers": [
+      "Layer1",
+      "Layer3"
+     ]
+    },
+    "script": {
+     "path": "scripts/player.lua"
+    },
+    "children": [
+     {
+      "type": "TextureNode",
+      "name": "Sprite",
+      "texture": "textures/player.png"
+     },
+     {
+      "type": "RaycastNode",
+      "name": "GroundRay",
+      "position": [
+       0,
+       30
+      ],
+      "properties": {
+       "direction": [
+        0,
+        1
+       ],
+       "length": 600
+      }
+     }
+    ]
+   },
+   {
+    "type": "Node",
+    "name": "HUD",
+    "script": {
+     "path": "scripts/hud.lua"
+    },
+    "children": [
+     {
+      "type": "TextNode",
+      "name": "Coins",
+      "position": [
+       48,
+       24
+      ],
+      "pivot": [
+       0,
+       0
+      ],
+      "properties": {
+       "text": "Coins: 0 / 3",
+       "fontSize": 36,
+       "align": "Left",
+       "color": "#ffffffff"
+      }
+     },
+     {
+      "type": "TextNode",
+      "name": "Height",
+      "position": [
+       48,
+       68
+      ],
+      "pivot": [
+       0,
+       0
+      ],
+      "properties": {
+       "text": "Above ground: 0 px",
+       "fontSize": 28,
+       "align": "Left",
+       "color": "#ffffffcc"
+      }
+     },
+     {
+      "type": "TextNode",
+      "name": "Help",
+      "position": [
+       48,
+       104
+      ],
+      "pivot": [
+       0,
+       0
+      ],
+      "properties": {
+       "text": "A / D move, Space jumps, F3 shows the shapes",
+       "fontSize": 24,
+       "align": "Left",
+       "color": "#ffffff99"
+      }
+     }
+    ]
+   }
+  ]
+ }
+}
