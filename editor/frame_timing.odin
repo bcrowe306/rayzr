@@ -15,7 +15,10 @@ import e "../engine"
 //   Present   EndDrawing: the buffer swap, waiting for the GPU (and vsync / the FPS cap)
 //
 // The Profiler tab shows them (smoothed); the drive command `bench <frames>
-// [label]` times that many uncapped frames and prints a [bench] line.
+// [label]` times that many uncapped frames and prints a [bench] line (and a
+// [bench-json] one: percentiles, for scripts/perf/perf.py - #331);
+// `bench-start [label]` .. `bench-stop` time the frames of the commands
+// between them (a drag, clicks).
 // `--uncapped` runs the editor without vsync or a frame cap.
 // ============================================================================
 
@@ -48,6 +51,9 @@ Frame_Timing :: struct {
 	benchSum:   [Frame_Phase]f64,
 	benchWhole: f64,
 	benchAllocs, benchTempBytes: int, // (profiling builds)
+	benchSamples: [dynamic]f32,       // ms, each timed frame (percentiles)
+	firstFrameMs: f64,                // process start to the end of the first frame (startup)
+	frameIndex:   u64,                // frames begun
 }
 
 frameTiming: Frame_Timing
@@ -57,12 +63,16 @@ FrameTiming_Begin :: proc() {
 	ft := &frameTiming
 	ft.frameStart = time.tick_now()
 	ft.mark = ft.frameStart
+	ft.frameIndex += 1
 	ft.viewport = 0
 	e.Prof_Begin("editor.frame")
 	e.Prof_Begin("editor.poll")
 	// (Loading a project applies its game's target FPS: undone every frame.)
 	if ft.uncapped do rl.SetTargetFPS(0)
 }
+
+// FrameTiming_FrameIndex: the editor's frame number (caches valid for a frame).
+FrameTiming_FrameIndex :: proc() -> u64 {return frameTiming.frameIndex}
 
 // FrameTiming_Mark ends `phase` (the time since the previous mark).
 FrameTiming_Mark :: proc(phase: Frame_Phase) {
@@ -96,9 +106,12 @@ FrameTiming_End :: proc() {
 	e.Prof_End() // editor.frame
 	e.Prof_FrameEnd()
 	for p in Frame_Phase do ft.smooth[p] += (ft.last[p] - ft.smooth[p]) * 0.05
+	if ft.firstFrameMs == 0 do ft.firstFrameMs = e.Process_SinceStartMs()
 	if ft.benchLeft > 0 {
 		for p in Frame_Phase do ft.benchSum[p] += ft.last[p]
-		ft.benchWhole += time.duration_milliseconds(time.tick_since(ft.frameStart))
+		whole := time.duration_milliseconds(time.tick_since(ft.frameStart))
+		ft.benchWhole += whole
+		append(&ft.benchSamples, f32(whole))
 		ft.benchAllocs += e.Prof_Last().allocs
 		ft.benchTempBytes += e.Prof_Last().tempBytes
 		ft.benchFrames += 1
@@ -128,7 +141,16 @@ FrameTiming_BenchStart :: proc(frames: int) {
 	ft.benchWhole = 0
 	ft.benchAllocs = 0
 	ft.benchTempBytes = 0
+	clear(&ft.benchSamples)
 }
+
+// FrameTiming_BenchStop ends an open-ended bench (bench-start) now.
+FrameTiming_BenchStop :: proc() {
+	frameTiming.benchLeft = 0
+}
+
+// FrameTiming_Benching: a drive is timing frames (its own bookkeeping can skip work then).
+FrameTiming_Benching :: proc() -> bool {return frameTiming.benchLeft > 0}
 
 FrameTiming_BenchDone :: proc() -> bool {
 	return frameTiming.benchLeft <= 0
@@ -141,6 +163,17 @@ FrameTiming_BenchReport :: proc(label: string) -> string {
 	whole := ft.benchWhole / n
 	allocs := ""
 	when e.RAYZR_PROF do allocs = fmt.tprintf(" | %.1f heap allocs, temp %.0f KB", f64(ft.benchAllocs) / n, f64(ft.benchTempBytes) / n / 1024)
-	return fmt.tprintf("[bench] editor %-22s %d frames: whole frame %.3f ms (%.0f fps) | poll %.3f | ui %.3f | viewport %.3f | draw %.3f | present %.3f%s",
-		label, ft.benchFrames, whole, 1000 / whole, ft.benchSum[.Poll] / n, ft.benchSum[.UI] / n, ft.benchSum[.Viewport] / n, ft.benchSum[.Draw] / n, ft.benchSum[.Present] / n, allocs)
+	s := e.Perf_Summarize(ft.benchSamples[:])
+	return fmt.tprintf("[bench] editor %-22s %d frames: whole frame %.3f ms (%.0f fps; p95 %.2f, p99 %.2f, max %.2f) | poll %.3f | ui %.3f | viewport %.3f | draw %.3f | present %.3f%s",
+		label, ft.benchFrames, whole, 1000 / whole, s.p95, s.p99, s.max, ft.benchSum[.Poll] / n, ft.benchSum[.UI] / n, ft.benchSum[.Viewport] / n, ft.benchSum[.Draw] / n, ft.benchSum[.Present] / n, allocs)
+}
+
+// FrameTiming_BenchJSON: the frames just timed as a [bench-json] line -
+// {"label", "frames", "frame_ms": {mean, p50, p95, p99, max}, "over_budget", "phases_ms": {...}}.
+FrameTiming_BenchJSON :: proc(label: string) -> string {
+	ft := &frameTiming
+	n := f64(max(ft.benchFrames, 1))
+	return fmt.tprintf("[bench-json] {{\"label\": %q, \"frames\": %d, \"frame_ms\": %s, \"over_budget\": %d, \"phases_ms\": {{\"poll\": %.3f, \"ui\": %.3f, \"viewport\": %.3f, \"draw\": %.3f, \"present\": %.3f}}}}",
+		label, ft.benchFrames, e.Perf_SummaryJSON(e.Perf_Summarize(ft.benchSamples[:])), e.Perf_OverBudget(ft.benchSamples[:]),
+		ft.benchSum[.Poll] / n, ft.benchSum[.UI] / n, ft.benchSum[.Viewport] / n, ft.benchSum[.Draw] / n, ft.benchSum[.Present] / n)
 }

@@ -141,6 +141,8 @@ class Desktop:
                    "--input-script", r["input_path"], "--dump-scene", r["dump"], "--scene", r["scene"]] + r["args"]
             if r.get("shot"):
                 cmd += ["--screenshot", r["shot"]]
+            if r.get("perf"):  # (scripts/perf/perf.py: uncapped frames, their times written)
+                cmd += ["--uncapped", "--perf-report", r["perf"]]
             env = dict(os.environ, **r.get("env", {}))
             try:
                 log = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace",
@@ -314,6 +316,8 @@ class Android:
                     "--input-script", "input.txt", "--dump-scene", f"dump{i}.json", "--scene", r["scene"]] + r["args"]
             if r.get("shot"):
                 args += ["--screenshot", f"shot{i}.png"]
+            if r.get("perf"):
+                args += ["--uncapped", "--perf-report", f"perf{i}.json"]
             ap = os.path.join(self.dir, "args.txt")
             open(ap, "w").write("\n".join(args) + "\n")
             self.adb_("logcat", "-c")
@@ -343,6 +347,8 @@ class Android:
             self.get(pkg, f"{ext}/dump{i}.json", r["dump"])
             if r.get("shot"):
                 self.get(pkg, f"{ext}/shot{i}.png", r["shot"])
+            if r.get("perf"):
+                self.get(pkg, f"{ext}/perf{i}.json", r["perf"])
             # (The app's saves -> the local user-data folder: @file checks read it.)
             shutil.rmtree(userdata)
             os.makedirs(userdata)
@@ -365,7 +371,10 @@ class Android:
         shutil.rmtree(self.dir, ignore_errors=True)
 
 
-def run_test(backend, tid, test, tmp):
+def run_test(backend, tid, test, tmp, perf=None):
+    """Plays a test; the failures (none: it passed). perf: a path - the
+    test's own run is uncapped and writes its frame times there (the
+    runner's --perf-report; scripts/perf/perf.py)."""
     proj = os.path.join(tmp, "project")
     shutil.copytree(os.path.join(ROOT, test.get("project", os.path.join("templates", tid))), proj)
     cfg = json.load(open(os.path.join(proj, "project.json")))
@@ -407,6 +416,7 @@ def run_test(backend, tid, test, tmp):
         if UPDATE_GOLDENS:
             os.makedirs(os.path.dirname(shot), exist_ok=True)
     runs[-1]["shot"] = shot
+    runs[-1]["perf"] = perf
     results = backend.run_all(tid, proj, userdata, runs)
     missing = {"code": -1, "tail": "not run", "errors": []}
     for i, run in enumerate(before):

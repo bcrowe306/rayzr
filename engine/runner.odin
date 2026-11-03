@@ -35,6 +35,7 @@ Run_Options :: struct {
 	trace:          string, // --trace <node name>: print "@trace <frame> <scene> <x> <y>" every frame (game tests, bots)
 	test:           string, // --test [filter]: play the project's tests/*_test.lua (game_tests.odin); "*" all
 	console:        string, // --console "perf; outlines; open": the developer console on, these lines run once loaded (tests; dev_console.odin)
+	perfReport:     string, // --perf-report <file.json>: every frame's time and the startup times, written at the end (perf_report.odin; #331)
 }
 
 // An --input-script event: `key` goes down / up at `frame`; pad events
@@ -232,7 +233,7 @@ Runner_ApplyInputEvent :: proc(input: ^InputSystem, ev: Input_Script_Event) {
 }
 
 // Engine_ParseRunArgs reads --project/-p, --scene, --screenshot, --frames,
-// --hidden, --dump-scene, --user-data, --bench, --uncapped and --no-render-cache. A bare argument is taken as the project.
+// --hidden, --dump-scene, --user-data, --bench, --uncapped, --perf-report and --no-render-cache. A bare argument is taken as the project.
 Engine_ParseRunArgs :: proc(args: []string) -> (opts: Run_Options) {
 	for a in args do if a == "--version" {
 		fmt.println(RAYZR_RELEASE)
@@ -279,6 +280,8 @@ Engine_ParseRunArgs :: proc(args: []string) -> (opts: Run_Options) {
 			n, _ := strconv.parse_int(next); opts.benchFrames = n; opts.uncapped = true; i += 1
 		case arg == "--uncapped":
 			opts.uncapped = true
+		case arg == "--perf-report" && next != "":
+			opts.perfReport = next; i += 1
 		case !strings.has_prefix(arg, "-") && opts.projectPath == "":
 			opts.projectPath = arg
 		}
@@ -358,6 +361,7 @@ Runner_State :: struct {
 	benchAllocs, benchAllocBytes, benchTempBytes: int, // (profiling builds)
 	windowOpen, audioOpen, fontsLoaded: bool,
 	inputEvents:        [dynamic]Input_Script_Event, // --input-script
+	perf:               Perf_Recorder,               // --perf-report
 }
 
 // The running game (Runner_Start .. Runner_Stop), for the platform hooks
@@ -402,6 +406,7 @@ Engine_RunProject :: proc(opts: Run_Options) -> int {
 Runner_Start :: proc(opts: Run_Options) -> (^Runner_State, bool) {
 	rs := new(Runner_State)
 	rs.opts = opts
+	rs.perf.path = opts.perfReport
 	projectPath := opts.projectPath
 	startScene := opts.startScene
 	game := new(Game)
@@ -480,6 +485,7 @@ Runner_Start :: proc(opts: Run_Options) -> (^Runner_State, bool) {
 		return nil, false
 	}
 	rs.windowOpen = true
+	rs.perf.windowMs = Process_SinceStartMs()
 	// Fullscreen (project Video, Engine.set_fullscreen): applied from the
 	// first frames on (Runner_ApplyFullscreen); the frame scales to the window.
 	if video.fullscreen && !opts.hidden do game.fullscreenRequest = true
@@ -501,6 +507,7 @@ Runner_Start :: proc(opts: Run_Options) -> (^Runner_State, bool) {
 		return nil, false
 	}
 	if video.icon != "" do Runner_SetWindowIcon(game, video.icon)
+	rs.perf.projectMs = Process_SinceStartMs()
 	// Crash reports go to the game's user-data folder (crash_report.odin).
 	when ODIN_OS != .JS {
 		Crash_Install(video.windowTitle if video.windowTitle != "" else Save_GameName(), Save_CrashDir())
@@ -663,7 +670,7 @@ Runner_Frame :: proc(rs: ^Runner_State) -> bool {
 			rlgl.EnableColorBlend()
 		}
 		if filtered do Colorblind_End()
-		if opts.uncapped && opts.benchFrames <= 0 do runner_draw_frame_time(rs)
+		if opts.uncapped && opts.benchFrames <= 0 && opts.perfReport == "" do runner_draw_frame_time(rs)
 		Console_DrawScreen(game) // (the developer console and its overlays)
 		Prof_Begin("present")
 		rl.EndDrawing()
@@ -671,9 +678,11 @@ Runner_Frame :: proc(rs: ^Runner_State) -> bool {
 		Prof_End() // frame
 		Prof_FrameEnd()
 		MemTrack_Frame()
+		if rs.perf.path != "" do Perf_RecordFrame(&rs.perf, runTime)
 		defer free_all(context.temp_allocator) // the frame's temp allocations (after the captures below)
 
 		rs.frameCount += 1
+		if rs.frameCount == 1 && EditorLink_Enabled() do fmt.println("@rayzr:first-frame") // (the editor's time-to-Play)
 		if opts.trace != "" {
 			if scene := game.sceneManager.currentScene; scene != nil {
 				if n := Scene_FindNodeByName(scene, opts.trace); n != nil {
@@ -737,6 +746,7 @@ Runner_FramesOver :: proc(opts: Run_Options, frameCount: int) -> bool {
 Runner_Stop :: proc(rs: ^Runner_State) {
 	if rs == nil do return
 	if runnerCurrent == rs do runnerCurrent = nil
+	Perf_WriteReport(&rs.perf) // (--perf-report: however the run ended)
 	for ev in rs.inputEvents do if ev.kind == .Connect && ev.pad >= 0 do delete(ev.name)
 	delete(rs.inputEvents)
 	Pixel_Release()

@@ -34,6 +34,8 @@ import rl "vendor:raylib"
 //   break-set <file> <l,l,...>  breakpoints in a script (break-clear: none); a hit
 //                               pauses the game in the script (lua_debugger.odin):
 //                               -> @rayzr:stopped {...}, then continue / step-* / locals
+// Unasked: @rayzr:hello once linked, @rayzr:first-frame after the first frame
+// is drawn (the editor's time-to-Play, #331).
 //
 // Paths are node names from the scene root, '/'-separated ("Player/Gun").
 // Scripts and textures reload by themselves when their files change.

@@ -147,6 +147,8 @@ RemoteGame_HandleLine :: proc(state: ^EditorState, line: string) -> bool {
 		Debug_SendAll() // breakpoints set before Play
 		StateGraph_SendBreaks(state) // state machine break on enter
 	case "stopped", "locals", "running", "watch": Debug_HandleReply(state, kind, rest)
+	case "first-frame": // (the game drew its first frame: time-to-Play)
+		if state.playMs == 0 do state.playMs = time.duration_milliseconds(time.tick_since(state.playRequestedAt))
 	case "paused": remote.paused = true
 	case "resumed": remote.paused = false
 	case "stepped": remote.steps += 1
