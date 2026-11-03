@@ -1,0 +1,189 @@
+# The Physics and collisions tutorial (docs/tutorials/physics.md, #295): its
+# steps, in a copy of the finished project (docs/tutorials/physics/, whose
+# scripts the reader writes), and its screenshots (scripts/docs/screenshots.sh
+# tutorial_physics copies them to docs/images/tutorial-physics_*.png).
+# drive: project docs/tutorials/physics
+wait 5
+key escape
+
+# 1. Bodies: a Static Platform floor and a Dynamic Physics Box above it.
+click @asset.new-scene
+click @hier.add
+type static platform
+click @addnode.create
+expect node:StaticPlatform.type == StaticBodyNode
+dblclick @insp.name
+key ctrl+a
+type Ground
+key enter
+dblclick @insp.position.y
+key ctrl+a
+type 560
+key enter
+dblclick @insp.prop:size.x
+key ctrl+a
+type 800
+key enter
+expect shape:Ground:0:size == 800.0,32.0
+key escape
+click @hier.add
+type dynamic physics box
+click @addnode.create
+expect node:DynamicPhysicsBox.type == DynamicBodyNode
+dblclick @insp.name
+key ctrl+a
+type Crate
+key enter
+dblclick @insp.position.y
+key ctrl+a
+type 200
+key enter
+dblclick @insp.prop:restitution
+key ctrl+a
+type 0.5
+key enter
+expect shape:Crate:0:size == 64.0,64.0
+annotate @node:Crate The box's collision shape
+annotate @insp.prop:restitution Its shape: size, material (density, friction, restitution) and layers
+screenshot tutorial-physics_bodies
+
+# 2. Simulate: gravity pulls the box down onto the floor.
+click @menu:Game
+click @menu:Game/Simulate in Editor
+wait 120
+expect node:Crate.position !contains ,200.0
+screenshot tutorial-physics_simulate
+click @menu:Game
+click @menu:Game/Simulate in Editor
+expect node:Crate.position ~= 640,200
+
+# 3. Gravity and the collision layers' names (Project Settings > General).
+click @toolbar.settings
+click @settings.page:General
+click @section:Collision Layers
+scroll @settings.gravity -3
+wait 3
+expect item:settings.layer:2 == visible
+annotate @settings.gravity Gravity: pixels per second squared, +y down
+annotate @settings.layer:1 The layers' names: World, Player, Props
+screenshot tutorial-physics_layers
+click @settings.cancel
+
+# 4. The player: a Character Mover with scripts/player.lua and the tag "player".
+key escape
+click @hier.add
+type character mover
+click @addnode.create
+expect node:CharacterMover.type == CharacterMoverNode
+dblclick @insp.name
+key ctrl+a
+type Player
+key enter
+dblclick @insp.position.x
+key ctrl+a
+type 400
+key enter
+dblclick @insp.position.y
+key ctrl+a
+type 480
+key enter
+click @insp.prop:controlMode
+click @pick:Script
+expect node:Player.prop.controlMode == Script
+click @insp.tag.input
+type player
+key enter
+expect node:Player.tags contains player
+click @insp.script-attach
+click @pick:scripts/player.lua
+expect node:Player.script.jump_speed == 560
+# A Raycast Sensor under it, pointing down.
+click @hier.add
+type raycast sensor
+click @addnode.create
+expect node:RaycastSensor.parent == Player
+dblclick @insp.name
+key ctrl+a
+type GroundRay
+key enter
+dblclick @insp.position.x
+key ctrl+a
+type 0
+key enter
+dblclick @insp.position.y
+key ctrl+a
+type 30
+key enter
+dblclick @insp.prop:direction.x
+key ctrl+a
+type 0
+key enter
+dblclick @insp.prop:direction.y
+key ctrl+a
+type 1
+key enter
+dblclick @insp.prop:length
+key ctrl+a
+type 600
+key enter
+expect node:GroundRay.prop.direction ~= 0,1
+expect node:GroundRay.position ~= 0,30
+
+# 5. A coin: a Trigger Area with scripts/coin.lua.
+key escape
+click @hier.add
+type trigger area
+click @addnode.create
+expect node:TriggerArea.type == AreaNode
+dblclick @insp.name
+key ctrl+a
+type Coin
+key enter
+dblclick @insp.position.x
+key ctrl+a
+type 800
+key enter
+dblclick @insp.position.y
+key ctrl+a
+type 480
+key enter
+click @insp.script-attach
+click @pick:scripts/coin.lua
+expect node:Coin.script contains scripts/coin.lua
+hover @insp.prop:maskLayers
+wait 2
+annotate @insp.prop:maskLayers Mask Layers: the layers of the bodies it reports
+screenshot tutorial-physics_area
+key ctrl+s
+expect file:scenes/new_scene.scene.json contains "type": "AreaNode"
+
+# 6. The finished scene in Simulate: the player walks into a coin (moved
+# there from the Lua line); crates report their collisions.
+dblclick @asset:scenes/main.scene.json
+wait 10
+expect scene contains main.scene.json
+click @menu:Game
+click @menu:Game/Simulate in Editor
+wait 60
+expect log contains bumped into Ground
+click @bottom:console
+drag 640,592 640,420
+wait 3
+click @console.lua
+type Scene.find_node("Player").position = Vec2(560, 380)
+key enter
+wait 20
+expect node:Coin1.exists == false
+expect node:Coins.prop.text == Coins: 1 / 3
+annotate @node:Player The Player's capsule; its GroundRay below it
+annotate @window:console Collision events printed by the crates
+screenshot tutorial-physics_finished
+click @menu:Game
+click @menu:Game/Simulate in Editor
+wait 5
+
+# 7. Played, with Show Colliders on (the drives' copy has it on).
+game-args --frames 100 --screenshot $SHOTS/06_tutorial-physics_colliders.png --dump-scene $SHOTS/game_scene.json
+key f5
+wait-until game == stopped timeout=900
+expect abs-file:$SHOTS/game_scene.json contains "Coins: 0 / 3"

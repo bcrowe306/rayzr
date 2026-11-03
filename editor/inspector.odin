@@ -956,10 +956,12 @@ inspector_resources :: proc(state: ^EditorState, node: ^e.Node) {
 				UI_PropLabel("Auto Start")
 				imgui.Checkbox("##autostart", &tm.running)
 				undo_on_activate(state, "Toggle auto start")
+				Drive_Item("insp.timer.autostart")
 				reset_after(state, "insp.timer.autostart", &tm.running, false, "auto start")
 				UI_PropLabel("Loop")
 				imgui.Checkbox("##timerloop", &tm.loop)
 				undo_on_activate(state, "Toggle loop")
+				Drive_Item("insp.timer.loop")
 				reset_after(state, "insp.timer.loop", &tm.loop, false, "loop")
 				UI_EndProps()
 			}

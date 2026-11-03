@@ -1,0 +1,23 @@
+{
+ "name": "Gem Catcher",
+ "version": "0.1.0",
+ "initial_scene": "scenes/main.scene.json",
+ "window": {
+  "title": "Gem Catcher",
+  "width": 1280,
+  "height": 720,
+  "virtual_width": 1280,
+  "virtual_height": 720,
+  "target_fps": 60
+ },
+ "video": {
+  "resizable": true
+ },
+ "physics": {
+  "gravity": [0, 980],
+  "debug_draw": false
+ },
+ "scenes": [
+  "scenes/main.scene.json"
+ ]
+}

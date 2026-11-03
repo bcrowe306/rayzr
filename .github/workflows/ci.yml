@@ -153,6 +153,8 @@ jobs:
           xvfb-run -a python3 scripts/templates/test_templates.py --runner bin/runners/linux/runner --suite tests/behavior_tree/runtime_tests.json
           # GOAP: planning through a condition, moving to targets, a goal completing.
           xvfb-run -a python3 scripts/templates/test_templates.py --runner bin/runners/linux/runner --suite tests/goap/runtime_tests.json
+          # The tutorials' finished projects (docs/tutorials/<name>/, #295): each loads and plays.
+          xvfb-run -a python3 scripts/templates/test_templates.py --runner bin/runners/linux/runner --suite tests/tutorials/runtime_tests.json
 
       - name: Crash reports (the runner and the editor crash for real)
         if: matrix.smoke

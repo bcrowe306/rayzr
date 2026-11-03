@@ -1,0 +1,194 @@
+# The Lua scripting basics tutorial (docs/tutorials/scripting.md, #295): its
+# steps, in a copy of the finished project (docs/tutorials/scripting/, whose
+# scripts the reader writes), and its screenshots (scripts/docs/screenshots.sh
+# tutorial_scripting copies them to docs/images/tutorial-scripting_*.png).
+# drive: project docs/tutorials/scripting
+wait 5
+key escape
+
+# 1. A new scene with the player: a Texture Sprite with scripts/player.lua.
+click @asset.new-scene
+click @hier.add
+type texture sprite
+click @addnode.create
+expect node:TextureSprite.type == TextureNode
+click @insp.texture
+click @pick:textures/player.png
+dblclick @insp.name
+key ctrl+a
+type Player
+key enter
+expect selected == Player
+dblclick @insp.position.x
+key ctrl+a
+type 320
+key enter
+dblclick @insp.position.y
+key ctrl+a
+type 360
+key enter
+expect node:Player.position ~= 320,360
+click @insp.script-attach
+click @pick:scripts/player.lua
+expect node:Player.script contains scripts/player.lua
+expect node:Player.script.speed == 300
+
+# 2. A property in the Inspector: Speed 400.
+click @insp.tab:properties
+dblclick @insp.script:speed
+key ctrl+a
+type 400
+key enter
+expect node:Player.script.speed == 400
+annotate @insp.script:speed Speed: the script's property, edited here
+screenshot tutorial-scripting_property
+click @insp.tab:node
+
+# 3. The gem, with a HopTimer child connected to its script (Signals).
+key escape
+click @hier.add
+type texture sprite
+click @addnode.create
+click @insp.texture
+click @pick:textures/gem.png
+dblclick @insp.name
+key ctrl+a
+type Gem
+key enter
+expect selected == Gem
+expect node:Gem.parent != Player
+dblclick @insp.position.x
+key ctrl+a
+type 760
+key enter
+dblclick @insp.position.y
+key ctrl+a
+type 360
+key enter
+click @insp.script-attach
+click @pick:scripts/gem.lua
+expect node:Gem.script.points == 10
+click @hier.add
+type timer
+click @addnode.create
+expect node:Timer.parent == Gem
+dblclick @insp.name
+key ctrl+a
+type HopTimer
+key enter
+expect node:HopTimer.parent == Gem
+dblclick @insp.timer.duration
+key ctrl+a
+type 2
+key enter
+click @insp.timer.autostart
+click @insp.timer.loop
+click @insp.signal-connect:timeout
+expect item:signal.connect == visible
+click @signal.target:Gem
+screenshot tutorial-scripting_signal
+click @signal.connect
+expect node:HopTimer.connections == timeout->..:on_hop_timer_timeout
+# (Connecting opens the handler in the Code tab: back to the viewport.)
+key cmd+1
+wait 2
+
+# 4. The score: a Text with scripts/score.lua.
+key escape
+expect selected ==
+click @hier.add
+type text
+click @addnode:Text
+click @addnode.create
+expect node:Text.type == TextNode
+dblclick @insp.name
+key ctrl+a
+type Score
+key enter
+dblclick @insp.position.x
+key ctrl+a
+type 160
+key enter
+dblclick @insp.position.y
+key ctrl+a
+type 60
+key enter
+click @insp.script-attach
+click @pick:scripts/score.lua
+expect node:Score.script contains scripts/score.lua
+key ctrl+s
+expect file:scenes/new_scene.scene.json contains "method": "on_hop_timer_timeout"
+expect file:scenes/new_scene.scene.json contains "speed": 400
+
+# 5. Simulate: print() reaches the Console; the Lua line catches the gem.
+click @menu:Game
+click @menu:Game/Simulate in Editor
+wait 30
+expect log contains [Lua] Player ready at
+expect node:Score.prop.text == Score: 0
+click @bottom:console
+# (A taller bottom panel: more of the Console shows.)
+drag 640,592 640,380
+wait 3
+click @console.lua
+type Scene.find_node("Gem"):get_script():catch()
+key enter
+wait 10
+expect log contains Caught! +10
+expect node:Score.prop.text == Score: 10
+annotate @window:console print() and Log lines; the Lua line runs code in the game
+screenshot tutorial-scripting_console
+
+# 6. Hot reload: a line added to catch() runs at once, still simulating.
+click @hier:Gem
+click @insp.script-edit
+wait-until code.lsp == ready timeout=600
+expect code.file == scripts/gem.lua
+key ctrl+g
+type 44
+key enter
+key end
+key enter
+type print("Hot reloaded")
+key ctrl+s
+wait 40
+click @bottom:console
+click @console.lua
+type Scene.find_node("Gem"):get_script():catch()
+key enter
+wait 10
+expect log contains Hot reloaded
+expect node:Score.prop.text == Score: 20
+
+# 7. Errors: a mistake in update() shows on its line, in red.
+click @code.tab:scripts/gem.lua
+key ctrl+g
+type 27
+key enter
+key end
+key enter
+type self.node:get_node("Sparkle"):set_visible(true)
+key ctrl+s
+wait 40
+# (Simulate runs while the viewport shows.)
+key cmd+1
+wait 40
+click @hier:Gem
+click @insp.script-edit
+wait 5
+expect runtime-diags >= 1
+expect code.diagnostic-messages contains attempt to index a nil value
+expect log contains get_node: no node at "Sparkle"
+screenshot tutorial-scripting_error
+click @menu:Game
+click @menu:Game/Simulate in Editor
+wait 5
+
+# 8. The finished project's scene, played (the game's own screenshot).
+dblclick @asset:scenes/main.scene.json
+wait 10
+expect scene contains main.scene.json
+game-args --frames 90 --screenshot $SHOTS/05_tutorial-scripting_game.png --dump-scene $SHOTS/game_scene.json
+key f5
+wait-until game == stopped timeout=900
+expect abs-file:$SHOTS/game_scene.json contains "Score: 0"

@@ -1,0 +1,48 @@
+{
+ "name": "main",
+ "background": [40, 44, 64, 255],
+ "root": {
+  "type": "Node",
+  "name": "root",
+  "children": [
+   {
+    "type": "TextureNode",
+    "name": "Player",
+    "position": [320, 360],
+    "texture": "textures/player.png",
+    "script": {"path": "scripts/player.lua", "properties": {"speed": 400}}
+   },
+   {
+    "type": "TextureNode",
+    "name": "Gem",
+    "position": [760, 360],
+    "scale": [2, 2],
+    "texture": "textures/gem.png",
+    "script": {"path": "scripts/gem.lua", "properties": {"player": "../Player"}},
+    "children": [
+     {
+      "type": "TimerNode",
+      "name": "HopTimer",
+      "timer": {"duration": 2, "auto_start": true, "loop": true},
+      "connections": [{"signal": "timeout", "target": "..", "method": "on_hop_timer_timeout"}]
+     }
+    ]
+   },
+   {
+    "type": "TextNode",
+    "name": "Score",
+    "position": [24, 16],
+    "pivot": [0, 0],
+    "properties": {"text": "Score: 0", "fontSize": 48, "align": "Left", "color": "#ffd27aff"},
+    "script": {"path": "scripts/score.lua"}
+   },
+   {
+    "type": "TextNode",
+    "name": "Help",
+    "position": [640, 696],
+    "pivot": [0.5, 1],
+    "properties": {"text": "Arrows / WASD move - catch the gem or click it", "fontSize": 28, "align": "Center", "color": "#ffffff99"}
+   }
+  ]
+ }
+}

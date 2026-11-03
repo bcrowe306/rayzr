@@ -1,0 +1,7 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "Mask Layers: the layers of the bodies it reports", "x": 1124, "y": 465, "w": 110, "h": 25}
+  ]
+}

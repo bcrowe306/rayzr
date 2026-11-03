@@ -82,6 +82,8 @@ Linux or the web. Anyone can play the result without the editor.
 - The [templates](../../templates/README.md) page describes the other
   starting points: a top-down RPG, a shoot 'em up, a Sokoban puzzle and the
   Platformer Adventure sample.
+- The [tutorials](../tutorials/index.md) build a small project each, step
+  by step: [Lua scripting basics](../tutorials/scripting.md) first.
 - [Drawing and animating a vector character](vector-character.md) builds
   the Vector Character template's Pip step by step.
 - The [engine guides](../../engine/docs/README.md) teach one feature at a

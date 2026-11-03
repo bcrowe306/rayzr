@@ -1,0 +1,7 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "Speed: the script's property, edited here", "x": 1124, "y": 513, "w": 110, "h": 25}
+  ]
+}

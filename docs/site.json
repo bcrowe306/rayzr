@@ -12,6 +12,14 @@
       ]
     },
     {
+      "label": "Tutorials",
+      "items": [
+        { "file": "docs/tutorials/index.md", "slug": "tutorials" },
+        { "file": "docs/tutorials/scripting.md", "slug": "tutorials/scripting" },
+        { "file": "docs/tutorials/physics.md", "slug": "tutorials/physics" }
+      ]
+    },
+    {
       "label": "Editor",
       "items": [
         { "file": "docs/editor/tour.md", "slug": "editor/tour" },

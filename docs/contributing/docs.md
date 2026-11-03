@@ -55,6 +55,33 @@ Node screenshots come from `tests/drive/docs_nodes_<category>.drive`. Each
 (see "Screenshots with callouts" below). The installed editor ships
 `docs/images/`, so the screenshots show in the Node Reference too.
 
+## Tutorials
+
+A tutorial builds one small project step by step (`docs/tutorials/`, the
+site's **Tutorials** section). Each has three parts that stay in step:
+
+| Part | Where |
+|---|---|
+| The page | `docs/tutorials/<name>.md`, listed in `docs/site.json` |
+| The finished project | `docs/tutorials/<name>/`: a real project (`project.json`, scenes, scripts, a few small CC0 assets) |
+| Its drive | `tests/drive/tutorial_<name>.drive`: performs the steps in a copy of the finished project (`# drive: project docs/tutorials/<name>`) and takes the page's screenshots |
+
+- **Screenshots**: `screenshot tutorial-<name>_<step>` lines;
+  `scripts/docs/screenshots.sh tutorial_<name>` copies them to
+  `docs/images/tutorial-<name>_<step>.png`. A page showing an image that
+  isn't there fails the checks below.
+- **The download**: the page links the project folder,
+  `[Download the finished project](<name>/)`. On GitHub that opens the
+  folder; the site exporter zips the folder's committed files into
+  `downloads/tutorials-<name>.zip` and links that instead.
+- **It plays**: `tests/tutorials/runtime_tests.json` runs each finished
+  project in the runner with scripted input and checks the result (CI:
+  `scripts/templates/test_templates.py --suite tests/tutorials/runtime_tests.json`).
+
+Write in the same voice as [Your first game](../getting-started/first-game.md):
+numbered steps for what to do in the editor, the whole script for each
+file, and only the editor labels, menus and API names that exist.
+
 ## Checks (CI)
 
 `python3 scripts/docs/check_docs.py` runs on every pull request. It fails
@@ -64,7 +91,8 @@ when:
   `bin/editor --dump-docs docs/generated/nodes.json` or `task docs:nodes`);
 - a node type has no Add Node description, or a property has no help line;
 - a guide in `engine/docs/` or `editor/docs/` isn't in `docs/site.json`;
-- a page links to a file that doesn't exist, or an image is missing;
+- a page links to a file that doesn't exist, or an image is missing (a
+  tutorial's screenshot too);
 - a Lua API function has no description.
 
 The website then builds the pages and checks every link between them.

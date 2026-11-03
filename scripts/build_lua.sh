@@ -8,6 +8,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 VERSION=5.4.7
+SHA256=9fbf5e28ef86c69858f6d3d34eccc32e911c1a28b4120ff3e84aaa70cfbf1e30
 case "$(uname -s)" in
 	Darwin) out=engine/lua54/lib/liblua54_darwin.a ;;
 	MINGW*|MSYS*|CYGWIN*) out=engine/lua54/lib/lua54_windows_x64.lib ;;
@@ -18,7 +19,19 @@ if [ "${1:-}" = --if-missing ] && [ -f "$out" ]; then
 	exit 0
 fi
 tmp=$(mktemp -d)
-curl -fsSL -o "$tmp/lua.tar.gz" "https://www.lua.org/ftp/lua-$VERSION.tar.gz"
+# lua.org, else its official mirror (CI's Windows runners sometimes can't
+# reach lua.org); the same tarball either way, checked against SHA256.
+got=
+for url in "https://www.lua.org/ftp/lua-$VERSION.tar.gz" "https://www.tecgraf.puc-rio.br/lua/ftp/lua-$VERSION.tar.gz"; do
+	if curl -fsSL --retry 2 --connect-timeout 15 -o "$tmp/lua.tar.gz" "$url"; then
+		got=$url
+		break
+	fi
+	echo "could not download $url" >&2
+done
+[ -n "$got" ] || { echo "Lua $VERSION: no download worked" >&2; exit 1; }
+sum=$( (sha256sum "$tmp/lua.tar.gz" 2>/dev/null || shasum -a 256 "$tmp/lua.tar.gz") | cut -d' ' -f1)
+[ "$sum" = "$SHA256" ] || { echo "Lua $VERSION from $got: checksum $sum, expected $SHA256" >&2; exit 1; }
 tar -xzf "$tmp/lua.tar.gz" -C "$tmp"
 src="$tmp/lua-$VERSION/src"
 mkdir -p "$(dirname "$out")"
