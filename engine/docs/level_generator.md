@@ -8,7 +8,7 @@ TileMap. The same generator and **seed** always give the same level, on
 every platform - so a seed is a level you can share, replay or test.
 
 So far (#142, #171): the generator file, the nodes (terrain, caves, rooms
-and corridors, walkers), placing entities, TileMap, component-layer and
+and corridors, walkers, Wave Function Collapse), placing entities, TileMap, component-layer and
 LDtk output, your own nodes (Lua or Odin), the **Level Generator** node
 that makes levels in the game (with progress for a loading bar and
 navigation baked again), the Lua module and the **Level Generator** window
@@ -50,8 +50,8 @@ in the editor.
   title bar to set the title and colour in the side panel; Delete or
   right-click > **Delete Frame** removes the frame and keeps the nodes.
 - **The side panel**: the level's **size**, **seed** (the dice picks a new
-  one) and **output**; the selected node's parameters and, for a tile
-  output, its **Tileset** (the picture its tile numbers count in; the grid
+  one) and **output**; the selected node's parameters, for a Wave Function
+  Collapse node its sample to paint (below) and, for a tile output, its **Tileset** (the picture its tile numbers count in; the grid
   button takes the tileset and tile size of the TileMap selected in the
   scene), its **Layer**, and its **rules** (a range and tiles: `3, 4` picks
   one of them per cell - or **Pick** them from the tileset: click tiles to
@@ -174,6 +174,7 @@ is an error.
 | `lines` | `count` (6), `min_length` (6), `max_length` (20), `thickness` (1), `direction`: `horizontal`, `vertical`, `both` (each line one or the other; default), `any` (any angle), `seed` (0) | Random lines: platforms, ledges, walls, cracks. Each fits inside the level (one longer than it is clipped). |
 | `rectangles` | `count` (5), `min_size` (4), `max_size` (12), `thickness` (1), `filled` (false), `seed` (0) | Random rectangles, outlines `thickness` cells wide or filled: rooms, ruins, crates. Each side's length is picked in the range. |
 | `circles` | `count` (5), `min_radius` (3), `max_radius` (8), `thickness` (1), `filled` (false), `seed` (0) | Random rings or discs: craters, arenas, pools. A cell is in when its centre is within radius + 0.5 of the circle's. |
+| `wfc` | `rules`: `sample` / `wang`, `wrap` (false), `attempts` (10), `seed` (0); inputs `mask`, `fixed`; `sample`, `wang` | Wave Function Collapse: **tile ids** (not 0..1 values), each tile next to only the tiles a sample you paint puts next to it. See [Wave Function Collapse](#wave-function-collapse). |
 
 **Noise types.** `value` blends random numbers at the corners of a grid:
 soft blobs, the original type (a file without `type` gets it, and the same
@@ -215,7 +216,7 @@ merge). Mix them with the rest: `combine` (max) adds ledges to a cave,
 
 | Type | | |
 |---|---|---|
-| `tile_output` | `empty` (-1), `tile_w`, `tile_h` (16), `writes` (`tiles`), `rules`, `tileset`, `layer` | Each cell takes the first rule whose `min`..`max` holds its value: one of its `tiles` (or `tile`), picked by the cell and the seed. Cells no rule takes get `empty` (-1: none). `tileset` (a project image) and the tile size are for picking tiles and previews; `layer` is where it goes (below). `writes`: `components` paints components on a map's component layer instead (below). |
+| `tile_output` | `empty` (-1), `tile_w`, `tile_h` (16), `writes` (`tiles`), `tile_ids` (false), `rules`, `tileset`, `layer` | Each cell takes the first rule whose `min`..`max` holds its value: one of its `tiles` (or `tile`), picked by the cell and the seed. Cells no rule takes get `empty` (-1: none). `tileset` (a project image) and the tile size are for picking tiles and previews; `layer` is where it goes (below). `writes`: `components` paints components on a map's component layer instead (below). `tile_ids`: its input already holds tiles (a `wfc` node's) - the rules are skipped. |
 
 **Terrains.** A rule can name a **terrain** of the tile output's tileset
 (`{"min": 0.5, "max": 1, "terrain": "Grass"}`; in the editor, the rule's
@@ -299,6 +300,81 @@ A **Level Generator** node with **Random Seed** tries other seeds when the
 generator refuses a level (an error, e.g. from `check`) - **Attempts** in all
 (10 by default); **Last Seed** is the seed of the level made. With a fixed
 seed it reports the error instead.
+
+## Wave Function Collapse
+
+The other nodes make values and a tile output turns them into tiles. The
+**Wave Function Collapse** node (`wfc`) makes the tiles themselves, from a
+small **sample** you paint: a tile only ever sits next to a tile - to its
+left, right, above or below - that it sits next to somewhere in the sample,
+and tiles come about as often as they do in it. Paint a pond: water inside,
+a shore of sand around it, grass outside - and the level gets ponds of all
+shapes, always with a shore, never grass touching water. Roads that join,
+rooms with walls round them, rivers with banks work the same way.
+
+**In the window**: add **Wave Function Collapse** (Generators), drag its
+output onto a tile output's input - the output's **tile_ids** turns on (its
+rules are skipped: the cells already hold tiles) - and give the output its
+**Tileset**. Select the WFC node: its side panel paints the sample with that
+tileset's tiles.
+
+- **Size**: the sample's cells across and down (8 x 8 to start, up to 64).
+- **Brush**: click a tile in the tileset (or one of those **In it** already)
+  to paint with it; **Eraser** paints nothing; **Fill** paints every cell
+  with the brush.
+- **The sample**: drag with the left button to paint, the right to erase.
+  Unpainted cells teach nothing. Each stroke is one undo step.
+- **Learned**: how many tiles and pairs of neighbours the rules hold; the
+  previews show the result with the output's tiles as you paint.
+
+Parameters:
+
+| | |
+|---|---|
+| `wrap` | The sample's edges wrap: its right column counts as next to its left one, its bottom row next to its top - more pairs from a small sample (paint it so it tiles). |
+| `attempts` | Tries before it gives up (below). |
+| `seed` | Added to the graph's seed. |
+
+Inputs, both optional: **mask** - only its solid cells (0.5 and above) are
+filled, the others are -1 (empty in the output) and don't constrain their
+neighbours: WFC tiles inside a cave's floor, a room, an island; **fixed** -
+cells whose value is one of the sample's tiles keep it and the rest is
+built around them (feed it another WFC node, or a Lua script that places a
+door tile).
+
+**Contradictions.** Sometimes the tiles placed so far leave a cell that no
+tile fits. The node then starts again with the next seed, up to `attempts`
+times (10), and then fails with an error (*a contradiction on every try*) -
+a Level Generator with **Random Seed** goes on to other seeds, as it does
+when a `check` refuses a level. Rules that can never fit (a tile with no
+neighbour allowed on one side, e.g. painted only at the sample's right
+edge) fail every time: paint it with neighbours on every side, turn on
+`wrap`, or paint a bigger sample. The same seed always gives the same
+tiles; a progress bar moves while a big one is solved.
+
+**Wang tiles.** Instead of a sample, set `rules` to `wang` and list tiles
+with the colours of their four edges - north, east, south, west, as
+numbers: two tiles touch only where their touching edges have the same
+colour, and each tile's **weight** is how often it is picked. In the window:
+**Add Wang Tile**, then its tile number, edges and weight. A Wang set is the
+same kind of rule as a sample - which tile may sit next to which - written
+out by edges: the solver is the same.
+
+```json
+{"id": 4, "type": "wfc", "params": {"rules": "wang"}, "wang": [
+  {"tile": 0, "edges": [0, 0, 0, 0]}, {"tile": 1, "edges": [0, 1, 0, 1]},
+  {"tile": 2, "edges": [1, 0, 1, 0]}, {"tile": 3, "edges": [1, 1, 1, 1], "weight": 0.2}]}
+```
+
+(Tile 1 is a road running east-west, 2 north-south, 3 a crossing; 0 grass:
+a road never stops in the grass - it runs on to the level's edge or into a
+crossing.)
+
+**Speed**: in an optimized build a 64 x 64 level takes about 2 ms and a
+128 x 128 about 8 ms with a 3-tile sample (10 ms with 16 Wang tiles) - more
+tiles, contradictions and retries cost more. Each cell's possible tiles are
+a bitset, the next cell is the one with the fewest left (a heap), and a
+change spreads to the neighbours with a stack.
 
 ## Placing things
 

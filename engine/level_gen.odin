@@ -45,6 +45,7 @@ Gen_Kind :: enum {
 	Lines,      // random lines: horizontal, vertical or any angle (#171)
 	Rectangles, // random rectangles, filled or outlines (#171)
 	Circles,    // random circles, filled or outlines (#171)
+	WFC,        // Wave Function Collapse: tile ids next to each other as a painted sample allows (#171; level_gen_wfc.odin)
 	// Modifiers
 	Threshold,
 	Invert,
@@ -95,6 +96,9 @@ GEN_LINE_DIRS := []string{"horizontal", "vertical", "both", "any"}
 // What a tile output writes (#171): tiles, or components on its map's
 // component layer (each rule's `component`).
 GEN_OUTPUT_WRITES := []string{"tiles", "components"}
+// Where a Wave Function Collapse node's rules come from (#171): the sample
+// painted on it, or its Wang tiles' edge colours.
+GEN_WFC_RULES := []string{"sample", "wang"}
 
 GEN_KINDS := [Gen_Kind]Gen_Kind_Info{
 	.Constant = {"constant", "Constant", {}, {{name = "value", default_ = 1, doc = "Every cell's value"}}, "The same value everywhere."},
@@ -179,6 +183,12 @@ GEN_KINDS := [Gen_Kind]Gen_Kind_Info{
 		{name = "filled", default_ = 0, doc = "Filled circles instead of rings", toggle = true},
 		{name = "seed", default_ = 0, doc = "Added to the graph's seed", integer = true},
 	}, "Circles at random places and sizes, rings or filled (1 = on), the same for a seed: craters, arenas, pools. Each fits inside the level when it can."},
+	.WFC = {"wfc", "Wave Function Collapse", {"mask", "fixed"}, {
+		{name = "rules", default_ = 0, choices = GEN_WFC_RULES, doc = "sample: which tile may sit next to which (in each direction) is learned from the sample painted on the node, how often each tile appears its weight; wang: from each Wang tile's edge colours (touching edges must match)"},
+		{name = "wrap", default_ = 0, doc = "sample: its edges wrap - the right column counts as next to the left one, the bottom row next to the top (more pairs from a small sample)", toggle = true},
+		{name = "attempts", default_ = 10, doc = "Tries, each with the next seed, when the tiles paint themselves into a corner (a contradiction) before it gives up (1-100)", integer = true},
+		{name = "seed", default_ = 0, doc = "Added to the graph's seed", integer = true},
+	}, "Tile ids, not 0..1 values: every cell a tile, each next to only the tiles the sample you paint (or the Wang tiles' edges) puts next to it - feed a Tile Output with tile_ids on. Mask: only its solid cells (-1 elsewhere); fixed: cells holding one of the tiles keep it (another WFC node's)."},
 	.Flood_Fill = {"flood_fill", "Flood Fill", {"in"}, {
 		{name = "x", default_ = -1, doc = "Start cell's column (-1: the middle); a closed cell starts from the nearest open one", integer = true},
 		{name = "y", default_ = -1, doc = "Start cell's row (-1: the middle)", integer = true},
@@ -218,6 +228,7 @@ GEN_KINDS := [Gen_Kind]Gen_Kind_Info{
 		{name = "tile_w", default_ = 16, doc = "Tile width in the tileset (pixels): the tile picker and previews", integer = true},
 		{name = "tile_h", default_ = 16, doc = "Tile height in the tileset (pixels)", integer = true},
 		{name = "writes", default_ = 0, choices = GEN_OUTPUT_WRITES, doc = "tiles: the map's tiles; components: its component layer - each rule's component painted on its cells (the tiles stay)"},
+		{name = "tile_ids", default_ = 0, doc = "Its input holds tile ids (a Wave Function Collapse node's): each cell gets its own tile (below 0: empty) and the rules are skipped; pattern rules still run", toggle = true},
 	}, "Rules turn value ranges into tiles (a random one of each rule's tiles, the same for a seed); written into a TileMap - or, as IntGrid values, into an LDtk layer. With a Layer name, into the TileMap of that name next to the main one. Writes components: each rule paints a component on the map's component layer instead."},
 	.Scatter = {"scatter", "Scatter", {"in"}, {
 		{name = "chance", default_ = 0.05, doc = "Chance of a point on each allowed cell"},
@@ -277,6 +288,8 @@ Gen_Node :: struct {
 	layer:   string, // Tile_Output: the TileMap it fills, by name, next to the main one ("": the main one; the graph's allocator)
 	script: string, // Script: its .lua file (the graph's allocator)
 	custom: string, // Custom: the registered kind's name (the graph's allocator)
+	sample: Gen_WFC_Sample, // WFC: the sample it learns from (the graph's allocator)
+	wang:   [dynamic]Gen_Wang_Tile, // WFC with rules = wang: the tiles and their edges (the graph's allocator)
 	pos:    [2]f32, // where the editor draws it
 }
 
@@ -380,6 +393,10 @@ gen_node_free :: proc(g: ^Gen_Graph, n: ^Gen_Node) {
 	gen_set_text(g, &n.custom, "")
 	gen_set_text(g, &n.tileset, "")
 	gen_set_text(g, &n.layer, "")
+	delete(n.sample.cells)
+	n.sample = {}
+	delete(n.wang)
+	n.wang = nil
 }
 
 // (a node's text, owned by the graph)
@@ -534,6 +551,7 @@ Gen_GraphParse :: proc(data: []u8, allocator := context.allocator) -> (g: Gen_Gr
 				append(&n.rules, r)
 			}
 		}
+		if kind == .WFC do gen_wfc_parse(&n, obj, allocator)
 		if pats, pok := obj["patterns"].(json.Array); pok && kind == .Tile_Output {
 			n.patterns = make([dynamic]Gen_Pattern_Rule, allocator)
 			for pv in pats {
@@ -588,6 +606,7 @@ Gen_GraphSerialize :: proc(g: ^Gen_Graph, allocator := context.allocator) -> str
 				// (A tile output's `writes` only when it isn't tiles: graphs
 				// without component outputs save as before.)
 				if n.kind == .Tile_Output && p.name == "writes" && n.params[pi] == 0 do continue
+				if n.kind == .Tile_Output && p.name == "tile_ids" && n.params[pi] == 0 do continue // (#171: likewise)
 				if k > 0 do strings.write_string(&w.sb, ", ")
 				k += 1
 				Json_String(&w, p.name)
@@ -646,6 +665,7 @@ Gen_GraphSerialize :: proc(g: ^Gen_Graph, allocator := context.allocator) -> str
 				Json_String(&w, n.layer)
 			}
 		}
+		if n.kind == .WFC do gen_wfc_serialize(&w, &n)
 		if n.kind == .Entity_Output {
 			strings.write_string(&w.sb, ", \"component\": ")
 			Json_String(&w, n.component)
@@ -712,6 +732,7 @@ Gen_AddNode :: proc(g: ^Gen_Graph, kind: Gen_Kind, pos: [2]f32, custom := "") ->
 		append(&r.tiles, 0)
 		append(&n.rules, r)
 	}
+	if kind == .WFC do Gen_WFCResizeSample(g, &n, {GEN_WFC_SAMPLE_DEFAULT, GEN_WFC_SAMPLE_DEFAULT})
 	append(&g.nodes, n)
 	return &g.nodes[len(g.nodes) - 1]
 }
@@ -728,6 +749,15 @@ Gen_DuplicateNode :: proc(g: ^Gen_Graph, id: int, offset := [2]f32{30, 30}) -> ^
 	n.id, n.pos, n.inputs = newId, copied.pos + offset, {}
 	n.rules, n.patterns = nil, nil
 	n.component, n.script, n.custom, n.tileset, n.layer = "", "", "", "", ""
+	n.sample, n.wang = {}, nil
+	if copied.sample.w > 0 {
+		n.sample = {copied.sample.w, copied.sample.h, make([dynamic]i32, g.allocator)}
+		append(&n.sample.cells, ..copied.sample.cells[:])
+	}
+	if len(copied.wang) > 0 {
+		n.wang = make([dynamic]Gen_Wang_Tile, g.allocator)
+		append(&n.wang, ..copied.wang[:])
+	}
 	Gen_SetComponent(g, n, copied.component)
 	Gen_SetTileset(g, n, copied.tileset)
 	Gen_SetLayer(g, n, copied.layer)

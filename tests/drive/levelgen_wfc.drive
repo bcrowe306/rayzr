@@ -1,0 +1,78 @@
+# #171: Wave Function Collapse - a WFC node added from the canvas menu and
+# connected to a tile output (whose tile_ids turns on), its sample painted
+# with the output's tileset (an island: water, a path ring, grass), the
+# previews following the sample's neighbours, the Wang mode, saved.
+wait 5
+exec mkdir -p $PROJECT/levels
+exec cp tests/drive/fixtures/wfc_zz.levelgen.json $PROJECT/levels/wfc_zz.levelgen.json
+wait-until item:asset:levels/wfc_zz.levelgen.json == visible timeout=300
+dblclick @asset:levels/wfc_zz.levelgen.json
+wait 5
+expect lge.open == true
+rclick @lge.canvas+-220,0
+click @ctx:lge-add:wfc
+wait 2
+expect lge.nodes == 2
+expect lge.selected == 2
+drag @lge.out:2 @lge.in:1:0
+wait 2
+expect lge.input:1:0 == 2
+expect lge.text contains "tile_ids": 1
+click @lge.node:2
+wait 2
+# (Nothing painted yet: the node says so, and the output it feeds.)
+expect lge.errors == 2
+screenshot empty_sample
+# An island: water all round, a ring of path, grass inside it (grass
+# never touches water).
+click @lge.wfc-brush:476
+expect lge.wfc-brush == 476
+click @lge.wfc-fill
+wait 1
+click @lge.wfc-brush:176
+drag @lge.wfc-cell:1:1 @lge.wfc-cell:6:1
+drag @lge.wfc-cell:1:6 @lge.wfc-cell:6:6
+drag @lge.wfc-cell:1:2 @lge.wfc-cell:1:5
+drag @lge.wfc-cell:6:2 @lge.wfc-cell:6:5
+click @lge.wfc-brush:45
+drag @lge.wfc-cell:2:2 @lge.wfc-cell:5:2
+drag @lge.wfc-cell:2:3 @lge.wfc-cell:5:3
+drag @lge.wfc-cell:2:4 @lge.wfc-cell:5:4
+drag @lge.wfc-cell:2:5 @lge.wfc-cell:5:5
+wait 4
+expect lge.errors == 0
+expect lge.text contains "sample": {"size": [8, 8], "cells": [476, 476, 476, 476, 476, 476, 476, 476, 476, 176, 176, 176, 176, 176, 176, 476, 476, 176, 45, 45, 45, 45, 176, 476, 476, 176, 45, 45, 45, 45, 176, 476, 476, 176, 45, 45, 45, 45, 176, 476, 476, 176, 45, 45, 45, 45, 176, 476, 476, 176, 176, 176, 176, 176, 176, 476, 476, 476, 476, 476, 476, 476, 476, 476]}
+screenshot painted_sample
+# The tile output's preview: real tiles, a path wherever grass meets water.
+click @lge.node:1
+wait 3
+screenshot output_preview
+# Undo takes a stroke back (the last grass row), redo puts it again.
+key ctrl+z
+wait 2
+expect lge.text contains "cells": [476, 476, 476, 476, 476, 476, 476, 476, 476, 176, 176, 176, 176, 176, 176, 476, 476, 176, 45, 45, 45, 45, 176, 476, 476, 176, 45, 45, 45, 45, 176, 476, 476, 176, 45, 45, 45, 45, 176, 476, 476, 176, 476, 476, 476, 476, 176, 476, 476, 176, 176, 176, 176, 176, 176, 476, 476, 476, 476, 476, 476, 476, 476, 476]
+key ctrl+shift+z
+wait 2
+expect lge.text contains "cells": [476, 476, 476, 476, 476, 476, 476, 476, 476, 176, 176, 176, 176, 176, 176, 476, 476, 176, 45, 45, 45, 45, 176, 476, 476, 176, 45, 45, 45, 45, 176, 476, 476, 176, 45, 45, 45, 45, 176, 476, 476, 176, 45, 45, 45, 45, 176, 476, 476, 176, 176, 176, 176, 176, 176, 476, 476, 476, 476, 476, 476, 476, 476, 476]
+# Another seed: another level from the same rules.
+click @lge.reseed
+wait 3
+expect lge.errors == 0
+screenshot reseeded
+key ctrl+s
+wait 1
+expect file:levels/wfc_zz.levelgen.json contains "type": "wfc"
+expect file:levels/wfc_zz.levelgen.json contains "tile_ids": 1
+expect file:levels/wfc_zz.levelgen.json contains "sample": {"size": [8, 8]
+# Wang mode: no tiles yet (an error), one added.
+click @lge.node:2
+wait 1
+click @lge.param:rules
+click @pick:wang
+wait 2
+expect lge.errors == 2
+click @lge.wang-add
+wait 3
+expect lge.errors == 0
+expect lge.text contains "wang": [{"tile": 0, "edges": [0, 0, 0, 0], "weight": 1}]
+screenshot wang

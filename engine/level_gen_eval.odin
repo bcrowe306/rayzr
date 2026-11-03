@@ -120,6 +120,15 @@ gen_progress_step :: proc(p: ^Gen_Progress) {
 	if v > sync.atomic_load(&p.value) do sync.atomic_store(&p.value, v)
 }
 
+// gen_progress_part: the node being computed is `frac` (0..1) done - for
+// nodes that take a while on their own (Wave Function Collapse).
+@(private)
+gen_progress_part :: proc(p: ^Gen_Progress, frac: f64) {
+	if p == nil do return
+	v := u32(clamp(p.base + p.span * (f64(p.done) + clamp(frac, 0, 1)) / f64(p.total), 0, 1) * GEN_PROGRESS_ONE)
+	if v > sync.atomic_load(&p.value) do sync.atomic_store(&p.value, v)
+}
+
 // Gen_NeededNodes: how many nodes a generation (Gen_Generate) computes -
 // those its outputs read, each once.
 Gen_NeededNodes :: proc(g: ^Gen_Graph) -> int {
@@ -209,6 +218,8 @@ gen_key :: proc(ev: ^Gen_Eval, id: int) -> u64 {
 	case .Custom:
 		h = gen_mix(h, hash.fnv64a(transmute([]u8)n.custom))
 		if def := Gen_FindCustomKind(n.custom); def != nil do h = gen_mix(h, u64(uintptr(rawptr(def.eval))))
+	case .WFC:
+		h = gen_wfc_key(h, n)
 	case .Constant, .Noise, .Random_Fill, .Gradient, .Border, .Rect, .Rooms, .Walker, .Lines, .Rectangles, .Circles, .Threshold, .Invert, .Remap, .Blur, .Cellular, .Dilate, .Erode, .Combine, .Scatter, .Poisson_Scatter, .Surface, .Flood_Fill, .Regions, .Connect_Regions, .Path, .Check, .Tile_Output, .Entity_Output:
 	}
 	ev.keys[id] = h
@@ -386,6 +397,8 @@ gen_compute :: proc(ev: ^Gen_Eval, n: ^Gen_Node, out: Gen_Grid) -> bool {
 		src := gen_input(ev, n, 0) or_return
 		custom := [4]int{int(p(n, "start_x")), int(p(n, "start_y")), int(p(n, "end_x")), int(p(n, "end_y"))}
 		gen_path(src, out, int(p(n, "placement")), custom, clamp(int(p(n, "width")), 1, 16), p(n, "open") != 0, int(p(n, "output")))
+	case .WFC:
+		gen_wfc(ev, n, nodeSeed, out) or_return
 	case .Check:
 		src := gen_input(ev, n, 0) or_return
 		if why := gen_check(src, f32(p(n, "min_open")), p(n, "connected") != 0, p(n, "open") != 0, p(n, "diagonal") != 0); why != "" {
@@ -429,6 +442,12 @@ Gen_TilesOf :: proc(out: ^Gen_Node, grid: Gen_Grid, seed: u64, allocator := cont
 	pickSeed := gen_mix(gen_mix(seed, u64(out.id)), 0x7111e)
 	empty := i32(Gen_Param(out, "empty"))
 	tiles := make([]i32, len(grid.v), allocator)
+	if Gen_Param(out, "tile_ids") != 0 {
+		// (#171) The values are the tiles (a Wave Function Collapse node's).
+		#no_bounds_check for v, i in grid.v do tiles[i] = i32(math.round(v)) if v >= 0 else empty
+		gen_pattern_rules(out, grid, tiles, pickSeed)
+		return tiles
+	}
 	// (Each rule's terrain, found once; -1: tiles.)
 	ruleTerrain := make([]int, len(out.rules), context.temp_allocator)
 	anyTerrain := false
