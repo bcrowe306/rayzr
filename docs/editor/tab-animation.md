@@ -34,6 +34,10 @@ on ([Settings](settings.md) > General), selecting a player switches to this
 tab by itself. With nothing to edit it says *Select an AnimationPlayer
 node...*.
 
+The player's Inspector keeps only its own settings: **Current**,
+**Default** (`defaultAnimation`), **FPS** (`fps`), **Preview**, **Reverse**
+and **Autoplay**, with their script paths.
+
 **View > Workspaces > Animation** gives the timeline a tall panel.
 
 ### The toolbar
@@ -116,6 +120,8 @@ under one means it eases or has a curve to the next key). Method keys are
 blue squares; other event keys are blue circles, with what they do written
 next to them (`emit 12`, `stop`, `spawn Explosion`, `disable`,
 `on_hit(3)`, a sound's name). Between eased keys the row draws the curve.
+Hover a key for its frame, its time and what it does (a property key's
+value and easing, the method it calls, the sound it plays).
 
 Working with keys:
 
@@ -272,6 +278,9 @@ A coin that bobs and flashes, and plays a sound:
 - Keys are timed in seconds: a key keeps its time when you change the fps, and tracks longer than the frames set the animation's length.
   See [Animation editing](../../engine/docs/animation_editing.md).
 - Onion skin draws only while the player itself is selected.
+- A negative **scale** on the player mirrors what it draws around its
+  **origin**, in the game and the viewport: with the origin at the centre
+  a character flips in place.
 - Scripts crossfade with `node:animation_play(name, blend)`; method keys
   also emit the player's `animation_event` signal.
 - Related: [Animation Player](../nodes/AnimationPlayerNode.md),

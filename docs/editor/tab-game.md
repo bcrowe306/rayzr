@@ -35,7 +35,7 @@ Shown only while a script is stopped on a breakpoint or a step:
 | Control | What it does |
 |---|---|
 | *Paused at file:line* | Where the script stopped (and why). The script opens at that line in the Code tab. |
-| **Continue** | Runs on to the next breakpoint. |
+| **Continue** (F8) | Runs on to the next breakpoint. |
 | **Step Over** (F10) | Runs the line, stepping over calls. |
 | **Step Into** (F11) | Steps into the function called on the line. |
 | **Step Out** (Shift+F11) | Runs to the end of the current function. |

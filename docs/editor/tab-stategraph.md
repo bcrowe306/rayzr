@@ -205,11 +205,18 @@ Idle, run and jump for a player:
 - New arrows are **Manual** (dashed): they do nothing until a script calls
   `sm_transition`. Switch **Mode** to Automatic for arrows the machine
   should take by itself.
+- From a script: `sm_set` and `sm_trigger` feed the conditions,
+  `sm_transition(state)` takes a Manual arrow
+  (`sm_transition(state, {force = true})` skips the guards and
+  conditions), and `on_enter_<state>` /
+  `on_update_<state>` / `on_exit_<state>` run per state. See the
+  [State machines guide](../../engine/docs/state_machine.md).
 - **Delete** in the graph removes a state or arrow, not the selected
   scene node, while the tab has focus.
 - **Break on Enter** is kept by the editor, not saved in the scene, and is
   sent to every game Play starts.
-- Every state in the project is in the generated Lua types, so typing
+- Every state in the project is in the generated Lua types
+  (`.rayzr/definitions/project_types.lua`), so typing
   `function Player:on_update_` completes the state names.
 - Renaming an animation in the [Animation tab](tab-animation.md) renames
   it in the states of machines that drive that player.
