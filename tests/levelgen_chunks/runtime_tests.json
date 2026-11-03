@@ -1,0 +1,13 @@
+[
+ {
+  "name": "chunked level (#171): the camera flies into negative chunks; the 5 x 5 around it in, the far ones out, no seams",
+  "project": "tests/levelgen_chunks/project",
+  "frames": 240,
+  "expect": [
+   ["Log", "text", "contains", "at -2 -1 "],
+   ["Log", "text", "contains", "around 25"],
+   ["Log", "text", "!contains", "out 0 "],
+   ["Gen", "exists", "==", true]
+  ]
+ }
+]

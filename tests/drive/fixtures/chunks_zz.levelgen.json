@@ -1,0 +1,7 @@
+{"size": [48, 32], "seed": 5, "output": 5, "nodes": [
+  {"id": 1, "type": "noise", "params": {"type": "simplex", "scale": 10, "octaves": 3}, "pos": [0, 0]},
+  {"id": 2, "type": "threshold", "inputs": {"in": 1}, "params": {"value": 0.5}, "pos": [220, 0]},
+  {"id": 3, "type": "rooms", "pos": [0, 200]},
+  {"id": 4, "type": "combine", "inputs": {"a": 2, "b": 3}, "params": {"op": "max"}, "pos": [440, 60]},
+  {"id": 5, "type": "tile_output", "inputs": {"in": 4}, "params": {"tile_w": 16, "tile_h": 16}, "rules": [{"min": 0.5, "max": 1, "tiles": [1]}], "tileset": "textures/Tiles.png", "pos": [660, 60]}
+]}

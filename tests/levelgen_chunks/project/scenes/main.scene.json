@@ -1,0 +1,7 @@
+{"format": 1, "name": "main", "background": [18, 16, 26, 255], "root": {"type": "Node", "name": "root", "children": [
+ {"type": "LevelGeneratorNode", "name": "Gen", "properties": {"generator": "levels/caves.levelgen.json", "seed": 3, "generateOnReady": true, "background": false, "chunked": true, "chunkSize": 32, "chunkRadius": 2},
+  "children": [{"type": "TileMapNode", "name": "Ground", "position": [0, 0], "tilemap": {"tileset": "textures/rock.png", "tile_size": [16, 16], "map_size": [32, 32], "data": [[1024, -1]]}, "properties": {"solid": true}}]},
+ {"type": "Node", "name": "Flyer", "position": [640, 360], "script": {"path": "scripts/fly.lua"}},
+ {"type": "CameraNode", "name": "Camera", "position": [640, 360], "follow": "../Flyer", "properties": {"isCurrent": true, "followMode": "SingleTarget"}},
+ {"type": "TextNode", "name": "Log", "position": [20, 10], "layer": 7, "properties": {"text": "", "fontSize": 20}}
+]}}

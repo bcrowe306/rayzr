@@ -293,7 +293,10 @@ Tile_Component_Place :: struct {
 // already on the layer under a footprint go. The queues are processed once,
 // at the end. Returns the instances placed (temp) and the first component
 // that couldn't load.
-TileMapNode_PlaceComponents :: proc(tm: ^TileMapNode, items: []Tile_Component_Place, scene: ^Scene, ctx: ^GameContext) -> (placed: []^Node, err: string) {
+//
+// `area` (lo.x, lo.y, hi.x, hi.y; zero: the map): the cells it places in - a
+// chunk of an endless map's (#171), negative cells too.
+TileMapNode_PlaceComponents :: proc(tm: ^TileMapNode, items: []Tile_Component_Place, scene: ^Scene, ctx: ^GameContext, area := [4]int{}) -> (placed: []^Node, err: string) {
 	out := make([dynamic]^Node, context.temp_allocator)
 	gc := ctx if ctx != nil else tm.gameContext
 	if scene == nil || scene.manager == nil || len(items) == 0 do return out[:], ""
@@ -313,8 +316,10 @@ TileMapNode_PlaceComponents :: proc(tm: ^TileMapNode, items: []Tile_Component_Pl
 	}
 	taken := make(map[[2]int]bool, allocator = context.temp_allocator)
 	bad := make(map[string]bool, allocator = context.temp_allocator)
+	lo, hi := [2]int{0, 0}, tm.mapSize
+	if area != {} do lo, hi = {area[0], area[1]}, {area[2], area[3]}
 	for it in items {
-		if it.component == "" || it.component in bad || !in_map(tm, it.cell) || it.cell in taken do continue
+		if it.component == "" || it.component in bad || it.cell.x < lo.x || it.cell.y < lo.y || it.cell.x >= hi.x || it.cell.y >= hi.y || it.cell in taken do continue
 		size, known := tm.compFootprints[tilemap_fp_key(tm, it.component)]
 		n: ^Node
 		if !known {
@@ -331,7 +336,7 @@ TileMapNode_PlaceComponents :: proc(tm: ^TileMapNode, items: []Tile_Component_Pl
 			size = TileMapNode_ComponentFootprint(tm, it.component, n)
 		}
 		top := TileMapNode_BlockFor(it.cell, size)
-		top = {clamp(top.x, 0, max(tm.mapSize.x - size.x, 0)), clamp(top.y, 0, max(tm.mapSize.y - size.y, 0))}
+		top = {clamp(top.x, lo.x, max(hi.x - size.x, lo.x)), clamp(top.y, lo.y, max(hi.y - size.y, lo.y))}
 		free := true
 		for y in 0 ..< size.y do for x in 0 ..< size.x do if top + {x, y} in taken do free = false
 		if !free {
@@ -363,7 +368,7 @@ TileMapNode_PlaceComponents :: proc(tm: ^TileMapNode, items: []Tile_Component_Pl
 	}
 	ProcessNodeQueues(m, gc)
 	Node_SetGlobalPositions(m, top_node)
-	TileMapNode_Changed(tm)
+	if area == {} do TileMapNode_Changed(tm) // (a chunk's: its tiles' drawing is unchanged)
 	return out[:], err
 }
 

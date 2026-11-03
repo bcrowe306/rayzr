@@ -82,6 +82,14 @@ Gen_Eval :: struct {
 	L:      ^lua.State,   // Script nodes' (made by the first one, closed at the end)
 	fns:    map[string]c.int, // script file -> its function (a registry ref in L)
 	progress: ^Gen_Progress, // counts the nodes computed (nil: not followed)
+	// A window of an endless level (#171, chunks; level_gen_chunks.odin):
+	// grids are `size` cells whose first is the level's cell `origin`, and
+	// nodes that read positions read the absolute ones. Not a window: the
+	// level - origin 0, 0 and the graph's size.
+	origin:    [2]int,
+	size:      [2]int,
+	chunkSeed: u64,  // a chunk's own seed: the nodes that aren't chunk-safe use it (0: the level's)
+	windowed:  bool, // a window: Scatter keeps local minima (chunk-safe) instead of its row scan
 }
 
 // Gen_Progress follows a generation (#171): nodes computed of those it
@@ -151,7 +159,7 @@ Gen_NeededNodes :: proc(g: ^Gen_Graph) -> int {
 
 @(private)
 gen_eval_begin :: proc(g: ^Gen_Graph, seed: u64, cache: ^Gen_Cache = nil) -> Gen_Eval {
-	ev := Gen_Eval{g = g, seed = seed if seed != 0 else g.seed, cache = cache}
+	ev := Gen_Eval{g = g, seed = seed if seed != 0 else g.seed, cache = cache, size = g.size}
 	ev.done = make(map[int]Gen_Grid, allocator = context.temp_allocator)
 	ev.active = make(map[int]bool, allocator = context.temp_allocator)
 	ev.keys = make(map[int]u64, allocator = context.temp_allocator)
@@ -187,7 +195,7 @@ Gen_GridDestroy :: proc(grid: ^Gen_Grid, allocator := context.allocator) {
 
 @(private)
 gen_new :: proc(ev: ^Gen_Eval) -> Gen_Grid {
-	w, h := ev.g.size.x, ev.g.size.y
+	w, h := ev.size.x, ev.size.y
 	return {w, h, make([]f32, w * h, context.temp_allocator)}
 }
 
@@ -208,7 +216,8 @@ gen_key :: proc(ev: ^Gen_Eval, id: int) -> u64 {
 	n := Gen_FindNode(ev.g, id)
 	if n == nil do return 0
 	h := gen_mix(gen_mix(ev.seed, u64(id)), u64(n.kind) + 1)
-	h = gen_mix(gen_mix(h, u64(ev.g.size.x)), u64(ev.g.size.y))
+	h = gen_mix(gen_mix(h, u64(ev.size.x)), u64(ev.size.y))
+	if ev.windowed do h = gen_mix(gen_mix(gen_mix(h, u64(i64(ev.origin.x))), u64(i64(ev.origin.y))), ev.chunkSeed + 0xc4)
 	for p in n.params do h = gen_mix(h, transmute(u64)p)
 	for src in n.inputs do h = gen_mix(h, gen_key(ev, src) if src != 0 else 0x5eed)
 	switch n.kind {
@@ -241,7 +250,7 @@ gen_eval :: proc(ev: ^Gen_Eval, id: int) -> (result: Gen_Grid, ok: bool) {
 	key: u64
 	if ev.cache != nil {
 		key = gen_key(ev, id)
-		if en, hit := ev.cache.entries[id]; hit && en.key == key && en.grid.w == ev.g.size.x && en.grid.h == ev.g.size.y {
+		if en, hit := ev.cache.entries[id]; hit && en.key == key && en.grid.w == ev.size.x && en.grid.h == ev.size.y {
 			ev.done[id] = en.grid
 			return en.grid, true
 		}
@@ -267,7 +276,11 @@ gen_eval :: proc(ev: ^Gen_Eval, id: int) -> (result: Gen_Grid, ok: bool) {
 @(private)
 gen_compute :: proc(ev: ^Gen_Eval, n: ^Gen_Node, out: Gen_Grid) -> bool {
 	nodeSeed := gen_mix(gen_mix(ev.seed, u64(n.id)), u64(i64(Gen_Param(n, "seed"))))
+	// (A chunk: a node that isn't chunk-safe makes something else in each
+	// one - its own seed - rather than the same thing again.)
+	if ev.chunkSeed != 0 && !Gen_KindChunkSafe(n.kind) do nodeSeed = gen_mix(nodeSeed, ev.chunkSeed)
 	w, h := out.w, out.h
+	o := ev.origin // (the absolute cell of out's first)
 	p :: Gen_Param
 	switch n.kind {
 	case .Constant:
@@ -275,26 +288,30 @@ gen_compute :: proc(ev: ^Gen_Eval, n: ^Gen_Node, out: Gen_Grid) -> bool {
 	case .Noise:
 		scale, octaves, persistence := max(f32(p(n, "scale")), 0.5), clamp(int(p(n, "octaves")), 1, 8), f32(p(n, "persistence"))
 		switch int(p(n, "type")) {
-		case 1: gen_gradient_noise(out, {0, 0}, scale, octaves, persistence, nodeSeed, false)
-		case 2: gen_gradient_noise(out, {0, 0}, scale, octaves, persistence, nodeSeed, true)
-		case: gen_noise(out, scale, octaves, persistence, nodeSeed)
+		case 1: gen_gradient_noise(out, o, scale, octaves, persistence, nodeSeed, false)
+		case 2: gen_gradient_noise(out, o, scale, octaves, persistence, nodeSeed, true)
+		case: gen_noise(out, o, scale, octaves, persistence, nodeSeed)
 		}
 	case .Random_Fill:
-		job := Gen_Fill_Job{out, f32(p(n, "density")), nodeSeed}
+		job := Gen_Fill_Job{out, f32(p(n, "density")), nodeSeed, o}
 		gen_parallel(h, w, &job, proc(data: rawptr, y0, y1: int) {
 			j := cast(^Gen_Fill_Job)data
-			#no_bounds_check for y in y0 ..< y1 do for x in 0 ..< j.out.w do j.out.v[y * j.out.w + x] = 1 if gen_hash01(x, y, j.seed) < j.density else 0
+			#no_bounds_check for y in y0 ..< y1 do for x in 0 ..< j.out.w do j.out.v[y * j.out.w + x] = 1 if gen_hash01(j.origin.x + x, j.origin.y + y, j.seed) < j.density else 0
 		})
 	case .Gradient:
+		// Across the generator's size, at absolute cells (chunk-safe: past
+		// its edges the ramp stays at 0 / 1).
 		dir := int(p(n, "direction"))
+		lw, lh := ev.g.size.x, ev.g.size.y
 		for y in 0 ..< h do for x in 0 ..< w {
+			ax, ay := o.x + x, o.y + y
 			v: f32
 			switch dir {
-			case 1: v = f32(y) / f32(max(h - 1, 1))
+			case 1: v = clamp(f32(ay) / f32(max(lh - 1, 1)), 0, 1)
 			case 2:
-				dx, dy := (f32(x) - f32(w - 1) * 0.5) / max(f32(w - 1) * 0.5, 1), (f32(y) - f32(h - 1) * 0.5) / max(f32(h - 1) * 0.5, 1)
+				dx, dy := (f32(ax) - f32(lw - 1) * 0.5) / max(f32(lw - 1) * 0.5, 1), (f32(ay) - f32(lh - 1) * 0.5) / max(f32(lh - 1) * 0.5, 1)
 				v = clamp(1 - math.sqrt(dx * dx + dy * dy) / math.SQRT_TWO, 0, 1)
-			case: v = f32(x) / f32(max(w - 1, 1))
+			case: v = clamp(f32(ax) / f32(max(lw - 1, 1)), 0, 1)
 			}
 			out.v[y * w + x] = v
 		}
@@ -302,7 +319,7 @@ gen_compute :: proc(ev: ^Gen_Eval, n: ^Gen_Node, out: Gen_Grid) -> bool {
 		bw := int(p(n, "width"))
 		for y in 0 ..< h do for x in 0 ..< w do out.v[y * w + x] = 1 if x < bw || y < bw || x >= w - bw || y >= h - bw else 0
 	case .Rect:
-		rx, ry, rw, rh := int(p(n, "x")), int(p(n, "y")), int(p(n, "w")), int(p(n, "h"))
+		rx, ry, rw, rh := int(p(n, "x")) - o.x, int(p(n, "y")) - o.y, int(p(n, "w")), int(p(n, "h")) // (absolute cells: chunk-safe)
 		val := f32(p(n, "value"))
 		x0 := clamp(rx, 0, w)
 		x1 := clamp(rx + rw, x0, w)
@@ -377,7 +394,8 @@ gen_compute :: proc(ev: ^Gen_Eval, n: ^Gen_Node, out: Gen_Grid) -> bool {
 		gen_circles(out, clamp(int(p(n, "count")), 0, 10_000), int(p(n, "min_radius")), int(p(n, "max_radius")), clamp(int(p(n, "thickness")), 1, 64), p(n, "filled") != 0, nodeSeed)
 	case .Scatter:
 		src := gen_input(ev, n, 0) or_return
-		gen_scatter(src, out, n.inputs[0] != 0, f32(p(n, "chance")), clamp(int(p(n, "spacing")), 0, 256), nodeSeed)
+		if ev.windowed do gen_scatter_local(src, out, o, n.inputs[0] != 0, f32(p(n, "chance")), clamp(int(p(n, "spacing")), 0, 256), nodeSeed)
+		else do gen_scatter(src, out, n.inputs[0] != 0, f32(p(n, "chance")), clamp(int(p(n, "spacing")), 0, 256), nodeSeed)
 	case .Poisson_Scatter:
 		src := gen_input(ev, n, 0) or_return
 		gen_poisson(src, out, n.inputs[0] != 0, clamp(f32(p(n, "radius")), 1, 256), clamp(int(p(n, "attempts")), 1, 100), nodeSeed)
@@ -430,7 +448,7 @@ gen_tiles :: proc(ev: ^Gen_Eval, outputId: int, allocator: runtime.Allocator) ->
 	if !ok do return nil, {}, ev.err
 	terrains: Tile_Terrains
 	if text, ok := ev.g.tilesets[out.tileset]; ok do terrains, _ = Terrains_Parse(transmute([]u8)text, context.temp_allocator)
-	return Gen_TilesOf(out, grid, ev.seed, allocator, &terrains, ev.g.layout, ev.g.stagger), {grid.w, grid.h}, ""
+	return Gen_TilesOf(out, grid, ev.seed, allocator, &terrains, ev.g.layout, ev.g.stagger, ev.origin), {grid.w, grid.h}, ""
 }
 
 // Gen_TilesOf: a tile output's tiles for its grid (already evaluated) and
@@ -438,14 +456,16 @@ gen_tiles :: proc(ev: ^Gen_Eval, outputId: int, allocator: runtime.Allocator) ->
 // terrain (of `terrains`, its tileset's) makes its cells that terrain, each
 // then given the tile of its pattern - cells beyond the level count as the
 // terrain, so it runs on past the edges. A terrain it doesn't have: empty.
-Gen_TilesOf :: proc(out: ^Gen_Node, grid: Gen_Grid, seed: u64, allocator := context.allocator, terrains: ^Tile_Terrains = nil, layout := TileMap_Layout.Square, stagger := TileMap_Stagger.Odd) -> []i32 {
+// `origin`: the absolute cell of the grid's first (a chunk's window): the
+// random picks are by absolute cell, so a chunk's match the level's.
+Gen_TilesOf :: proc(out: ^Gen_Node, grid: Gen_Grid, seed: u64, allocator := context.allocator, terrains: ^Tile_Terrains = nil, layout := TileMap_Layout.Square, stagger := TileMap_Stagger.Odd, origin := [2]int{}) -> []i32 {
 	pickSeed := gen_mix(gen_mix(seed, u64(out.id)), 0x7111e)
 	empty := i32(Gen_Param(out, "empty"))
 	tiles := make([]i32, len(grid.v), allocator)
 	if Gen_Param(out, "tile_ids") != 0 {
 		// (#171) The values are the tiles (a Wave Function Collapse node's).
 		#no_bounds_check for v, i in grid.v do tiles[i] = i32(math.round(v)) if v >= 0 else empty
-		gen_pattern_rules(out, grid, tiles, pickSeed)
+		gen_pattern_rules(out, grid, tiles, pickSeed, origin)
 		return tiles
 	}
 	// (Each rule's terrain, found once; -1: tiles.)
@@ -472,13 +492,13 @@ Gen_TilesOf :: proc(out: ^Gen_Node, grid: Gen_Grid, seed: u64, allocator := cont
 				break
 			}
 			if len(r.tiles) == 0 do continue
-			t = r.tiles[0] if len(r.tiles) == 1 else r.tiles[int(gen_hash01(i % grid.w, i / grid.w, pickSeed) * f32(len(r.tiles))) % len(r.tiles)]
+			t = r.tiles[0] if len(r.tiles) == 1 else r.tiles[int(gen_hash01(origin.x + i % grid.w, origin.y + i / grid.w, pickSeed) * f32(len(r.tiles))) % len(r.tiles)]
 			break
 		}
 		tiles[i] = t
 	}
 	w, h := grid.w, grid.h
-	defer gen_pattern_rules(out, grid, tiles, pickSeed) // (last: over the rules' and terrains' tiles)
+	defer gen_pattern_rules(out, grid, tiles, pickSeed, origin) // (last: over the rules' and terrains' tiles)
 	if !anyTerrain do return tiles
 	if layout != .Square {
 		// Isometric, staggered, hex: the grid's own neighbours.
@@ -491,7 +511,7 @@ Gen_TilesOf :: proc(out: ^Gen_Node, grid: Gen_Grid, seed: u64, allocator := cont
 			if c < 0 do continue
 			k := Ctx{cellTerrain[:], w, h, c}
 			t := &terrains.terrains[c]
-			if tile := Terrain_Tile(t, Terrain_MaskAt(t.kind, layout, stagger, {i % w, i / w}, &k, member), i % w, i / w, pickSeed); tile >= 0 do tiles[i] = tile
+			if tile := Terrain_Tile(t, Terrain_MaskAt(t.kind, layout, stagger, {i % w, i / w}, &k, member), origin.x + i % w, origin.y + i / w, pickSeed); tile >= 0 do tiles[i] = tile
 		}
 		return tiles
 	}
@@ -504,7 +524,7 @@ Gen_TilesOf :: proc(out: ^Gen_Node, grid: Gen_Grid, seed: u64, allocator := cont
 			nb[dy][dx] = nx < 0 || ny < 0 || nx >= w || ny >= h || cellTerrain[ny * w + nx] == c
 		}
 		t := &terrains.terrains[c]
-		if tile := Terrain_Tile(t, Terrain_Mask(t.kind, nb), x, y, pickSeed); tile >= 0 do tiles[i] = tile
+		if tile := Terrain_Tile(t, Terrain_Mask(t.kind, nb), origin.x + x, origin.y + y, pickSeed); tile >= 0 do tiles[i] = tile
 	}
 	return tiles
 }
@@ -513,7 +533,7 @@ Gen_TilesOf :: proc(out: ^Gen_Node, grid: Gen_Grid, seed: u64, allocator := cont
 // cell the first rule whose 3x3 pattern matches the grid around it (and
 // whose chance the cell's hash is under) takes one of its tiles.
 @(private = "file")
-gen_pattern_rules :: proc(out: ^Gen_Node, grid: Gen_Grid, tiles: []i32, seed: u64) #no_bounds_check {
+gen_pattern_rules :: proc(out: ^Gen_Node, grid: Gen_Grid, tiles: []i32, seed: u64, origin := [2]int{}) #no_bounds_check {
 	if len(out.patterns) == 0 do return
 	w, h := grid.w, grid.h
 	for y in 0 ..< h do for x in 0 ..< w {
@@ -535,8 +555,9 @@ gen_pattern_rules :: proc(out: ^Gen_Node, grid: Gen_Grid, tiles: []i32, seed: u6
 			}
 			if !match do continue
 			ps := gen_mix(seed, u64(k) + 0x9a77)
-			if pr.chance < 1 && gen_hash01(x, y, ps) >= pr.chance do continue
-			tiles[y * w + x] = pr.tiles[0] if len(pr.tiles) == 1 else pr.tiles[int(gen_hash01(x, y, ps ~ 0x51) * f32(len(pr.tiles))) % len(pr.tiles)]
+			ax, ay := origin.x + x, origin.y + y
+			if pr.chance < 1 && gen_hash01(ax, ay, ps) >= pr.chance do continue
+			tiles[y * w + x] = pr.tiles[0] if len(pr.tiles) == 1 else pr.tiles[int(gen_hash01(ax, ay, ps ~ 0x51) * f32(len(pr.tiles))) % len(pr.tiles)]
 			break
 		}
 	}
@@ -548,6 +569,7 @@ gen_pattern_rules :: proc(out: ^Gen_Node, grid: Gen_Grid, tiles: []i32, seed: u6
 // until the result is applied.
 Gen_Result :: struct {
 	size:     [2]int,
+	origin:   [2]int, // a chunk's first cell, in the level's cells (cells below are relative to it; 0, 0: a whole level)
 	tiles:    []i32, // the output's (the main map; nil when the output writes components)
 	layers:   [dynamic]Gen_Layer_Tiles, // the other tile outputs with a layer
 	entities: [dynamic]Gen_Entity,
@@ -576,34 +598,56 @@ Gen_Generate :: proc(g: ^Gen_Graph, seed: u64 = 0, allocator := context.allocato
 	ev := gen_eval_begin(g, seed)
 	ev.progress = progress
 	defer gen_eval_end(&ev)
+	return gen_generate(&ev, allocator)
+}
+
+// gen_generate: Gen_Generate's work for an evaluation - a level, or a
+// chunk's window (level_gen_chunks.odin), whose middle - all but `apron`
+// cells on each side - is kept.
+@(private)
+gen_generate :: proc(ev: ^Gen_Eval, allocator: runtime.Allocator, apron := 0) -> (r: Gen_Result, err: string) {
+	g := ev.g
 	main := Gen_OutputNode(g)
+	mid := ev.size - 2 * apron // (the cells kept)
+	crop :: proc(tiles: []i32, w, apron: int, mid: [2]int, allocator: runtime.Allocator) -> []i32 {
+		if apron == 0 do return tiles
+		out := make([]i32, mid.x * mid.y, allocator)
+		for y in 0 ..< mid.y do copy(out[y * mid.x:(y + 1) * mid.x], tiles[(y + apron) * w + apron:][:mid.x])
+		delete(tiles, allocator)
+		return out
+	}
 	r.layers = make([dynamic]Gen_Layer_Tiles, allocator)
 	r.components = make([dynamic]Gen_Layer_Component, allocator)
-	if main != nil && Gen_WritesComponents(main) {
-		r.size = g.size // (the main map's tiles stay)
-	} else {
-		r.tiles, r.size, err = gen_tiles(&ev, 0, allocator)
+	r.size = mid
+	r.origin = ev.origin + apron
+	if main == nil || !Gen_WritesComponents(main) { // (else the main map's tiles stay)
+		r.tiles, _, err = gen_tiles(ev, 0, allocator)
+		if err == "" do r.tiles = crop(r.tiles, ev.size.x, apron, mid, allocator)
 	}
 	if err == "" do for &n in g.nodes {
 		if n.kind != .Tile_Output do continue
 		if Gen_WritesComponents(&n) {
-			grid, ok := gen_eval(&ev, n.id)
+			grid, ok := gen_eval(ev, n.id)
 			if !ok {
 				err = ev.err
 				break
 			}
 			for k, i in Gen_ComponentsOf(&n, grid, context.temp_allocator) {
-				if k >= 0 do append(&r.components, Gen_Layer_Component{n.layer, n.rules[k].component, {i % grid.w, i / grid.w}})
+				c := [2]int{i % grid.w, i / grid.w} - apron
+				if k >= 0 && c.x >= 0 && c.y >= 0 && c.x < mid.x && c.y < mid.y do append(&r.components, Gen_Layer_Component{n.layer, n.rules[k].component, c})
 			}
 			continue
 		}
 		if n.layer == "" || (main != nil && n.id == main.id) do continue
 		tiles: []i32
-		tiles, _, err = gen_tiles(&ev, n.id, allocator)
+		tiles, _, err = gen_tiles(ev, n.id, allocator)
 		if err != "" do break
-		append(&r.layers, Gen_Layer_Tiles{n.layer, tiles})
+		append(&r.layers, Gen_Layer_Tiles{n.layer, crop(tiles, ev.size.x, apron, mid, allocator)})
 	}
-	if err == "" do r.entities, err = gen_entities(&ev, allocator)
+	if err == "" {
+		r.entities, err = gen_entities(ev, allocator, {apron, apron, apron + mid.x, apron + mid.y} if apron > 0 else {})
+		for &en in r.entities do en.cell -= apron
+	}
 	if err != "" do Gen_ResultDestroy(&r, allocator)
 	return
 }
@@ -646,8 +690,10 @@ Gen_Entities :: proc(g: ^Gen_Graph, seed: u64 = 0, allocator := context.allocato
 	return gen_entities(&ev, allocator)
 }
 
+// `keep`: only the cells in [keep.xy, keep.zw) (a chunk's middle; zero: all)
+// - with `max`, that many of them.
 @(private)
-gen_entities :: proc(ev: ^Gen_Eval, allocator: runtime.Allocator) -> (out: [dynamic]Gen_Entity, err: string) {
+gen_entities :: proc(ev: ^Gen_Eval, allocator: runtime.Allocator, keep := [4]int{}) -> (out: [dynamic]Gen_Entity, err: string) {
 	out = make([dynamic]Gen_Entity, allocator)
 	for &n in ev.g.nodes {
 		if n.kind != .Entity_Output || n.component == "" do continue
@@ -656,7 +702,13 @@ gen_entities :: proc(ev: ^Gen_Eval, allocator: runtime.Allocator) -> (out: [dyna
 		Cell :: struct {cell: [2]int, key: f32}
 		cells := make([dynamic]Cell, context.temp_allocator)
 		pickSeed := gen_mix(gen_mix(ev.seed, u64(n.id)), 0xe171)
-		for v, i in grid.v do if v >= 0.5 do append(&cells, Cell{{i % grid.w, i / grid.w}, gen_hash01(i % grid.w, i / grid.w, pickSeed)})
+		o := ev.origin
+		for v, i in grid.v {
+			if v < 0.5 do continue
+			c := [2]int{i % grid.w, i / grid.w}
+			if keep != {} && (c.x < keep[0] || c.y < keep[1] || c.x >= keep[2] || c.y >= keep[3]) do continue
+			append(&cells, Cell{c, gen_hash01(o.x + c.x, o.y + c.y, pickSeed)})
+		}
 		limit := int(Gen_Param(&n, "max"))
 		if limit > 0 && len(cells) > limit {
 			// The `limit` with the lowest keys, back in row order.
@@ -683,6 +735,7 @@ Gen_Fill_Job :: struct {
 	out:     Gen_Grid,
 	density: f32,
 	seed:    u64,
+	origin:  [2]int,
 }
 
 // gen_noise: value noise fBm. Each octave's lattice of random corners is
@@ -697,21 +750,27 @@ Gen_Noise_Job :: struct {
 	seed:        u64,
 	lattice:     [8][]f32,
 	lw:          [8]int,
+	l0:          [8][2]int, // the lattice's first point (a window's: not 0, 0)
+	origin:      [2]int,
 }
 
 @(private = "file")
-gen_noise :: proc(out: Gen_Grid, scale: f32, octaves: int, persistence: f32, seed: u64) {
-	job := Gen_Noise_Job{out = out, octaves = octaves, seed = seed}
+gen_noise :: proc(out: Gen_Grid, origin: [2]int, scale: f32, octaves: int, persistence: f32, seed: u64) {
+	// (At absolute cells - origin + the cell - so a chunk's window gets the
+	// level's values: chunk-safe.)
+	job := Gen_Noise_Job{out = out, octaves = octaves, seed = seed, origin = origin}
 	amp, freq: f32 = 1, 1 / scale
 	for o in 0 ..< octaves {
 		job.freq[o], job.amp[o] = freq, amp
 		job.norm += amp
-		lw, lh := int(math.floor(f32(out.w - 1) * freq)) + 2, int(math.floor(f32(out.h - 1) * freq)) + 2
+		l0 := [2]int{int(math.floor(f32(origin.x) * freq)), int(math.floor(f32(origin.y) * freq))}
+		lw := int(math.floor(f32(origin.x + out.w - 1) * freq)) - l0.x + 2
+		lh := int(math.floor(f32(origin.y + out.h - 1) * freq)) - l0.y + 2
 		if lw * lh <= 4 * out.w * out.h + 64 {
 			oseed := seed + u64(o) * 7919
 			lat := make([]f32, lw * lh, context.temp_allocator)
-			for j in 0 ..< lh do for i in 0 ..< lw do lat[j * lw + i] = gen_hash01(i, j, oseed)
-			job.lattice[o], job.lw[o] = lat, lw
+			for j in 0 ..< lh do for i in 0 ..< lw do lat[j * lw + i] = gen_hash01(l0.x + i, l0.y + j, oseed)
+			job.lattice[o], job.lw[o], job.l0[o] = lat, lw, l0
 		}
 		amp *= persistence
 		freq *= 2
@@ -723,7 +782,7 @@ gen_noise :: proc(out: Gen_Grid, scale: f32, octaves: int, persistence: f32, see
 		#no_bounds_check for y in y0 ..< y1 do for x in 0 ..< w {
 			sum: f32
 			for o in 0 ..< j.octaves {
-				fx, fy := f32(x) * j.freq[o], f32(y) * j.freq[o]
+				fx, fy := f32(j.origin.x + x) * j.freq[o], f32(j.origin.y + y) * j.freq[o]
 				lat := j.lattice[o]
 				if lat == nil {
 					sum += gen_value_noise(fx, fy, j.seed + u64(o) * 7919) * j.amp[o]
@@ -731,7 +790,7 @@ gen_noise :: proc(out: Gen_Grid, scale: f32, octaves: int, persistence: f32, see
 				}
 				x0, y0 := math.floor(fx), math.floor(fy)
 				tx, ty := fx - x0, fy - y0
-				ix, iy, lw := int(x0), int(y0), j.lw[o]
+				ix, iy, lw := int(x0) - j.l0[o].x, int(y0) - j.l0[o].y, j.lw[o]
 				sx, sy := tx * tx * (3 - 2 * tx), ty * ty * (3 - 2 * ty)
 				k := iy * lw + ix
 				a, b, c, d := lat[k], lat[k + 1], lat[k + lw], lat[k + lw + 1]
@@ -906,6 +965,37 @@ gen_scatter :: proc(src, out: Gen_Grid, masked: bool, chance: f32, spacing: int,
 		if near do continue
 		out.v[y * w + x] = 1
 		last[x] = y
+	}
+}
+
+// gen_scatter_local: Scatter in a chunk's window (#171) - chunk-safe. A
+// candidate (an allowed cell whose number is under `chance`, at its
+// absolute cell) is kept when no other candidate within spacing - 1 cells
+// (either way) comes before it (a lower second number; ties: the earlier
+// cell): the same spacing as the row scan, decided from the cells around
+// only, so neighbouring chunks agree.
+@(private = "file")
+gen_scatter_local :: proc(src, out: Gen_Grid, origin: [2]int, masked: bool, chance: f32, spacing: int, seed: u64) #no_bounds_check {
+	w, h := src.w, src.h
+	keySeed := gen_mix(seed, 0x5ca7)
+	cand :: #force_inline proc(src: Gen_Grid, origin: [2]int, masked: bool, chance: f32, seed: u64, x, y: int) -> bool #no_bounds_check {
+		if masked && src.v[y * src.w + x] < 0.5 do return false
+		return gen_hash01(origin.x + x, origin.y + y, seed) < chance
+	}
+	r := max(spacing - 1, 0)
+	for y in 0 ..< h do for x in 0 ..< w {
+		if !cand(src, origin, masked, chance, seed, x, y) do continue
+		k := gen_hash01(origin.x + x, origin.y + y, keySeed)
+		kept := true
+		search: for yy in max(y - r, 0) ..= min(y + r, h - 1) do for xx in max(x - r, 0) ..= min(x + r, w - 1) {
+			if (xx == x && yy == y) || !cand(src, origin, masked, chance, seed, xx, yy) do continue
+			k2 := gen_hash01(origin.x + xx, origin.y + yy, keySeed)
+			if k2 < k || (k2 == k && (yy < y || (yy == y && xx < x))) {
+				kept = false
+				break search
+			}
+		}
+		if kept do out.v[y * w + x] = 1
 	}
 }
 

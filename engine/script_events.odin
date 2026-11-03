@@ -66,6 +66,8 @@ push_event_value :: proc(L: ^lua.State, value: EventValue) {
 		else do lua.pushnil(L)
 	case Lua_Value_Ref:
 		lua.rawgeti(L, lua.REGISTRYINDEX, lua.Integer(v))
+	case [2]f32:
+		Lua_PushVec2(L, v)
 	case:
 		lua.pushnil(L)
 	}

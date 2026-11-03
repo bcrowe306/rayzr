@@ -485,6 +485,8 @@ entities). No script needed.
 | Attempts | With Random Seed: seeds tried when the generator refuses a level (a `check` node) before it gives up (10). |
 | Rebake Navigation | Once the level is in - tiles, colliders, components, entities - bake every Navigation Region of the scene again, before `generated`: agents find paths through the new map at once. Off by default. |
 | Progress | 0 to 1 while it generates (runtime, read-only; below). |
+| Chunked / Chunk Size / Chunk Radius / Camera Path | An endless level made around the camera (below). |
+| Loaded Chunks | Chunked: the chunks in now (runtime, read-only). |
 
 **Level Parameters** in the Inspector: change a generator node's value for
 this node only - one generator file, many levels (denser caves later on).
@@ -526,6 +528,72 @@ baked again once the level is in (the TileMap's solid tiles, static bodies
 among the components and entities), before `generated` - so a `generated`
 handler can send agents across the new level at once. The region must
 cover the map ([`navigation.md`](navigation.md)).
+
+## Endless levels: chunks
+
+Turn on **Chunked** and the level never ends: it is made a chunk at a time
+around the camera. A chunk is **Chunk Size** x Chunk Size cells (32) of the
+level - chunk (x, y) starts at cell (x, y) x Chunk Size, so negative chunks
+go up and left. The chunks within **Chunk Radius** (2: a 5 x 5 square) of
+the camera's chunk are kept in; a chunk more than Chunk Radius + 1 away is
+taken out again - its tiles cleared, its colliders, components and
+entities removed (the extra one keeps a camera wobbling over a chunk's edge
+from making and dropping the same chunks). The camera is **Camera Path**
+(any node, as a path from the generator: a camera, the player), else the
+scene's camera; without one, chunk (0, 0).
+
+Chunks are made on worker threads, the nearest first (a few at once), and
+go in at the start of a frame - a 32 x 32 chunk's tiles and colliders take
+about 0.1 ms on the main thread. With **Background** off the first chunks,
+around the camera, go in at once (before the first frame: the player
+doesn't fall through an empty map); later ones still come from the
+workers. The web build makes one chunk a frame. In the editor, **Generate
+Now** makes the chunks around the scene's camera (or Camera Path's node)
+into the map, to see the start of the world.
+
+A chunk always comes out the same for a seed, and a **chunk-safe**
+generator gives every cell the value it has in one big level: no seams.
+Each chunk is made with an apron of extra cells around it - what the
+neighbourhood nodes need to see past its edge (blur's radius, cellular's
+iterations, dilate / erode's, scatter's spacing, surface and the tile
+output's one cell, added up along each path to an output) - and only the
+middle is kept.
+
+| Chunk-safe | Not chunk-safe (they look at the whole level or its edges) |
+|---|---|
+| constant, noise (every type), random fill, gradient (across the generator's size; past it 0 or 1), rectangle (at its cells), threshold, invert, remap, combine, blur, cellular, dilate, erode, scatter, surface, tile output, entity output | border, rooms & corridors, walker, random lines / rectangles / circles, Wave Function Collapse, Poisson scatter, flood fill, regions, connect regions, path, check, Lua Script and Odin nodes |
+
+Nodes that aren't chunk-safe still run: in each chunk on its own, with the
+chunk's own seed (each chunk a different dungeon, always the same one), so
+seams show between chunks. The Inspector and the Level Generator window
+warn (a mark on each such node) when a generator made in chunks has any.
+In a chunk, Scatter keeps a candidate unless one within its spacing comes
+before it - the same spacing as its row-by-row scan, decided from the cells
+around - so its points differ from the whole level's; an entity output's
+`max` counts per chunk.
+
+Events: `chunk_generated` and `chunk_unloaded` (the chunk, a Vec2 of its
+x, y) for each chunk that goes in or out; `generated` once the first chunks
+are all in. `progress` is the share of the chunks around the camera that
+are in: it drops when the camera reaches new ground and is back at 1 once
+they are in (`generation_progress` follows). With **Rebake Navigation** the
+regions are baked again each time the chunks around the camera are all in
+after a change.
+
+```lua
+local gen = self.node:get_node("Generator")
+gen:connect("chunk_generated", function(c) print("in", c.x, c.y) end)
+gen:connect("chunk_unloaded", function(c) save_chunk_state(c.x, c.y) end)
+local cx, cy = gen:levelgen_chunk_at(player.position.x, player.position.y)
+if not gen:levelgen_is_chunk_loaded(cx, cy) then player.paused = true end
+for _, c in ipairs(gen:levelgen_loaded_chunks()) do print(c.x, c.y) end
+```
+
+The TileMap becomes endless (cells anywhere, negative too): its storage
+covers the chunks that are in and moves with them, and each chunk has its
+own collider body. Tiles a script sets on such a map don't get colliders.
+What a chunk placed goes when it does - remember picked-up coins yourself
+(`chunk_unloaded`) if they shouldn't come back.
 
 ## Lua
 

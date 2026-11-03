@@ -95,6 +95,8 @@ Event_Describe :: proc(name: string) -> (param: string, doc: string) {
 	case "generated":          return "seed", "The level generator's level is in (its seed)"
 	case "generation_failed":  return "why", "The level generator couldn't make the level (why)"
 	case "generation_progress": return "progress", "The level generator's progress moved (0 to 1, by 1% or more; 1 when the level is in)"
+	case "chunk_generated":    return "chunk", "A chunk of the chunked level went in (a Vec2: its x, y)"
+	case "chunk_unloaded":     return "chunk", "A chunk of the chunked level was taken out, far from the camera (a Vec2: its x, y)"
 	}
 	return "value", ""
 }
