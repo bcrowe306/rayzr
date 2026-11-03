@@ -40,13 +40,16 @@ Esc when done`.
 ### Tools
 
 The toolbar's first row. Press a tool's key while the mouse is over the
-viewport.
+viewport. While you draw, the keys work on the art, not on the node:
+**Delete** removes the selected shapes or anchor, **Esc** ends a pen path
+(a second **Esc** leaves the mode), and the scene's own keys (Q / W / E /
+R / T, F, the arrows) wait until you're done.
 
 | Tool | Key | What it does |
 |---|---|---|
 | **Select** | V | Click a shape to select it, drag to move it. **Shift+click** adds or removes a shape; drag on empty space for a box (shapes wholly inside). **Delete** removes the selected shapes. |
 | **Nodes** | A | The selected shape's anchors and handles. Drag an anchor; drag a handle to bend the curve (its partner follows; **Alt**: only this one). **Double-click** a segment to add an anchor, **Alt+click** an anchor to remove it, **right-click** an anchor: **Smooth**, **Symmetric**, **Corner**. |
-| **Pen** | P | Click for a corner, click and drag for a smooth anchor. Click the first anchor to close the shape (it gets the fill colour). **Enter** or a double-click ends an open path. |
+| **Pen** | P | Click for a corner, click and drag for a smooth anchor. Click the first anchor to close the shape (it gets the fill colour). **Enter**, **Esc** or a double-click ends an open path. |
 | **Rectangle** | R | Drag one out. **Shift**: a square, **Alt**: from the centre. |
 | **Ellipse** | O | Drag one out. **Shift**: a circle, **Alt**: from the centre. |
 | **Polygon** | | Drag one out. |

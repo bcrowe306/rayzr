@@ -117,6 +117,12 @@ VectorDraw_IsActive :: proc(state: ^EditorState) -> bool {
 
 VectorDraw_Node :: proc() -> ^e.VectorShapeNode {return vd.node if vd.active else nil}
 
+// VectorDraw_OwnsKeys: is the edit mode on for the selected node (its keys
+// come before the scene's - Actions_Dispatch, #372)?
+VectorDraw_OwnsKeys :: proc(state: ^EditorState) -> bool {
+	return vd.active && vd.node != nil && state.selectedNode == &vd.node.node && e.Node_IsAlive(&vd.node.node)
+}
+
 // VectorDraw_Enter starts editing a Vector Shape's art (asks first for a
 // file it would lose parts of).
 VectorDraw_Enter :: proc(state: ^EditorState, v: ^e.VectorShapeNode) {
@@ -1689,6 +1695,7 @@ VectorDraw_DriveQuery :: proc(state: ^EditorState, q: string) -> (string, bool) 
 	case "vd.tool":   return fmt.tprint(vd.tool), true
 	case "vd.file":   return vd.node.file if vd.node != nil else "", true
 	case "vd.shape":  return fmt.tprint(vd.shape), true
+	case "vd.pen":    return fmt.tprint(vd.penShape), true // (the path the pen is drawing, -1)
 	case "vd.layer":  return fmt.tprint(vd.layer), true
 	case "vd.selected": return fmt.tprint(len(vd_selection(r))), true
 	case "vd.scope":
