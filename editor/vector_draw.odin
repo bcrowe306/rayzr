@@ -91,6 +91,10 @@ vd: struct {
 	// The editor's allocator: tools grow the document from its arena
 	// (context.allocator switched), but undo entries and logs outlive it.
 	alloc:    runtime.Allocator,
+	layer:    int,           // the layer (top-level group) new shapes go into (-1: as the node shows)
+	locked:   map[int]bool,  // layers that can't be picked (editor only)
+	snapped:  [2]f32,        // the anchor the last snap went to (shown), when snappedOn
+	snappedOn: bool,
 }
 
 VectorDraw_IsActive :: proc(state: ^EditorState) -> bool {
@@ -121,6 +125,9 @@ vectordraw_start :: proc(state: ^EditorState, v: ^e.VectorShapeNode) {
 	if vd.sides == 0 do vd.sides, vd.points, vd.inner, vd.smooth, vd.brush = 5, 5, 0.5, 50, 12
 	vd.active, vd.node, vd.shape, vd.anchor, vd.drag, vd.penShape = true, v, -1, -1, .None, -1
 	vd.alloc = context.allocator
+	vd.layer = -1
+	if vd.locked == nil do vd.locked = make(map[int]bool)
+	clear(&vd.locked)
 	if vd.backedUp == nil do vd.backedUp = make(map[string]bool)
 	Editor_Log(state, .Info, "Drawing in %s: V select, A nodes, P pen; Esc when done", v.name)
 }
@@ -182,6 +189,63 @@ doc_per_px :: proc(state: ^EditorState, v: ^e.VectorShapeNode) -> f32 {
 	return 1 / s
 }
 
+// vd_snap: a point snapped (Ctrl held: not) - to another shape's anchor
+// within a few pixels, else (the viewport's snap on) to the grid and the
+// guides; `skip` is a shape whose anchors don't count (the one being edited).
+@(private = "file")
+vd_snap :: proc(state: ^EditorState, r: ^e.Vector_Resource, q: [2]f32, skip := -1) -> [2]f32 {
+	vd.snappedOn = false
+	if imgui.GetIO().KeyCtrl || imgui.GetIO().KeySuper do return q
+	v := vd.node
+	px := doc_per_px(state, v)
+	if r != nil {
+		best := 8 * px
+		hit: [2]f32
+		found := false
+		for &s, i in r.doc.shapes {
+			if i == skip || shape_locked(r, i) do continue
+			for a in e.Vector_PathAnchors(&s.path) {
+				if d := linalg.distance(s.path.pts[a.pt], q); d < best do best, hit, found = d, s.path.pts[a.pt], true
+			}
+		}
+		if found {
+			vd.snapped, vd.snappedOn = hit, true
+			return hit
+		}
+	}
+	if !state.snapGrid do return q
+	w := doc_to_world(v, q)
+	if state.gridSize > 0 do w = {math.round(w.x / state.gridSize) * state.gridSize, math.round(w.y / state.gridSize) * state.gridSize}
+	if scene := state.activeScene; scene != nil {
+		wq := doc_to_world(v, q)
+		reach := 8 / max(state.cameraZoom, 0.0001)
+		for g in scene.guides[:scene.guideCount] {
+			if g.vertical && abs(wq.x - g.pos) < reach do w.x = g.pos
+			if !g.vertical && abs(wq.y - g.pos) < reach do w.y = g.pos
+		}
+	}
+	return world_to_doc(v, w)
+}
+
+// shape_locked: the shape is in a hidden or locked layer (not picked).
+@(private = "file")
+shape_locked :: proc(r: ^e.Vector_Resource, i: int) -> bool {
+	for g, gi in r.doc.groups {
+		if g.parent != -1 || i < g.first || i >= g.first + g.count do continue
+		return g.hidden || vd.locked[gi]
+	}
+	return false
+}
+
+// vd_target_group: where new shapes go - the chosen layer, else the symbol
+// the node shows (-1: the document).
+@(private = "file")
+vd_target_group :: proc(r: ^e.Vector_Resource) -> int {
+	if vd.layer >= 0 && vd.layer < len(r.doc.groups) do return vd.layer
+	if g := e.Vector_ResourceGroup(r, vd.node.group); g >= 0 do return g
+	return -1
+}
+
 // --- the dimmed scene (world space, after the scene draws) --------------------
 
 // Viewport_DrawVectorEditFocus dims everything but the node being drawn in.
@@ -223,6 +287,19 @@ Viewport_VectorDraw :: proc(state: ^EditorState, dl: ^imgui.DrawList, mouseScree
 			if vd.penShape >= 0 do pen_finish(state)
 			else if imgui.IsKeyPressed(.Escape, false) {vectordraw_exit(state); return true}
 		}
+		// Draw order: Ctrl+] forward, Ctrl+[ back (within the shape's group).
+		if r != nil && vd.shape >= 0 && vd.penShape < 0 && (io.KeyCtrl || io.KeySuper) {
+			dir := 0
+			if imgui.IsKeyPressed(.RightBracket, false) do dir = 1
+			if imgui.IsKeyPressed(.LeftBracket, false) do dir = -1
+			if dir != 0 {
+				edit_begin(r)
+				if j := e.Vector_DocMoveShape(&r.doc, vd.shape, dir); j != vd.shape {
+					vd.shape, vd.anchor = j, -1
+					edit_commit(state, r, "Bring forward" if dir > 0 else "Send backward")
+				}
+			}
+		}
 		if (imgui.IsKeyPressed(.Delete, false) || imgui.IsKeyPressed(.Backspace, false)) && r != nil && vd.shape >= 0 && vd.penShape < 0 {
 			if vd.tool == .Node && vd.anchor >= 0 do anchor_delete(state, r, vd.shape, vd.anchor)
 			else {
@@ -249,6 +326,11 @@ Viewport_VectorDraw :: proc(state: ^EditorState, dl: ^imgui.DrawList, mouseScree
 	case .Bucket: tool_bucket(state, r, mouse, tol)
 	}
 	anchor_menu(state, r)
+	// Where the last snap went (an anchor): a ring there while dragging.
+	if vd.snappedOn && (vd.drag != .None || vd.tool == .Pen) {
+		at := doc_to_screen(state, v, vd.snapped)
+		imgui.DrawList_AddCircle(dl, at, 7, col_u32(UI_WARNING), 0, 2)
+	}
 	return true
 }
 
@@ -439,6 +521,7 @@ tool_select :: proc(state: ^EditorState, dl: ^imgui.DrawList, r: ^e.Vector_Resou
 @(private = "file")
 shape_at :: proc(r: ^e.Vector_Resource, q: [2]f32, tol: f32) -> int {
 	for i := len(r.doc.shapes) - 1; i >= 0; i -= 1 {
+		if shape_locked(r, i) do continue
 		s := &r.doc.shapes[i]
 		if s.style.fill && path_contains(&s.path, q) do return i
 		_, _, d := e.Vector_SegmentNearest(&s.path, q)
@@ -599,6 +682,7 @@ tool_node :: proc(state: ^EditorState, dl: ^imgui.DrawList, r: ^e.Vector_Resourc
 					a := anchors[vd.anchor]
 					switch vd.drag {
 					case .Anchor:
+						d = vd_snap(state, r, mouse, vd.shape) - p.pts[a.pt]
 						p.pts[a.pt] += d
 						if a.in_ >= 0 do p.pts[a.in_] += d
 						if a.out >= 0 do p.pts[a.out] += d
@@ -787,10 +871,12 @@ tool_pen :: proc(state: ^EditorState, dl: ^imgui.DrawList, r: ^e.Vector_Resource
 			res = vectordraw_new_file(state, v)
 			if res == nil do return
 			mouse := world_to_doc(v, Viewport_ScreenToWorld(state, mouse_screen()))
-			pen_add(state, res, mouse, tol)
+			pen_add(state, res, vd_snap(state, res, mouse), tol)
+			vd.start = mouse
 			return
 		}
-		pen_add(state, res, mouse, tol)
+		pen_add(state, res, vd_snap(state, res, mouse, vd.penShape), tol)
+		vd.start = mouse // (the press, unsnapped: a drag from here pulls handles)
 	}
 	if vd.drag == .Pen && res != nil {
 		if imgui.IsMouseDown(.Left) {
@@ -799,7 +885,7 @@ tool_pen :: proc(state: ^EditorState, dl: ^imgui.DrawList, r: ^e.Vector_Resource
 			n := len(p.pts)
 			at := p.pts[n - 1]
 			out := mouse - at
-			if linalg.length(out) > tol * 0.5 {
+			if linalg.distance(mouse, vd.start) > tol * 0.5 {
 				vd.penOut = out
 				if n >= 3 && p.cmds[len(p.cmds) - 1] == .Cubic do p.pts[n - 2] = at - out
 				e.Vector_ResourceEdited(res)
@@ -835,9 +921,7 @@ pen_add :: proc(state: ^EditorState, r: ^e.Vector_Resource, q: [2]f32, tol: f32)
 		e.Vector_MoveTo(&s.path, q)
 		s.style = e.Vector_Style{stroke = true, strokeColor = vd.stroke, strokeWidth = vd.width, fillColor = vd.fill, join = .Round, cap = .Round, miterLimit = 4, opacity = 1}
 		s.style.stroke = vd.width > 0
-		group := -1
-		if g := e.Vector_ResourceGroup(r, vd.node.group); g >= 0 do group = g // (into the symbol being drawn)
-		vd.penShape = e.Vector_DocInsertShape(&r.doc, s, group)
+		vd.penShape = e.Vector_DocInsertShape(&r.doc, s, vd_target_group(r))
 		vd.shape, vd.penOut = vd.penShape, {}
 		vd.drag, vd.last = .Pen, q
 		e.Vector_ResourceEdited(r)
@@ -917,14 +1001,12 @@ tool_shape :: proc(state: ^EditorState, dl: ^imgui.DrawList, r: ^e.Vector_Resour
 		s: e.Vector_Shape
 		e.Vector_Path_Init(&s.path)
 		s.style = e.Vector_Style{fill = vd.fill.a > 0, fillColor = vd.fill, stroke = vd.width > 0, strokeColor = vd.stroke, strokeWidth = vd.width, join = .Miter, miterLimit = 4, opacity = 1}
-		group := -1
-		if g := e.Vector_ResourceGroup(res, v.group); g >= 0 do group = g
-		vd.shape = e.Vector_DocInsertShape(&res.doc, s, group)
-		vd.anchor, vd.drag, vd.start = -1, .Draw, q
+		vd.shape = e.Vector_DocInsertShape(&res.doc, s, vd_target_group(res))
+		vd.anchor, vd.drag, vd.start = -1, .Draw, vd_snap(state, res, q, vd.shape)
 		return
 	}
 	if vd.drag != .Draw || res == nil || vd.shape < 0 || vd.shape >= len(res.doc.shapes) do return
-	a, b := vd.start, mouse
+	a, b := vd.start, vd_snap(state, res, mouse, vd.shape)
 	if io.KeyShift {
 		// Square / circle / a regular polygon: the larger side both ways.
 		d := b - a
@@ -1031,9 +1113,7 @@ tool_freehand :: proc(state: ^EditorState, dl: ^imgui.DrawList, r: ^e.Vector_Res
 		colour := vd.fill if vd.fill.a > 0 else vd.stroke
 		s.style = e.Vector_Style{fill = true, fillColor = colour, miterLimit = 4, opacity = 1}
 	}
-	group := -1
-	if g := e.Vector_ResourceGroup(res, v.group); g >= 0 do group = g
-	vd.shape = e.Vector_DocInsertShape(&res.doc, s, group)
+	vd.shape = e.Vector_DocInsertShape(&res.doc, s, vd_target_group(res))
 	edit_commit(state, res, "Pencil" if vd.tool == .Pencil else "Brush")
 }
 
@@ -1064,12 +1144,94 @@ tool_bucket :: proc(state: ^EditorState, r: ^e.Vector_Resource, mouse: [2]f32, t
 		return
 	}
 	s.style = e.Vector_Style{fill = true, fillColor = vd.fill, fillRule = .EvenOdd, miterLimit = 4, opacity = 1}
-	group := -1
-	if g := e.Vector_ResourceGroup(r, vd.node.group); g >= 0 do group = g
+	group := vd_target_group(r)
 	// (Under the lines: the group's first shape.)
 	first := r.doc.groups[group].first if group >= 0 else 0
 	vd.shape = e.Vector_DocInsertShape(&r.doc, s, group, first)
 	edit_commit(state, r, "Paint Bucket")
+}
+
+// --- layers (the Inspector, while drawing) -----------------------------------------------
+
+// VectorDraw_LayersUI: the file's layers (top-level groups) - which one new
+// shapes go into, shown / hidden, locked, renamed, reordered, added - and
+// the selected shape's draw order.
+VectorDraw_LayersUI :: proc(state: ^EditorState, v: ^e.VectorShapeNode) {
+	if !VectorDraw_IsActive(state) || vd.node != v do return
+	r := e.VectorShapeNode_Asset(v)
+	layers: []int
+	if r != nil do layers = e.Vector_DocLayers(&r.doc)
+	imgui.TextUnformatted("Layers")
+	imgui.SameLine()
+	if UI_IconButton(ICON_FA_PLUS, "vd.layer.add", "A new layer on top (new shapes go into it)", false, 22) {
+		if r == nil do r = vectordraw_new_file(state, v) // (nothing drawn yet: the file first)
+		if r == nil do return
+		edit_begin(r)
+		vd.layer = e.Vector_DocAddGroup(&r.doc, fmt.tprintf("Layer %d", len(layers) + 1))
+		edit_commit(state, r, "Add layer")
+		layers = e.Vector_DocLayers(&r.doc)
+	}
+	if r == nil || len(layers) == 0 {
+		UI_DimText("No layers: shapes go straight into the file.")
+		return
+	}
+	// Top first (drawn last), as layer lists show them.
+	for k := len(layers) - 1; k >= 0; k -= 1 {
+		gi := layers[k]
+		g := &r.doc.groups[gi]
+		imgui.PushIDInt(i32(gi))
+		defer imgui.PopID()
+		if imgui.RadioButton("##target", vd.layer == gi) do vd.layer = gi
+		Drive_Item(fmt.tprintf("vd.layer.target:%d", gi))
+		UI_Tooltip("New shapes go into this layer")
+		imgui.SameLine(0, 4)
+		if UI_IconButton(ICON_FA_EYE_SLASH if g.hidden else ICON_FA_EYE, fmt.tprintf("vd.layer.hide:%d", gi), "Show / hide (hidden layers are saved hidden)", false, 22) {
+			edit_begin(r)
+			g.hidden = !g.hidden
+			edit_commit(state, r, "Hide layer")
+		}
+		imgui.SameLine(0, 2)
+		if UI_IconButton(ICON_FA_LOCK if vd.locked[gi] else ICON_FA_LOCK_OPEN, fmt.tprintf("vd.layer.lock:%d", gi), "Lock: its shapes can't be picked (while drawing)", vd.locked[gi], 22) do vd.locked[gi] = !vd.locked[gi]
+		imgui.SameLine(0, 4)
+		buf: [64]u8
+		copy(buf[:63], g.name)
+		imgui.SetNextItemWidth(max(imgui.GetContentRegionAvail().x - 56, 60))
+		if imgui.InputText("##name", cstring(raw_data(buf[:])), len(buf), {.EnterReturnsTrue}) {
+			name := strings.trim_space(string(cstring(raw_data(buf[:]))))
+			if name != "" && name != g.name {
+				edit_begin(r)
+				g.name = strings.clone(name, e.Vector_EditAllocator(&r.doc))
+				edit_commit(state, r, "Rename layer")
+			}
+		}
+		Drive_Item(fmt.tprintf("vd.layer.name:%d", gi))
+		imgui.SameLine(0, 2)
+		if UI_IconButton(ICON_FA_ARROW_UP, fmt.tprintf("vd.layer.up:%d", gi), "Move up (drawn over the next)", false, 22) {
+			edit_begin(r)
+			if e.Vector_DocMoveLayer(&r.doc, gi, 1) do edit_commit(state, r, "Move layer")
+		}
+		imgui.SameLine(0, 2)
+		if UI_IconButton(ICON_FA_ARROW_DOWN, fmt.tprintf("vd.layer.down:%d", gi), "Move down", false, 22) {
+			edit_begin(r)
+			if e.Vector_DocMoveLayer(&r.doc, gi, -1) do edit_commit(state, r, "Move layer")
+		}
+	}
+	if vd.shape >= 0 {
+		if UI_Button(fmt.tprintf("%s  Forward", ICON_FA_ARROW_UP), "vd.forward") do vd_move_shape(state, r, 1)
+		UI_Tooltip("Draw the selected shape over the next one (Ctrl+])")
+		imgui.SameLine()
+		if UI_Button(fmt.tprintf("%s  Backward", ICON_FA_ARROW_DOWN), "vd.backward") do vd_move_shape(state, r, -1)
+		UI_Tooltip("Draw it under the one before (Ctrl+[)")
+	}
+}
+
+@(private = "file")
+vd_move_shape :: proc(state: ^EditorState, r: ^e.Vector_Resource, dir: int) {
+	edit_begin(r)
+	if j := e.Vector_DocMoveShape(&r.doc, vd.shape, dir); j != vd.shape {
+		vd.shape, vd.anchor = j, -1
+		edit_commit(state, r, "Bring forward" if dir > 0 else "Send backward")
+	}
 }
 
 // --- the lossy-file question --------------------------------------------------
@@ -1143,6 +1305,15 @@ VectorDraw_DriveQuery :: proc(state: ^EditorState, q: string) -> (string, bool) 
 	case "vd.tool":   return fmt.tprint(vd.tool), true
 	case "vd.file":   return vd.node.file if vd.node != nil else "", true
 	case "vd.shape":  return fmt.tprint(vd.shape), true
+	case "vd.layer":  return fmt.tprint(vd.layer), true
+	case "vd.layers":
+		if r == nil do return "", true
+		sb := strings.builder_make(context.temp_allocator)
+		for gi, k in e.Vector_DocLayers(&r.doc) {
+			if k > 0 do strings.write_string(&sb, ",")
+			fmt.sbprintf(&sb, "%s%s", r.doc.groups[gi].name, "(hidden)" if r.doc.groups[gi].hidden else "")
+		}
+		return strings.to_string(sb), true
 	case "vd.shapes": return fmt.tprint(len(r.doc.shapes) if r != nil else 0), true
 	case "vd.anchors":
 		if r == nil || vd.shape < 0 || vd.shape >= len(r.doc.shapes) do return "0", true

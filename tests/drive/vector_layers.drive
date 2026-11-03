@@ -1,0 +1,50 @@
+# #267 part 4: snapping (the viewport's grid; other shapes' anchors) and
+# layers (the SVG's top-level groups) - added, drawn into, reordered,
+# hidden, renamed; shapes brought forward / sent back.
+wait 5
+key escape
+click @hier.add
+type vector
+click @addnode.create
+expect selected == VectorShape
+expect node:VectorShape.position == 640.0,352.0
+click @insp.vec.draw
+
+# A layer; a rectangle into it, its corners on the 32 px grid.
+click @vd.layer.add
+expect vd.layers == Layer 1
+click @vd.tool:rect
+drag @node:VectorShape+-50,-50 @node:VectorShape+-10,-10
+expect vd.point:0 == 192,192
+expect vd.point:2 == 256,256
+
+# The pen's first point lands on the rectangle's corner (an anchor, within 8 px).
+click @vd.tool:pen
+click @node:VectorShape+-11,-13
+click @node:VectorShape+60,60
+key enter
+expect vd.shapes == 2
+expect vd.point:0 == 256,256
+
+# A second layer on top; a shape into it; then it moves below Layer 1.
+click @vd.layer.add
+expect vd.layers == Layer 1,Layer 2
+click @vd.tool:ellipse
+drag @node:VectorShape+20,20 @node:VectorShape+90,90
+expect vd.shapes == 3
+click @vd.layer.down:1
+expect vd.layers == Layer 2,Layer 1
+click @vd.layer.hide:1
+expect vd.layers == Layer 2(hidden),Layer 1
+expect file:art/vectorshape.svg contains display:none
+click @vd.layer.hide:1
+expect vd.layers == Layer 2,Layer 1
+screenshot layers
+
+# Draw order inside Layer 1: the pen line goes back under the rectangle.
+click @vd.tool:select
+click @node:VectorShape+30,30
+expect vd.shape == 2
+key ctrl+lbracket
+expect vd.shape == 1
+key escape
