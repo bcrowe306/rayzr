@@ -95,6 +95,12 @@ when:
   tutorial's screenshot too);
 - a Lua API function has no description.
 
+`odin test editor` also checks that the
+[Keyboard Shortcuts](../editor/keyboard-shortcuts.md) page lists every
+editor command with its default shortcuts: after changing the action table
+(`editor/actions.odin`), run
+`bin/editor --dump-shortcuts docs/editor/keyboard-shortcuts.md`.
+
 The website then builds the pages and checks every link between them.
 
 ## Screenshots with callouts
@@ -106,7 +112,11 @@ Screenshots come from editor test drives, so they stay current:
    target is a drive item (`@toolbar.play`, `@hier:Player`), a panel
    (`@window:inspector`, `@window:viewport`, `@window:scene`, `@window:assets`,
    `@window:console`, `@window:toolbar`, `@window:statusbar`,
-   `@window:preview`) or a node (`@node:Player`).
+   `@window:preview`, `@window:code`, the Level tab's `@window:level-canvas`,
+   `@window:level-levels`, `@window:level-layers` and `@window:level-panel`,
+   and the `@window:welcome`, `@window:shortcuts` and `@window:noderef`
+   windows; `Drive_Window` in the editor's code registers more) or a node
+   (`@node:Player`). A target can't contain spaces.
 2. Run `scripts/docs/screenshots.sh` (needs a display). It copies the shots
    and their `.annotations.json` into `docs/images/`.
 3. Use the image in a page on a line of its own:

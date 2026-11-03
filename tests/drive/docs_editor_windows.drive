@@ -1,0 +1,135 @@
+# Docs screenshots (#45): the Welcome window, Keyboard Shortcuts, the command
+# palette, the Node Reference window, Settings > Plugins and Project >
+# Export (docs/editor/welcome.md, keyboard-shortcuts.md, command-palette.md,
+# node-reference.md, plugins.md, export.md). F1 in the Welcome and
+# Shortcuts windows opens their pages; the Settings dialog is modal (no F1),
+# so its header's ? opens settings.md over it, and Esc closes only that.
+wait 5
+key escape
+
+# --- Welcome (Help > Welcome; drives don't open it at startup) ---
+click @menu:Help
+click @menu:Help/Welcome
+wait 3
+expect welcome-open == true
+click @welcome.template:Platformer
+click @welcome.where
+key cmd+a
+type /Users/you/Games
+key enter
+move 1270,710
+wait 2
+annotate @welcome.open Open Project... (and recent projects above)
+annotate @welcome.template:Platformer Templates and samples: click one
+annotate @welcome.name Name and Location of the new project
+annotate @welcome.create Create Project: makes it and opens it
+screenshot editor_welcome
+click @welcome.logo
+key f1
+wait 1
+expect noderef.page == editor/welcome
+click @noderef.close
+wait 1
+click @welcome.close
+expect welcome-open == false
+
+# --- Keyboard Shortcuts (Cmd+Shift+K) ---
+key ctrl+shift+k
+wait 2
+expect shortcuts-open == true
+click @shortcuts.filter
+type save
+move 1270,710
+wait 2
+annotate @shortcuts.filter Filter by command or key
+annotate @window:shortcuts Command, shortcut(s), where it works
+screenshot editor_keyboard-shortcuts
+key escape
+click @window:shortcuts
+key f1
+wait 1
+expect noderef.page == editor/keyboard-shortcuts
+click @noderef.close
+wait 1
+click @shortcuts.close
+wait 1
+expect shortcuts-open == false
+
+# --- Command palette (Cmd+Shift+P) ---
+key ctrl+shift+p
+expect palette.open == true
+type fit sel
+wait 2
+annotate @palette.input Type to filter (> commands, : a line)
+screenshot editor_command-palette
+key escape
+expect palette.open == false
+
+# --- Node Reference (Shift+F1 on the selected node) ---
+click @hier:PlayerShip
+wait 1
+key shift+f1
+wait 2
+expect noderef.page == TextureNode
+annotate @noderef.back Back to the page before
+annotate @noderef.index Every node, by category
+annotate @noderef.body The page: links open other pages here
+screenshot editor_node-reference
+click @noderef.close
+wait 1
+
+# --- Settings > Plugins, with two of the example plugins ---
+exec mkdir -p $PROJECT/plugins
+exec cp -R editor/docs/plugin_examples/level_stats $PROJECT/plugins/level_stats_docs
+exec cp -R editor/docs/plugin_examples/align_tools $PROJECT/plugins/align_tools_docs
+key ctrl+comma
+expect project-settings-open == true
+click @settings.tab:plugins
+wait 2
+click @plugins.rescan
+wait 3
+click @plugins.trust.toggle
+wait 3
+click @plugins.item:level_stats_docs
+wait 2
+move 1270,710
+annotate @plugins.trust.toggle This project's plugins: Allow / Block
+annotate @plugins.rescan Rescan, and the user plugins folder
+annotate @plugins.item:level_stats_docs Every plugin, with its state
+annotate @plugins.enabled Enabled, Reload, Open Folder
+screenshot editor_plugins
+
+# The ? in the header: the Settings page, over the dialog.
+click @settings.help
+wait 2
+expect noderef.open == true
+expect noderef.page == editor/settings
+key escape
+wait 1
+expect noderef.open == false
+expect project-settings-open == true
+click @settings.help
+wait 1
+click @noderef.close
+wait 1
+expect noderef.open == false
+expect project-settings-open == true
+
+# --- Project > Export, with presets ---
+click @settings.tab:project
+click @settings.page:Export
+wait 1
+click @settings.preset-convert
+wait 2
+# (down to the selected preset and the export buttons)
+scroll @settings.preset-name -10
+wait 2
+move 1270,710
+annotate @settings.preset-exe The selected preset: its own name, folder, version, window...
+annotate @settings.preset-exclude Include / Exclude: file patterns, one per line
+annotate @settings.export-preset Save and Export This Preset
+annotate @settings.export-now Save and Export (All): every preset
+screenshot editor_export
+click @settings.cancel
+wait 1
+expect project-settings-open == false

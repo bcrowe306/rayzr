@@ -863,6 +863,7 @@ Drive_Query :: proc(state: ^EditorState, q: string) -> (string, bool) {
 		if a == nil do return "none", true
 		return fmt.tprintf("%s:%d/%d:%d", a.name, apn.currentFrame - a.startFrame + 1, e.Animation_Length(a), len(a.tracks)), true
 	case "shortcuts-open": return "true" if showShortcutsWindow else "false", true
+	case "welcome-open": return "true" if Welcome_IsOpen() else "false", true
 	case "usages": return fmt.tprint(AssetUsages_Count()), true
 	case "workspace": return currentWorkspace, true
 	case "dialog-start": return nativeDialogLastStart, true // where the last file dialog opened
