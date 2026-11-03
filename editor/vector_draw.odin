@@ -1,5 +1,6 @@
 package editor
 
+import "base:runtime"
 import "core:fmt"
 import "core:math"
 import "core:math/linalg"
@@ -41,6 +42,9 @@ Vector_Tool :: enum {
 	Ellipse,
 	Polygon,
 	Star,
+	Pencil,
+	Brush,
+	Bucket,
 }
 
 @(private = "file")
@@ -52,6 +56,7 @@ Vd_Drag :: enum {
 	Out,
 	Pen,
 	Draw, // dragging out a shape tool's shape
+	Freehand, // the Pencil / Brush collecting samples
 }
 
 @(private = "file")
@@ -78,6 +83,14 @@ vd: struct {
 	sides:    i32,    // Polygon
 	points:   i32,    // Star
 	inner:    f32,    // Star: inner radius (fraction)
+	smooth:   f32,    // Pencil / Brush: 0 (every wiggle) .. 100 (few, smooth curves)
+	brush:    f32,    // Brush: width (document units)
+	samples:  [dynamic][2]f32, // the freehand stroke so far (document units)
+	widths:   [dynamic]f32,    // the Brush's width at each sample
+	lastTime: f64,
+	// The editor's allocator: tools grow the document from its arena
+	// (context.allocator switched), but undo entries and logs outlive it.
+	alloc:    runtime.Allocator,
 }
 
 VectorDraw_IsActive :: proc(state: ^EditorState) -> bool {
@@ -105,8 +118,9 @@ VectorDraw_Enter :: proc(state: ^EditorState, v: ^e.VectorShapeNode) {
 @(private = "file")
 vectordraw_start :: proc(state: ^EditorState, v: ^e.VectorShapeNode) {
 	if vd.fill == {} do vd.fill, vd.stroke, vd.width = {255, 255, 255, 255}, {20, 20, 20, 255}, 2
-	if vd.sides == 0 do vd.sides, vd.points, vd.inner = 5, 5, 0.5
+	if vd.sides == 0 do vd.sides, vd.points, vd.inner, vd.smooth, vd.brush = 5, 5, 0.5, 50, 12
 	vd.active, vd.node, vd.shape, vd.anchor, vd.drag, vd.penShape = true, v, -1, -1, .None, -1
+	vd.alloc = context.allocator
 	if vd.backedUp == nil do vd.backedUp = make(map[string]bool)
 	Editor_Log(state, .Info, "Drawing in %s: V select, A nodes, P pen; Esc when done", v.name)
 }
@@ -202,6 +216,9 @@ Viewport_VectorDraw :: proc(state: ^EditorState, dl: ^imgui.DrawList, mouseScree
 		if imgui.IsKeyPressed(.P, false) do vectordraw_set_tool(state, .Pen)
 		if imgui.IsKeyPressed(.R, false) do vectordraw_set_tool(state, .Rect)
 		if imgui.IsKeyPressed(.O, false) do vectordraw_set_tool(state, .Ellipse)
+		if imgui.IsKeyPressed(.Y, false) do vectordraw_set_tool(state, .Pencil)
+		if imgui.IsKeyPressed(.B, false) do vectordraw_set_tool(state, .Brush)
+		if imgui.IsKeyPressed(.K, false) do vectordraw_set_tool(state, .Bucket)
 		if imgui.IsKeyPressed(.Escape, false) || imgui.IsKeyPressed(.Enter, false) {
 			if vd.penShape >= 0 do pen_finish(state)
 			else if imgui.IsKeyPressed(.Escape, false) {vectordraw_exit(state); return true}
@@ -228,6 +245,8 @@ Viewport_VectorDraw :: proc(state: ^EditorState, dl: ^imgui.DrawList, mouseScree
 	case .Node:   tool_node(state, dl, r, mouse, tol)
 	case .Pen:    tool_pen(state, dl, r, mouse, tol)
 	case .Rect, .Ellipse, .Polygon, .Star: tool_shape(state, dl, r, mouse, tol)
+	case .Pencil, .Brush: tool_freehand(state, dl, r, mouse, tol)
+	case .Bucket: tool_bucket(state, r, mouse, tol)
 	}
 	anchor_menu(state, r)
 	return true
@@ -243,7 +262,7 @@ vectordraw_set_tool :: proc(state: ^EditorState, t: Vector_Tool) {
 vectordraw_toolbar :: proc(state: ^EditorState) {
 	imgui.SetCursorScreenPos(state.viewportPos + {10, 10})
 	imgui.BeginGroup()
-	tools := [7]struct {t: Vector_Tool, icon, id, tip: string}{
+	tools := [10]struct {t: Vector_Tool, icon, id, tip: string}{
 		{.Select, ICON_FA_ARROW_POINTER, "vd.tool:select", "Select (V): click a shape, drag to move it"},
 		{.Node, ICON_FA_BEZIER_CURVE, "vd.tool:node", "Nodes (A): drag anchors and handles; double-click a segment to add one"},
 		{.Pen, ICON_FA_PEN, "vd.tool:pen", "Pen (P): click for corners, drag for curves; click the first point to close"},
@@ -251,6 +270,9 @@ vectordraw_toolbar :: proc(state: ^EditorState) {
 		{.Ellipse, ICON_FA_CIRCLE, "vd.tool:ellipse", "Ellipse (O): drag one out (Shift: a circle, Alt: from the centre)"},
 		{.Polygon, ICON_FA_DRAW_POLYGON, "vd.tool:polygon", "Polygon: drag one out (its number of sides is beside the colours)"},
 		{.Star, ICON_FA_STAR, "vd.tool:star", "Star: drag one out (its points and inner radius are beside the colours)"},
+		{.Pencil, ICON_FA_PENCIL, "vd.tool:pencil", "Pencil (Y): draw a line freehand (smoothed: the slider beside the colours)"},
+		{.Brush, ICON_FA_PAINTBRUSH, "vd.tool:brush", "Brush (B): paint a filled stroke - thinner when you move fast"},
+		{.Bucket, ICON_FA_FILL_DRIP, "vd.tool:bucket", "Paint Bucket (K): click a shape to fill it, or a gap lines close in to fill it"},
 	}
 	for t, i in tools {
 		if i > 0 do imgui.SameLine(0, 4)
@@ -284,6 +306,19 @@ vectordraw_toolbar :: proc(state: ^EditorState) {
 		imgui.SetNextItemWidth(70)
 		imgui.DragInt("##vdsides", &vd.sides, 0.1, 3, 32, "%d sides")
 		Drive_Item("vd.sides")
+	case .Pencil, .Brush:
+		if vd.tool == .Brush {
+			imgui.SameLine(0, 8)
+			imgui.SetNextItemWidth(70)
+			imgui.DragFloat("##vdbrush", &vd.brush, 0.2, 1, 200, "size %.0f")
+			Drive_Item("vd.brush")
+			UI_Tooltip("Brush width (moving fast paints thinner)")
+		}
+		imgui.SameLine(0, 8)
+		imgui.SetNextItemWidth(90)
+		imgui.SliderFloat("##vdsmooth", &vd.smooth, 0, 100, "smooth %.0f")
+		Drive_Item("vd.smooth")
+		UI_Tooltip("0: every wiggle (more anchors); higher: fewer, smoother curves")
 	case .Star:
 		imgui.SameLine(0, 8)
 		imgui.SetNextItemWidth(70)
@@ -315,6 +350,7 @@ edit_commit :: proc(state: ^EditorState, r: ^e.Vector_Resource, label: string) {
 
 @(private = "file")
 vectordraw_save :: proc(state: ^EditorState, r: ^e.Vector_Resource, label: string) {
+	context.allocator = vd.alloc // (not the document's arena: undo keeps these)
 	v := vd.node
 	rel := v.file
 	if rel == "" do return
@@ -376,7 +412,7 @@ project_file_exists :: proc(state: ^EditorState, rel: string) -> bool {
 @(private = "file")
 tool_select :: proc(state: ^EditorState, dl: ^imgui.DrawList, r: ^e.Vector_Resource, mouse: [2]f32, tol: f32) {
 	if r == nil || !state.viewportHovered && vd.drag == .None do return
-	if imgui.IsMouseClicked(.Left) {
+	if vd_clicked() {
 		vd.shape = shape_at(r, mouse, tol)
 		vd.anchor = -1
 		if vd.shape >= 0 {
@@ -530,7 +566,7 @@ tool_node :: proc(state: ^EditorState, dl: ^imgui.DrawList, r: ^e.Vector_Resourc
 		vd.anchor, vd.menu = hoverA, hoverA
 		imgui.OpenPopup("##vd_anchor_menu")
 	}
-	if imgui.IsMouseDoubleClicked(.Left) && vd.shape >= 0 && hoverKind == .None {
+	if (imgui.IsMouseDoubleClicked(.Left) && !imgui.IsAnyItemHovered()) && vd.shape >= 0 && hoverKind == .None {
 		p := &r.doc.shapes[vd.shape].path
 		if cmd, t, d := e.Vector_SegmentNearest(p, mouse); cmd >= 0 && d <= tol * 1.5 {
 			edit_begin(r)
@@ -542,7 +578,7 @@ tool_node :: proc(state: ^EditorState, dl: ^imgui.DrawList, r: ^e.Vector_Resourc
 			return
 		}
 	}
-	if imgui.IsMouseClicked(.Left) {
+	if vd_clicked() {
 		switch {
 		case hoverKind == .Anchor && io.KeyAlt:
 			anchor_delete(state, r, vd.shape, hoverA)
@@ -582,7 +618,7 @@ tool_node :: proc(state: ^EditorState, dl: ^imgui.DrawList, r: ^e.Vector_Resourc
 								}
 							}
 						}
-					case .None, .Shape, .Pen, .Draw:
+					case .None, .Shape, .Pen, .Draw, .Freehand:
 					}
 					e.Vector_ResourceEdited(r)
 					vd.moved = true
@@ -742,11 +778,11 @@ tool_pen :: proc(state: ^EditorState, dl: ^imgui.DrawList, r: ^e.Vector_Resource
 	}
 	if !state.viewportHovered && vd.drag == .None do return
 	imgui.SetMouseCursor(.Arrow)
-	if imgui.IsMouseDoubleClicked(.Left) && vd.penShape >= 0 {
+	if (imgui.IsMouseDoubleClicked(.Left) && !imgui.IsAnyItemHovered()) && vd.penShape >= 0 {
 		pen_finish(state)
 		return
 	}
-	if imgui.IsMouseClicked(.Left) {
+	if vd_clicked() {
 		if res == nil {
 			res = vectordraw_new_file(state, v)
 			if res == nil do return
@@ -776,6 +812,10 @@ tool_pen :: proc(state: ^EditorState, dl: ^imgui.DrawList, r: ^e.Vector_Resource
 		}
 	}
 }
+
+// vd_clicked: a left click on the canvas (not on the toolbar over it).
+@(private = "file")
+vd_clicked :: proc() -> bool {return imgui.IsMouseClicked(.Left) && !imgui.IsAnyItemHovered()}
 
 @(private = "file")
 mouse_screen :: proc() -> [2]f32 {
@@ -865,7 +905,7 @@ tool_shape :: proc(state: ^EditorState, dl: ^imgui.DrawList, r: ^e.Vector_Resour
 	if !state.viewportHovered && vd.drag == .None do return
 	imgui.SetMouseCursor(.Arrow)
 	io := imgui.GetIO()
-	if imgui.IsMouseClicked(.Left) {
+	if vd_clicked() {
 		q := mouse
 		if res == nil {
 			res = vectordraw_new_file(state, v)
@@ -914,6 +954,122 @@ tool_shape :: proc(state: ^EditorState, dl: ^imgui.DrawList, r: ^e.Vector_Resour
 		}
 		vectordraw_save(state, res, "Draw shape")
 	}
+}
+
+// --- Pencil, Brush -------------------------------------------------------------------
+
+// tool_freehand: drag to draw; on release the samples are fitted to curves
+// (the smoothing slider sets the error) - a line (Pencil) or a filled
+// outline whose width follows the speed (Brush).
+@(private = "file")
+tool_freehand :: proc(state: ^EditorState, dl: ^imgui.DrawList, r: ^e.Vector_Resource, mouse: [2]f32, tol: f32) {
+	v := vd.node
+	if vd.samples == nil {
+		vd.samples = make([dynamic][2]f32)
+		vd.widths = make([dynamic]f32)
+	}
+	// The stroke so far, as drawn.
+	if vd.drag == .Freehand && len(vd.samples) > 1 {
+		col := col_u32({f32(vd.stroke.r) / 255, f32(vd.stroke.g) / 255, f32(vd.stroke.b) / 255, 1}) if vd.tool == .Pencil else col_u32({f32(vd.fill.r) / 255, f32(vd.fill.g) / 255, f32(vd.fill.b) / 255, 1})
+		scale := 1 / doc_per_px(state, v)
+		for i in 1 ..< len(vd.samples) {
+			w := vd.width * scale if vd.tool == .Pencil else vd.widths[i] * scale
+			imgui.DrawList_AddLine(dl, doc_to_screen(state, v, vd.samples[i - 1]), doc_to_screen(state, v, vd.samples[i]), col, max(w, 1))
+		}
+	}
+	if !state.viewportHovered && vd.drag == .None do return
+	imgui.SetMouseCursor(.Arrow)
+	now := imgui.GetTime()
+	if vd_clicked() {
+		clear(&vd.samples)
+		clear(&vd.widths)
+		append(&vd.samples, mouse)
+		append(&vd.widths, vd.brush)
+		vd.drag, vd.lastTime = .Freehand, now
+		return
+	}
+	if vd.drag != .Freehand do return
+	if imgui.IsMouseDown(.Left) {
+		last := vd.samples[len(vd.samples) - 1]
+		if d := linalg.distance(mouse, last); d > tol * 0.4 {
+			// Faster (screen pixels a second): thinner, down to a third.
+			dt := max(f32(now - vd.lastTime), 1.0 / 240)
+			speed := d / doc_per_px(state, v) / dt
+			w := vd.brush * clamp(1.2 - speed / 2500, 0.35, 1)
+			if n := len(vd.widths); n > 0 do w = vd.widths[n - 1] * 0.6 + w * 0.4 // (eased: no jumps)
+			append(&vd.samples, mouse)
+			append(&vd.widths, w)
+			vd.lastTime = now
+		}
+		return
+	}
+	// Released: fit and keep it.
+	vd.drag = .None
+	if len(vd.samples) < 2 && vd.tool == .Pencil do return
+	res := r
+	if res == nil {
+		res = vectordraw_new_file(state, v)
+		if res == nil do return
+	}
+	err := (0.3 + vd.smooth / 100 * 7.7) * doc_per_px(state, v)
+	edit_begin(res)
+	context.allocator = e.Vector_EditAllocator(&res.doc)
+	s: e.Vector_Shape
+	e.Vector_Path_Init(&s.path)
+	if vd.tool == .Pencil {
+		e.Vector_FitCurve(vd.samples[:], err, &s.path)
+		s.style = e.Vector_Style{stroke = true, strokeColor = vd.stroke, strokeWidth = max(vd.width, 0.5), join = .Round, cap = .Round, miterLimit = 4, opacity = 1}
+	} else {
+		// The ends taper a little (as a brush lifts).
+		n := len(vd.widths)
+		for i in 0 ..< min(3, n) {
+			f := 0.55 + 0.15 * f32(i)
+			vd.widths[i] *= f
+			vd.widths[n - 1 - i] *= f
+		}
+		e.Vector_BrushOutline(vd.samples[:], vd.widths[:], err, &s.path)
+		colour := vd.fill if vd.fill.a > 0 else vd.stroke
+		s.style = e.Vector_Style{fill = true, fillColor = colour, miterLimit = 4, opacity = 1}
+	}
+	group := -1
+	if g := e.Vector_ResourceGroup(res, v.group); g >= 0 do group = g
+	vd.shape = e.Vector_DocInsertShape(&res.doc, s, group)
+	edit_commit(state, res, "Pencil" if vd.tool == .Pencil else "Brush")
+}
+
+// --- Paint Bucket --------------------------------------------------------------------
+
+// tool_bucket: a click inside a filled shape gives it the fill colour; in a
+// gap that lines close in, a new filled shape under them.
+@(private = "file")
+tool_bucket :: proc(state: ^EditorState, r: ^e.Vector_Resource, mouse: [2]f32, tol: f32) {
+	if r == nil || !state.viewportHovered || !vd_clicked() do return
+	edit_begin(r)
+	for i := len(r.doc.shapes) - 1; i >= 0; i -= 1 {
+		s := &r.doc.shapes[i]
+		if s.style.fill && path_contains(&s.path, mouse) {
+			s.style.fill, s.style.fillColor, s.style.fillPaint = true, vd.fill, {}
+			vd.shape = i
+			edit_commit(state, r, "Paint Bucket")
+			return
+		}
+	}
+	shapes := e.Vector_DocShapes(&r.doc, e.Vector_ResourceGroup(r, vd.node.group))
+	context.allocator = e.Vector_EditAllocator(&r.doc)
+	s: e.Vector_Shape
+	e.Vector_Path_Init(&s.path)
+	if !e.Vector_EnclosedArea(shapes, mouse, 0.25 * doc_per_px(state, vd.node), &s.path) {
+		context.allocator = vd.alloc
+		Editor_Log(state, .Info, "Paint Bucket: that area isn't closed in (draw lines round it, or click inside a shape)")
+		return
+	}
+	s.style = e.Vector_Style{fill = true, fillColor = vd.fill, fillRule = .EvenOdd, miterLimit = 4, opacity = 1}
+	group := -1
+	if g := e.Vector_ResourceGroup(r, vd.node.group); g >= 0 do group = g
+	// (Under the lines: the group's first shape.)
+	first := r.doc.groups[group].first if group >= 0 else 0
+	vd.shape = e.Vector_DocInsertShape(&r.doc, s, group, first)
+	edit_commit(state, r, "Paint Bucket")
 }
 
 // --- the lossy-file question --------------------------------------------------
