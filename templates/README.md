@@ -9,7 +9,7 @@ Character's art was drawn for Rayzr.
 |---|---|
 | [Platformer](platformer/README.md) | Run and jump through two levels: coins, spikes, enemies to stomp, three lives; a title, settings, a pause menu, saved progress |
 | [Top-down RPG](rpg/README.md) | Explore a small dungeon: talk to a wizard, fight slimes, find the key, unlock the door and escape |
-| [Shoot 'em up](shmup/README.md) | Fly through waves of enemies: pooled bullets, explosions, a saved high score |
+| [Shoot 'em up](shmup/README.md) | Fly through three stages of enemies: pooled bullets, explosions, three lives; a title, settings, a pause menu, a saved high score |
 | [Puzzle (Sokoban)](puzzle/README.md) | Push every crate onto a target; levels typed as text, undo, a move counter |
 | [Visual Novel](visual_novel/README.md) | A branching story: characters, backgrounds, choices, three endings; save slots, a backlog, auto and skip |
 | [Isometric Dungeon](dungeon/README.md) | Click to walk (path finding) or WASD in an isometric room; walk behind pillars and walls; a chest, a key, a door |

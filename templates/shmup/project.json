@@ -1,7 +1,7 @@
 {
  "name": "Shoot 'em up",
  "version": "0.1.0",
- "initial_scene": "scenes/game.scene.json",
+ "initial_scene": "scenes/title.scene.json",
  "window": {
   "title": "Shoot 'em up",
   "width": 1280,
@@ -124,10 +124,51 @@
       "button": "RIGHT_FACE_DOWN"
      }
     ]
+   },
+   {
+    "name": "confirm",
+    "bindings": [
+     {
+      "key": "ENTER"
+     },
+     {
+      "key": "KP_ENTER"
+     },
+     {
+      "key": "SPACE"
+     },
+     {
+      "button": "RIGHT_FACE_DOWN"
+     }
+    ]
+   },
+   {
+    "name": "pause",
+    "bindings": [
+     {
+      "key": "ESCAPE"
+     },
+     {
+      "key": "P"
+     },
+     {
+      "button": "MIDDLE_RIGHT"
+     }
+    ]
    }
   ]
  },
  "scenes": [
-  "scenes/game.scene.json"
+  "scenes/title.scene.json",
+  "scenes/stage1.scene.json",
+  "scenes/stage2.scene.json",
+  "scenes/stage3.scene.json",
+  "scenes/result.scene.json"
+ ],
+ "globals": [
+  {
+   "name": "Game",
+   "script": "scripts/game.lua"
+  }
  ]
 }

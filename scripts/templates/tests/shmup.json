@@ -1,7 +1,301 @@
 [
  {
+  "name": "play-through: the title's Play starts stage 1 (three lives)",
+  "frames": 60,
+  "input": [
+   "10 ENTER tap"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "stage1"
+   ],
+   [
+    "Stage",
+    "text",
+    "==",
+    "Stage 1 / 3"
+   ],
+   [
+    "Lives",
+    "text",
+    "==",
+    "Lives 3"
+   ]
+  ]
+ },
+ {
+  "name": "play-through: from the title, stage 1 shot clear goes on to stage 2 (unlocked and saved)",
+  "frames": 540,
+  "input": [
+   "10 ENTER tap",
+   "30 SPACE down"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "stage2"
+   ],
+   [
+    "Score",
+    "text",
+    "==",
+    "Score 600"
+   ],
+   [
+    "Lives",
+    "text",
+    "==",
+    "Lives 3"
+   ],
+   [
+    "Stage",
+    "text",
+    "==",
+    "Stage 2 / 3"
+   ],
+   [
+    "@file:save.json",
+    "progress.unlocked",
+    "==",
+    2
+   ]
+  ]
+ },
+ {
+  "name": "play-through: from the title, flying into the enemies until no lives are left is game over",
+  "frames": 480,
+  "input": [
+   "10 ENTER tap",
+   "30 RIGHT down"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "result"
+   ],
+   [
+    "Heading",
+    "text",
+    "==",
+    "Game over"
+   ],
+   [
+    "Again",
+    "text",
+    "contains",
+    "Retry stage 1"
+   ]
+  ]
+ },
+ {
+  "name": "play-through: the last stage cleared wins the game (the result screen, the best score saved)",
+  "frames": 330,
+  "scene": "scenes/stage3.scene.json",
+  "patch": {
+   "Spawner": {
+    "script.count": 1,
+    "script.spread": 0
+   }
+  },
+  "input": [
+   "5 SPACE down"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "result"
+   ],
+   [
+    "Heading",
+    "text",
+    "==",
+    "You win!"
+   ],
+   [
+    "Best",
+    "text",
+    "==",
+    "New best!"
+   ],
+   [
+    "@file:save.json",
+    "progress.best",
+    "==",
+    100
+   ]
+  ]
+ },
+ {
+  "name": "play-through: the stage reached survives a restart - the title starts at stage 2",
+  "frames": 60,
+  "before": [
+   {
+    "frames": 540,
+    "input": [
+     "10 ENTER tap",
+     "30 SPACE down"
+    ]
+   }
+  ],
+  "input": [
+   "10 ENTER tap"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "stage2"
+   ],
+   [
+    "@file:save.json",
+    "progress.unlocked",
+    "==",
+    2
+   ]
+  ]
+ },
+ {
+  "name": "play-through: the best score survives a restart - the title shows it",
+  "frames": 30,
+  "patch_scene": "scenes/stage3.scene.json",
+  "patch": {
+   "Spawner": {
+    "script.count": 1,
+    "script.spread": 0
+   }
+  },
+  "before": [
+   {
+    "frames": 330,
+    "scene": "scenes/stage3.scene.json",
+    "input": [
+     "5 SPACE down"
+    ]
+   }
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "title"
+   ],
+   [
+    "Best",
+    "text",
+    "==",
+    "Best 100"
+   ]
+  ]
+ },
+ {
+  "name": "play-through: the volume set in Settings survives a restart",
+  "frames": 60,
+  "before": [
+   {
+    "frames": 120,
+    "input": [
+     "10 DOWN tap",
+     "20 DOWN tap",
+     "30 ENTER tap",
+     "45 LEFT tap",
+     "55 LEFT tap",
+     "65 LEFT tap",
+     "75 DOWN tap",
+     "85 ENTER tap"
+    ]
+   }
+  ],
+  "input": [
+   "10 DOWN tap",
+   "20 DOWN tap",
+   "30 ENTER tap"
+  ],
+  "expect": [
+   [
+    "Volume",
+    "text",
+    "==",
+    "Volume  < 50% >"
+   ],
+   [
+    "@file:save.json",
+    "settings.volume",
+    "==",
+    0.5
+   ]
+  ]
+ },
+ {
+  "name": "play-through: Quit on the title ends the game",
+  "frames": 120,
+  "quits": true,
+  "input": [
+   "10 UP tap",
+   "20 ENTER tap"
+  ]
+ },
+ {
+  "name": "pause: Esc pauses the stage; Resume plays on",
+  "frames": 120,
+  "scene": "scenes/stage1.scene.json",
+  "input": [
+   "20 ESCAPE tap",
+   "30 ENTER tap",
+   "40 RIGHT down"
+  ],
+  "expect": [
+   [
+    "PauseMenu",
+    "visible",
+    "==",
+    false
+   ],
+   [
+    "Player",
+    "x",
+    ">",
+    60
+   ]
+  ]
+ },
+ {
+  "name": "pause: nothing moves while paused",
+  "frames": 80,
+  "scene": "scenes/stage1.scene.json",
+  "input": [
+   "20 ESCAPE tap",
+   "30 RIGHT down"
+  ],
+  "expect": [
+   [
+    "PauseMenu",
+    "visible",
+    "==",
+    true
+   ],
+   [
+    "Player",
+    "x",
+    "==",
+    40
+   ]
+  ]
+ },
+ {
   "name": "shooting an enemy scores (and is the best score)",
   "frames": 260,
+  "scene": "scenes/stage2.scene.json",
   "input": [
    "5 SPACE down",
    "5 DOWN down",
@@ -31,6 +325,7 @@
  {
   "name": "flying into an enemy costs a life",
   "frames": 160,
+  "scene": "scenes/stage2.scene.json",
   "patch": {
    "Player": {
     "position": [
@@ -51,6 +346,7 @@
  {
   "name": "the last life ends the game",
   "frames": 160,
+  "scene": "scenes/stage2.scene.json",
   "patch": {
    "Player": {
     "position": [
@@ -76,8 +372,9 @@
   ]
  },
  {
-  "name": "fire after game over plays again",
-  "frames": 200,
+  "name": "after the last life, the result screen says Game over",
+  "frames": 280,
+  "scene": "scenes/stage2.scene.json",
   "patch": {
    "Player": {
     "position": [
@@ -87,27 +384,25 @@
     "script.lives": 1
    }
   },
-  "input": [
-   "170 SPACE tap"
-  ],
   "expect": [
    [
-    "Message",
-    "text",
+    "@scene",
+    "name",
     "==",
-    ""
+    "result"
    ],
    [
-    "Score",
+    "Heading",
     "text",
     "==",
-    "Score 0"
+    "Game over"
    ]
   ]
  },
  {
   "name": "the player stays on screen",
   "frames": 120,
+  "scene": "scenes/stage1.scene.json",
   "input": [
    "5 LEFT down",
    "5 UP down"
@@ -130,6 +425,7 @@
  {
   "name": "touch: the fire button shoots an enemy",
   "frames": 260,
+  "scene": "scenes/stage2.scene.json",
   "input": [
    "5 touch2 292 152 down",
    "5 touch1 60 120 down",
@@ -142,6 +438,21 @@
     "text",
     "==",
     "Score 100"
+   ]
+  ]
+ },
+ {
+  "name": "touch: tapping Play on the title starts stage 1",
+  "frames": 60,
+  "input": [
+   "10 touch1 160 88 tap"
+  ],
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "stage1"
    ]
   ]
  }

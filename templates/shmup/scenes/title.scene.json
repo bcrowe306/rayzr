@@ -1,0 +1,582 @@
+{
+ "name": "title",
+ "background": [
+  140,
+  214,
+  225,
+  255
+ ],
+ "root": {
+  "type": "Node",
+  "name": "root",
+  "children": [
+   {
+    "type": "CameraNode",
+    "name": "Camera",
+    "position": [
+     160.0,
+     90.0
+    ],
+    "properties": {
+     "isCurrent": true
+    }
+   },
+   {
+    "type": "TileMapNode",
+    "name": "Sea",
+    "position": [
+     0,
+     -6
+    ],
+    "layer": 0,
+    "z_index": 0,
+    "tilemap": {
+     "tileset": "textures/tiles.png",
+     "tile_size": [
+      16,
+      16
+     ],
+     "map_size": [
+      40,
+      12
+     ],
+     "data": [
+      [
+       42,
+       42
+      ],
+      [
+       1,
+       37
+      ],
+      [
+       1,
+       38
+      ],
+      [
+       1,
+       39
+      ],
+      [
+       17,
+       42
+      ],
+      [
+       1,
+       37
+      ],
+      [
+       1,
+       38
+      ],
+      [
+       1,
+       39
+      ],
+      [
+       17,
+       42
+      ],
+      [
+       1,
+       49
+      ],
+      [
+       1,
+       50
+      ],
+      [
+       1,
+       51
+      ],
+      [
+       1,
+       39
+      ],
+      [
+       16,
+       42
+      ],
+      [
+       1,
+       49
+      ],
+      [
+       1,
+       50
+      ],
+      [
+       1,
+       51
+      ],
+      [
+       1,
+       39
+      ],
+      [
+       16,
+       42
+      ],
+      [
+       1,
+       61
+      ],
+      [
+       1,
+       62
+      ],
+      [
+       1,
+       63
+      ],
+      [
+       1,
+       51
+      ],
+      [
+       16,
+       42
+      ],
+      [
+       1,
+       61
+      ],
+      [
+       1,
+       62
+      ],
+      [
+       1,
+       63
+      ],
+      [
+       1,
+       51
+      ],
+      [
+       17,
+       42
+      ],
+      [
+       1,
+       61
+      ],
+      [
+       1,
+       62
+      ],
+      [
+       1,
+       63
+      ],
+      [
+       17,
+       42
+      ],
+      [
+       1,
+       61
+      ],
+      [
+       1,
+       62
+      ],
+      [
+       1,
+       63
+      ],
+      [
+       65,
+       42
+      ],
+      [
+       1,
+       37
+      ],
+      [
+       1,
+       38
+      ],
+      [
+       1,
+       39
+      ],
+      [
+       17,
+       42
+      ],
+      [
+       1,
+       37
+      ],
+      [
+       1,
+       38
+      ],
+      [
+       1,
+       39
+      ],
+      [
+       17,
+       42
+      ],
+      [
+       1,
+       49
+      ],
+      [
+       1,
+       50
+      ],
+      [
+       1,
+       51
+      ],
+      [
+       1,
+       39
+      ],
+      [
+       16,
+       42
+      ],
+      [
+       1,
+       49
+      ],
+      [
+       1,
+       50
+      ],
+      [
+       1,
+       51
+      ],
+      [
+       1,
+       39
+      ],
+      [
+       16,
+       42
+      ],
+      [
+       1,
+       61
+      ],
+      [
+       1,
+       62
+      ],
+      [
+       1,
+       63
+      ],
+      [
+       1,
+       51
+      ],
+      [
+       16,
+       42
+      ],
+      [
+       1,
+       61
+      ],
+      [
+       1,
+       62
+      ],
+      [
+       1,
+       63
+      ],
+      [
+       1,
+       51
+      ],
+      [
+       17,
+       42
+      ],
+      [
+       1,
+       61
+      ],
+      [
+       1,
+       62
+      ],
+      [
+       1,
+       63
+      ],
+      [
+       17,
+       42
+      ],
+      [
+       1,
+       61
+      ],
+      [
+       1,
+       62
+      ],
+      [
+       1,
+       63
+      ],
+      [
+       85,
+       42
+      ]
+     ]
+    },
+    "properties": {
+     "solid": false
+    },
+    "script": {
+     "path": "scripts/scroll.lua",
+     "properties": {
+      "speed": 20,
+      "wrap": 320
+     }
+    }
+   },
+   {
+    "type": "Node",
+    "name": "Menu",
+    "layer": 7,
+    "script": {
+     "path": "scripts/menu.lua",
+     "properties": {
+      "kind": "title",
+      "item_width": 170,
+      "item_height": 16,
+      "selected": "#c0392bff"
+     }
+    },
+    "children": [
+     {
+      "type": "TextNode",
+      "name": "Title",
+      "position": [
+       160.0,
+       36.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Shoot 'em up",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 32,
+       "align": "Center",
+       "color": "#1d3b4cff"
+      }
+     },
+     {
+      "type": "TextNode",
+      "name": "Best",
+      "position": [
+       160.0,
+       62.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 16,
+       "align": "Center",
+       "color": "#1d3b4cff"
+      }
+     },
+     {
+      "type": "TextNode",
+      "name": "Play",
+      "position": [
+       160.0,
+       88.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Play",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 16,
+       "align": "Center",
+       "color": "#1d3b4cff"
+      },
+      "tags": [
+       "item"
+      ]
+     },
+     {
+      "type": "TextNode",
+      "name": "Level",
+      "position": [
+       160.0,
+       106.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Stage",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 16,
+       "align": "Center",
+       "color": "#1d3b4cff"
+      },
+      "tags": [
+       "item"
+      ]
+     },
+     {
+      "type": "TextNode",
+      "name": "Settings",
+      "position": [
+       160.0,
+       124.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Settings",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 16,
+       "align": "Center",
+       "color": "#1d3b4cff"
+      },
+      "tags": [
+       "item"
+      ]
+     },
+     {
+      "type": "TextNode",
+      "name": "Quit",
+      "position": [
+       160.0,
+       142.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Quit",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 16,
+       "align": "Center",
+       "color": "#1d3b4cff"
+      },
+      "tags": [
+       "item"
+      ]
+     }
+    ]
+   },
+   {
+    "type": "Node",
+    "name": "SettingsMenu",
+    "layer": 7,
+    "script": {
+     "path": "scripts/menu.lua",
+     "properties": {
+      "kind": "settings",
+      "item_width": 170,
+      "item_height": 16,
+      "selected": "#c0392bff"
+     }
+    },
+    "children": [
+     {
+      "type": "TextNode",
+      "name": "Heading",
+      "position": [
+       160.0,
+       50.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Settings",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 32,
+       "align": "Center",
+       "color": "#1d3b4cff"
+      }
+     },
+     {
+      "type": "TextNode",
+      "name": "Volume",
+      "position": [
+       160.0,
+       96.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Volume",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 16,
+       "align": "Center",
+       "color": "#1d3b4cff"
+      },
+      "tags": [
+       "item"
+      ]
+     },
+     {
+      "type": "TextNode",
+      "name": "Back",
+      "position": [
+       160.0,
+       114.0
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Back",
+       "font": "fonts/kenney_pixel.ttf",
+       "fontSize": 16,
+       "align": "Center",
+       "color": "#1d3b4cff"
+      },
+      "tags": [
+       "item"
+      ]
+     }
+    ],
+    "visible": false
+   }
+  ]
+ }
+}

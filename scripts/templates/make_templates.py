@@ -679,8 +679,8 @@ def rpg():
 
 def shmup():
     t = Template("shmup", "Shoot 'em up",
-                 "Fly right through waves of enemies: shoot, dodge their bullets, keep your three lives. "
-                 "Pooled bullets, explosions, a scrolling sea, a saved high score.", "jet-fighter", 3)
+                 "Fly right through three stages of enemies: shoot, dodge their bullets, keep your three lives. "
+                 "A title screen, settings, a pause menu, a saved high score.", "jet-fighter", 3)
     t.begin()
     t.art("pixel-shmup/ships_packed.png", "textures/ships.png")
     t.art("pixel-shmup/tiles_packed.png", "textures/tiles.png")
@@ -713,29 +713,46 @@ def shmup():
             "children": [{**sprite("Sprite", SHIPS, SG, {"idle": ([cell], 1, True)}, layer=2), "rotation": 90}]})
     t.json("components/explosion.component.json", {
         "type": "Node", "name": "Explosion", "script": {"path": "scripts/explosion.lua"}, "children": [explosion]})
-    children = [
-        {"type": "CameraNode", "name": "Camera", "position": [160, 90], "properties": {"isCurrent": True}},
-        {**tilemap("Sea", TILES, 16, sea, layer=0, pos=(0, -6)),
-         "script": {"path": "scripts/scroll.lua", "properties": {"speed": 20, "wrap": 320}}},
-        {"type": "Node", "name": "Player", "position": [40, 90], "tags": ["player"],
-         "script": {"path": "scripts/player.lua"},
-         "children": [{**sprite("Sprite", SHIPS, SG, {"idle": ([1], 1, True)}, layer=2), "rotation": -90}]},
-        {"type": "Node", "name": "Spawner", "script": {"path": "scripts/spawner.lua"}},
-        {"type": "Node", "name": "Shots"},  # bullets, enemies, explosions go here
-        {"type": "Node", "name": "HUD", "script": {"path": "scripts/hud.lua"}, "children": [
-            text("Score", "Score 0", (6, 2), color="#1d3b4cff"),
-            text("High", "Best 0", (314, 2), align="Right", pivot=(1, 0), color="#1d3b4cff"),
-            text("Lives", "Lives 3", (6, 162), color="#1d3b4cff"),
-            text("Message", "", (160, 80), size=32, align="Center", pivot=(0.5, 0.5), color="#1d3b4cff"),
-        ]},
-    ]
-    t.json("scenes/game.scene.json", with_touch(scene("game", children, background=(140, 214, 225, 255)), (320, 180),
-                                                buttons=(("fire", "F"),)))
-    t.json("project.json", project("Shoot 'em up", ["scenes/game.scene.json"], MOVE_ACTIONS + [
-        action("fire", "SPACE", "J", "pad:RIGHT_FACE_DOWN"),
-    ], gravity=(0, 0)))
+    ink, red, sky = "#1d3b4cff", "#c0392bff", (140, 214, 225, 255)
+
+    def sea_map():
+        return {**tilemap("Sea", TILES, 16, sea, layer=0, pos=(0, -6)),
+                "script": {"path": "scripts/scroll.lua", "properties": {"speed": 20, "wrap": 320}}}
+    # A small game (#329): three stages - the first down the middle, then
+    # sweeping waves with shooters - three lives for the whole run, the best
+    # score saved; the title, a pause menu, the result screen.
+    STAGES = [{"count": 6, "interval": 0.8, "shooter_every": 0, "spread": 0},
+              {"count": 8, "interval": 0.9, "shooter_every": 4, "spread": 1},
+              {"count": 10, "interval": 0.75, "shooter_every": 3, "spread": 1}]
+    levels = [f"scenes/stage{i + 1}.scene.json" for i in range(len(STAGES))]
+    for i, props in enumerate(STAGES):
+        children = [
+            {"type": "CameraNode", "name": "Camera", "position": [160, 90], "properties": {"isCurrent": True}},
+            sea_map(),
+            {"type": "Node", "name": "Player", "position": [40, 90], "tags": ["player"],
+             "script": {"path": "scripts/player.lua"},
+             "children": [{**sprite("Sprite", SHIPS, SG, {"idle": ([1], 1, True)}, layer=2), "rotation": -90}]},
+            {"type": "Node", "name": "Spawner", "script": {"path": "scripts/spawner.lua", "properties": {"stage": i + 1, **props}}},
+            {"type": "Node", "name": "Shots"},  # bullets, enemies, explosions go here
+            {"type": "Node", "name": "HUD", "script": {"path": "scripts/hud.lua"}, "children": [
+                text("Score", "Score 0", (6, 2), color=ink),
+                text("Stage", "", (160, 2), align="Center", pivot=(0.5, 0), color=ink),
+                text("High", "Best 0", (314, 2), align="Right", pivot=(1, 0), color=ink),
+                text("Lives", "Lives 3", (6, 162), color=ink),
+                text("Message", "", (160, 80), size=32, align="Center", pivot=(0.5, 0.5), color=ink),
+            ]},
+            pause_menu(PIXEL_STYLE, red),
+        ]
+        t.json(levels[i], with_touch(scene(f"stage{i + 1}", children, background=sky), (320, 180),
+                                     buttons=(("fire", "F"),), pause="pause"))
+    t.json("scenes/title.scene.json", title_scene("Shoot 'em up", PIXEL_STYLE, ink, red, sky, [sea_map()], level_word="Stage"))
+    t.json("scenes/result.scene.json", result_scene(PIXEL_STYLE, ink, red, sky, [sea_map()]))
+    t.json("project.json", project("Shoot 'em up", ["scenes/title.scene.json"] + levels + ["scenes/result.scene.json"],
+                                   MOVE_ACTIONS + [action("fire", "SPACE", "J", "pad:RIGHT_FACE_DOWN")] + GAME_ACTIONS,
+                                   gravity=(0, 0), globals_=GAME_GLOBALS))
     for s_ in ("player", "bullet", "enemy", "spawner", "explosion", "scroll", "hud"):
         t.script(s_)
+    game_scripts(t, levels, lives=3, score_name="Score", level_word="Stage")
     with open(os.path.join(SCRIPTS, "shmup", "README.md")) as f:
         t.write("README.md", f.read())
     return t
