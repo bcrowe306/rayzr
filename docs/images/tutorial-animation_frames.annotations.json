@@ -1,0 +1,10 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "The animation shown: idle, run or jump", "x": 219, "y": 471, "w": 170, "h": 25},
+    {"label": "Its frames: cells of the sheet", "x": 450, "y": 558, "w": 32, "h": 40},
+    {"label": "Loop: start over at the end", "x": 658, "y": 471, "w": 57, "h": 25},
+    {"label": "Frames per second: the player's 8 (the slicer's FPS)", "x": 837, "y": 471, "w": 96, "h": 25}
+  ]
+}

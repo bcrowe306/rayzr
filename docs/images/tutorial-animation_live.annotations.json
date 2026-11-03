@@ -1,0 +1,7 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "The current state, lit: the player is in the air", "x": 497, "y": 622, "w": 84, "h": 35}
+  ]
+}

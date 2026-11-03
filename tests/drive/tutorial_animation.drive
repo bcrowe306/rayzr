@@ -1,0 +1,522 @@
+# The Animation tutorial (docs/tutorials/animation.md, #295): its steps, in a
+# copy of the finished project (docs/tutorials/animation/), and its
+# screenshots (scripts/docs/screenshots.sh tutorial_animation copies them to
+# docs/images/tutorial-animation_*.png).
+# drive: project docs/tutorials/animation
+wait 5
+key escape
+# A taller bottom panel for the Animation tab.
+click @menu:View
+click @menu:View/Workspaces
+click @menu:Workspaces/Animation
+wait 3
+key escape
+# (more room for the timeline)
+drag 640,426 640,300 10
+wait 2
+
+# 1. The ground: a Tile Map of tiles.png, a row of grass, Solid.
+click @asset.new-scene
+click @hier.add
+type tile map
+click @addnode.create
+expect node:TileMap.type == TileMapNode
+wait 2
+dblclick @insp.name
+key ctrl+a
+type Ground
+key enter
+dblclick @insp.position.x
+key ctrl+a
+type 0
+key enter
+dblclick @insp.position.y
+key ctrl+a
+type 0
+key enter
+click @tile.tileset
+click @pick:textures/tiles.png
+wait 2
+dblclick @tile.size-x
+key cmd+a
+type 18
+key enter
+dblclick @tile.size-y
+key cmd+a
+type 18
+key enter
+dblclick @tile.map-w
+key cmd+a
+type 18
+key enter
+dblclick @tile.map-h
+key cmd+a
+type 10
+key enter
+click @hier:Ground
+key shift+f
+wait 3
+click @tile.palette:2
+drag @world:9,153 @world:315,153 20
+expect node:Ground.tiles == 18
+click @tile.paint
+click @insp.prop:solid
+expect node:Ground.prop.solid == true
+
+# 2. The player: a Character Mover with an Animation Player child.
+key escape
+click @hier.add
+type character mover
+click @addnode.create
+expect node:CharacterMover.type == CharacterMoverNode
+dblclick @insp.name
+key ctrl+a
+type Player
+key enter
+dblclick @insp.position.x
+key ctrl+a
+type 40
+key enter
+dblclick @insp.position.y
+key ctrl+a
+type 130
+key enter
+dblclick @insp.prop:size.x
+key ctrl+a
+type 12
+key enter
+dblclick @insp.prop:size.y
+key ctrl+a
+type 6
+key enter
+click @insp.prop:controlMode
+click @pick:Script
+expect node:Player.prop.controlMode == Script
+click @insp.tag.input
+type player
+key enter
+click @hier.add
+type animation player
+click @addnode.create
+expect node:AnimationPlayer.parent == Player
+dblclick @insp.name
+key ctrl+a
+type Sprite
+key enter
+dblclick @insp.position.x
+key ctrl+a
+type 0
+key enter
+dblclick @insp.position.y
+key ctrl+a
+type -3
+key enter
+wait 2
+expect bottom-tab == Animation
+
+# 3. Slice the sprite sheet: idle (cell 0), run (0, 1), jump (1) at 8 fps.
+click @anim.new-from
+click @anim.new-slicer
+wait 2
+click @slicer.texture
+click @pick:textures/characters.png
+wait 2
+dblclick @slicer.cols
+key ctrl+a
+type 9
+key enter
+dblclick @slicer.rows
+key ctrl+a
+type 3
+key enter
+click @slicer.cell:0
+click @slicer.name
+type idle
+click @slicer.add
+click @slicer.cell:0
+hold shift
+click @slicer.cell:1
+release
+click @slicer.name
+type run
+click @slicer.add
+click @slicer.cell:1
+click @slicer.name
+type jump
+click @slicer.add
+dblclick @slicer.fps
+key ctrl+a
+type 8
+key enter
+annotate @slicer.cols Cell Grid: 9 columns, 3 rows - cells of 24 x 24 px
+annotate @slicer.add Pick cells, name the animation, Add Animation
+annotate @slicer.create Add the animations to the selected Animation Player
+screenshot tutorial-animation_slicer
+click @slicer.create
+wait 2
+expect anim-names contains run
+# (the slicer's close button)
+click 1004,126
+wait 2
+expect item:slicer.create == missing
+# jump plays once: Loop off in the Animation tab.
+click @anim.select
+click @pick:jump
+click @anim.loop
+expect file:scenes/new_scene.scene.json !contains "name": "jump"
+key ctrl+s
+expect file:scenes/new_scene.scene.json contains "name": "jump", "loop": false
+click @anim.select
+click @pick:run
+click @anim.frame:2
+wait 2
+annotate @anim.select The animation shown: idle, run or jump
+annotate @anim.frame:1 Its frames: cells of the sheet
+annotate @anim.loop Loop: start over at the end
+annotate @anim.fps Frames per second: the player's 8 (the slicer's FPS)
+screenshot tutorial-animation_frames
+
+# 4. The coin: a Trigger Area with an Animation Player child; "bob" and
+# "collect" from tiles.png's coin cell (151), at 10 fps.
+click @hier:Ground
+key escape
+expect selected ==
+click @hier.add
+type trigger area
+click @addnode.create
+expect node:TriggerArea.type == AreaNode
+dblclick @insp.name
+key ctrl+a
+type Coin
+key enter
+dblclick @insp.position.x
+key ctrl+a
+type 225
+key enter
+dblclick @insp.position.y
+key ctrl+a
+type 72
+key enter
+click @insp.shape0.type
+click @pick:Circle
+dblclick @insp.prop:radius
+key ctrl+a
+type 6
+key enter
+expect shape:Coin:0:radius == 6.0
+click @insp.tag.input
+type coin
+key enter
+click @insp.script-attach
+click @pick:scripts/coin.lua
+click @hier.add
+type animation player
+click @addnode.create
+expect node:AnimationPlayer.parent == Coin
+dblclick @insp.name
+key ctrl+a
+type Sprite
+key enter
+dblclick @insp.position.x
+key ctrl+a
+type 0
+key enter
+dblclick @insp.position.y
+key ctrl+a
+type 0
+key enter
+click @anim.new-from
+click @anim.new-slicer
+wait 2
+click @slicer.texture
+click @pick:textures/tiles.png
+wait 2
+dblclick @slicer.cols
+key ctrl+a
+type 20
+key enter
+dblclick @slicer.rows
+key ctrl+a
+type 9
+key enter
+click @slicer.cell:151
+click @slicer.name
+type bob
+click @slicer.add
+click @slicer.cell:151
+click @slicer.name
+type collect
+click @slicer.add
+dblclick @slicer.fps
+key ctrl+a
+type 10
+key enter
+click @slicer.create
+wait 2
+click 1004,126
+wait 2
+expect item:slicer.create == missing
+click @anim.select
+click @pick:bob
+
+# The bob: a position track, keys at frames 1, 7 and 13 (0, 0.6, 1.2 s).
+click @anim.add-track
+click @anim.track-prop:position
+expect item:anim.keyframe:position:1 == visible
+click @anim.keyframe:position:1
+key cmd+d
+expect item:anim.keyframe:position:2 == visible
+dblclick @anim.keyinsp.frame
+key ctrl+a
+type 7
+key enter
+wait 2
+expect item:anim.keyframe:position:7 == visible
+dblclick @anim.keyinsp.value+60,0
+key ctrl+a
+type -4
+key enter
+click @anim.keyframe:position:7
+key cmd+d
+dblclick @anim.keyinsp.frame
+key ctrl+a
+type 13
+key enter
+wait 2
+expect item:anim.keyframe:position:13 == visible
+dblclick @anim.keyinsp.value+60,0
+key ctrl+a
+type 0
+key enter
+# Easing: in_out_sine from the first two keys.
+click @anim.keyframe:position:1
+hold cmd
+click @anim.keyframe:position:7
+release
+expect anim-keys == 2
+click @anim.keyinsp.ease
+click @pick:in_out_sine
+click @anim.default
+click @insp.prop:autoplay
+click @anim.keyinsp.close
+click @anim.keyframe:position:7
+hover 700,60
+wait 2
+annotate @anim.keyframe:position:7 A key: the Sprite's position at frame 7 (0.6 s)
+annotate @anim.keyinsp.value The selected key's value and easing
+annotate @anim.default The star: the animation selected when the scene loads (Autoplay plays it)
+screenshot tutorial-animation_tracks
+click @anim.keyinsp.close
+key ctrl+s
+expect file:scenes/new_scene.scene.json contains "v": [0, -4, 0, 0], "ease": "in_out_sine"
+expect file:scenes/new_scene.scene.json contains "default_animation": "bob"
+
+# collect: plays once; scale 1 -> 1.6 -> 0 and position up 14 px in 0.3 s.
+click @anim.select
+click @pick:collect
+click @anim.loop
+click @anim.frame:1
+click @anim.add-track
+click @anim.track-prop:position
+click @anim.keyframe:position:1
+key cmd+d
+dblclick @anim.keyinsp.frame
+key ctrl+a
+type 4
+key enter
+wait 2
+dblclick @anim.keyinsp.value+60,0
+key ctrl+a
+type -14
+key enter
+click @anim.keyframe:position:1
+click @anim.keyinsp.ease
+click @pick:out_quad
+click @anim.add-track
+click @anim.track-prop:scale
+click @anim.keyframe:scale:1
+key cmd+d
+expect item:anim.keyframe:scale:2 == visible
+dblclick @anim.keyinsp.value+-60,0
+key ctrl+a
+type 1.6
+key enter
+dblclick @anim.keyinsp.value+60,0
+key ctrl+a
+type 1.6
+key enter
+click @anim.keyinsp.ease
+click @pick:in_back
+click @anim.keyframe:scale:2
+key cmd+d
+dblclick @anim.keyinsp.frame
+key ctrl+a
+type 4
+key enter
+wait 2
+expect item:anim.keyframe:scale:4 == visible
+dblclick @anim.keyinsp.value+-60,0
+key ctrl+a
+type 0
+key enter
+dblclick @anim.keyinsp.value+60,0
+key ctrl+a
+type 0
+key enter
+click @anim.keyinsp.close
+click @anim.frame:1
+wait 2
+annotate @anim.loop Loop off: collect plays once, then animation_finished
+screenshot tutorial-animation_collect
+click @anim.stop
+key ctrl+s
+expect file:scenes/new_scene.scene.json contains "name": "collect", "loop": false
+expect file:scenes/new_scene.scene.json contains "v": [1.6, 1.6, 0, 0], "ease": "in_back"
+
+# 5. The State Machine: a state per animation; speed and on_floor; arrows.
+click @hier:Player
+click @hier.add
+type state machine
+click @addnode.create
+expect node:StateMachine.parent == Player
+wait 3
+expect bottom-tab == StateGraph
+click @smg.page:settings
+wait 2
+click @smg.from-anims
+click @smg.page:params
+wait 2
+click @smg.add-param
+click @smg.param-name:0
+key cmd+a
+type speed
+key enter
+click @smg.param-type:0
+click @pick:float
+click @smg.add-param
+click @smg.param-name:1
+key cmd+a
+type on_floor
+key enter
+click @smg.param-value:1
+wait 2
+annotate @smg.param-type:0 speed: a float the script sets every frame
+annotate @smg.param-value:1 on_floor: a bool, true at the start
+screenshot tutorial-animation_parameters
+click @smg.page:graph
+wait 2
+hover @smg.canvas
+key f
+wait 2
+# jump below run, the Any box below idle.
+drag @smg.state:jump @smg.state:run+0,90 10
+drag @smg.state:Any @smg.state:idle+0,90 10
+hover @smg.canvas
+key f
+wait 2
+# idle -> run when speed > 10, back when speed < 10 (0.1 s blends).
+drag @smg.handle:idle @smg.state:run 10
+wait 2
+click @insp.sm.tr-mode:0
+click @pick:Automatic
+click @insp.sm.add-cond:0
+click @insp.sm.cond-op:0.0
+click @pick:>
+dblclick @insp.sm.cond-value:0.0
+key ctrl+a
+type 10
+key enter
+dblclick @insp.sm.tr-blend:0
+key ctrl+a
+type 0.1
+key enter
+drag @smg.handle:run @smg.state:idle 10
+wait 2
+click @insp.sm.tr-mode:1
+click @pick:Automatic
+click @insp.sm.add-cond:1
+click @insp.sm.cond-op:1.0
+click @pick:<
+dblclick @insp.sm.cond-value:1.0
+key ctrl+a
+type 10
+key enter
+dblclick @insp.sm.tr-blend:1
+key ctrl+a
+type 0.1
+key enter
+# Any state -> jump when on_floor is false; jump -> idle when it's true.
+drag @smg.handle:Any @smg.state:jump 10
+wait 2
+click @insp.sm.tr-mode:2
+click @pick:Automatic
+click @insp.sm.add-cond:2
+click @insp.sm.cond-param:2.0
+click @pick:on_floor
+click @insp.sm.cond-op:2.0
+click @pick:is false
+drag @smg.handle:jump @smg.state:idle 10
+wait 2
+click @insp.sm.tr-mode:3
+click @pick:Automatic
+click @insp.sm.add-cond:3
+click @insp.sm.cond-param:3.0
+click @pick:on_floor
+hover @smg.canvas
+key f
+wait 2
+click @smg.tr:2
+wait 2
+annotate @smg.state:idle A state: its name and the animation it plays
+annotate @smg.tr:0 Automatic arrows (solid): taken when their conditions hold
+annotate @smg.state:Any Any state: its arrows fire from every state
+screenshot tutorial-animation_graph
+key ctrl+s
+expect file:scenes/new_scene.scene.json contains "from": "*", "to": "jump", "mode": "auto"
+expect file:scenes/new_scene.scene.json contains ["false", "on_floor"]
+expect file:scenes/new_scene.scene.json contains [">", "speed", 10]
+# The player's script feeds the machine.
+click @hier:Player
+click @insp.script-attach
+click @pick:scripts/player.lua
+expect node:Player.script.speed == 90
+
+# 6. The finished scene in Simulate: from the Lua line the player floats up
+# slowly (low gravity) - off the floor, the Any-state arrow takes it to jump.
+dblclick @asset:scenes/main.scene.json
+wait 10
+expect scene contains main.scene.json
+click @hier:Ground
+key shift+f
+wait 3
+click @hier:Player/StateMachine
+wait 2
+click @menu:Game
+click @menu:Game/Simulate in Editor
+wait 20
+expect node:StateMachine.state == idle/3
+click @bottom:console
+click @console.lua
+type local p = Scene.find_node("Player"); p:set_property("gravityScale", 0.02); p:character_set_velocity(0, -30)
+key enter
+wait 6
+expect node:StateMachine.state == jump/3
+click @bottom:stategraph
+wait 2
+hover @smg.canvas
+key f
+wait 2
+annotate @smg.state:jump The current state, lit: the player is in the air
+screenshot tutorial-animation_live
+click @menu:Game
+click @menu:Game/Simulate in Editor
+wait 5
+
+# 7. Played (without the drives' Show Colliders).
+click @menu:Game
+click @menu:Game/Show Colliders in Game
+expect log contains Colliders hidden in the game
+game-args --frames 90 --screenshot $SHOTS/08_tutorial-animation_game.png --dump-scene $SHOTS/game_scene.json
+key f5
+wait-until game == stopped timeout=900
+expect abs-file:$SHOTS/game_scene.json contains "State: idle"

@@ -1,0 +1,8 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "The score label, set by the coin_collected event", "x": 566, "y": 235, "w": 56, "h": 56},
+    {"label": "The bar's value, set by the health_changed event", "x": 297, "y": 235, "w": 56, "h": 56}
+  ]
+}

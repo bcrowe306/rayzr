@@ -1,0 +1,87 @@
+{
+ "name": "title",
+ "background": [
+  205,
+  232,
+  247,
+  255
+ ],
+ "root": {
+  "type": "Node",
+  "name": "root",
+  "children": [
+   {
+    "type": "ScreenLayerNode",
+    "name": "Menu",
+    "position": [
+     0,
+     0
+    ],
+    "layer": 7,
+    "properties": {
+     "anchor": "Center"
+    },
+    "script": {
+     "path": "scripts/title.lua"
+    },
+    "children": [
+     {
+      "type": "TextNode",
+      "name": "Title",
+      "position": [
+       0,
+       -60
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Coin Run",
+       "fontSize": 48,
+       "align": "Center",
+       "color": "#3c3c5aff"
+      }
+     },
+     {
+      "type": "UIButtonNode",
+      "name": "Play",
+      "position": [
+       -100,
+       10
+      ],
+      "layer": 7,
+      "properties": {
+       "size": [
+        200,
+        36
+       ],
+       "text": "Play",
+       "fontSize": 18
+      }
+     },
+     {
+      "type": "TextNode",
+      "name": "Hint",
+      "position": [
+       0,
+       80
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 7,
+      "properties": {
+       "text": "Tab or the arrows pick a button, Enter presses it",
+       "fontSize": 16,
+       "align": "Center",
+       "color": "#3c3c5a99"
+      }
+     }
+    ]
+   }
+  ]
+ }
+}
