@@ -1,0 +1,8 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "Generate Now: a level in the editor, to see or paint over", "x": 1037, "y": 456, "w": 111, "h": 25},
+    {"label": "Random Seed: a new level each time (Last Seed: the one made)", "x": 1124, "y": 965, "w": 25, "h": 25}
+  ]
+}

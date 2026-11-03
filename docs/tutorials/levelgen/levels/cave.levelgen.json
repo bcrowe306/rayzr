@@ -1,0 +1,16 @@
+{"size": [40, 22], "seed": 7, "output": 8, "nodes": [
+  {"id": 1, "type": "noise", "params": {"scale": 6, "octaves": 3}, "pos": [0, 0]},
+  {"id": 2, "type": "threshold", "inputs": {"in": 1}, "params": {"value": 0.47}, "pos": [200, 0]},
+  {"id": 3, "type": "cellular", "inputs": {"in": 2}, "params": {"iterations": 3}, "pos": [400, 0]},
+  {"id": 4, "type": "border", "params": {"width": 1}, "pos": [400, 170]},
+  {"id": 5, "type": "combine", "inputs": {"a": 3, "b": 4}, "params": {"op": "max"}, "pos": [600, 0]},
+  {"id": 6, "type": "connect_regions", "inputs": {"in": 5}, "params": {"min_size": 12}, "pos": [800, 0]},
+  {"id": 7, "type": "check", "inputs": {"in": 6}, "params": {"min_open": 0.35}, "pos": [1000, 0]},
+  {"id": 8, "type": "tile_output", "inputs": {"in": 7}, "params": {"tile_w": 16, "tile_h": 16}, "tileset": "textures/dungeon.png", "rules": [{"min": 0.5, "max": 1, "terrain": "Stone"}], "pos": [1200, 0]},
+  {"id": 9, "type": "tile_output", "inputs": {"in": 7}, "params": {"tile_w": 16, "tile_h": 16}, "tileset": "textures/dungeon.png", "layer": "Floor", "rules": [{"min": 0, "max": 0.5, "tiles": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 24]}], "pos": [1200, 170]},
+  {"id": 10, "type": "path", "inputs": {"in": 7}, "params": {"placement": "farthest", "output": "start"}, "pos": [1200, 340]},
+  {"id": 11, "type": "entity_output", "inputs": {"in": 10}, "component": "components/start.component.json", "pos": [1400, 340]},
+  {"id": 12, "type": "invert", "inputs": {"in": 7}, "pos": [1000, 510]},
+  {"id": 13, "type": "poisson_scatter", "inputs": {"mask": 12}, "params": {"radius": 7}, "pos": [1200, 510]},
+  {"id": 14, "type": "entity_output", "inputs": {"in": 13}, "params": {"max": 10}, "component": "components/coin.component.json", "pos": [1400, 510]}
+]}

@@ -1,0 +1,289 @@
+# The Tile maps and terrains tutorial (docs/tutorials/tilemaps.md, #295): its
+# steps, in a copy of the finished project (docs/tutorials/tilemaps/), and its
+# screenshots (scripts/docs/screenshots.sh tutorial_tilemaps copies them to
+# docs/images/tutorial-tilemaps_*.png).
+# drive: project docs/tutorials/tilemaps
+wait 5
+key escape
+# The reader makes the tileset's terrain and animation: start without them.
+exec rm $PROJECT/textures/dungeon.tileset.json
+# A taller bottom panel for the Tile Map tab.
+click @menu:View
+click @menu:View/Workspaces
+click @menu:Workspaces/Animation
+wait 3
+key escape
+
+# 1. A Tile Map for the floor: the tileset, its tile size, the map size; a fill.
+click @asset.new-scene
+click @hier.add
+type tile map
+click @addnode.create
+expect node:TileMap.type == TileMapNode
+wait 2
+expect bottom-tab == TileMap
+dblclick @insp.name
+key ctrl+a
+type Floor
+key enter
+dblclick @insp.position.x
+key ctrl+a
+type 0
+key enter
+dblclick @insp.position.y
+key ctrl+a
+type 0
+key enter
+click @tile.tileset
+click @pick:textures/dungeon.png
+wait 2
+dblclick @tile.size-x
+key cmd+a
+type 16
+key enter
+dblclick @tile.size-y
+key cmd+a
+type 16
+key enter
+dblclick @tile.map-w
+key cmd+a
+type 20
+key enter
+dblclick @tile.map-h
+key cmd+a
+type 11
+key enter
+expect node:Floor.tiles == 0
+click @hier:Floor
+key shift+f
+wait 3
+click @tile.palette:0
+expect item:tile.paint == visible
+click @tile.fill
+click @world:100,100
+expect node:Floor.tiles == 220
+annotate @tile.tileset The tileset image, its Tile Size and the Map Size in cells
+annotate @tile.palette:0 The tiles: click one to paint with it
+annotate @tile.fill Paint, Erase, Fill
+screenshot tutorial-tilemaps_tileset
+click @tile.fill
+
+# 2. The walls: a second Tile Map, painted with strokes; Solid.
+key escape
+click @hier.add
+type tile map
+click @addnode.create
+dblclick @insp.name
+key ctrl+a
+type Walls
+key enter
+dblclick @insp.position.x
+key ctrl+a
+type 0
+key enter
+dblclick @insp.position.y
+key ctrl+a
+type 0
+key enter
+click @tile.tileset
+click @pick:textures/dungeon.png
+wait 2
+dblclick @tile.size-x
+key cmd+a
+type 16
+key enter
+dblclick @tile.size-y
+key cmd+a
+type 16
+key enter
+dblclick @tile.map-w
+key cmd+a
+type 20
+key enter
+dblclick @tile.map-h
+key cmd+a
+type 11
+key enter
+click @tile.palette:40
+drag @world:8,8 @world:312,8 20
+drag @world:8,24 @world:8,152 20
+drag @world:8,168 @world:312,168 20
+drag @world:312,24 @world:312,152 20
+expect node:Walls.tiles == 58
+# The door: erase a wall tile, paint the door there.
+click @tile.erase
+click @world:312,88
+expect node:Walls.tiles == 57
+click @tile.palette:45
+click @world:312,88
+expect node:Walls.tiles == 58
+click @tile.paint
+click @insp.prop:solid
+expect node:Walls.prop.solid == true
+annotate @node:Walls The walls: one Tile Map, painted a stroke at a time
+annotate @insp.prop:solid Solid: the painted tiles become colliders
+screenshot tutorial-tilemaps_walls
+
+# 3. A terrain: the Stone terrain of the tileset (Edges, 16 patterns), its
+# tiles picked in the Terrain Tiles window, painted on a third map.
+key escape
+click @hier.add
+type tile map
+click @addnode.create
+dblclick @insp.name
+key ctrl+a
+type Path
+key enter
+dblclick @insp.position.x
+key ctrl+a
+type 0
+key enter
+dblclick @insp.position.y
+key ctrl+a
+type 0
+key enter
+click @tile.tileset
+click @pick:textures/dungeon.png
+wait 2
+dblclick @tile.size-x
+key cmd+a
+type 16
+key enter
+dblclick @tile.size-y
+key cmd+a
+type 16
+key enter
+dblclick @tile.map-w
+key cmd+a
+type 20
+key enter
+dblclick @tile.map-h
+key cmd+a
+type 11
+key enter
+click @tile.layer:Terrains
+click @tile.terrain-new
+wait 1
+expect file:textures/dungeon.tileset.json contains "name": "Terrain"
+click @tile.terrain-name:0
+key cmd+a
+type Stone
+key enter
+click @tile.terrain-kind:0
+click @pick:Edges (16)
+wait 1
+expect file:textures/dungeon.tileset.json contains "name": "Stone", "kind": "edges"
+click @tile.terrain-edit:0
+wait 2
+# Each pattern (N 1, E 2, S 4, W 8: the sides that are Stone too), its tile.
+click @terrain.pattern:15
+click @terrain.tile:14
+click @terrain.pattern:14
+click @terrain.tile:2
+click @terrain.pattern:11
+click @terrain.tile:26
+click @terrain.pattern:7
+click @terrain.tile:13
+click @terrain.pattern:13
+click @terrain.tile:15
+click @terrain.pattern:6
+click @terrain.tile:1
+click @terrain.pattern:12
+click @terrain.tile:3
+click @terrain.pattern:3
+click @terrain.tile:25
+click @terrain.pattern:9
+click @terrain.tile:27
+wait 1
+expect file:textures/dungeon.tileset.json contains [3, 25], [6, 1], [7, 13], [9, 27], [11, 26], [12, 3], [13, 15], [14, 2], [15, 14]
+click @terrain.pattern:6
+wait 1
+annotate @terrain.pattern:6 A pattern: green the cell, blue its Stone neighbours (here east and south)
+annotate @terrain.tile:1 Its tile: the top-left corner
+screenshot tutorial-tilemaps_terrain_tiles
+click @terrain.done
+wait 1
+# Paint the walkway (three rows) and a branch up to the north wall.
+click @tile.terrain:0
+expect item:tile.paint == visible
+drag @world:24,72 @world:296,72 30
+drag @world:24,88 @world:296,88 30
+drag @world:24,104 @world:296,104 30
+drag @world:152,24 @world:152,56 6
+drag @world:168,24 @world:168,56 6
+drag @world:184,24 @world:184,56 6
+expect node:Path.tiles == 63
+click @tile.paint
+annotate @node:Path Painted with the Stone terrain: edges and corners pick themselves
+screenshot tutorial-tilemaps_terrain
+
+# 4. An animated tile: the gargoyle (19) drips (20).
+click @hier:Walls
+wait 1
+click @tile.layer:Tiles
+click @tile.palette:19
+click @tile.animate
+wait 1
+expect item:tile-anim.adding == visible
+click @tile.palette:20
+wait 1
+expect file:textures/dungeon.tileset.json contains [19, 120], [20, 120]
+dblclick @tile-anim.ms:0
+key ctrl+a
+type 400
+key enter
+dblclick @tile-anim.ms:1
+key ctrl+a
+type 400
+key enter
+wait 1
+expect file:textures/dungeon.tileset.json contains [19, 400], [20, 400]
+annotate @tile-anim.adding Add Frames: click tiles in the Tile Map tab to add them
+screenshot tutorial-tilemaps_animation
+click @tile-anim.adding
+# (the window's close button)
+click 854,176
+wait 1
+expect item:tile-anim.adding == missing
+click @tile.palette:19
+click @world:168,8
+click @tile.paint
+key ctrl+s
+expect file:scenes/new_scene.scene.json contains "type": "TileMapNode"
+expect file:scenes/new_scene.scene.json contains "solid": true
+
+# 5. The finished room in Simulate: the player moved next to the door from
+# the Lua line, the door's tile erased with tilemap_set_tile.
+dblclick @asset:scenes/main.scene.json
+wait 10
+expect scene contains main.scene.json
+click @hier:Walls
+key shift+f
+wait 3
+key escape
+click @menu:Game
+click @menu:Game/Simulate in Editor
+wait 20
+click @bottom:console
+wait 3
+click @console.lua
+type Scene.find_node("Player").position = Vec2(296, 88)
+key enter
+wait 10
+expect node:Hint.prop.text == E: open the door
+click @console.lua
+type Scene.find_node("Walls"):tilemap_set_tile(19, 5, -1)
+key enter
+wait 10
+annotate @node:Player The player next to the door; its tile erased from the Lua line
+annotate @window:console tilemap_set_tile(19, 5, -1): the door's cell emptied
+screenshot tutorial-tilemaps_lua
+click @menu:Game
+click @menu:Game/Simulate in Editor
+wait 5
+
+# 6. Played.
+game-args --frames 60 --screenshot $SHOTS/07_tutorial-tilemaps_game.png --dump-scene $SHOTS/game_scene.json
+key f5
+wait-until game == stopped timeout=900
+expect abs-file:$SHOTS/game_scene.json contains "name": "Walls"

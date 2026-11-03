@@ -16,7 +16,9 @@
       "items": [
         { "file": "docs/tutorials/index.md", "slug": "tutorials" },
         { "file": "docs/tutorials/scripting.md", "slug": "tutorials/scripting" },
-        { "file": "docs/tutorials/physics.md", "slug": "tutorials/physics" }
+        { "file": "docs/tutorials/physics.md", "slug": "tutorials/physics" },
+        { "file": "docs/tutorials/tilemaps.md", "slug": "tutorials/tilemaps" },
+        { "file": "docs/tutorials/levelgen.md", "slug": "tutorials/levelgen" }
       ]
     },
     {

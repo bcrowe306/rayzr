@@ -1,0 +1,9 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "The tileset image, its Tile Size and the Map Size in cells", "x": 259, "y": 471, "w": 220, "h": 25},
+    {"label": "The tiles: click one to paint with it", "x": 223, "y": 577, "w": 32, "h": 32},
+    {"label": "Paint, Erase, Fill", "x": 541, "y": 533, "w": 28, "h": 28}
+  ]
+}

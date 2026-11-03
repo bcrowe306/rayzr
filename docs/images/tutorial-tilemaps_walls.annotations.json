@@ -1,0 +1,8 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "The walls: one Tile Map, painted a stroke at a time", "x": 425, "y": 154, "w": 56, "h": 56},
+    {"label": "Solid: the painted tiles become colliders", "x": 1136, "y": 457, "w": 25, "h": 25}
+  ]
+}

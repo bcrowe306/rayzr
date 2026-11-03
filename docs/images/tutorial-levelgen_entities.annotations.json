@@ -1,0 +1,8 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "The component on each point: a coin", "x": 854, "y": 432, "w": 293, "h": 25},
+    {"label": "Poisson Scatter: evenly spaced points on the floor", "x": 670, "y": 478, "w": 74, "h": 10}
+  ]
+}

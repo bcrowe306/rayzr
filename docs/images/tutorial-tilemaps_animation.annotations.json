@@ -1,0 +1,7 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "Add Frames: click tiles in the Tile Map tab to add them", "x": 422, "y": 235, "w": 93, "h": 25}
+  ]
+}

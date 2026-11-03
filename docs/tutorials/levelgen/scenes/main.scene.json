@@ -1,0 +1,197 @@
+{
+ "name": "main",
+ "background": [
+  37,
+  19,
+  26,
+  255
+ ],
+ "root": {
+  "type": "Node",
+  "name": "root",
+  "children": [
+   {
+    "type": "LevelGeneratorNode",
+    "name": "Generator",
+    "position": [
+     0,
+     0
+    ],
+    "properties": {
+     "generator": "levels/cave.levelgen.json",
+     "seed": 0,
+     "randomSeed": true,
+     "generateOnReady": true,
+     "attempts": 10
+    },
+    "script": {
+     "path": "scripts/level.lua"
+    },
+    "children": [
+     {
+      "type": "TileMapNode",
+      "name": "Walls",
+      "position": [
+       0,
+       0
+      ],
+      "layer": 1,
+      "z_index": 0,
+      "tilemap": {
+       "tileset": "textures/dungeon.png",
+       "tile_size": [
+        16,
+        16
+       ],
+       "map_size": [
+        40,
+        22
+       ],
+       "data": [
+        [
+         880,
+         -1
+        ]
+       ]
+      },
+      "properties": {
+       "solid": true
+      }
+     },
+     {
+      "type": "TileMapNode",
+      "name": "Floor",
+      "position": [
+       0,
+       0
+      ],
+      "layer": 1,
+      "z_index": -1,
+      "tilemap": {
+       "tileset": "textures/dungeon.png",
+       "tile_size": [
+        16,
+        16
+       ],
+       "map_size": [
+        40,
+        22
+       ],
+       "data": [
+        [
+         880,
+         -1
+        ]
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "type": "CharacterMoverNode",
+    "name": "Player",
+    "position": [
+     320,
+     180
+    ],
+    "tags": [
+     "player"
+    ],
+    "shapes": [
+     {
+      "type": "Capsule",
+      "radius": 5,
+      "size": [
+       10,
+       2
+      ]
+     }
+    ],
+    "properties": {
+     "controlMode": "Script"
+    },
+    "script": {
+     "path": "scripts/player.lua",
+     "properties": {}
+    },
+    "children": [
+     {
+      "type": "AnimationPlayerNode",
+      "name": "Sprite",
+      "position": [
+       0,
+       -3
+      ],
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "layer": 2,
+      "z_index": 0,
+      "fps": 8,
+      "animation": "idle",
+      "default_animation": "idle",
+      "animations": [
+       {
+        "name": "idle",
+        "loop": true,
+        "fps": 1,
+        "sheet": "textures/dungeon.png",
+        "grid": [
+         12,
+         11
+        ],
+        "cells": [
+         96
+        ],
+        "start": 0,
+        "end": 0
+       }
+      ],
+      "properties": {
+       "autoplay": true
+      }
+     }
+    ]
+   },
+   {
+    "type": "TextNode",
+    "name": "Info",
+    "position": [
+     8,
+     2
+    ],
+    "pivot": [
+     0,
+     0
+    ],
+    "layer": 7,
+    "properties": {
+     "text": "",
+     "fontSize": 20,
+     "align": "Left",
+     "color": "#ffffffff"
+    }
+   },
+   {
+    "type": "TextNode",
+    "name": "Coins",
+    "position": [
+     632,
+     2
+    ],
+    "pivot": [
+     1,
+     0
+    ],
+    "layer": 7,
+    "properties": {
+     "text": "",
+     "fontSize": 20,
+     "align": "Right",
+     "color": "#ffffffff"
+    }
+   }
+  ]
+ }
+}

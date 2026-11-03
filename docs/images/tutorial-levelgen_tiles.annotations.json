@@ -1,0 +1,8 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "The tileset the tiles come from", "x": 963, "y": 463, "w": 141, "h": 25},
+    {"label": "Rock (0.5 to 1) becomes the Stone terrain: auto-tiled edges", "x": 1028, "y": 595, "w": 83, "h": 25}
+  ]
+}
