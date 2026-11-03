@@ -442,7 +442,7 @@ levelgen_chunks_start :: proc(lg: ^LevelGeneratorNode, ctx: ^GameContext, seed: 
 	lg.onProgress->notify(lg, f64(0), ctx)
 	// The maps it fills: endless and empty; what the last level placed goes.
 	levelgen_endless(w, tm, sc)
-	for &n in w.graph.nodes do if n.kind == .Tile_Output && n.layer != "" do if m := Gen_LayerTileMap(tm, n.layer); m != nil do levelgen_endless(w, m, sc)
+	for &n in w.graph.nodes do for name in Gen_OutputMaps(&n) do if m := Gen_LayerTileMap(tm, name); m != nil do levelgen_endless(w, m, sc)
 	Node_SetGlobalPositions(sc.manager, sc.rootNode) // (the camera's place now)
 	w.center = levelgen_chunk_center(lg, w, tm, sc)
 	sync_ := !lg.background

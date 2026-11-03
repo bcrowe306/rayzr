@@ -1,0 +1,11 @@
+{"format": 1, "name": "main", "background": [18, 16, 26, 255], "root": {"type": "Node", "name": "root", "children": [
+ {"type": "LevelGeneratorNode", "name": "Gen", "properties": {"generator": "levels/heights.levelgen.json", "generateOnReady": true, "background": false},
+  "children": [
+   {"type": "TileMapNode", "name": "Ground", "position": [0, 0], "tilemap": {"tileset": "textures/heights.png", "tile_size": [16, 16], "map_size": [80, 45], "data": [[3600, -1]]}},
+   {"type": "TileMapNode", "name": "Hills", "position": [0, 0], "z_index": 1, "tilemap": {"tileset": "textures/heights.png", "tile_size": [16, 16], "map_size": [80, 45], "data": [[3600, -1]]}},
+   {"type": "TileMapNode", "name": "Peaks", "position": [0, 0], "z_index": 2, "tilemap": {"tileset": "textures/heights.png", "tile_size": [16, 16], "map_size": [80, 45], "data": [[3600, -1]]}},
+   {"type": "TileMapNode", "name": "Walls", "position": [0, 0], "visible": false, "tilemap": {"tileset": "textures/heights.png", "tile_size": [16, 16], "map_size": [80, 45], "data": [[3600, -1]]}, "properties": {"solid": true}}]},
+ {"type": "Node", "name": "Checker", "script": {"path": "scripts/check.lua"}},
+ {"type": "CameraNode", "name": "Camera", "position": [640, 360], "properties": {"isCurrent": true}},
+ {"type": "TextNode", "name": "Log", "position": [20, 10], "layer": 7, "properties": {"text": "", "fontSize": 20}}
+]}}

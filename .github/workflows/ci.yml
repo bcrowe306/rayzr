@@ -137,6 +137,8 @@ jobs:
           xvfb-run -a python3 scripts/templates/test_templates.py --runner bin/runners/linux/runner --suite tests/tile_anims/runtime_tests.json
           # Chunked level generation (#171): a camera flying into negative chunks, chunks in and out.
           xvfb-run -a python3 scripts/templates/test_templates.py --runner bin/runners/linux/runner --suite tests/levelgen_chunks/runtime_tests.json
+          # Height layers (#171): a 3-level height map into stacked TileMaps, terrain edges, cliff faces, walls.
+          xvfb-run -a python3 scripts/templates/test_templates.py --runner bin/runners/linux/runner --suite tests/levelgen_heights/runtime_tests.json
           # The developer console (#285): open, help, a Lua result, debug drawing.
           xvfb-run -a python3 scripts/templates/test_templates.py --runner bin/runners/linux/runner --suite tests/console/runtime_tests.json
           # Viewports (#279): a minimap, an in-world screen through a Sprite, split-screen.
