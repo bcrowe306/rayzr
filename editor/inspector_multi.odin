@@ -40,10 +40,25 @@ Multi_Edit :: struct {
 
 // multi_selection: the selected nodes still alive (an undo rebuilds the
 // scene before the selection is synced).
+// (Asked for every property the Inspector draws: kept for the frame while
+// the selection looks the same - 5000 selected nodes, #331.)
 multi_selection :: proc(state: ^EditorState) -> []^e.Node {
+	mc := &multiCache
+	frame, sig := FrameTiming_FrameIndex(), Editor_SelectionSignature(state.selection[:])
+	if mc.frame == frame && mc.sig == sig && mc.n == len(state.selection) && frame != 0 do return mc.alive
 	out := make([dynamic]^e.Node, context.temp_allocator)
 	for n in state.selection do if e.Node_IsAlive(n) do append(&out, n)
+	mc.frame, mc.sig, mc.n, mc.alive = frame, sig, len(state.selection), out[:]
 	return out[:]
+}
+
+// The frame's multi_selection (temp memory: valid for that frame only).
+@(private = "file")
+multiCache: struct {
+	frame: u64,
+	sig:   uintptr,
+	n:     int,
+	alive: []^e.Node,
 }
 
 // multi_others: the same property on the other selected nodes (those that
@@ -59,14 +74,31 @@ multi_others :: proc(state: ^EditorState, node: ^e.Node, p: e.Node_Property) -> 
 		own, ok := e.Node_FindProperty(node, p.name)
 		if !ok || own.ptr != p.ptr do return nil
 	}
-	out := make([dynamic]Multi_Target, context.temp_allocator)
+	out := make([dynamic]Multi_Target, 0, len(sel), context.temp_allocator)
+	// A node of the primary's type has the property at the same offset (its
+	// fields are reflected from the struct: node_properties.odin); other
+	// types are looked up once per type, not per node (#331).
+	Type_Offset :: struct {ok: bool, prop: e.Node_Property, offset: uintptr}
+	byType := make(map[typeid]Type_Offset, 8, context.temp_allocator)
+	byType[node.typeId] = {true, p, offset}
 	for n in sel {
 		if n == node do continue
 		if isBase {
 			q := p
 			q.ptr = rawptr(uintptr(n) + offset)
 			append(&out, Multi_Target{n, q})
-		} else if q, ok := e.Node_FindProperty(n, p.name); ok && q.type.id == p.type.id {
+			continue
+		}
+		to, seen := byType[n.typeId]
+		if !seen {
+			if q, ok := e.Node_FindProperty(n, p.name); ok && q.type.id == p.type.id && uintptr(q.ptr) >= uintptr(n) {
+				to = {true, q, uintptr(q.ptr) - uintptr(n)}
+			}
+			byType[n.typeId] = to
+		}
+		if to.ok {
+			q := to.prop
+			q.ptr = rawptr(uintptr(n) + to.offset)
 			append(&out, Multi_Target{n, q})
 		}
 	}

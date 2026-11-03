@@ -234,7 +234,7 @@ Viewport_RenderOffscreen :: proc(state: ^EditorState) {
 		Viewport_DrawAdvancedCameras(state)
 
 		// Draw bounding boxes / physics colliders (when enabled or node selected)
-		Viewport_DrawSceneBounds(state)
+		Viewport_DrawSceneBounds(state, e.Camera2D_ViewRect(cam, state.viewportSize.x, state.viewportSize.y))
 		Viewport_DrawAllColliders(state)
 		Viewport_DrawLdtkEntities(state)
 		Viewport_DrawCameraFollow(state)
@@ -418,7 +418,7 @@ point_in_quad :: proc(p: [2]f32, q: [4][2]f32) -> bool {
 }
 
 // Draw bounds and collision shapes for scene nodes
-Viewport_DrawSceneBounds :: proc(state: ^EditorState) {
+Viewport_DrawSceneBounds :: proc(state: ^EditorState, view: rl.Rectangle) {
 	if state.activeScene == nil || state.activeScene.manager == nil do return
 	for node in state.activeScene.manager.nodes {
 		if node == nil || node == state.activeScene.rootNode || node.typeId == e.CameraNode do continue
@@ -426,16 +426,34 @@ Viewport_DrawSceneBounds :: proc(state: ^EditorState) {
 		if !state.showBounds && !isSelected do continue
 		if Editor_ViewHidden(state, node) do continue
 		q, isHandle := Node_Bounds(state, node)
+		// Off screen: not drawn (5000 selected nodes drew 20000 corner
+		// circles a frame, most of them outside the view - #331).
+		if !bounds_in_view(q, view) do continue
 		col := rl.Color{92, 141, 255, 255} if isSelected else rl.Color{140, 150, 170, 90}
 		th := (2.0 if isSelected else 1.0) / state.cameraZoom
 		for i in 0 ..< 4 {
 			rl.DrawLineEx(q[i], q[(i + 1) % 4], th, col)
 		}
 		if isSelected && !isHandle {
-			// Corner ticks read better than a heavy box.
-			for c in q do rl.DrawCircleV(c, 3 / state.cameraZoom, col)
+			// Corner ticks read better than a heavy box. (8 segments: a 3 px
+			// dot looks the same as raylib's 36, and a big selection draws
+			// thousands of them - #331.)
+			for c in q do rl.DrawCircleSector(c, 3 / state.cameraZoom, 0, 360, 8, col)
 		}
 	}
+}
+
+// bounds_in_view: a node's bounds (corners) overlap the view (a margin for
+// the corner ticks).
+bounds_in_view :: proc(q_: [4][2]f32, view: rl.Rectangle) -> bool {
+	q := q_
+	mn, mx := q[0], q[0]
+	for c in q[1:] {
+		mn = {min(mn.x, c.x), min(mn.y, c.y)}
+		mx = {max(mx.x, c.x), max(mx.y, c.y)}
+	}
+	pad := max(view.width, view.height) * 0.02
+	return mx.x >= view.x - pad && mn.x <= view.x + view.width + pad && mx.y >= view.y - pad && mn.y <= view.y + view.height + pad
 }
 
 // Viewport_DrawNavigation: regions (outline; cells while selected) and,

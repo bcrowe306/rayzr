@@ -355,6 +355,7 @@ Editor_Shutdown :: proc(state: ^EditorState) {
 	InspectorFields_Shutdown()
 	PreviewPanel_Shutdown(state)
 	delete(state.selection)
+	Editor_SelectionSetRelease()
 	delete(state.dragOthers)
 	delete(state.selectedAssetPath)
 	delete(state.assetAnchorPath)
