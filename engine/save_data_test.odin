@@ -186,3 +186,27 @@ Save.has("anything")
 	data, _ := os.read_entire_file(path(dir, "save.json"), context.temp_allocator)
 	testing.expectf(t, strings.trim_space(string(data)) == "{}", "emptied: rewritten (%s)", string(data))
 }
+
+// #378: Game_FlushSaves (Android's pause, the web tab hiding) writes the
+// save data while the game runs, without a quit or Save.flush().
+@(test)
+test_save_flush_while_running :: proc(t: ^testing.T) {
+	dir, _ := filepath.join({Engine_TempDir(), "rayzr_save_flush_running_test"}, context.temp_allocator)
+	_ = os.remove_all(dir)
+	defer os.remove_all(dir)
+	Save_SetDirectory(dir)
+	defer Save_Reset()
+	file, _ := filepath.join({dir, "save.json"}, context.temp_allocator)
+	testing.expect(t, Runner_FlushSaves(), "no running game: nothing to write")
+	testing.expect(t, Game_FlushSaves(nil))
+	game := new(Game)
+	InitializeGame(game)
+	defer game->terminate()
+	L := game.scriptManager.L
+	res := lua.L_dostring(L, `Save.set("coins", 7)`)
+	testing.expectf(t, res == 0, "lua: %s", lua.tostring(L, -1) if res != 0 else "")
+	testing.expect(t, !os.exists(file), "not written before a flush")
+	testing.expect(t, Game_FlushSaves(game))
+	data, _ := os.read_entire_file(file, context.temp_allocator)
+	testing.expectf(t, strings.contains(string(data), "\"coins\"") && strings.contains(string(data), "7"), "written: %s", string(data))
+}

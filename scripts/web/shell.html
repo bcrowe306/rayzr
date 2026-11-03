@@ -83,10 +83,17 @@ function start() {
     if (more) requestAnimationFrame(frame);
   };
   requestAnimationFrame(frame);
-  // Saves reach IndexedDB every couple of seconds and when the tab hides.
+  // Saves reach IndexedDB every couple of seconds and when the tab hides
+  // (first writing the game's unflushed save data: a hidden tab can be
+  // closed or discarded without a quit, #378).
   const sync = () => FS.syncfs(false, () => {});
   setInterval(sync, 2000);
-  document.addEventListener("visibilitychange", () => { if (document.hidden) sync(); });
+  const hide = () => {
+    try { if (Module._main_flush_saves) Module._main_flush_saves(); } catch (err) { console.error("main_flush_saves:", err); }
+    sync();
+  };
+  document.addEventListener("visibilitychange", () => { if (document.hidden) hide(); });
+  window.addEventListener("pagehide", hide);
 }
 document.getElementById("start").addEventListener("click", start);
 window.addEventListener("keydown", start, { once: false });
