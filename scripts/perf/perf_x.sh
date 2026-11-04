@@ -34,9 +34,7 @@ P="ArmBack LegBack LegFront Body Head Eyes Mouth ArmFront"
 Q="PepArmBack PepLegBack PepLegFront PepBody PepHead PepEyes PepMouth PepArmFront"
 cp -r templates/vector_character /tmp/vc_orig
 restore() { rm -rf templates/vector_character; cp -r /tmp/vc_orig templates/vector_character; }
-run new1 X=1 -- vector_character
+run new1 X=1 -- vector_character dungeon
 hide $P $Q; run nochars X=1 -- vector_character; restore
-hide $Q; run nopep X=1 -- vector_character; restore
 hide Backdrop Backdrop2; run nobackdrop X=1 -- vector_character; restore
-hide Backdrop Backdrop2 Thorns1 Thorns2 Goal $P $Q; run novector X=1 -- vector_character; restore
-run new2 X=1 -- vector_character
+run new2 X=1 -- vector_character dungeon
