@@ -387,10 +387,7 @@ Vector_Cache_Draw :: proc(c: ^Vector_Cache, pos: [2]f32, rotation: f32, scale: [
 		}
 		vf.material.maps[rl.MaterialMapIndex.ALBEDO].texture = c.gradTex if c.gradTex.id != 0 else rl.Texture2D{id = rlgl.GetTextureIdDefault(), width = 1, height = 1, mipmaps = 1, format = .UNCOMPRESSED_R8G8B8A8}
 		xf := rl.MatrixTranslate(pos.x, pos.y, 0) * rl.MatrixRotateZ(rotation * rl.DEG2RAD) * rl.MatrixScale(scale.x, scale.y, 1) * rl.MatrixTranslate(offset.x, offset.y, 0)
-		xo := os.get_env("RAYZR_X_OPAQUE", context.temp_allocator) != "" && Vector_Cache_Solid(c) && c.mesh.bounds[2] - c.mesh.bounds[0] > 1000 // DEBUG(#331)
-		if xo do rlgl.DisableColorBlend()
 		for m in c.gpu do rl.DrawMesh(m, vf.material, xf)
-		if xo do rlgl.EnableColorBlend()
 		return
 	}
 	rlgl.PushMatrix()
