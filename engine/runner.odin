@@ -672,7 +672,7 @@ Runner_Frame :: proc(rs: ^Runner_State) -> bool {
 			rlgl.DrawRenderBatchActive()
 			rlgl.DisableColorBlend()
 			if opaqueInCopy do Render_OpaqueCopyBegin()
-			rl.DrawTexturePro(frame, {0, 0, f32(frame.width), -f32(frame.height)}, dest, {0, 0}, 0, rl.WHITE)
+			if os.get_env("RAYZR_X_NOBLIT", context.temp_allocator) == "" do rl.DrawTexturePro(frame, {0, 0, f32(frame.width), -f32(frame.height)}, dest, {0, 0}, 0, rl.WHITE) // DEBUG(#331)
 			if opaqueInCopy do Render_OpaqueCopyEnd()
 			rlgl.DrawRenderBatchActive()
 			rlgl.EnableColorBlend()
