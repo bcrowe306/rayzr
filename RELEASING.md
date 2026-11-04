@@ -89,20 +89,66 @@ on Linux the runner plays the demo project and the packaged editor is
 smoke-tested (`scripts/test_package.sh`). The editor's UI drives
 (`scripts/editor_drive.sh`) stay local: they need a GPU.
 
+## The macOS disk image
+
+`scripts/ci/archive_editor.sh` makes `rayzr-editor-<version>-macos.dmg` with
+[dmgbuild](https://github.com/dmgbuild/dmgbuild) (headless, no Finder
+scripting; pinned with hashes in `scripts/ci/dmgbuild_requirements.txt`,
+installed into a throwaway venv). Settings: `scripts/ci/dmg_settings.py`.
+
+- Volume **Rayzr Editor <version>**, its icon the app's (`AppIcon.icns`).
+- A 640×400 icon-view window, no toolbar, sidebar, path or status bar:
+  **Rayzr Editor.app** on the left, an **Applications** link
+  (`-> /Applications`) on the right, icons 128pt.
+- The background (`branding/dmg/background.png` and `@2x`, made by
+  `scripts/ci/dmg_background.py`): an arrow from the app to Applications
+  and "Drag Rayzr Editor to Applications". Move an icon and the arrow
+  there too (the coordinates are in both files).
+- ULFO (LZFSE) compression: macOS 10.11+, the editor needs 12.0.
+
 ## Signing (optional)
 
-Without these secrets the packages are unsigned (macOS: ad-hoc signed - users
-right-click > Open the first time; Windows: SmartScreen warns).
+Without these secrets the packages are unsigned (macOS: an ad-hoc signed app
+on an unsigned disk image - users right-click > Open the first time;
+Windows: SmartScreen warns).
 
-**macOS** - Developer ID + notarization (`scripts/ci/sign_macos.sh`), needs an
-Apple Developer account. Repository secrets:
+**macOS** - Developer ID + notarization (`scripts/ci/sign_macos.sh`; the
+`package` job of `build-packages.yml`), in this order:
 
-- `MACOS_CERTIFICATE` - the *Developer ID Application* certificate exported
-  as `.p12`, base64 (`base64 -i cert.p12 | pbcopy`)
-- `MACOS_CERTIFICATE_PASSWORD` - its password
-- `MACOS_SIGNING_IDENTITY` - e.g. `Developer ID Application: Your Name (TEAMID)`
-- `MACOS_NOTARY_APPLE_ID`, `MACOS_NOTARY_TEAM_ID`, `MACOS_NOTARY_PASSWORD`
-  (an app-specific password from appleid.apple.com)
+1. the app: every dylib and executable inside signed, inside out, then the
+   app (hardened runtime, secure timestamp); notarized
+   (`notarytool submit --wait`), the ticket stapled to the app;
+2. the disk image made with that stapled app (**Archive**);
+3. the disk image signed (`codesign --timestamp`), notarized, stapled and
+   checked with `spctl -a -t open --context context:primary-signature`.
+
+A notarization that isn't *Accepted* fails the build and prints
+`notarytool log`. The certificate lives in a temporary keychain, deleted
+when the script exits, also on a failure. No entitlements: the editor and
+the runners don't JIT (Lua 5.4 is an interpreter) or load unsigned code
+(every library is in the signed bundle). `SIGN_DRY_RUN=1
+scripts/ci/sign_macos.sh <app or dmg>` prints the commands without a
+certificate. `scripts/ci/install_check.sh` on a signed `.dmg` checks the
+disk image's signature and both tickets.
+
+### Setting up macOS signing
+
+Needs an Apple Developer Program membership. Six repository secrets
+(Settings > Secrets and variables > Actions):
+
+| Secret | What it is |
+|---|---|
+| `MACOS_CERTIFICATE` | The **Developer ID Application** certificate *with its private key*, exported from Keychain Access as `.p12`, base64 (`base64 -i cert.p12 \| pbcopy`). Not an *Apple Development* or *Apple Distribution* certificate: notarization rejects those, and `sign_macos.sh` stops before uploading. |
+| `MACOS_CERTIFICATE_PASSWORD` | The password chosen when exporting the `.p12`. |
+| `MACOS_SIGNING_IDENTITY` | The certificate's name exactly as `security find-identity -v -p codesigning` prints it: `Developer ID Application: Your Name (TEAMID)`. |
+| `MACOS_NOTARY_APPLE_ID` | The Apple ID (email) of the developer account, for `notarytool`. |
+| `MACOS_NOTARY_TEAM_ID` | The team id: 10 characters (Apple Developer > Membership details; also the `(TEAMID)` in the identity). |
+| `MACOS_NOTARY_PASSWORD` | An app-specific password for that Apple ID (account.apple.com > Sign-In and Security > App-Specific Passwords), not the account password. |
+
+With `MACOS_CERTIFICATE` set the release signs; leave all six empty to stay
+unsigned. A first check: Actions > Release > Run workflow (a dry run), then
+`scripts/ci/install_check.sh` on the `.dmg` it built (the Install check
+workflow builds its own, unsigned).
 
 **Windows** - a code-signing certificate (`scripts/ci/sign_windows.sh`):
 

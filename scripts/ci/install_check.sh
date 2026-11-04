@@ -4,10 +4,12 @@
 #
 #   scripts/ci/install_check.sh <package> [--work DIR] [--version V] [--gl-dlls DIR]
 #
-#   .dmg       mounted (quarantined first, as a browser download is), the
-#              .app copied out, Gatekeeper's verdict noted, the quarantine
-#              removed (what a user's right-click > Open does: unsigned
-#              until 1.0, #289)
+#   .dmg       mounted (quarantined first, as a browser download is), its
+#              layout checked (the Applications link, Finder's .DS_Store and
+#              background), the .app copied out, Gatekeeper's verdict noted,
+#              the quarantine removed (what a user's right-click > Open does:
+#              unsigned until 1.0, #289); when signed, the disk image's
+#              signature (spctl) and both notarization tickets (stapler)
 #   .zip       extracted (PowerShell's Expand-Archive, as Explorer does)
 #   .deb       `apt-get install ./file.deb` (its dependencies from apt)
 #   .AppImage  marked executable and run (--appimage-extract-and-run when
@@ -124,12 +126,43 @@ install_dmg() {
 	local src
 	src=$(ls -d "$work/mnt"/*.app 2> /dev/null | head -1)
 	[ -n "$src" ] || { fail "install (.dmg)" "no .app on the disk image"; hdiutil detach -quiet "$work/mnt"; return 1; }
+	# The drag-to-install layout (scripts/ci/archive_editor.sh): an Applications
+	# link beside the app, Finder's window settings and background.
+	local layout="" vol
+	vol=$(diskutil info "$work/mnt" 2> /dev/null | sed -n 's/^ *Volume Name: *//p')
+	[ -L "$work/mnt/Applications" ] && [ "$(readlink "$work/mnt/Applications")" = /Applications ] ||
+		layout="$layout no Applications -> /Applications link;"
+	[ -s "$work/mnt/.DS_Store" ] || layout="$layout no .DS_Store (Finder window layout);"
+	ls "$work/mnt"/.background* > /dev/null 2>&1 || layout="$layout no .background image;"
+	[ -z "$layout" ] && pass "disk image layout" "'$vol': $(basename "$src") + Applications -> /Applications, .DS_Store, $(cd "$work/mnt" && ls -d .background* | head -1)" ||
+		fail "disk image layout" "'$vol':$layout"
+	# Signed (a Developer ID release, #289): the disk image's signature,
+	# Gatekeeper's verdict on opening it, its notarization ticket.
+	if codesign -dv "$work/download.dmg" > "$work/logs/dmg_codesign.log" 2>&1; then
+		if spctl -a -t open --context context:primary-signature -v "$work/download.dmg" > "$work/logs/dmg_spctl.log" 2>&1; then
+			pass "disk image signature" "$(grep -m1 -E 'source=|origin=' "$work/logs/dmg_spctl.log" | tr '\n' ' ')"
+		else
+			fail "disk image signature" "spctl rejects it: $(tr '\n' ' ' < "$work/logs/dmg_spctl.log")"
+		fi
+		xcrun stapler validate "$work/download.dmg" > "$work/logs/dmg_stapler.log" 2>&1 &&
+			pass "disk image notarization" "ticket stapled" ||
+			fail "disk image notarization" "stapler validate: $(tail -1 "$work/logs/dmg_stapler.log")"
+	else
+		note "disk image signature" "unsigned (no Developer ID yet, #289)"
+	fi
 	ditto "$src" "$work/apps/$(basename "$src")" # (as Finder copies it: extended attributes kept)
 	hdiutil detach -quiet "$work/mnt" || hdiutil detach -force -quiet "$work/mnt"
 	app="$work/apps/$(basename "$src")"
 	editor="$app/Contents/MacOS/rayzr-editor"
 	res="$app/Contents/Resources"
 	pass "install (.dmg)" "$(basename "$src") copied from the disk image"
+	if codesign -dv "$app" 2>&1 | grep -q '^Authority=Developer ID Application'; then
+		xcrun stapler validate "$app" > "$work/logs/app_stapler.log" 2>&1 &&
+			pass "app notarization" "ticket stapled" ||
+			fail "app notarization" "stapler validate: $(tail -1 "$work/logs/app_stapler.log")"
+	else
+		note "app notarization" "not Developer ID signed (ad-hoc until the certificate exists, #289): not notarized"
+	fi
 	# Gatekeeper: what a user sees on first open.
 	if xattr -p com.apple.quarantine "$editor" > /dev/null 2>&1 || xattr -p com.apple.quarantine "$app" > /dev/null 2>&1; then
 		local verdict

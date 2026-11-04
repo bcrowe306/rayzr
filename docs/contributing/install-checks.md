@@ -14,7 +14,7 @@ runner or container and runs `scripts/ci/install_check.sh` on it:
 
 | Machine | Package | How it's installed |
 |---|---|---|
-| macOS 14, macOS 15 (Apple silicon) | `.dmg` | mounted, the app copied out, Gatekeeper's verdict noted, the quarantine removed (a user's right-click > **Open**) |
+| macOS 14, macOS 15 (Apple silicon) | `.dmg` | mounted, its layout checked (the `Applications` link, Finder's `.DS_Store` and background), the app copied out, Gatekeeper's verdict noted, the quarantine removed (a user's right-click > **Open**); when signed: the disk image's signature (`spctl`) and both notarization tickets (`stapler validate`) |
 | Windows Server 2022, 2025 | `.zip` | extracted with `Expand-Archive` |
 | Ubuntu 22.04, 24.04 | `.deb`, `.AppImage`, `.tar.gz` | `apt-get install ./file.deb`; the AppImage run (without FUSE: `--appimage-extract-and-run`); untarred |
 | Debian 12, Fedora (containers, pinned by digest) | `.deb` (Debian), `.AppImage`, `.tar.gz` | the same, on a bare image plus Xvfb |
