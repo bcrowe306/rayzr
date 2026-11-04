@@ -634,7 +634,7 @@ Runner_Frame :: proc(rs: ^Runner_State) -> bool {
 		}
 		if !Tests_AfterFrame(game) do return false // (every test ran)
 		// (Drawn over the black letterbox below: soft edges would darken.)
-		if !renderPixel.smooth && Game_ClearColor(game).a == 255 do Render_MakeOpaque(vw, vh)
+		if !renderPixel.smooth && Game_ClearColor(game).a == 255 && os.get_env("RAYZR_X_NOOPAQUE", context.temp_allocator) == "" do Render_MakeOpaque(vw, vh) // DEBUG(#331)
 		rl.EndTextureMode()
 		Render_SetFrameTarget(nil)
 		frame := target.texture

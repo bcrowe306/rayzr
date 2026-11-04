@@ -1,0 +1,35 @@
+# DEBUG(#331): temporary llvmpipe experiments (removed before merge).
+name: Perf experiments
+on:
+  push:
+    branches: [harden/low-end-perf]
+    paths: [".github/workflows/perf-x.yml", "scripts/perf/perf_x.sh"]
+env:
+  ODIN_RELEASE: dev-2026-03
+jobs:
+  x:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    env:
+      LIBGL_ALWAYS_SOFTWARE: "1"
+      GALLIUM_DRIVER: llvmpipe
+      LP_NUM_THREADS: "2"
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          submodules: false
+      - run: git submodule update --init --depth 1 ui odin_editor ldtk
+      - uses: laytan/setup-odin@8536d8fa450ec6f1bd9ddc84bbaaf16296c0051d # v2.12.2
+        with:
+          release: ${{ env.ODIN_RELEASE }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - run: scripts/ci/setup_deps.sh
+      - run: |
+          mkdir -p bin/perf
+          odin build runner -o:speed $(scripts/odin_flags.sh) -out:bin/perf/runner
+      - run: bash scripts/perf/perf_x.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: perf-x
+          path: perf/

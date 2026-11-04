@@ -350,7 +350,7 @@ Vector_Cache_Draw :: proc(c: ^Vector_Cache, pos: [2]f32, rotation: f32, scale: [
 	if Vector_DrawModeNow() == .GPU && c.uploaded {
 		if !vectorMaterialReady {
 			vectorMaterial = rl.LoadMaterialDefault()
-			vectorMaterial.shader = rl.LoadShaderFromMemory(Shader_Port(VECTOR_VS), Shader_Port(VECTOR_FS))
+			vectorMaterial.shader = rl.LoadShaderFromMemory(Shader_Port(VECTOR_VS), Shader_Port(vector_x_fs()))
 			vectorAddLoc = rl.GetShaderLocation(vectorMaterial.shader, "colAdd")
 			vectorMaterialReady = true
 		}
@@ -400,7 +400,7 @@ Vector_Cache_Draw :: proc(c: ^Vector_Cache, pos: [2]f32, rotation: f32, scale: [
 vector_draw_deformed :: proc(c: ^Vector_Cache, pos: [2]f32, rotation: f32, scale: [2]f32, tint: rl.Color, offset: [2]f32, add: [4]f32, d: ^Vector_Deform) {
 	if !vskin.ready {
 		vskin.material = rl.LoadMaterialDefault()
-		sh := rl.LoadShaderFromMemory(Shader_Port(VECTOR_SKIN_VS), Shader_Port(VECTOR_FS))
+		sh := rl.LoadShaderFromMemory(Shader_Port(VECTOR_SKIN_VS), Shader_Port(vector_x_fs()))
 		vskin.material.shader = sh
 		vskin.add = rl.GetShaderLocation(sh, "colAdd")
 		vskin.bones = rl.GetShaderLocation(sh, "bones")
@@ -458,4 +458,22 @@ vector_vertex_gradient :: proc(m: ^Vector_Mesh, v: u32) -> [4]u8 {
 	t = Vector_PaintSpread(spread, t)
 	c := m.gradients[row][clamp(int(t * 255 + 0.5), 0, 255)]
 	return {c.r, c.g, c.b, u8(u32(c.a) * u32(m.cols[v].a) / 255)}
+}
+
+// DEBUG(#331): temporary perf experiment knob (RAYZR_X_FS=simple).
+VECTOR_X_SIMPLE_FS :: `#version 330
+in vec2 fragGrad;
+in vec2 fragMode;
+in vec4 fragColor;
+uniform sampler2D texture0;
+uniform vec4 colDiffuse;
+uniform vec4 colAdd;
+out vec4 finalColor;
+void main() {
+    finalColor = fragColor * colDiffuse;
+}
+`
+vector_x_fs :: proc() -> cstring {
+	if os.get_env("RAYZR_X_FS", context.temp_allocator) == "simple" do return VECTOR_X_SIMPLE_FS
+	return VECTOR_FS
 }
