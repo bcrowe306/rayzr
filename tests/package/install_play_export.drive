@@ -11,16 +11,13 @@ wait-until game == stopped timeout=900
 expect abs-file:$SHOTS/played.json contains "TileMapNode"
 expect log !contains Building game
 
-# DEBUG(#330) temporary: Windows doesn't open Settings here
+# (Windows: a click in the frames right after the game's window closed was
+# lost - Settings didn't open. Point at the gear first, as a user does.)
 wait 10
-expect item:toolbar.settings == visible
 hover @toolbar.settings
 wait 30
-screenshot hover_settings
 click @toolbar.settings
-wait 5
 expect project-settings-open == true
-screenshot after_settings_click
 click @settings.page:Export
 screenshot export_settings
 click @settings.export-now
