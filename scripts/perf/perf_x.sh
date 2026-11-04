@@ -30,9 +30,13 @@ for p in glob.glob("templates/vector_character/scenes/stage*.scene.json"):
 PY
 }
 R=bin/perf/runner
-T="vector_character"
-run new1 X=1 -- $T
-run opaque1 RAYZR_X_OPAQUE=1 -- $T
-run new2 X=1 -- $T
-run opaque2 RAYZR_X_OPAQUE=1 -- $T
-hide Backdrop Backdrop2; run nobackdrop X=1 -- vector_character
+P="ArmBack LegBack LegFront Body Head Eyes Mouth ArmFront"
+Q="PepArmBack PepLegBack PepLegFront PepBody PepHead PepEyes PepMouth PepArmFront"
+cp -r templates/vector_character /tmp/vc_orig
+restore() { rm -rf templates/vector_character; cp -r /tmp/vc_orig templates/vector_character; }
+run new1 X=1 -- vector_character
+hide $P $Q; run nochars X=1 -- vector_character; restore
+hide $Q; run nopep X=1 -- vector_character; restore
+hide Backdrop Backdrop2; run nobackdrop X=1 -- vector_character; restore
+hide Backdrop Backdrop2 Thorns1 Thorns2 Goal $P $Q; run novector X=1 -- vector_character; restore
+run new2 X=1 -- vector_character
