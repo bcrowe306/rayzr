@@ -35,6 +35,13 @@ for kind in segv panic abort; do
 	check "runner $kind: the path on stderr" grep -q "Crash report: " "$tmp/runner_$kind.log"
 done
 grep -q "SIGSEGV\|ACCESS_VIOLATION" "$tmp"/runner_segv/crashes/*.txt && echo "ok   runner segv: the signal named" || { echo "FAIL runner segv: the signal named"; fails=$((fails + 1)); }
+# (#392) macOS / Linux: the faulting instruction (pc) with its procedure's
+# name - Linux's from the executable's symbol table - and the address touched.
+if [ "$platform" != windows ]; then
+	segv=$(ls "$tmp"/runner_segv/crashes/crash-*.txt 2>/dev/null | head -1)
+	check "runner segv: the pc, named (engine::...)" grep -Eq '^  pc  0x[0-9a-f]+  engine::' "$segv"
+	check "runner segv: the address touched" grep -q '^address:  0x8 ' "$segv"
+fi
 
 # The editor: crash, then the next start offers the report.
 cp -R assets/demo_project "$tmp/project"

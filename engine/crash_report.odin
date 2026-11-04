@@ -24,7 +24,10 @@ import lua "lua54"
 //   platform: macOS arm64
 //   time:     1793000000 (unix)
 //   reason:   SIGSEGV (invalid memory access)
-//   stack:    ...frames (symbol names; Windows: exe+offset)
+//   address:  0x8 (the memory it touched: a signal's fault address)
+//   stack:    pc (a signal's faulting instruction), then the frames
+//             (symbol names - Linux: from the executable's symbol table,
+//             crash_report_elf.odin - and module+offset; Windows: exe+offset)
 //   recent:   the last log lines / actions (Crash_Note)
 //
 // The report is written from preformatted static memory (no allocation in a
@@ -48,6 +51,8 @@ crash: struct {
 	written:   bool, // a report was written (a panic, then its trap: one report)
 	file:      Crash_File, // the report being written
 	inStack:   bool, // walking the stack (a fault there: crash_stack_failed)
+	detail:    [128]u8, // more about the reason (a signal's fault address), after it
+	detailLen: int,
 	header:    [512]u8,
 	headerLen: int,
 	path:      [1024]u8, // the report file (NUL-terminated); "" = stderr only
@@ -171,7 +176,9 @@ crash_write_report :: proc "contextless" (reason: string) {
 	w(f, crash_itoa(num[:], crash_unix_time_platform()))
 	w(f, " (unix)\nreason:   ")
 	w(f, reason)
-	w(f, "\n\nstack:\n")
+	w(f, "\n")
+	if crash.detailLen > 0 do w(f, string(crash.detail[:crash.detailLen]))
+	w(f, "\nstack:\n")
 	crash.inStack = true
 	crash_stack_platform(f)
 	crash.inStack = false

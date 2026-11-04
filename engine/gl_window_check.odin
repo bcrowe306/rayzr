@@ -13,7 +13,11 @@ import "core:strings"
 // rl.IsWindowReady can say anything. Here: a hidden 1 x 1 window with the
 // context raylib asks for (the same hints), made and destroyed through
 // raylib's own GLFW (compiled into raylib's library - no second GLFW is
-// linked), then GLFW shut down again so raylib starts it fresh.
+// linked). On success GLFW stays initialised: raylib's InitPlatform sets the
+// same init hint and its glfwInit then does nothing. (It used to be shut
+// down and started again: glfwTerminate unloads libGL / the Mesa driver and
+// closes the X display, which isn't safe while a driver thread may still
+// run - a suspect for the intermittent start-up SIGSEGV on Linux CI, #392.)
 // ok = false: reason is GLFW's own error text (temp-allocated).
 // (Android and the web don't use GLFW: always ok.)
 // ============================================================================
@@ -64,7 +68,6 @@ Window_CanOpenGL :: proc(msaa := false) -> (ok: bool, reason: string) {
 		// (As raylib's InitPlatform: the working folder stays where it is.)
 		when ODIN_OS == .Darwin do glfwInitHint(GLFW_COCOA_CHDIR_RESOURCES, 0)
 		if glfwInit() == 0 do return false, glfw_error("no window system")
-		defer glfwTerminate()
 		glfwDefaultWindowHints()
 		glfwWindowHint(GLFW_VISIBLE, 0)
 		glfwWindowHint(GLFW_FOCUSED, 0)
@@ -74,7 +77,11 @@ Window_CanOpenGL :: proc(msaa := false) -> (ok: bool, reason: string) {
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE)
 		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, 1 if ODIN_OS == .Darwin else 0)
 		win := glfwCreateWindow(1, 1, "", nil, nil)
-		if win == nil do return false, glfw_error("no OpenGL 3.3 window")
+		if win == nil {
+			why := glfw_error("no OpenGL 3.3 window")
+			glfwTerminate() // (no window will be made: the runner stops)
+			return false, why
+		}
 		glfwDestroyWindow(win)
 		return true, ""
 	}
