@@ -634,11 +634,17 @@ Runner_Frame :: proc(rs: ^Runner_State) -> bool {
 		}
 		if !Tests_AfterFrame(game) do return false // (every test ran)
 		// (Drawn over the black letterbox below: soft edges would darken.)
-		if !renderPixel.smooth && Game_ClearColor(game).a == 255 && os.get_env("RAYZR_X_NOOPAQUE", context.temp_allocator) == "" do Render_MakeOpaque(vw, vh) // DEBUG(#331)
+		// An opaque frame copied straight to the window gets its alpha set to
+		// 1 by the copy (one full-screen pass fewer: software GL pays for
+		// every pixel, #331); one that goes through post effects or the
+		// colour-blind filter first is made opaque here, as those read it.
+		effects := Scene_PostEffects(game.sceneManager.currentScene)
+		opaquePass, opaqueInCopy := Runner_OpaqueFrame(renderPixel.smooth, Game_ClearColor(game).a, len(effects), Colorblind_Filtering(access.colorblind, access.colorblindStrength))
+		if opaquePass do Render_MakeOpaque(vw, vh)
 		rl.EndTextureMode()
 		Render_SetFrameTarget(nil)
 		frame := target.texture
-		if effects := Scene_PostEffects(game.sceneManager.currentScene); len(effects) > 0 && !renderPixel.smooth {
+		if len(effects) > 0 && !renderPixel.smooth {
 			frame = Post_Process(effects, frame, &game.gameContext) // through each effect
 		}
 		runTime := time.tick_since(frameStart)
@@ -665,7 +671,9 @@ Runner_Frame :: proc(rs: ^Runner_State) -> bool {
 			// frame's alpha dropped (anti-aliased text, translucent sprites).
 			rlgl.DrawRenderBatchActive()
 			rlgl.DisableColorBlend()
+			if opaqueInCopy do Render_OpaqueCopyBegin()
 			rl.DrawTexturePro(frame, {0, 0, f32(frame.width), -f32(frame.height)}, dest, {0, 0}, 0, rl.WHITE)
+			if opaqueInCopy do Render_OpaqueCopyEnd()
 			rlgl.DrawRenderBatchActive()
 			rlgl.EnableColorBlend()
 		}
@@ -728,6 +736,16 @@ Runner_Frame :: proc(rs: ^Runner_State) -> bool {
 		if Runner_FramesOver(opts, rs.frameCount) do return false // (--frames alone, #358)
 	}
 	return true
+}
+
+// Runner_OpaqueFrame: how a frame meant to be opaque (no smooth camera's
+// layers, an opaque clear colour) gets alpha 1 - a pass of its own when
+// post effects or the colour-blind filter read it first, else in the copy
+// to the window (inCopy: Render_OpaqueCopyBegin; #331).
+Runner_OpaqueFrame :: proc(smooth: bool, clearAlpha: u8, effects: int, colorblind: bool) -> (pass, inCopy: bool) {
+	if smooth || clearAlpha != 255 do return false, false
+	if effects > 0 || colorblind do return true, false
+	return false, true
 }
 
 // Runner_CaptureFrame: the frame --screenshot / --dump-scene capture on -

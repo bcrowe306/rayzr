@@ -16,3 +16,20 @@ test_runner_frames :: proc(t: ^testing.T) {
 	testing.expect_value(t, Runner_CaptureFrame(Engine_ParseRunArgs({"game", "--frames", "90", "--screenshot", "s.png"})), 90)
 	testing.expect_value(t, Runner_CaptureFrame(Engine_ParseRunArgs({"game", "--screenshot", "s.png"})), 30)
 }
+
+// #331: an opaque frame gets its alpha in the copy to the window (no
+// full-screen pass of its own) unless post effects or the colour-blind
+// filter read it first; frames not meant to be opaque get neither.
+@(test)
+test_runner_opaque_frame :: proc(t: ^testing.T) {
+	pass, inCopy := Runner_OpaqueFrame(false, 255, 0, false)
+	testing.expect(t, !pass && inCopy, "plain: in the copy")
+	pass, inCopy = Runner_OpaqueFrame(false, 255, 2, false)
+	testing.expect(t, pass && !inCopy, "post effects: a pass first")
+	pass, inCopy = Runner_OpaqueFrame(false, 255, 0, true)
+	testing.expect(t, pass && !inCopy, "colour-blind filter: a pass first")
+	pass, inCopy = Runner_OpaqueFrame(true, 255, 0, false)
+	testing.expect(t, !pass && !inCopy, "smooth camera: neither")
+	pass, inCopy = Runner_OpaqueFrame(false, 128, 0, false)
+	testing.expect(t, !pass && !inCopy, "see-through clear colour: neither")
+}

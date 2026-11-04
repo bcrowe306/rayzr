@@ -423,3 +423,42 @@ Render_MakeOpaque :: proc(width, height: f32) {
 	rlgl.PopMatrix()
 	rl.EndBlendMode()
 }
+
+// The copy that makes opaque (Render_OpaqueCopyBegin / End): the texture's
+// colours with alpha 1 - Render_MakeOpaque folded into a copy that's drawn
+// anyway (blending off), one full-screen pass fewer.
+@(private = "file")
+RENDER_OPAQUE_COPY_FS :: `#version 330
+in vec2 fragTexCoord;
+in vec4 fragColor;
+uniform sampler2D texture0;
+uniform vec4 colDiffuse;
+out vec4 finalColor;
+void main() {
+    finalColor = vec4((texture(texture0, fragTexCoord) * colDiffuse * fragColor).rgb, 1.0);
+}
+`
+
+@(private = "file")
+opaqueCopy: struct {
+	shader: rl.Shader,
+	loaded: bool,
+}
+
+// Render_OpaqueCopyBegin: texture draws until Render_OpaqueCopyEnd write
+// alpha 1 (their colours as drawn). For a copy with blending off.
+Render_OpaqueCopyBegin :: proc() {
+	if !opaqueCopy.loaded {
+		opaqueCopy.shader = rl.LoadShaderFromMemory(nil, Shader_Port(RENDER_OPAQUE_COPY_FS))
+		opaqueCopy.loaded = true
+	}
+	rl.BeginShaderMode(opaqueCopy.shader)
+}
+
+Render_OpaqueCopyEnd :: proc() {rl.EndShaderMode()}
+
+// Render_OpaqueCopyShutdown frees its shader (engine shutdown).
+Render_OpaqueCopyShutdown :: proc() {
+	if opaqueCopy.loaded && opaqueCopy.shader.id != 0 && rl.IsWindowReady() do rl.UnloadShader(opaqueCopy.shader)
+	opaqueCopy = {}
+}

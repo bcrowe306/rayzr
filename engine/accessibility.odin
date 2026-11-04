@@ -272,10 +272,16 @@ cbShader: struct {
 	locMode, locStrength, locSim: i32,
 }
 
+// Colorblind_Filtering: whether Colorblind_Begin will filter (a mode at
+// some strength).
+Colorblind_Filtering :: proc(mode: Colorblind_Mode, strength: f32) -> bool {
+	return mode != .None && strength > 0
+}
+
 // Colorblind_Begin starts drawing through the filter for these settings
 // (false = no filter); Colorblind_End after the draws.
 Colorblind_Begin :: proc(mode: Colorblind_Mode, strength: f32, simulate: bool) -> bool {
-	if mode == .None || strength <= 0 || !rl.IsWindowReady() do return false
+	if !Colorblind_Filtering(mode, strength) || !rl.IsWindowReady() do return false
 	if !cbShader.loaded {
 		cbShader.shader = rl.LoadShaderFromMemory(nil, Shader_Port(COLORBLIND_FS))
 		cbShader.loaded = true
