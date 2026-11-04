@@ -103,7 +103,10 @@ scan_project :: proc(root: string) {
 		for fi in infos {
 			if strings.has_prefix(fi.name, ".") do continue
 			if e.Asset_IsImportFile(fi.name) do continue // (shown as the asset's import settings)
-			child, _ := filepath.join({rel, fi.name}, context.temp_allocator)
+			// (Project-relative paths use "/" on every OS, as the lists' callers
+			// match them ("scenes/..."): filepath.join gave "scenes\..." on
+			// Windows, and the asset browser listed nothing there, #330.)
+			child := strings.concatenate({rel, "/", fi.name}, context.temp_allocator) if rel != "" else fi.name
 			if fi.type == .Directory {
 				append(&projectFiles.dirs, strings.clone(child))
 				walk(root, child, depth + 1)
