@@ -29,8 +29,34 @@ for p in glob.glob("templates/vector_character/scenes/stage*.scene.json"):
     json.dump(d, open(p, "w"))
 PY
 }
+sudo apt-get install -y -qq linux-tools-common linux-tools-$(uname -r) > /dev/null 2>&1 || sudo apt-get install -y -qq linux-tools-generic > /dev/null 2>&1
+sudo sysctl -w kernel.perf_event_paranoid=-1 kernel.kptr_restrict=0 > /dev/null
+PERFBIN=$(ls /usr/lib/linux-tools/*/perf 2>/dev/null | head -1); [ -n "$PERFBIN" ] || PERFBIN=perf
+echo "perf: $PERFBIN"
+prof() { # name template
+  cat > /tmp/wrap.sh <<W
+#!/bin/sh
+exec $PERFBIN record -F 2000 -g -o $PWD/perf/$1.data -- $PWD/bin/perf/runner "\$@"
+W
+  chmod +x /tmp/wrap.sh
+  PERF_TMP="$RUNNER_TEMP/perf" taskset -c 0,1 xvfb-run -a -s "-screen 0 1920x1080x24" \
+    python3 -u scripts/perf/perf.py --runner /tmp/wrap.sh --reps 1 --setup x --out "perf/$1.json" "$2" > "perf/$1.log" 2>&1
+  $PERFBIN report -i perf/$1.data --no-children --sort comm,dso,sym --stdio 2>/dev/null | grep -v "^$" | grep "%" | head -70 > perf/$1.txt
+  $PERFBIN report -i perf/$1.data --no-children --sort comm --stdio 2>/dev/null | grep "%" | head -10 >> perf/$1.txt
+  echo "=== $1"; cat perf/$1.txt
+}
+prof prof_vc vector_character
+prof prof_pf platformer
+exit 0
 cp -r templates/vector_character /tmp/vc_orig
 run base X=1 -- vector_character dungeon platformer
+run noopaque RAYZR_X_NOOPAQUE=1 -- vector_character dungeon platformer
+run simplefs RAYZR_X_FS=simple -- vector_character
+run immediate RAYZR_VECTOR_MODE=immediate -- vector_character
 hide Backdrop Backdrop2; run nobackdrop X=1 -- vector_character
 rm -rf templates/vector_character; cp -r /tmp/vc_orig templates/vector_character
+hide Rig PepRig; run norigs X=1 -- vector_character
+rm -rf templates/vector_character; cp -r /tmp/vc_orig templates/vector_character
 hide Backdrop Backdrop2 Rig PepRig Thorns1 Thorns2 Goal; run novector X=1 -- vector_character
+rm -rf templates/vector_character; cp -r /tmp/vc_orig templates/vector_character
+hide Backdrop Backdrop2; run nobd_simplefs RAYZR_X_FS=simple -- vector_character
