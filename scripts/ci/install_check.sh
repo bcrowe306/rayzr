@@ -226,7 +226,8 @@ macos)
 	libs_bad=""
 	while IFS= read -r f; do
 		file "$f" | grep -q Mach-O || continue
-		minos=$(otool -l "$f" 2> /dev/null | awk '/LC_BUILD_VERSION/{b=1} b && $1=="minos"{print $2; exit}')
+		# (Every architecture of a universal binary: the newest minimum.)
+		minos=$(otool -arch all -l "$f" 2> /dev/null | awk '/LC_BUILD_VERSION/{b=1} b && $1=="minos"{print $2; b=0}' | sort -V | tail -1)
 		if [ -n "$minos" ] && [ "$(printf '%s\n%s\n' "$minos" "$declared" | sort -V | tail -1)" != "$declared" ]; then
 			bad="$bad ${f#$app/}($minos)"
 		fi
@@ -236,7 +237,9 @@ macos)
 				@rpath/*|@executable_path/*|@loader_path/*) [ -e "$app/Contents/Frameworks/$(basename "$l")" ] || [ -e "$(dirname "$f")/$(basename "$l")" ] || libs_bad="$libs_bad ${f#$app/}:$l" ;;
 				*) libs_bad="$libs_bad ${f#$app/}:$l" ;;
 			esac
-		done < <(otool -L "$f" 2> /dev/null | awk 'NR > 1 {print $1}')
+		# (otool -L: a "FILE:" or "FILE (architecture X):" line per architecture -
+		# skipped - then a tab-indented "PATH (compatibility version ...)" per library.)
+		done < <(otool -arch all -L "$f" 2> /dev/null | awk '!/:$/ { sub(/^[ \t]+/, ""); sub(/ \(compatibility version.*/, ""); print }' | sort -u)
 	done < <(find "$app/Contents" -type f \( -perm -u+x -o -name '*.dylib' \))
 	[ -z "$bad" ] && pass "macOS version" "every binary runs on $declared (Info.plist); this Mac: $(sw_vers -productVersion)" ||
 		{ fail "macOS version" "need a newer macOS than $declared:$bad"; deps_ok=0; }
@@ -257,7 +260,13 @@ linux)
 	missing=$(for b in "${bins[@]}"; do ldd "$b" 2>&1 | grep 'not found' | awk '{print $1}'; done | sort -u | tr '\n' ' ')
 	[ -z "$missing" ] && pass "ldd" "every linked library found" || { fail "ldd" "not found: $missing"; deps_ok=0; }
 	# Loaded at run time (raylib's GLFW and miniaudio dlopen them).
-	have_lib() { ldconfig -p 2> /dev/null | grep -q " $1 " || ls /usr/lib*/"$1" /usr/lib/*-linux-gnu/"$1" /lib/*-linux-gnu/"$1" > /dev/null 2>&1; }
+	# (ldconfig -p: "<tab>libGL.so.1 (libc6,x86-64) => /lib/..."; else any of the usual folders.)
+	have_lib() {
+		ldconfig -p 2> /dev/null | grep "[[:space:]]$1 (" > /dev/null && return # (not -q: no SIGPIPE under pipefail)
+		local p
+		for p in /usr/lib*/"$1" /usr/lib/*-linux-gnu/"$1" /lib*/"$1" /lib/*-linux-gnu/"$1"; do [ -e "$p" ] && return; done
+		return 1
+	}
 	export PATH="$PATH:/sbin:/usr/sbin"
 	for l in libGL.so.1 libX11.so.6; do have_lib "$l" || { fail "runtime libraries" "no $l: no window (OpenGL / X11)"; deps_ok=0; }; done
 	opt=""
