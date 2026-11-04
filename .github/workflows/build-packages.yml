@@ -7,9 +7,12 @@
 #      it (any editor exports every desktop target, the web and Android), as
 #      users download it (scripts/ci/archive_editor.sh): editor-macos (.dmg),
 #      editor-linux (.tar.gz, .AppImage, .deb), editor-windows (.zip).
-# Signing: macOS packages are ad-hoc signed unless the caller passes the
-# MACOS_* secrets (Developer ID + notarization: TODO C.4); Windows ones are
-# unsigned unless WINDOWS_CERTIFICATE is passed (TODO C.5).
+# Signing: macOS packages are an ad-hoc signed app on an unsigned disk image
+# unless the caller passes the MACOS_* secrets (Developer ID + notarization,
+# #289): then the app is signed, notarized and stapled, the disk image is
+# made with it, and the disk image is signed, notarized and stapled too
+# (scripts/ci/sign_macos.sh). Windows ones are unsigned unless
+# WINDOWS_CERTIFICATE is passed (TODO C.5).
 # Every third-party action is pinned to a commit (its tag in the comment).
 name: Build packages
 
@@ -156,7 +159,10 @@ jobs:
       - run: scripts/ci/fetch_luals.sh
       - run: scripts/package_editor.sh --out dist --version "$VERSION" --name "$APP_NAME"
 
-      - name: Sign and notarize (macOS, with a Developer ID)
+      # macOS with a Developer ID, in this order: the app signed (inside out,
+      # hardened runtime), notarized and stapled; then the disk image made
+      # with it (Archive); then the disk image signed, notarized and stapled.
+      - name: Sign and notarize the app (macOS, with a Developer ID)
         if: runner.os == 'macOS' && env.HAS_MACOS_CERT == 'true'
         env:
           MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
@@ -176,6 +182,16 @@ jobs:
 
       - name: Archive
         run: scripts/ci/archive_editor.sh "$VERSION" dist "$APP_NAME"
+      - name: Sign and notarize the disk image (macOS, with a Developer ID)
+        if: runner.os == 'macOS' && env.HAS_MACOS_CERT == 'true'
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+          MACOS_SIGNING_IDENTITY: ${{ secrets.MACOS_SIGNING_IDENTITY }}
+          MACOS_NOTARY_APPLE_ID: ${{ secrets.MACOS_NOTARY_APPLE_ID }}
+          MACOS_NOTARY_TEAM_ID: ${{ secrets.MACOS_NOTARY_TEAM_ID }}
+          MACOS_NOTARY_PASSWORD: ${{ secrets.MACOS_NOTARY_PASSWORD }}
+        run: scripts/ci/sign_macos.sh "rayzr-editor-$VERSION-macos.dmg"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: editor-${{ matrix.platform }}

@@ -18,8 +18,8 @@
 #      the docs of those versions, deployed and verified
 #      (bcrowe306/rayzr_website's site.yml).
 # Signing: macOS packages are ad-hoc signed unless the MACOS_* secrets are
-# set (Developer ID + notarization: TODO C.4); Windows ones are unsigned
-# (TODO C.5).
+# set (Developer ID: the app and its disk image both signed, notarized and
+# stapled, #289; RELEASING.md); Windows ones are unsigned (TODO C.5).
 name: Release
 
 on:
