@@ -29,14 +29,10 @@ for p in glob.glob("templates/vector_character/scenes/stage*.scene.json"):
     json.dump(d, open(p, "w"))
 PY
 }
-R=bin/perf/runner
-P="ArmBack LegBack LegFront Body Head Eyes Mouth ArmFront"
-Q="PepArmBack PepLegBack PepLegFront PepBody PepHead PepEyes PepMouth PepArmFront"
-cp -r templates/vector_character /tmp/vc_orig
-restore() { rm -rf templates/vector_character; cp -r /tmp/vc_orig templates/vector_character; }
-run new1 X=1 -- vector_character
-run skinflat RAYZR_X_SKIN=flat -- vector_character
-run skinoff RAYZR_X_SKIN=off -- vector_character
-hide $P $Q; run nochars X=1 -- vector_character; restore
-run new2 X=1 -- vector_character
-run skinflat2 RAYZR_X_SKIN=flat -- vector_character
+T="vector_character dungeon"
+R=bin/perf/runner; run skin1 X=1 -- $T
+R=bin/perf/runner_base; run noskinfix1 X=1 -- $T
+R=bin/perf/runner; run skin2 X=1 -- $T
+R=bin/perf/runner_base; run noskinfix2 X=1 -- $T
+R=bin/perf/runner; run skin3 X=1 -- $T
+R=bin/perf/runner_base; run noskinfix3 X=1 -- $T
