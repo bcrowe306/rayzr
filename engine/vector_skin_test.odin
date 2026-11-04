@@ -169,3 +169,66 @@ Tween.to(limb, "warpTopLeft", Vec2(0, 0), 0.1, "linear")
 	for _ in 0 ..< 12 do game->run(1.0 / 60)
 	testing.expectf(t, close2(v.warpTopLeft, {0, 0}, 0.01), "the corner tweened back (%v)", v.warpTopLeft)
 }
+
+// #331: binding splits only what bends - triangles wholly on one bone stay
+// whole (one bone moves them affinely: the same picture, fewer triangles),
+// a single bone splits nothing, a warp still splits everywhere.
+@(test)
+test_vector_skin_subdivides_what_bends :: proc(t: ^testing.T) {
+	d, dok := Skeleton_LoadSpine(ARM_RIG, "", nil, nil)
+	testing.expect(t, dok && d != nil, "the rig loads")
+	if d == nil do return
+	defer Skeleton_DataDestroy(d, nil)
+	// A strip along both bones (0..200 x -10..10): two triangles far from
+	// the joint at x 100 on each side, two across it.
+	strip :: proc(c: ^Vector_Cache) {
+		Vector_Mesh_Clear(&c.mesh)
+		xs := [?]f32{0, 40, 80, 120, 160, 200}
+		for x in xs {
+			append(&c.mesh.verts, [2]f32{x, -10}, [2]f32{x, 10})
+			append(&c.mesh.cols, [4]u8{255, 255, 255, 255}, [4]u8{255, 255, 255, 255})
+			append(&c.mesh.gc, [2]f32{}, [2]f32{})
+			append(&c.mesh.gi, [2]f32{}, [2]f32{})
+		}
+		for i in 0 ..< len(xs) - 1 {
+			a := u32(i * 2)
+			append(&c.mesh.idx, a, a + 1, a + 2, a + 1, a + 3, a + 2)
+		}
+		c.mesh.bounds = {0, -10, 200, 10}
+		c.stats.tessellations += 1
+	}
+	c: Vector_Cache
+	defer Vector_Cache_Destroy(&c)
+	s: Vector_Skin
+	defer Vector_Skin_Destroy(&s)
+	strip(&c)
+	before := len(c.mesh.idx) / 3
+	testing.expect(t, Vector_SkinBind(&s, d, &c, "upper", 12, VECTOR_AFFINE_IDENTITY), "bound to one bone")
+	testing.expect_value(t, len(c.mesh.idx) / 3, before) // (one bone: nothing to bend at)
+
+	strip(&c)
+	testing.expect(t, Vector_SkinBind(&s, d, &c, "upper, lower", 12, VECTOR_AFFINE_IDENTITY), "bound to two")
+	bent := len(c.mesh.idx) / 3
+	testing.expect(t, bent > before, "split round the joint")
+	// The end pieces (x 0..40, 160..200) stay (nearly) whole: split at most
+	// where they meet a piece that bends.
+	ends :: proc(m: ^Vector_Mesh) -> int {
+		n := 0
+		for i := 0; i < len(m.idx); i += 3 {
+			a, b, c := m.verts[m.idx[i]].x, m.verts[m.idx[i + 1]].x, m.verts[m.idx[i + 2]].x
+			if max(a, b, c) <= 40 || min(a, b, c) >= 160 do n += 1
+		}
+		return n
+	}
+	rigidEnds := ends(&c.mesh)
+	testing.expectf(t, rigidEnds <= 8, "the ends stay whole (%d triangles)", rigidEnds)
+	// Every vertex of a rigid piece has its bone alone.
+	for v, i in c.mesh.verts do if v.x <= 40 || v.x >= 160 {
+		testing.expectf(t, s.weights[i] == {1, 0, 0, 0}, "vertex %v: one bone (%v)", v, s.weights[i])
+	}
+
+	strip(&c)
+	testing.expect(t, Vector_SkinBind(&s, d, &c, "upper, lower", 12, VECTOR_AFFINE_IDENTITY, warped = true), "warped")
+	testing.expect(t, len(c.mesh.idx) / 3 > bent, "a warp bends rigid parts too: split everywhere")
+	testing.expectf(t, ends(&c.mesh) > rigidEnds * 4, "warped: the ends split too (%d)", ends(&c.mesh))
+}

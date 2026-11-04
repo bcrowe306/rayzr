@@ -21,10 +21,24 @@ import imgui "lib/imgui"
 // Editor_SyncSelection drops destroyed nodes and keeps the primary
 // selection inside `selection`.
 Editor_SyncSelection :: proc(state: ^EditorState) {
+	// (A large selection checks against a set of the scene's nodes: a scan
+	// of the scene per selected node was 25M compares a frame with 5000
+	// selected - #331.)
+	inScene: map[^e.Node]struct{}
+	if len(state.selection) > SELECTION_SET_MIN && state.activeScene != nil && state.activeScene.manager != nil {
+		inScene = make(map[^e.Node]struct{}, len(state.activeScene.manager.nodes), context.temp_allocator)
+		for n in state.activeScene.manager.nodes do if n != nil do inScene[n] = {}
+	}
+	removed := false
 	for i := len(state.selection) - 1; i >= 0; i -= 1 {
 		n := state.selection[i]
-		if !e.Node_IsAlive(n) || state.activeScene == nil || !node_in_scene(state, n) do ordered_remove(&state.selection, i)
+		there := (n in inScene) if inScene != nil else (state.activeScene != nil && node_in_scene(state, n))
+		if !e.Node_IsAlive(n) || !there {
+			ordered_remove(&state.selection, i)
+			removed = true
+		}
 	}
+	if removed do selection_set_invalidate()
 	if state.selectedNode != nil && (!e.Node_IsAlive(state.selectedNode) || !node_in_scene(state, state.selectedNode)) {
 		state.selectedNode = nil
 	}
@@ -44,7 +58,60 @@ node_in_scene :: proc(state: ^EditorState, n: ^e.Node) -> bool {
 }
 
 Editor_IsSelected :: proc(state: ^EditorState, n: ^e.Node) -> bool {
-	return n != nil && slice.contains(state.selection[:], n)
+	if n == nil do return false
+	if len(state.selection) <= SELECTION_SET_MIN do return slice.contains(state.selection[:], n)
+	return n in selection_set(state.selection[:])
+}
+
+// A set over a large selection (#331): Editor_IsSelected is asked per node
+// per frame (the viewport's bounds, the scene tree's rows, the selection's
+// roots) - a scan of the selection each time made 5000 selected nodes a
+// 25M-compare frame. The set is rebuilt when the selection looks different
+// (its length, storage, ends and a sample of its entries) and every frame.
+SELECTION_SET_MIN :: 32
+
+@(private = "file")
+selectionSet: struct {
+	set:   map[^e.Node]struct{},
+	frame: u64,
+	n:     int,
+	data:  rawptr,
+	sig:   uintptr,
+}
+
+// Editor_SelectionSignature: a cheap fingerprint of a selection (its length,
+// ends and ~16 entries): caches compare it.
+Editor_SelectionSignature :: proc(sel: []^e.Node) -> uintptr {
+	h := uintptr(len(sel))
+	if len(sel) == 0 do return h
+	step := max(len(sel) / 16, 1)
+	for i := 0; i < len(sel); i += step do h = (h ~ uintptr(rawptr(sel[i]))) * 0x100000001b3
+	return h ~ uintptr(rawptr(sel[len(sel) - 1]))
+}
+
+@(private = "file")
+selection_set :: proc(sel: []^e.Node) -> ^map[^e.Node]struct{} {
+	ss := &selectionSet
+	frame := FrameTiming_FrameIndex()
+	sig := Editor_SelectionSignature(sel)
+	if ss.set != nil && ss.frame == frame && ss.n == len(sel) && ss.data == raw_data(sel) && ss.sig == sig do return &ss.set
+	if ss.set == nil do ss.set = make(map[^e.Node]struct{})
+	clear(&ss.set)
+	reserve(&ss.set, len(sel))
+	for n in sel do ss.set[n] = {}
+	ss.frame, ss.n, ss.data, ss.sig = frame, len(sel), raw_data(sel), sig
+	return &ss.set
+}
+
+@(private = "file")
+selection_set_invalidate :: proc() {
+	selectionSet.n = -1
+}
+
+// Editor_SelectionSetRelease frees the set (the editor's shutdown).
+Editor_SelectionSetRelease :: proc() {
+	delete(selectionSet.set)
+	selectionSet = {}
 }
 
 Editor_HasMultiSelection :: proc(state: ^EditorState) -> bool {

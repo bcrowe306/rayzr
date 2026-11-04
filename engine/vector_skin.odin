@@ -97,6 +97,7 @@ Vector_Skin_Key :: struct {
 	bones:         u64, // hash of the bone list
 	smooth:        f32,
 	bind:          Vector_Affine,
+	warped:        bool, // (a warp bends rigid parts too: split everywhere)
 }
 
 // Vector_Skin: one node's binding to a skeleton.
@@ -147,8 +148,11 @@ Vector_SkinBoneList :: proc(d: ^Skeleton_Data, list: string, out: ^[dynamic]int)
 // a fill, fringes and strokes along straight sides) that would stretch
 // across a bend. Edges are split where shared (red-green refinement: a
 // triangle splits by how many of its edges are marked), so there are no
-// T-junctions to crack open. Attributes are interpolated.
-Vector_MeshSubdivide :: proc(m: ^Vector_Mesh, maxEdge: f32) {
+// T-junctions to crack open. Attributes are interpolated. rigid (optional):
+// triangles wholly on one bone aren't split for their own sake - a single
+// bone moves them as a whole (affine), so splitting would only add
+// triangles (software GL pays per triangle, #331).
+Vector_MeshSubdivide :: proc(m: ^Vector_Mesh, maxEdge: f32, rigid: ^Vector_Skin_Rigid = nil) {
 	if maxEdge <= 0 || len(m.idx) == 0 do return
 	lim := maxEdge * maxEdge
 	len2 :: proc(m: ^Vector_Mesh, a, b: u32) -> f32 {
@@ -160,6 +164,7 @@ Vector_MeshSubdivide :: proc(m: ^Vector_Mesh, maxEdge: f32) {
 		mids := make(map[u64]u32, allocator = context.temp_allocator)
 		ntri := len(m.idx) / 3
 		for t in 0 ..< ntri {
+			if rigid != nil && vector_tri_rigid(rigid, m.verts[m.idx[t * 3]], m.verts[m.idx[t * 3 + 1]], m.verts[m.idx[t * 3 + 2]]) do continue
 			for k in 0 ..< 3 {
 				a, b := m.idx[t * 3 + k], m.idx[t * 3 + (k + 1) % 3]
 				if len2(m, a, b) <= lim do continue
@@ -207,6 +212,39 @@ Vector_MeshSubdivide :: proc(m: ^Vector_Mesh, maxEdge: f32) {
 	}
 }
 
+// Vector_Skin_Rigid: what decides whether a triangle bends (the bones'
+// segments in the skeleton's space, mesh space -> that space, the joints'
+// smoothing).
+Vector_Skin_Rigid :: struct {
+	segs:   [][2][2]f32,
+	bind:   Vector_Affine,
+	smooth: f32,
+}
+
+// vector_tri_rigid: whether every point of a triangle (mesh space) gets one
+// bone alone - the nearest bone at its centre is nearer than every other by
+// more than the smoothing everywhere in it (distances move at most as far
+// as the point does: the centre's, give or take the triangle's radius).
+vector_tri_rigid :: proc(r: ^Vector_Skin_Rigid, a, b, c: [2]f32) -> bool {
+	if len(r.segs) == 1 do return true
+	pa, pb, pc := Vector_AffineApply(r.bind, a), Vector_AffineApply(r.bind, b), Vector_AffineApply(r.bind, c)
+	ctr := (pa + pb + pc) / 3
+	rad: f32 = 0
+	for p in ([3][2]f32{pa, pb, pc}) {
+		d := p - ctr
+		rad = max(rad, math.sqrt(d.x * d.x + d.y * d.y))
+	}
+	near, dmin := -1, max(f32)
+	for seg, i in r.segs {
+		if d := seg_dist(ctr, seg[0], seg[1]); d < dmin {near, dmin = i, d}
+	}
+	for seg, i in r.segs {
+		if i == near do continue
+		if seg_dist(ctr, seg[0], seg[1]) - dmin - 2 * rad <= max(r.smooth, 0) + 1e-3 do return false
+	}
+	return true
+}
+
 @(private = "file")
 seg_dist :: proc(p, a, b: [2]f32) -> f32 {
 	ab := b - a
@@ -220,10 +258,10 @@ seg_dist :: proc(p, a, b: [2]f32) -> f32 {
 // Vector_SkinBind (re)binds a mesh to bones when anything the binding
 // depends on changed; true when the weights were remade (the mesh needs
 // them uploaded). bind: mesh space -> the skeleton's space.
-Vector_SkinBind :: proc(s: ^Vector_Skin, d: ^Skeleton_Data, c: ^Vector_Cache, boneList: string, smooth: f32, bind: Vector_Affine) -> bool {
+Vector_SkinBind :: proc(s: ^Vector_Skin, d: ^Skeleton_Data, c: ^Vector_Cache, boneList: string, smooth: f32, bind: Vector_Affine, warped := false) -> bool {
 	key := Vector_Skin_Key{
 		data = d, cache = c, tessellations = c.stats.tessellations, bucket = c.bucket,
-		bones = hash.fnv64a(transmute([]u8)boneList), smooth = smooth, bind = bind,
+		bones = hash.fnv64a(transmute([]u8)boneList), smooth = smooth, bind = bind, warped = warped,
 	}
 	if s.valid && key == s.key do return false
 	context.allocator = Engine_HeapAllocator()
@@ -252,11 +290,13 @@ Vector_SkinBind :: proc(s: ^Vector_Skin, d: ^Skeleton_Data, c: ^Vector_Cache, bo
 		segs[i] = {{w.wx, w.wy}, Skeleton_LocalToWorld(w, {max(d.bones[bi].length, 0), 0})}
 	}
 	m := &c.mesh
-	// (Short edges: what bends must have vertices to bend at. Idempotent:
-	// a re-bind of the same mesh splits nothing.)
+	// (Short edges: what bends must have vertices to bend at - not what one
+	// bone moves whole, unless a warp bends it too. Idempotent: a re-bind of
+	// the same mesh splits nothing.)
 	if len(s.bones) > 0 {
 		size := max(m.bounds[2] - m.bounds[0], m.bounds[3] - m.bounds[1])
-		Vector_MeshSubdivide(m, max(VECTOR_SKIN_EDGE, size / 64))
+		rigid := Vector_Skin_Rigid{segs = segs, bind = bind, smooth = smooth}
+		Vector_MeshSubdivide(m, max(VECTOR_SKIN_EDGE, size / 64), nil if warped else &rigid)
 	}
 	resize(&s.ids, len(m.verts))
 	resize(&s.weights, len(m.verts))

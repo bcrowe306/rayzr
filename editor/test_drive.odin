@@ -97,6 +97,8 @@ TestDrive :: struct {
 	keyUp:      [dynamic]imgui.Key,
 	held:       [dynamic]imgui.Key, // `hold` modifiers
 	frame:      int,
+	benchLabel: string, // bench-start's label
+	dblClickTime: f32,  // ImGui's double-click time, while a dblclick stretches it
 }
 
 GlobalDrive: TestDrive
@@ -338,12 +340,19 @@ drive_exec :: proc(d: ^TestDrive, state: ^EditorState, line: string) -> bool {
 			return false
 		}
 		clicks := 2 if cmd == "dblclick" else 1
-		// steps: 1 down, 2 up, 3 down, 4 up
+		// steps: 1 down, 2 up, 3 down, 4 up. (A double-click's two clicks
+		// count as one however slow the frames are: a software-GL machine's
+		// first frames can take longer than ImGui's 0.3 s - perf runs, #331.)
 		if d.step <= clicks * 2 {
+			if clicks == 2 && d.step == 1 {
+				d.dblClickTime = io.MouseDoubleClickTime
+				io.MouseDoubleClickTime = max(io.MouseDoubleClickTime, 5)
+			}
 			imgui.IO_AddMouseButtonEvent(io, button, d.step % 2 == 1)
 			d.step += 1
 			return false
 		}
+		if clicks == 2 && d.dblClickTime > 0 do io.MouseDoubleClickTime = d.dblClickTime
 		d.wait = 1
 		return true
 	case "drag":
@@ -516,8 +525,34 @@ drive_exec :: proc(d: ^TestDrive, state: ^EditorState, line: string) -> bool {
 		if fields := strings.fields(rest, context.temp_allocator); len(fields) > 1 do label = fields[1]
 		line := FrameTiming_BenchReport(label)
 		fmt.println(line)
+		fmt.println(FrameTiming_BenchJSON(label))
 		append(&d.report, fmt.aprintf("`%s`", line))
 		FrameTiming_SetUncapped(false, false)
+		return true
+	case "bench-start":
+		// bench-start [label] .. bench-stop: time the (uncapped) frames of the
+		// commands between them - a drag, clicks (scripts/perf/perf.py).
+		delete(d.benchLabel)
+		d.benchLabel = strings.clone(rest if rest != "" else "frames")
+		FrameTiming_SetUncapped(true, false)
+		FrameTiming_BenchStart(max(int))
+		return true
+	case "bench-stop":
+		FrameTiming_BenchStop()
+		line := FrameTiming_BenchReport(d.benchLabel)
+		fmt.println(line)
+		fmt.println(FrameTiming_BenchJSON(d.benchLabel))
+		append(&d.report, fmt.aprintf("`%s`", line))
+		FrameTiming_SetUncapped(false, false)
+		return true
+	case "bench-value":
+		// bench-value <label> <query>: a query's value (a number: startup-ms,
+		// play-ms) as a [bench-json] line.
+		label, _, q := strings.partition(rest, " ")
+		v, ok := Drive_Query(state, strings.trim_space(q))
+		if !ok {drive_fail(d, fmt.tprintf("bench-value: unknown query %q", q)); return true}
+		fmt.printfln("[bench-json] {{\"label\": %q, \"value\": %s}}", label, v if v != "" else "null")
+		append(&d.report, fmt.aprintf("`%s: %s`", label, v))
 		return true
 	case "log":
 		fmt.printfln("[DRIVE] %s", rest)
@@ -849,6 +884,7 @@ Drive_Query :: proc(state: ^EditorState, q: string) -> (string, bool) {
 	case "preview-audio": return "playing" if state.previewAudioPlaying else "stopped", true // the Assets' Preview panel
 	case "preview-anim": return fmt.tprintf("%s %d", "playing" if state.previewAnimPlaying else "paused", len(state.previewAnimFrames)), true
 	case "asset-selected": return filepath.base(state.selectedAssetPath), true
+	case "preview-texture": return filepath.base(state.previewTexturePath) if state.previewTextureLoaded else "", true // the Preview panel's image
 	case "audio-preview": return "playing" if state.selectedNode != nil && AudioPreview_Playing(state.selectedNode) else "stopped", true
 	case "sound-next": // the selected Sound Effect's own Sequential place (#217: previews don't move it)
 		if n := state.selectedNode; n != nil && n.typeId == e.SoundNode do return fmt.tprint((cast(^e.SoundNode)n).nextIndex), true
@@ -965,6 +1001,8 @@ Drive_Query :: proc(state: ^EditorState, q: string) -> (string, bool) {
 	case "ref-section": return ScriptReference_Selected() if ScriptReference_IsOpen() else "", true
 	case "ref-api": return ScriptReference_Api(), true
 	case "runtime-diags": return fmt.tprint(CodeRuntime_Count()), true
+	case "startup-ms": return fmt.tprintf("%.1f", frameTiming.firstFrameMs), true // process start to the first frame's end
+	case "play-ms": return fmt.tprintf("%.1f", state.playMs) if state.playMs > 0 else "", true // Play to the game's first frame (#331)
 	case "game-pid": return fmt.tprint(state.gameProcess.pid if state.gameProcessRunning else 0), true
 	case "last-played": return state.lastPlayedScene if state.lastPlayedScene != "" else "project", true
 	case "log":

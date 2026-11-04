@@ -130,6 +130,7 @@
         { "file": "docs/contributing/index.md", "slug": "contributing" },
         { "file": "RELEASING.md", "slug": "contributing/releasing", "label": "Releases and dev builds" },
         { "file": "docs/contributing/install-checks.md", "slug": "contributing/install-checks" },
+        { "file": "docs/contributing/performance.md", "slug": "contributing/performance" },
         { "file": "editor/TEST_DRIVE.md", "slug": "contributing/test-drives", "label": "Editor test drives" },
         { "file": "docs/contributing/docs.md", "slug": "contributing/docs" }
       ]

@@ -64,6 +64,8 @@ Editor_PlayRequest :: proc(state: ^EditorState, mode: Play_Mode, scene := "") {
 		Editor_Log(state, .Info, "Saved %d modified scene(s) before playing", saved)
 	}
 
+	state.playRequestedAt = time.tick_now() // (time-to-Play: until the game's first frame)
+	state.playMs = 0
 	state.pendingPlayMode = mode
 	delete(state.pendingPlayScene)
 	state.pendingPlayScene = strings.clone(scene if scene != "" else state.activeScenePath) if mode == .CurrentScene else ""

@@ -1,0 +1,114 @@
+# The editor's performance drive (#331; scripts/perf/perf.py runs it on the
+# project of scripts/make_bench_project.py): startup, a large scene idle,
+# selecting and dragging in it, a big tile map, Simulate with many
+# particles, and time-to-Play. Each `bench` / `bench-start .. bench-stop`
+# prints a [bench-json] line (frame-time percentiles); `bench-value` one
+# number. Frames are uncapped while timed.
+wait 30
+bench-value editor_startup_ms startup-ms
+dblclick @asset:scenes/main.scene.json
+wait-until scene == scenes/main.scene.json timeout=1800
+wait 30
+bench 300 demo_idle
+
+# 5000 sprites (TextureNodes) open in the editor (the ones clicked are in
+# the view of a 1280x720 window).
+dblclick @asset:scenes/bench_sprites.scene.json
+wait-until nodes >= 5000 timeout=1800
+wait 30
+screenshot sprites
+bench 300 sprites_idle
+# Selecting: clicks on sprites in the viewport, one after another.
+bench-start sprites_select
+# (Alternating textures: S<k> shows Asteroid_<k % 4 + 1>.)
+click @node:S1222
+click @node:S1225
+click @node:S1322
+click @node:S1325
+click @node:S1422
+click @node:S1425
+click @node:S1522
+click @node:S1525
+bench-stop
+expect selection == S1525
+# (The Preview panel follows: Asteroid_2 - the recent textures are kept, #331.)
+expect preview-texture == Asteroid_2.png
+# A box selection over ~100 of them (the Select tool, from a gap between sprites).
+key q
+bench-start sprites_box_select
+drag @world:385,265 @world:885,515 60
+bench-stop
+expect selection-count >= 50
+key escape
+# Dragging one sprite with the Move tool (smart snapping on: the default).
+click @node:S1525
+key w
+expect tool == translate
+bench-start sprites_drag
+drag @node:S1525 @node:S1525+160,90 90
+bench-stop
+expect modified == true
+key ctrl+z
+# Everything selected (5000 nodes): idle, then nudged with the arrow keys
+# (each press moves all 5000 and is an undo step).
+key ctrl+shift+a
+wait 5
+expect selection-count >= 5000
+bench 120 sprites_all_selected
+bench-start sprites_nudge_all
+key right
+key right
+key right
+key right
+key right
+key shift+down
+key shift+down
+key shift+down
+bench-stop
+expect selection-count >= 5000
+expect modified == true
+key ctrl+z
+key ctrl+z
+key ctrl+z
+key ctrl+z
+key ctrl+z
+key ctrl+z
+key ctrl+z
+key ctrl+z
+wait 5
+key escape
+key q
+
+# A 400x400 tile map, zoomed out.
+dblclick @asset:scenes/bench_tiles.scene.json
+wait-until scene == scenes/bench_tiles.scene.json timeout=1800
+wait 30
+screenshot tiles
+bench 300 tiles_idle
+
+# Simulate: 5000 live particles in the editor.
+dblclick @asset:scenes/bench_particles.scene.json
+wait-until scene == scenes/bench_particles.scene.json timeout=1800
+wait 10
+key f7
+wait-until simulating == true timeout=600
+wait 60
+bench 300 particles_simulate
+key f7
+wait-until simulating == false timeout=600
+
+# Time-to-Play: Play (F5: the demo's initial scene) until the game's first
+# frame, then Play Current Scene on the 5000-sprite scene (F6).
+key f5
+wait-until play-ms != timeout=1200
+bench-value play_project_ms play-ms
+key shift+f5
+wait-until game-pid == 0 timeout=600
+dblclick @asset:scenes/bench_sprites.scene.json
+wait-until scene == scenes/bench_sprites.scene.json timeout=1800
+wait 30
+key f6
+wait-until play-ms != timeout=1200
+bench-value play_large_scene_ms play-ms
+key shift+f5
+wait-until game-pid == 0 timeout=600

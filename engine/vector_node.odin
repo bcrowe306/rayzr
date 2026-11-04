@@ -299,7 +299,7 @@ VectorShapeNode_Deform :: proc(v: ^VectorShapeNode, cache: ^Vector_Cache, offset
 	for n: ^Node = v; n != nil && n != sn; n = n.parent {
 		bind = Vector_AffineMul(Vector_AffineTRS(n.position, n.rotation, n.scale), bind)
 	}
-	if Vector_SkinBind(&v.skinning, sn.data, cache, v.skinBones, v.skinSmooth, bind) {
+	if Vector_SkinBind(&v.skinning, sn.data, cache, v.skinBones, v.skinSmooth, bind, VectorShapeNode_Warped(v)) {
 
 
 		Vector_Cache_SetSkin(cache, v.skinning.ids[:], v.skinning.weights[:])

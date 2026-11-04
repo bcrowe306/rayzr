@@ -114,6 +114,8 @@ EditorState :: struct {
 	lastPlayedScene:    string, // what Restart plays again ("" = the project)
 	lastPlayPackage:    string, // an exported .rayzr played last (Restart replays it)
 	hasPlayed:          bool,
+	playRequestedAt:    time.Tick, // the last Play (time-to-Play: the game's first frame - @rayzr:first-frame, #331)
+	playMs:             f64,       //   and how long it took (0: not yet)
 	gameOutput:         ^os.File,
 	gameLineBuf:        [dynamic]u8,
 	buildProcess:       os.Process,
@@ -353,6 +355,7 @@ Editor_Shutdown :: proc(state: ^EditorState) {
 	InspectorFields_Shutdown()
 	PreviewPanel_Shutdown(state)
 	delete(state.selection)
+	Editor_SelectionSetRelease()
 	delete(state.dragOthers)
 	delete(state.selectedAssetPath)
 	delete(state.assetAnchorPath)

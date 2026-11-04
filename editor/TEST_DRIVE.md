@@ -181,7 +181,13 @@ exec <command...>              # run a command to completion
 drop-files <target> <path...>  # files/folders dropped from the OS file manager at <target>
 dialog-files [<path...>]       # answer for the next system file dialog (none = Cancel)
 log <text> | quit
+bench <frames> [label]         # time that many uncapped frames: a [bench] line and a [bench-json] one
+bench-start [label] / bench-stop  # time the frames of the commands between them (a drag, clicks)
+bench-value <label> <query>    # a query's number as a [bench-json] line (startup-ms, play-ms)
 ```
+
+The `bench` commands are for performance drives (`tests/perf/editor.drive`,
+run by `scripts/perf/perf.py`: [Performance checks](../docs/contributing/performance.md)).
 
 **Targets**
 - `@<id>`: a widget registered by the UI (`@toolbar.play`, `@hier:PlayerShip`,
@@ -213,6 +219,7 @@ Queries:
 - `selected`, `scene`, `tool`, `zoom`, `camera`, `nodes`, `tile-chunks` (cached tile chunks), `undo-bytes` (memory held by undo snapshots)
 - `modified`, `modified-count`, `undo`, `redo`
 - `game` (running/stopped), `build`, `log`, `last-log`
+- `startup-ms` (process start to the first frame), `play-ms` (the last Play to the game's first frame; empty until it drew one), `preview-texture` (the Preview panel's image)
 - `add-node-open`, `project-settings-open`, `item:<id>`
 - `file:<project path>`, `abs-file:<path>`
 - `code.open` (tab count), `code.file`, `code.text`, `code.line` (caret line), `code.cursor` (`line:col`), `code.top-row` (the display row at the top of the text),

@@ -192,7 +192,7 @@ render_rows :: proc(state: ^EditorState, children: []^e.Node, parentPath: string
 			for i + count < len(children) && skippable(mgr, children[i + count], filter) {
 				ry := y + f32(count) * step
 				if !(ry + step < top || ry > bottom) do break
-				if GlobalDrive.enabled {
+				if GlobalDrive.enabled && !FrameTiming_Benching() { // (not while a drive times frames: drive-only work)
 					n := children[i + count]
 					path := n.name if parentPath == "" else fmt.tprintf("%s/%s", parentPath, n.name)
 					mn := [2]f32{start.x, start.y + f32(count) * step}

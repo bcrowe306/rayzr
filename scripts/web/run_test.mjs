@@ -65,7 +65,7 @@ true`;
 const result = { runs: [], error: null };
 try {
   let target;
-  for (let i = 0; i < 50 && !target; i++) {
+  for (let i = 0; i < 150 && !target; i++) { // (up to 30 s: a cold first start on a fresh CI image is slow)
     await sleep(200);
     try { target = (await (await fetch(`http://127.0.0.1:${port}/json`)).json()).find((t) => t.type === "page"); } catch {}
   }

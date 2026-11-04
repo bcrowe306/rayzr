@@ -59,16 +59,17 @@ Vector_Cache :: struct {
 	skinUploaded: bool,
 }
 
+// The shaders: [plain, with gradients].
 @(private = "file")
-vectorMaterial: rl.Material
-@(private = "file")
-vectorMaterialReady: bool
-@(private = "file")
-vectorAddLoc: i32 = -1
+vflat: [2]struct {
+	material: rl.Material,
+	ready:    bool,
+	add:      i32,
+}
 
-// The deforming variant (skin + warp; vector_skin.odin).
+// The deforming variant (skin + warp; vector_skin.odin): [plain, with gradients].
 @(private = "file")
-vskin: struct {
+vskin: [2]struct {
 	material:                    rl.Material,
 	ready:                       bool,
 	add, bones, skinOn:          i32,
@@ -178,6 +179,30 @@ void main() {
     finalColor.rgb = min(finalColor.rgb + colAdd.rgb, vec3(1.0)); // (straight alpha)
 }
 `
+
+// The plain variant: meshes without gradient vertices (most art; linear
+// two-stop gradients are baked into vertex colours: vector_tess.odin) skip
+// the texture look-up and spread maths - the same pixels, cheaper per pixel
+// (software GL runs every branch of a shader for every pixel, #331).
+@(private = "file")
+VECTOR_SOLID_FS :: `#version 330
+in vec2 fragGrad;
+in vec2 fragMode;
+in vec4 fragColor;
+uniform vec4 colDiffuse;
+uniform vec4 colAdd;
+out vec4 finalColor;
+void main() {
+    finalColor = fragColor * colDiffuse;
+    finalColor.rgb = min(finalColor.rgb + colAdd.rgb, vec3(1.0)); // (straight alpha)
+}
+`
+
+// Vector_Cache_Solid: whether a cache's mesh has no gradient vertices (it
+// draws through the plain shader).
+Vector_Cache_Solid :: proc(c: ^Vector_Cache) -> bool {
+	return len(c.mesh.gradients) == 0
+}
 
 // Vector_Cache_Destroy frees the mesh and its GPU buffers.
 Vector_Cache_Destroy :: proc(c: ^Vector_Cache) {
@@ -348,20 +373,21 @@ Vector_Cache_Draw :: proc(c: ^Vector_Cache, pos: [2]f32, rotation: f32, scale: [
 		return
 	}
 	if Vector_DrawModeNow() == .GPU && c.uploaded {
-		if !vectorMaterialReady {
-			vectorMaterial = rl.LoadMaterialDefault()
-			vectorMaterial.shader = rl.LoadShaderFromMemory(Shader_Port(VECTOR_VS), Shader_Port(VECTOR_FS))
-			vectorAddLoc = rl.GetShaderLocation(vectorMaterial.shader, "colAdd")
-			vectorMaterialReady = true
+		vf := &vflat[0 if Vector_Cache_Solid(c) else 1]
+		if !vf.ready {
+			vf.material = rl.LoadMaterialDefault()
+			vf.material.shader = rl.LoadShaderFromMemory(Shader_Port(VECTOR_VS), Shader_Port(VECTOR_SOLID_FS if vf == &vflat[0] else VECTOR_FS))
+			vf.add = rl.GetShaderLocation(vf.material.shader, "colAdd")
+			vf.ready = true
 		}
-		vectorMaterial.maps[rl.MaterialMapIndex.ALBEDO].color = tint
-		if vectorAddLoc >= 0 {
+		vf.material.maps[rl.MaterialMapIndex.ALBEDO].color = tint
+		if vf.add >= 0 {
 			a := add
-			rl.SetShaderValue(vectorMaterial.shader, rl.ShaderLocationIndex(vectorAddLoc), &a, .VEC4)
+			rl.SetShaderValue(vf.material.shader, rl.ShaderLocationIndex(vf.add), &a, .VEC4)
 		}
-		vectorMaterial.maps[rl.MaterialMapIndex.ALBEDO].texture = c.gradTex if c.gradTex.id != 0 else rl.Texture2D{id = rlgl.GetTextureIdDefault(), width = 1, height = 1, mipmaps = 1, format = .UNCOMPRESSED_R8G8B8A8}
+		vf.material.maps[rl.MaterialMapIndex.ALBEDO].texture = c.gradTex if c.gradTex.id != 0 else rl.Texture2D{id = rlgl.GetTextureIdDefault(), width = 1, height = 1, mipmaps = 1, format = .UNCOMPRESSED_R8G8B8A8}
 		xf := rl.MatrixTranslate(pos.x, pos.y, 0) * rl.MatrixRotateZ(rotation * rl.DEG2RAD) * rl.MatrixScale(scale.x, scale.y, 1) * rl.MatrixTranslate(offset.x, offset.y, 0)
-		for m in c.gpu do rl.DrawMesh(m, vectorMaterial, xf)
+		for m in c.gpu do rl.DrawMesh(m, vf.material, xf)
 		return
 	}
 	rlgl.PushMatrix()
@@ -398,51 +424,53 @@ Vector_Cache_Draw :: proc(c: ^Vector_Cache, pos: [2]f32, rotation: f32, scale: [
 // vector_draw_deformed: the GPU path through the bending shader.
 @(private = "file")
 vector_draw_deformed :: proc(c: ^Vector_Cache, pos: [2]f32, rotation: f32, scale: [2]f32, tint: rl.Color, offset: [2]f32, add: [4]f32, d: ^Vector_Deform) {
-	if !vskin.ready {
-		vskin.material = rl.LoadMaterialDefault()
-		sh := rl.LoadShaderFromMemory(Shader_Port(VECTOR_SKIN_VS), Shader_Port(VECTOR_FS))
-		vskin.material.shader = sh
-		vskin.add = rl.GetShaderLocation(sh, "colAdd")
-		vskin.bones = rl.GetShaderLocation(sh, "bones")
-		vskin.skinOn = rl.GetShaderLocation(sh, "skinOn")
-		vskin.warpBox = rl.GetShaderLocation(sh, "warpBox")
-		vskin.warpA = rl.GetShaderLocation(sh, "warpA")
-		vskin.warpB = rl.GetShaderLocation(sh, "warpB")
-		vskin.ready = true
+	vs := &vskin[0 if Vector_Cache_Solid(c) else 1]
+	if !vs.ready {
+		vs.material = rl.LoadMaterialDefault()
+		sh := rl.LoadShaderFromMemory(Shader_Port(VECTOR_SKIN_VS), Shader_Port(VECTOR_SOLID_FS if Vector_Cache_Solid(c) else VECTOR_FS))
+		vs.material.shader = sh
+		vs.add = rl.GetShaderLocation(sh, "colAdd")
+		vs.bones = rl.GetShaderLocation(sh, "bones")
+		vs.skinOn = rl.GetShaderLocation(sh, "skinOn")
+		vs.warpBox = rl.GetShaderLocation(sh, "warpBox")
+		vs.warpA = rl.GetShaderLocation(sh, "warpA")
+		vs.warpB = rl.GetShaderLocation(sh, "warpB")
+		vs.ready = true
 	}
-	sh := vskin.material.shader
-	vskin.material.maps[rl.MaterialMapIndex.ALBEDO].color = tint
-	vskin.material.maps[rl.MaterialMapIndex.ALBEDO].texture = c.gradTex if c.gradTex.id != 0 else rl.Texture2D{id = rlgl.GetTextureIdDefault(), width = 1, height = 1, mipmaps = 1, format = .UNCOMPRESSED_R8G8B8A8}
+	sh := vs.material.shader
+	vs.material.maps[rl.MaterialMapIndex.ALBEDO].color = tint
+	vs.material.maps[rl.MaterialMapIndex.ALBEDO].texture = c.gradTex if c.gradTex.id != 0 else rl.Texture2D{id = rlgl.GetTextureIdDefault(), width = 1, height = 1, mipmaps = 1, format = .UNCOMPRESSED_R8G8B8A8}
 	a := add
-	if vskin.add >= 0 do rl.SetShaderValue(sh, rl.ShaderLocationIndex(vskin.add), &a, .VEC4)
+	if vs.add >= 0 do rl.SetShaderValue(sh, rl.ShaderLocationIndex(vs.add), &a, .VEC4)
 	on: f32 = 1 if c.skinUploaded && len(d.bones) > 0 else 0
-	if vskin.skinOn >= 0 do rl.SetShaderValue(sh, rl.ShaderLocationIndex(vskin.skinOn), &on, .FLOAT)
-	if on > 0 && vskin.bones >= 0 {
+	if vs.skinOn >= 0 do rl.SetShaderValue(sh, rl.ShaderLocationIndex(vs.skinOn), &on, .FLOAT)
+	if on > 0 && vs.bones >= 0 {
 		n := min(len(d.bones), VECTOR_SKIN_MAX_BONES)
 		packed: [VECTOR_SKIN_MAX_BONES * 2][4]f32
 		for m, i in d.bones[:n] {
 			packed[i * 2] = {m[0], m[1], m[2], m[3]}
 			packed[i * 2 + 1] = {m[4], m[5], 0, 0}
 		}
-		rl.SetShaderValueV(sh, rl.ShaderLocationIndex(vskin.bones), &packed, .VEC4, i32(n * 2))
+		rl.SetShaderValueV(sh, rl.ShaderLocationIndex(vs.bones), &packed, .VEC4, i32(n * 2))
 	}
 	box := [4]f32{d.box[0], d.box[1], d.box[2], d.box[3]}
 	wa := [4]f32{d.warp[0].x, d.warp[0].y, d.warp[1].x, d.warp[1].y}
 	wb := [4]f32{d.warp[2].x, d.warp[2].y, d.warp[3].x, d.warp[3].y}
-	if vskin.warpBox >= 0 do rl.SetShaderValue(sh, rl.ShaderLocationIndex(vskin.warpBox), &box, .VEC4)
-	if vskin.warpA >= 0 do rl.SetShaderValue(sh, rl.ShaderLocationIndex(vskin.warpA), &wa, .VEC4)
-	if vskin.warpB >= 0 do rl.SetShaderValue(sh, rl.ShaderLocationIndex(vskin.warpB), &wb, .VEC4)
+	if vs.warpBox >= 0 do rl.SetShaderValue(sh, rl.ShaderLocationIndex(vs.warpBox), &box, .VEC4)
+	if vs.warpA >= 0 do rl.SetShaderValue(sh, rl.ShaderLocationIndex(vs.warpA), &wa, .VEC4)
+	if vs.warpB >= 0 do rl.SetShaderValue(sh, rl.ShaderLocationIndex(vs.warpB), &wb, .VEC4)
 	xf := rl.MatrixTranslate(pos.x, pos.y, 0) * rl.MatrixRotateZ(rotation * rl.DEG2RAD) * rl.MatrixScale(scale.x, scale.y, 1) * rl.MatrixTranslate(offset.x, offset.y, 0)
-	for m in c.gpu do rl.DrawMesh(m, vskin.material, xf)
+	for m in c.gpu do rl.DrawMesh(m, vs.material, xf)
 }
 
 // Vector_DeformShutdown frees the bending shader (engine shutdown).
 Vector_DeformShutdown :: proc() {
-	if !vskin.ready do return
-	// (Not UnloadMaterial: its albedo may be a cache's gradient texture.)
-	if rl.IsWindowReady() do rl.UnloadShader(vskin.material.shader)
-	rl.MemFree(vskin.material.maps)
-	vskin = {}
+	for &v in vskin do if v.ready {
+		// (Not UnloadMaterial: its albedo may be a cache's gradient texture.)
+		if rl.IsWindowReady() do rl.UnloadShader(v.material.shader)
+		rl.MemFree(v.material.maps)
+		v = {}
+	}
 }
 
 // vector_vertex_gradient: a gradient vertex's colour on the CPU (the

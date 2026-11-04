@@ -2,6 +2,7 @@ package engine
 
 import "core:fmt"
 import "core:log"
+import "core:math"
 import os "osx"
 import "core:path/filepath"
 import "core:slice"
@@ -35,6 +36,7 @@ Run_Options :: struct {
 	trace:          string, // --trace <node name>: print "@trace <frame> <scene> <x> <y>" every frame (game tests, bots)
 	test:           string, // --test [filter]: play the project's tests/*_test.lua (game_tests.odin); "*" all
 	console:        string, // --console "perf; outlines; open": the developer console on, these lines run once loaded (tests; dev_console.odin)
+	perfReport:     string, // --perf-report <file.json>: every frame's time and the startup times, written at the end (perf_report.odin; #331)
 }
 
 // An --input-script event: `key` goes down / up at `frame`; pad events
@@ -232,7 +234,7 @@ Runner_ApplyInputEvent :: proc(input: ^InputSystem, ev: Input_Script_Event) {
 }
 
 // Engine_ParseRunArgs reads --project/-p, --scene, --screenshot, --frames,
-// --hidden, --dump-scene, --user-data, --bench, --uncapped and --no-render-cache. A bare argument is taken as the project.
+// --hidden, --dump-scene, --user-data, --bench, --uncapped, --perf-report and --no-render-cache. A bare argument is taken as the project.
 Engine_ParseRunArgs :: proc(args: []string) -> (opts: Run_Options) {
 	for a in args do if a == "--version" {
 		fmt.println(RAYZR_RELEASE)
@@ -279,6 +281,8 @@ Engine_ParseRunArgs :: proc(args: []string) -> (opts: Run_Options) {
 			n, _ := strconv.parse_int(next); opts.benchFrames = n; opts.uncapped = true; i += 1
 		case arg == "--uncapped":
 			opts.uncapped = true
+		case arg == "--perf-report" && next != "":
+			opts.perfReport = next; i += 1
 		case !strings.has_prefix(arg, "-") && opts.projectPath == "":
 			opts.projectPath = arg
 		}
@@ -358,6 +362,7 @@ Runner_State :: struct {
 	benchAllocs, benchAllocBytes, benchTempBytes: int, // (profiling builds)
 	windowOpen, audioOpen, fontsLoaded: bool,
 	inputEvents:        [dynamic]Input_Script_Event, // --input-script
+	perf:               Perf_Recorder,               // --perf-report
 }
 
 // The running game (Runner_Start .. Runner_Stop), for the platform hooks
@@ -402,6 +407,7 @@ Engine_RunProject :: proc(opts: Run_Options) -> int {
 Runner_Start :: proc(opts: Run_Options) -> (^Runner_State, bool) {
 	rs := new(Runner_State)
 	rs.opts = opts
+	rs.perf.path = opts.perfReport
 	projectPath := opts.projectPath
 	startScene := opts.startScene
 	game := new(Game)
@@ -480,6 +486,7 @@ Runner_Start :: proc(opts: Run_Options) -> (^Runner_State, bool) {
 		return nil, false
 	}
 	rs.windowOpen = true
+	rs.perf.windowMs = Process_SinceStartMs()
 	// Fullscreen (project Video, Engine.set_fullscreen): applied from the
 	// first frames on (Runner_ApplyFullscreen); the frame scales to the window.
 	if video.fullscreen && !opts.hidden do game.fullscreenRequest = true
@@ -501,6 +508,7 @@ Runner_Start :: proc(opts: Run_Options) -> (^Runner_State, bool) {
 		return nil, false
 	}
 	if video.icon != "" do Runner_SetWindowIcon(game, video.icon)
+	rs.perf.projectMs = Process_SinceStartMs()
 	// Crash reports go to the game's user-data folder (crash_report.odin).
 	when ODIN_OS != .JS {
 		Crash_Install(video.windowTitle if video.windowTitle != "" else Save_GameName(), Save_CrashDir())
@@ -627,11 +635,17 @@ Runner_Frame :: proc(rs: ^Runner_State) -> bool {
 		}
 		if !Tests_AfterFrame(game) do return false // (every test ran)
 		// (Drawn over the black letterbox below: soft edges would darken.)
-		if !renderPixel.smooth && Game_ClearColor(game).a == 255 do Render_MakeOpaque(vw, vh)
+		// An opaque frame copied straight to the window gets its alpha set to
+		// 1 by the copy (one full-screen pass fewer: software GL pays for
+		// every pixel, #331); one that goes through post effects or the
+		// colour-blind filter first is made opaque here, as those read it.
+		effects := Scene_PostEffects(game.sceneManager.currentScene)
+		opaquePass, opaqueInCopy := Runner_OpaqueFrame(renderPixel.smooth, Game_ClearColor(game).a, len(effects), Colorblind_Filtering(access.colorblind, access.colorblindStrength))
+		if opaquePass do Render_MakeOpaque(vw, vh)
 		rl.EndTextureMode()
 		Render_SetFrameTarget(nil)
 		frame := target.texture
-		if effects := Scene_PostEffects(game.sceneManager.currentScene); len(effects) > 0 && !renderPixel.smooth {
+		if len(effects) > 0 && !renderPixel.smooth {
 			frame = Post_Process(effects, frame, &game.gameContext) // through each effect
 		}
 		runTime := time.tick_since(frameStart)
@@ -651,19 +665,34 @@ Runner_Frame :: proc(rs: ^Runner_State) -> bool {
 			}
 			// (Premultiplied: scene.odin draws the layers over the world so.)
 			rl.BeginBlendMode(.ALPHA_PREMULTIPLY)
+			exact := Runner_CopyIsExact(dest, target.texture)
+			if exact do rl.SetTextureFilter(target.texture, .POINT)
 			rl.DrawTexturePro(target.texture, {0, 0, f32(target.texture.width), -f32(target.texture.height)}, dest, {0, 0}, 0, rl.WHITE)
 			rl.EndBlendMode()
+			if exact {
+				rlgl.DrawRenderBatchActive()
+				rl.SetTextureFilter(target.texture, .POINT if video.sharpScaling else .BILINEAR)
+			}
 		} else {
 			// Copied as is: blending would let the bars' black through where the
 			// frame's alpha dropped (anti-aliased text, translucent sprites).
 			rlgl.DrawRenderBatchActive()
 			rlgl.DisableColorBlend()
+			if opaqueInCopy do Render_OpaqueCopyBegin()
+			// (Pixel for pixel - the window the frame's size: nearest is the same
+			// pixels as bilinear, and software GL samples it at a fraction of
+			// the cost. Only the runner's own target: an effect's output keeps
+			// its filter.)
+			exact := frame.id == target.texture.id && Runner_CopyIsExact(dest, frame)
+			if exact do rl.SetTextureFilter(frame, .POINT)
 			rl.DrawTexturePro(frame, {0, 0, f32(frame.width), -f32(frame.height)}, dest, {0, 0}, 0, rl.WHITE)
+			if opaqueInCopy do Render_OpaqueCopyEnd()
 			rlgl.DrawRenderBatchActive()
 			rlgl.EnableColorBlend()
+			if exact do rl.SetTextureFilter(frame, .POINT if video.sharpScaling else .BILINEAR)
 		}
 		if filtered do Colorblind_End()
-		if opts.uncapped && opts.benchFrames <= 0 do runner_draw_frame_time(rs)
+		if opts.uncapped && opts.benchFrames <= 0 && opts.perfReport == "" do runner_draw_frame_time(rs)
 		Console_DrawScreen(game) // (the developer console and its overlays)
 		Prof_Begin("present")
 		rl.EndDrawing()
@@ -671,9 +700,11 @@ Runner_Frame :: proc(rs: ^Runner_State) -> bool {
 		Prof_End() // frame
 		Prof_FrameEnd()
 		MemTrack_Frame()
+		if rs.perf.path != "" do Perf_RecordFrame(&rs.perf, runTime)
 		defer free_all(context.temp_allocator) // the frame's temp allocations (after the captures below)
 
 		rs.frameCount += 1
+		if rs.frameCount == 1 && EditorLink_Enabled() do fmt.println("@rayzr:first-frame") // (the editor's time-to-Play)
 		if opts.trace != "" {
 			if scene := game.sceneManager.currentScene; scene != nil {
 				if n := Scene_FindNodeByName(scene, opts.trace); n != nil {
@@ -721,6 +752,22 @@ Runner_Frame :: proc(rs: ^Runner_State) -> bool {
 	return true
 }
 
+// Runner_OpaqueFrame: how a frame meant to be opaque (no smooth camera's
+// layers, an opaque clear colour) gets alpha 1 - a pass of its own when
+// post effects or the colour-blind filter read it first, else in the copy
+// to the window (inCopy: Render_OpaqueCopyBegin; #331).
+Runner_OpaqueFrame :: proc(smooth: bool, clearAlpha: u8, effects: int, colorblind: bool) -> (pass, inCopy: bool) {
+	if smooth || clearAlpha != 255 do return false, false
+	if effects > 0 || colorblind do return true, false
+	return false, true
+}
+
+// Runner_CopyIsExact: whether the frame lands on the window pixel for
+// pixel (its size, at a whole-pixel position): no filtering needed.
+Runner_CopyIsExact :: proc(dest: rl.Rectangle, tex: rl.Texture2D) -> bool {
+	return dest.width == f32(tex.width) && dest.height == f32(tex.height) && dest.x == math.floor(dest.x) && dest.y == math.floor(dest.y)
+}
+
 // Runner_CaptureFrame: the frame --screenshot / --dump-scene capture on -
 // --frames N (as asked: #362), else 30.
 Runner_CaptureFrame :: proc(opts: Run_Options) -> int {
@@ -737,6 +784,7 @@ Runner_FramesOver :: proc(opts: Run_Options, frameCount: int) -> bool {
 Runner_Stop :: proc(rs: ^Runner_State) {
 	if rs == nil do return
 	if runnerCurrent == rs do runnerCurrent = nil
+	Perf_WriteReport(&rs.perf) // (--perf-report: however the run ended)
 	for ev in rs.inputEvents do if ev.kind == .Connect && ev.pad >= 0 do delete(ev.name)
 	delete(rs.inputEvents)
 	Pixel_Release()
@@ -838,3 +886,4 @@ runner_draw_frame_time :: proc(rs: ^Runner_State) {
 	rl.DrawRectangle(4, 4, 170, 24, {0, 0, 0, 170})
 	rl.DrawText(cstring(&text[0]), 10, 9, 16, rl.LIME)
 }
+

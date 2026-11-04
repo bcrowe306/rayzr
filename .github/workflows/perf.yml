@@ -1,0 +1,158 @@
+# Performance on the reference low-end setups (#331): scripts/perf/perf.py
+# plays every template game (its scripted play-through, uncapped frames),
+# opens a large generated scene in the editor (idle, selecting, dragging,
+# Simulate, time-to-Play) and checks the numbers against the targets and
+# the recorded baseline in tests/perf/baseline.json (a regression beyond
+# its margin fails the job - on the weekly and manual runs; on pull
+# requests misses are reported as warnings and the job passes, since
+# GitHub's runner CPUs vary). The reports are uploaded as artifacts; a
+# baseline is updated deliberately (docs/contributing/performance.md):
+#   python3 scripts/perf/perf.py --update-baseline report-linux.json
+#
+# The reference setups:
+#   linux-llvmpipe-2core   GitHub's Ubuntu runner held to 2 cores (taskset;
+#                          the X server too) with Mesa's llvmpipe software
+#                          GL (LP_NUM_THREADS=2) under Xvfb: no GPU at all
+#   android-emulator-api34 the API 34 x86_64 emulator (Google APIs; arm64
+#                          apps through its ARM translation, SwiftShader GL)
+#                          with 2 cores and 2 GB of RAM: a budget phone
+#
+# When: by hand (workflow_dispatch), weekly, and the Linux job on pull
+# requests that touch the render / scene / editor viewport code (about 15
+# minutes; the Android one - 40+ minutes and an emulator - runs weekly and
+# by hand only).
+name: Performance
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 5 * * 1" # Mondays 05:17 UTC
+  pull_request:
+    paths:
+      - "engine/render*.odin"
+      - "engine/scene*.odin"
+      - "engine/node*.odin"
+      - "engine/tile*.odin"
+      - "engine/text*.odin"
+      - "engine/particle*.odin"
+      - "engine/culling.odin"
+      - "engine/runner.odin"
+      - "editor/viewport*.odin"
+      - "editor/scene_*.odin"
+      - "editor/inspector*.odin"
+      - "editor/frame_timing.odin"
+      - "scripts/perf/**"
+      - "tests/perf/**"
+      - ".github/workflows/perf.yml"
+
+concurrency:
+  group: perf-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  ODIN_RELEASE: dev-2026-03
+
+jobs:
+  linux-llvmpipe:
+    name: Linux, 2 cores, llvmpipe
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    env:
+      LIBGL_ALWAYS_SOFTWARE: "1"
+      GALLIUM_DRIVER: llvmpipe
+      LP_NUM_THREADS: "2"
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          submodules: false
+      - run: git submodule update --init --depth 1 ui odin_editor ldtk
+      - uses: laytan/setup-odin@8536d8fa450ec6f1bd9ddc84bbaaf16296c0051d # v2.12.2
+        with:
+          release: ${{ env.ODIN_RELEASE }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Dependencies
+        run: |
+          scripts/ci/setup_deps.sh
+          sudo apt-get install -y -qq mesa-utils > /dev/null
+      - name: Build (as released, -o:speed)
+        run: |
+          mkdir -p bin/perf
+          odin build runner -o:speed $(scripts/odin_flags.sh) -out:bin/perf/runner
+          odin build editor -o:speed $(scripts/odin_flags.sh) -out:bin/perf/editor
+      - name: The GL renderer (llvmpipe expected)
+        run: |
+          r=$(taskset -c 0,1 xvfb-run -a glxinfo -B | grep -m1 "OpenGL renderer string" | sed 's/.*: //')
+          echo "renderer: $r; cores: $(nproc) (held to 2)"
+          case "$r" in *llvmpipe*) ;; *) echo "::error::not llvmpipe: $r"; exit 1 ;; esac
+          echo "PERF_GL_RENDERER=$r" >> "$GITHUB_ENV"
+      - name: Measure
+        run: |
+          mkdir -p perf "$RUNNER_TEMP/perf"
+          PERF_TMP="$RUNNER_TEMP/perf" taskset -c 0,1 xvfb-run -a -s "-screen 0 1920x1080x24" \
+            python3 -u scripts/perf/perf.py --runner bin/perf/runner --editor bin/perf/editor \
+            --setup linux-llvmpipe-2core --out perf/report-linux.json
+      - name: Check the targets and the baseline
+        if: always() && hashFiles('perf/report-linux.json') != ''
+        run: |
+          python3 scripts/perf/perf.py --table perf/report-linux.json >> "$GITHUB_STEP_SUMMARY" || true
+          # Pull requests: reported, never failed (the runner's CPU varies);
+          # the weekly and manual runs fail on a miss or a regression.
+          only=""; [ "${{ github.event_name }}" = "pull_request" ] && only="--report-only"
+          python3 scripts/perf/perf.py --check perf/report-linux.json $only
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: perf-linux-llvmpipe-2core
+          path: |
+            perf/
+            ${{ runner.temp }}/perf/rayzr_perf_editor.log
+          if-no-files-found: ignore
+
+  android-emulator:
+    name: Android emulator, API 34, 2 cores / 2 GB
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          submodules: false
+      - run: git submodule update --init --depth 1 ui odin_editor ldtk
+      - uses: laytan/setup-odin@8536d8fa450ec6f1bd9ddc84bbaaf16296c0051d # v2.12.2
+        with:
+          release: ${{ env.ODIN_RELEASE }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: OUT=bin/runners/android-test scripts/build_android_runner.sh -define:RAYZR_TEST_HOOKS=true
+      # (Packing the projects runs the engine on this machine: Box2D, Clipper2.)
+      - run: scripts/ci/setup_deps.sh
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          cores: 2
+          ram-size: 2048M
+          heap-size: 256M
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          disable-animations: true
+          script: scripts/ci/android_perf.sh perf/report-android.json
+      - name: Check the targets and the baseline
+        if: always() && hashFiles('perf/report-android.json') != ''
+        run: |
+          python3 scripts/perf/perf.py --table perf/report-android.json >> "$GITHUB_STEP_SUMMARY" || true
+          python3 scripts/perf/perf.py --check perf/report-android.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: perf-android-emulator-api34
+          path: perf/
+          if-no-files-found: ignore

@@ -13,6 +13,7 @@
 //        [--user-data <dir>]  (Save data folder instead of the platform's)
 //        [--bench N]          (N uncapped frames, then frame timings; scripts/make_bench_project.py)
 //        [--uncapped]         (no vsync, no frame cap, frame time / FPS top left)
+//        [--perf-report f]    (every frame's time and the startup times as JSON at the end: scripts/perf/perf.py)
 //        [--no-render-cache]  (no tile chunk cache / draw reordering, for comparisons)
 //        [--input-script f]   (keys pressed on given frames - "30 RIGHT down", "40 SPACE tap 8"; fixed 1/60 s frames)
 //        [--trace <node>]     (prints "@trace <frame> <scene> <x> <y>" every frame: game tests, bots)
