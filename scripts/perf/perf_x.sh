@@ -30,24 +30,11 @@ for p in glob.glob("templates/vector_character/scenes/stage*.scene.json"):
 PY
 }
 R=bin/perf/runner
-T="vector_character dungeon hex visual_novel platformer"
+T="vector_character dungeon hex visual_novel"
 run new1 X=1 -- $T
-sudo apt-get install -y -qq linux-tools-common linux-tools-$(uname -r) > /dev/null 2>&1 || sudo apt-get install -y -qq linux-tools-generic > /dev/null 2>&1
-sudo sysctl -w kernel.perf_event_paranoid=-1 kernel.kptr_restrict=0 > /dev/null
-PERFBIN=$(ls /usr/lib/linux-tools/*/perf 2>/dev/null | head -1); [ -n "$PERFBIN" ] || PERFBIN=perf
-prof() { # name template
-  cat > /tmp/wrap.sh <<W
-#!/bin/sh
-exec $PERFBIN record -F 3000 -o $PWD/perf/$1.data -- $PWD/bin/perf/runner "\$@"
-W
-  chmod +x /tmp/wrap.sh
-  PERF_TMP="$RUNNER_TEMP/perf" taskset -c 0,1 xvfb-run -a -s "-screen 0 1920x1080x24" \
-    python3 -u scripts/perf/perf.py --runner /tmp/wrap.sh --reps 1 --setup x --out "perf/$1.json" "$2" > "perf/$1.log" 2>&1
-  {
-    echo "=== $1 threads"; $PERFBIN report -i perf/$1.data --sort comm --stdio 2>/dev/null | grep "%" | head -8
-    echo "=== $1 main thread"; $PERFBIN report -i perf/$1.data --comm runner --sort dso,sym --stdio 2>/dev/null | grep "%" | head -45
-  } > perf/$1.txt
-  cat perf/$1.txt
-}
-prof prof_vc vector_character
-prof prof_hex hex
+run point1 RAYZR_X_BLIT=point -- $T
+run glblit1 RAYZR_X_BLIT=glblit -- $T
+run noblit RAYZR_X_NOBLIT=1 -- $T
+run new2 X=1 -- $T
+run point2 RAYZR_X_BLIT=point -- $T
+run glblit2 RAYZR_X_BLIT=glblit -- $T
