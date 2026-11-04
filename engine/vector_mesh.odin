@@ -368,7 +368,7 @@ Vector_Cache_Draw :: proc(c: ^Vector_Cache, pos: [2]f32, rotation: f32, scale: [
 		rlgl.DrawRenderBatchActive()
 		rlgl.EnableBackfaceCulling()
 	}
-	if deform != nil && Vector_DrawModeNow() == .GPU && c.uploaded {
+	if deform != nil && Vector_DrawModeNow() == .GPU && c.uploaded && os.get_env("RAYZR_X_SKIN", context.temp_allocator) != "flat" { // DEBUG(#331)
 		vector_draw_deformed(c, pos, rotation, scale, tint, offset, add, deform)
 		return
 	}
@@ -442,7 +442,7 @@ vector_draw_deformed :: proc(c: ^Vector_Cache, pos: [2]f32, rotation: f32, scale
 	vs.material.maps[rl.MaterialMapIndex.ALBEDO].texture = c.gradTex if c.gradTex.id != 0 else rl.Texture2D{id = rlgl.GetTextureIdDefault(), width = 1, height = 1, mipmaps = 1, format = .UNCOMPRESSED_R8G8B8A8}
 	a := add
 	if vs.add >= 0 do rl.SetShaderValue(sh, rl.ShaderLocationIndex(vs.add), &a, .VEC4)
-	on: f32 = 1 if c.skinUploaded && len(d.bones) > 0 else 0
+	on: f32 = 1 if c.skinUploaded && len(d.bones) > 0 && os.get_env("RAYZR_X_SKIN", context.temp_allocator) != "off" else 0 // DEBUG(#331)
 	if vs.skinOn >= 0 do rl.SetShaderValue(sh, rl.ShaderLocationIndex(vs.skinOn), &on, .FLOAT)
 	if on > 0 && vs.bones >= 0 {
 		n := min(len(d.bones), VECTOR_SKIN_MAX_BONES)
