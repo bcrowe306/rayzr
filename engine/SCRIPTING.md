@@ -661,6 +661,18 @@ Names renamed before 1.0, all still working:
 | `follow_ratio`, `path_length`, `aseprite_frame`, `oscillator_state`, `sound_count`, `sound_last`, `skeleton_duration` | `follow_get_ratio`, `path_get_length`, `aseprite_get_frame`, `oscillator_get_state`, `sound_get_count`, `sound_get_last`, `skeleton_get_duration` |
 | `ui_set_items`, `ui_get_items` | `set_items`, `get_items` |
 
+**Behaviour change (before 1.0, approved): Visible hides the subtree (#388).**
+`set_visible(false)` (the Inspector's Visible, a scene's `"visible": false`)
+used to stop only the node's own drawing - its children still drew. Now it
+hides the node and everything under it, in the game and in the editor's
+viewport (as Godot's `visible`): nothing in it draws, its lights don't light
+and its UI widgets take no clicks or keys. It is still drawing only - the
+subtree keeps updating; `set_enabled(false)` stops a branch altogether.
+`is_visible()` still reads the node's own flag. A script that hid a menu's
+children one by one can now hide just the menu. Nodes that draw nothing
+(Timer, Behavior Tree, GOAP Agent, Oscillator) used to be made hidden: they
+are visible now, and load visible, so their children keep drawing.
+
 **The naming rules the API follows:**
 
 - Every method a node type adds starts with its type's prefix (`camera_`,
@@ -702,7 +714,7 @@ Names renamed before 1.0, all still working:
 | `is_enabled()` | - | `boolean` | Checks if node receives updates. |
 | `set_enabled(enabled)` | `enabled: boolean` | - | Enables/disables node updates. |
 | `is_visible()` | - | `boolean` | Checks if node is rendered. |
-| `set_visible(visible)` | `visible: boolean` | - | Enables/disables node rendering. |
+| `set_visible(visible)` | `visible: boolean` | - | Shows / hides the node and its subtree (hidden: not drawn, UI takes no input; still updates). |
 | `get_parent()` | - | `Node?` | Gets parent node in scene hierarchy. |
 | `get_children()` | - | `Node[]` | Gets array of child nodes. |
 | `get_child(name)` | `name: string` | `Node?` | Finds child node by name. |

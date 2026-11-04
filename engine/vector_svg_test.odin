@@ -273,6 +273,21 @@ test_vector_asset_resource :: proc(t: ^testing.T) {
 	a.globalScale = {2, 2}
 	cr, cok := Node_RenderBounds(a)
 	testing.expect(t, cok && cr.x == 100 && cr.y == 0 && cr.width == 200, "culling bounds")
+	// #390: mirrored with a corner pivot - the art is to the left of the
+	// position (the matrix flips it round the position), and so the bounds.
+	a.pivot = {0, 0}
+	a.globalPosition = {2560, 0}
+	a.globalScale = {-1, 1}
+	cr, cok = Node_RenderBounds(a)
+	testing.expectf(t, cok && cr == {2460, 0, 100, 100}, "flipped corner-pivot bounds: %v", cr)
+	a.globalScale = {1, -2}
+	cr, cok = Node_RenderBounds(a)
+	testing.expectf(t, cok && cr == {2560, -200, 100, 200}, "flipped vertically: %v", cr)
+	a.globalRotation = 90
+	cr, cok = Node_RenderBounds(a)
+	testing.expectf(t, cok && abs(cr.x - 2560) < 0.01 && abs(cr.y) < 0.01 && abs(cr.width - 200) < 0.01 && abs(cr.height - 100) < 0.01, "flipped and rotated: %v", cr)
+	a.pivot = {0.5, 0.5}
+	a.globalPosition, a.globalScale, a.globalRotation = {200, 100}, {2, 2}, 0
 	// Hit test: on the frame, not in the hole (a mesh is needed: tessellate one).
 	tess: Vector_Tess
 	defer Vector_Tess_Destroy(&tess)

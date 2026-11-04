@@ -669,7 +669,9 @@ The benchmark: `tests/vector/project`, scene `scenes/bench.scene.json`
   no soft (alpha) masks yet.
 - Filters apply to one Vector Shape: an exploded character's parts each get
   their own (a shadow per part, not one for the whole character). Bent
-  (skinned or warped) art skips its filters.
+  (skinned or warped) art gets only the colour adjustment (saturation,
+  contrast, hue: in its shader); its shadow, glow, outline and blur are
+  skipped.
 - Skinning binds by distance to the bones (no painted weights yet); outlines
   bend with the art, so a strongly bent stroke gets a little thinner on the
   inside of the bend.

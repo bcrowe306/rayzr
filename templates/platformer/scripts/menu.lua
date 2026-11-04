@@ -56,8 +56,7 @@ end
 ---@param open boolean
 function Menu:show(open)
     self.open = open
-    self.node:set_visible(open)
-    for _, c in ipairs(self.node:get_children()) do c:set_visible(open) end
+    self.node:set_visible(open) -- (its children with it: a hidden node hides its subtree)
     if self.kind == "pause" then Engine.set_paused(open) end
     self.index = 1
     self.wait = open and 1 or 0 -- (the key that opened it isn't also a choice)

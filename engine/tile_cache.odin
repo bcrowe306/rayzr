@@ -83,7 +83,7 @@ TileCache_Prepare :: proc(scene: ^Scene, view: rl.Rectangle, ctx: ^GameContext) 
 	tileCache.frame += 1
 	if tileCache.disabled || scene == nil || scene.manager == nil || !rl.IsWindowReady() do return
 	for n in scene.manager.nodes {
-		if n == nil || !n.enabled || !n.renderable || n.material != nil do continue
+		if n == nil || !n.enabled || !Node_VisibleInTree(n) || n.material != nil do continue
 		switch n.typeId {
 		case TileMapNode:   TileMapNode_PrepareChunks(cast(^TileMapNode)n, view)
 		case LdtkLevelNode: LdtkLevelNode_PrepareChunks(cast(^LdtkLevelNode)n, view, ctx)

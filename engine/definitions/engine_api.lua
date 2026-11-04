@@ -384,10 +384,10 @@ function Node:set_enabled(enabled) end
 ---@return boolean This node's own Visible flag (true even when a parent is hidden); false for a destroyed node
 function Node:is_visible() end
 
----Sets whether the node is rendered.
+---Sets whether the node and its children are rendered.
 ---
 ---Example: `self.node:get_node("Shield"):set_visible(true)`
----@param visible boolean false stops this node drawing itself; it keeps updating, and its children still draw
+---@param visible boolean false hides this node and its whole subtree (no drawing, no clicks on UI widgets in it); they keep updating
 function Node:set_visible(visible) end
 
 ---Flashes the node a colour (white on a hit), fading back over `seconds`.

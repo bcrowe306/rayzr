@@ -1023,6 +1023,7 @@ read_node :: proc(scene: ^Scene, obj: json.Object, parent: ^Node, ctx: ^GameCont
 	node.rotation = sj_float(obj, "rotation", 0)
 	node.enabled = sj_bool(obj, "enabled", true)
 	node.renderable = sj_bool(obj, "visible", node.renderable)
+	if Node_HiddenWasDefault(node) do node.renderable = true
 	node.layer = RenderLayer(math.clamp(sj_int(obj, "layer", int(node.layer)), 0, len(RenderLayer) - 1))
 	node.zIndex = i32(sj_int(obj, "z_index", 0))
 	node.ySort = sj_bool(obj, "y_sort", false)
@@ -1817,6 +1818,7 @@ read_component_instance :: proc(scene: ^Scene, compPath: string, inst: json.Obje
 	if Node_HasOrigin(node) do node.pivot = sj_vec2(inst, "pivot", node.pivot)
 	node.enabled = sj_bool(inst, "enabled", node.enabled)
 	node.renderable = sj_bool(inst, "visible", node.renderable)
+	if Node_HiddenWasDefault(node) do node.renderable = true
 	node.layer = RenderLayer(math.clamp(sj_int(inst, "layer", int(node.layer)), 0, len(RenderLayer) - 1))
 	node.zIndex = i32(sj_int(inst, "z_index", int(node.zIndex)))
 	node.ySort = sj_bool(inst, "y_sort", node.ySort)

@@ -1,0 +1,6 @@
+{"name": "mirror", "background": [44, 52, 70, 255], "root": {"type": "Node", "name": "root", "children": [{"type": "CameraNode", "name": "Camera", "position": [480, 270], "properties": {"isCurrent": true}},
+ {"type": "VectorShapeNode", "name": "Plain", "position": [60, 60], "pivot": [0, 0], "scale": [2, 2], "properties": {"file": "art/limb.svg"}},
+ {"type": "VectorShapeNode", "name": "MirroredEdge", "position": [1100, 160], "pivot": [0, 0], "scale": [-2, 2], "properties": {"file": "art/limb.svg"}},
+ {"type": "VectorShapeNode", "name": "MirroredInside", "position": [460, 260], "pivot": [0, 0], "scale": [-2, 2], "properties": {"file": "art/limb.svg"}},
+ {"type": "VectorShapeNode", "name": "FlippedUp", "position": [300, 640], "pivot": [0, 0], "scale": [2, -2], "properties": {"file": "art/character_parts.svg"}},
+ {"type": "VectorShapeNode", "name": "MirroredCentred", "position": [1050, 450], "scale": [-2, 2], "properties": {"file": "art/limb.svg"}}]}}

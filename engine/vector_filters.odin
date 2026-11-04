@@ -181,7 +181,7 @@ Vector_FiltersPrepared :: proc() -> int {return vfilt.prepared}
 
 // Vector_FiltersActive: whether the node draws through filters.
 Vector_FiltersActive :: proc(v: ^VectorShapeNode) -> bool {
-	if VectorShapeNode_Deformed(v) do return false // (bent art draws as a mesh: filters skip it)
+	if VectorShapeNode_Deformed(v) do return false // (bent art draws as a mesh: only the colour adjustment applies, in its shader - #389)
 	return v.shadowColor.a > 0 || v.glowColor.a > 0 || v.outlineColor.a > 0 || v.blur > 0 || v.saturation != 1 || v.contrast != 1 || v.hue != 0
 }
 
@@ -198,7 +198,7 @@ Vector_FiltersPrepare :: proc(scene: ^Scene, zoom: f32) {
 	if scene == nil || scene.manager == nil || !rl.IsWindowReady() do return
 	any := false
 	for n in scene.manager.nodes {
-		if n == nil || !n.enabled || n.typeId != VectorShapeNode do continue
+		if n == nil || !n.enabled || n.typeId != VectorShapeNode || !Node_VisibleInTree(n) do continue
 		v := cast(^VectorShapeNode)n
 		if !Vector_FiltersActive(v) {
 			if v.filter.rt.id != 0 do Vector_FilterRelease(v)

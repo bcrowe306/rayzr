@@ -53,7 +53,7 @@ BehaviorTreeNode_Init :: proc(t: ^BehaviorTreeNode) {
 	t.active = true
 	t.wasActive = true
 	t.tickRate = 1
-	t.renderable = false
+	t.renderable = true // (draws nothing; visible so its children draw - #388)
 	t.runningAction = -1
 	t.lastCondition = -1
 	t.nodes = make([dynamic]BT_Node, t.allocator)

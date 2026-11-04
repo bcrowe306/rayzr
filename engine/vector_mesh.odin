@@ -59,21 +59,68 @@ Vector_Cache :: struct {
 	skinUploaded: bool,
 }
 
-// The shaders: [plain, with gradients].
+// The shaders: [plain, with gradients, plain + colour adjustment, with
+// gradients + colour adjustment] (vector_shader_variant).
 @(private = "file")
-vflat: [2]struct {
-	material: rl.Material,
-	ready:    bool,
-	add:      i32,
+vflat: [4]struct {
+	material:    rl.Material,
+	ready:       bool,
+	add, adjust: i32,
 }
 
-// The deforming variant (skin + warp; vector_skin.odin): [plain, with gradients].
+// The deforming variant (skin + warp; vector_skin.odin), the same four.
 @(private = "file")
-vskin: [2]struct {
+vskin: [4]struct {
 	material:                    rl.Material,
 	ready:                       bool,
-	add, bones, skinOn:          i32,
+	add, bones, skinOn, adjust:  i32,
 	warpBox, warpA, warpB:       i32,
+}
+
+// VECTOR_NO_ADJUST: no colour adjustment (saturation, contrast, hue in
+// degrees): Vector_Cache_Draw's default.
+VECTOR_NO_ADJUST :: [3]f32{1, 1, 0}
+
+// vector_shader_variant: the shader slot for a mesh and an adjustment, and
+// its fragment shader's source (a #define picks the adjusting code; meshes
+// without one keep the cheaper shaders).
+@(private = "file")
+vector_shader_variant :: proc(c: ^Vector_Cache, adjust: [3]f32) -> (slot: int, fs: cstring) {
+	solid := Vector_Cache_Solid(c)
+	slot = 0 if solid else 1
+	if adjust != VECTOR_NO_ADJUST do slot += 2
+	switch slot {
+	case 0: fs = VECTOR_SOLID_FS
+	case 1: fs = VECTOR_FS
+	case 2: fs = VECTOR_SOLID_FS_ADJUST
+	case: fs = VECTOR_FS_ADJUST
+	}
+	return
+}
+
+// vector_set_adjust uploads an adjustment (hue in degrees) to a shader.
+@(private = "file")
+vector_set_adjust :: proc(sh: rl.Shader, loc: i32, adjust: [3]f32) {
+	if loc < 0 do return
+	p := [3]f32{adjust[0], adjust[1], adjust[2] * math.RAD_PER_DEG}
+	rl.SetShaderValue(sh, rl.ShaderLocationIndex(loc), &p, .VEC3)
+}
+
+// Vector_AdjustColor: a straight-alpha colour (0..1) through a colour
+// adjustment - the shaders' maths (and vector_filters.odin's ADJUST_FS) for
+// the immediate path: hue rotated round the grey axis, then saturation
+// (0: grey), then contrast round mid grey.
+Vector_AdjustColor :: proc(rgb: [3]f32, adjust: [3]f32) -> [3]f32 {
+	h := adjust[2] * math.RAD_PER_DEG
+	co, si := math.cos(h), math.sin(h)
+	k := [3]f32{0.57735, 0.57735, 0.57735}
+	kxr := [3]f32{k.y * rgb.z - k.z * rgb.y, k.z * rgb.x - k.x * rgb.z, k.x * rgb.y - k.y * rgb.x}
+	kd := k.x * rgb.x + k.y * rgb.y + k.z * rgb.z
+	c := rgb * co + kxr * si + k * kd * (1 - co)
+	grey := c.x * 0.299 + c.y * 0.587 + c.z * 0.114
+	c = grey + (c - grey) * adjust[0]
+	c = (c - 0.5) * adjust[1] + 0.5
+	return {clamp(c.x, 0, 1), clamp(c.y, 0, 1), clamp(c.z, 0, 1)}
 }
 
 // The vector shader: solid vertices use their colour; gradient vertices
@@ -153,8 +200,34 @@ void main() {
 }
 `
 
+// The colour adjustment (a Vector Shape's saturation / contrast / hue, as
+// vector_filters.odin's ADJUST_FS) in the adjusting variants: for bent
+// shapes, which draw as a mesh (no filter texture: #389).
 @(private = "file")
-VECTOR_FS :: `#version 330
+VECTOR_ADJUST_GLSL :: `
+#ifdef ADJUST
+uniform vec3 adjust; // saturation, contrast, hue (radians)
+vec3 vector_adjust(vec3 rgb) {
+    float co = cos(adjust.z), si = sin(adjust.z);
+    vec3 k = vec3(0.57735);
+    rgb = rgb * co + cross(k, rgb) * si + k * dot(k, rgb) * (1.0 - co);
+    float grey = dot(rgb, vec3(0.299, 0.587, 0.114));
+    rgb = mix(vec3(grey), rgb, adjust.x);
+    rgb = (rgb - 0.5) * adjust.y + 0.5;
+    return clamp(rgb, 0.0, 1.0);
+}
+#else
+vec3 vector_adjust(vec3 rgb) { return rgb; }
+#endif
+`
+
+@(private = "file")
+VECTOR_FS :: "#version 330\n" + VECTOR_FS_BODY
+@(private = "file")
+VECTOR_FS_ADJUST :: "#version 330\n#define ADJUST 1\n" + VECTOR_FS_BODY
+
+@(private = "file")
+VECTOR_FS_BODY :: VECTOR_ADJUST_GLSL + `
 in vec2 fragGrad;
 in vec2 fragMode;
 in vec4 fragColor;
@@ -176,7 +249,7 @@ void main() {
         c = vec4(g.rgb, g.a * fragColor.a);
     }
     finalColor = c * colDiffuse;
-    finalColor.rgb = min(finalColor.rgb + colAdd.rgb, vec3(1.0)); // (straight alpha)
+    finalColor.rgb = vector_adjust(min(finalColor.rgb + colAdd.rgb, vec3(1.0))); // (straight alpha)
 }
 `
 
@@ -185,7 +258,12 @@ void main() {
 // the texture look-up and spread maths - the same pixels, cheaper per pixel
 // (software GL runs every branch of a shader for every pixel, #331).
 @(private = "file")
-VECTOR_SOLID_FS :: `#version 330
+VECTOR_SOLID_FS :: "#version 330\n" + VECTOR_SOLID_FS_BODY
+@(private = "file")
+VECTOR_SOLID_FS_ADJUST :: "#version 330\n#define ADJUST 1\n" + VECTOR_SOLID_FS_BODY
+
+@(private = "file")
+VECTOR_SOLID_FS_BODY :: VECTOR_ADJUST_GLSL + `
 in vec2 fragGrad;
 in vec2 fragMode;
 in vec4 fragColor;
@@ -194,7 +272,7 @@ uniform vec4 colAdd;
 out vec4 finalColor;
 void main() {
     finalColor = fragColor * colDiffuse;
-    finalColor.rgb = min(finalColor.rgb + colAdd.rgb, vec3(1.0)); // (straight alpha)
+    finalColor.rgb = vector_adjust(min(finalColor.rgb + colAdd.rgb, vec3(1.0))); // (straight alpha)
 }
 `
 
@@ -359,8 +437,9 @@ Vector_ScreenPixel :: proc(nodeScale: [2]f32) -> f32 {
 // Vector_Cache_Draw draws the cached mesh at a transform (degrees), tinted.
 // offset moves the mesh in its own units first (an asset's origin).
 // add is a colour offset (0..1, alpha unused) added after the tint.
-// deform bends it first (a warp, bones: vector_skin.odin).
-Vector_Cache_Draw :: proc(c: ^Vector_Cache, pos: [2]f32, rotation: f32, scale: [2]f32, tint: rl.Color = rl.WHITE, offset: [2]f32 = {}, add: [4]f32 = {}, deform: ^Vector_Deform = nil) {
+// deform bends it first (a warp, bones: vector_skin.odin). adjust: a colour
+// adjustment after the tint and offset (saturation, contrast, hue degrees).
+Vector_Cache_Draw :: proc(c: ^Vector_Cache, pos: [2]f32, rotation: f32, scale: [2]f32, tint: rl.Color = rl.WHITE, offset: [2]f32 = {}, add: [4]f32 = {}, deform: ^Vector_Deform = nil, adjust := VECTOR_NO_ADJUST) {
 	if !rl.IsWindowReady() || len(c.mesh.idx) == 0 do return
 	rlgl.DrawRenderBatchActive()
 	rlgl.DisableBackfaceCulling() // (the tessellator doesn't keep one winding)
@@ -369,15 +448,17 @@ Vector_Cache_Draw :: proc(c: ^Vector_Cache, pos: [2]f32, rotation: f32, scale: [
 		rlgl.EnableBackfaceCulling()
 	}
 	if deform != nil && Vector_DrawModeNow() == .GPU && c.uploaded {
-		vector_draw_deformed(c, pos, rotation, scale, tint, offset, add, deform)
+		vector_draw_deformed(c, pos, rotation, scale, tint, offset, add, deform, adjust)
 		return
 	}
 	if Vector_DrawModeNow() == .GPU && c.uploaded {
-		vf := &vflat[0 if Vector_Cache_Solid(c) else 1]
+		slot, fs := vector_shader_variant(c, adjust)
+		vf := &vflat[slot]
 		if !vf.ready {
 			vf.material = rl.LoadMaterialDefault()
-			vf.material.shader = rl.LoadShaderFromMemory(Shader_Port(VECTOR_VS), Shader_Port(VECTOR_SOLID_FS if vf == &vflat[0] else VECTOR_FS))
+			vf.material.shader = rl.LoadShaderFromMemory(Shader_Port(VECTOR_VS), Shader_Port(fs))
 			vf.add = rl.GetShaderLocation(vf.material.shader, "colAdd")
+			vf.adjust = rl.GetShaderLocation(vf.material.shader, "adjust")
 			vf.ready = true
 		}
 		vf.material.maps[rl.MaterialMapIndex.ALBEDO].color = tint
@@ -385,6 +466,7 @@ Vector_Cache_Draw :: proc(c: ^Vector_Cache, pos: [2]f32, rotation: f32, scale: [
 			a := add
 			rl.SetShaderValue(vf.material.shader, rl.ShaderLocationIndex(vf.add), &a, .VEC4)
 		}
+		if slot >= 2 do vector_set_adjust(vf.material.shader, vf.adjust, adjust)
 		vf.material.maps[rl.MaterialMapIndex.ALBEDO].texture = c.gradTex if c.gradTex.id != 0 else rl.Texture2D{id = rlgl.GetTextureIdDefault(), width = 1, height = 1, mipmaps = 1, format = .UNCOMPRESSED_R8G8B8A8}
 		xf := rl.MatrixTranslate(pos.x, pos.y, 0) * rl.MatrixRotateZ(rotation * rl.DEG2RAD) * rl.MatrixScale(scale.x, scale.y, 1) * rl.MatrixTranslate(offset.x, offset.y, 0)
 		for m in c.gpu do rl.DrawMesh(m, vf.material, xf)
@@ -397,6 +479,7 @@ Vector_Cache_Draw :: proc(c: ^Vector_Cache, pos: [2]f32, rotation: f32, scale: [
 	rlgl.Translatef(offset.x, offset.y, 0)
 	rlgl.Begin(rlgl.TRIANGLES)
 	tr, tg, tb, ta := u32(tint.r), u32(tint.g), u32(tint.b), u32(tint.a)
+	adjusted := adjust != VECTOR_NO_ADJUST
 	m := &c.mesh
 	for i := 0; i < len(m.idx); i += 3 {
 		_ = rlgl.CheckRenderBatchLimit(3) // (flushes when full; raylib keeps the mode)
@@ -404,11 +487,18 @@ Vector_Cache_Draw :: proc(c: ^Vector_Cache, pos: [2]f32, rotation: f32, scale: [
 			v := m.idx[i + k]
 			col := m.cols[v]
 			if m.gi[v].y > 0 do col = vector_vertex_gradient(m, v) // (per vertex: an approximation)
-			if add != {} {
-				// (The colour offset, premultiplied by the vertex alpha like the shader.)
-				for ch in 0 ..< 3 do col[ch] = u8(min(f32(col[ch]) + add[ch] * 255, 255))
+			if adjusted {
+				// (Tint, offset, then the adjustment: the shader's order.)
+				rgb := [3]f32{f32(col.r) * f32(tr), f32(col.g) * f32(tg), f32(col.b) * f32(tb)} / (255 * 255)
+				rgb = Vector_AdjustColor({min(rgb.x + add[0], 1), min(rgb.y + add[1], 1), min(rgb.z + add[2], 1)}, adjust)
+				rlgl.Color4ub(u8(rgb.x * 255 + 0.5), u8(rgb.y * 255 + 0.5), u8(rgb.z * 255 + 0.5), u8(u32(col.a) * ta / 255))
+			} else {
+				if add != {} {
+					// (The colour offset, premultiplied by the vertex alpha like the shader.)
+					for ch in 0 ..< 3 do col[ch] = u8(min(f32(col[ch]) + add[ch] * 255, 255))
+				}
+				rlgl.Color4ub(u8(u32(col.r) * tr / 255), u8(u32(col.g) * tg / 255), u8(u32(col.b) * tb / 255), u8(u32(col.a) * ta / 255))
 			}
-			rlgl.Color4ub(u8(u32(col.r) * tr / 255), u8(u32(col.g) * tg / 255), u8(u32(col.b) * tb / 255), u8(u32(col.a) * ta / 255))
 			p := m.verts[v]
 			if deform != nil {
 				skinned := len(c.skinIds) == len(m.verts) && len(c.skinWeights) == len(m.verts)
@@ -423,13 +513,15 @@ Vector_Cache_Draw :: proc(c: ^Vector_Cache, pos: [2]f32, rotation: f32, scale: [
 
 // vector_draw_deformed: the GPU path through the bending shader.
 @(private = "file")
-vector_draw_deformed :: proc(c: ^Vector_Cache, pos: [2]f32, rotation: f32, scale: [2]f32, tint: rl.Color, offset: [2]f32, add: [4]f32, d: ^Vector_Deform) {
-	vs := &vskin[0 if Vector_Cache_Solid(c) else 1]
+vector_draw_deformed :: proc(c: ^Vector_Cache, pos: [2]f32, rotation: f32, scale: [2]f32, tint: rl.Color, offset: [2]f32, add: [4]f32, d: ^Vector_Deform, adjust: [3]f32) {
+	slot, fs := vector_shader_variant(c, adjust)
+	vs := &vskin[slot]
 	if !vs.ready {
 		vs.material = rl.LoadMaterialDefault()
-		sh := rl.LoadShaderFromMemory(Shader_Port(VECTOR_SKIN_VS), Shader_Port(VECTOR_SOLID_FS if Vector_Cache_Solid(c) else VECTOR_FS))
+		sh := rl.LoadShaderFromMemory(Shader_Port(VECTOR_SKIN_VS), Shader_Port(fs))
 		vs.material.shader = sh
 		vs.add = rl.GetShaderLocation(sh, "colAdd")
+		vs.adjust = rl.GetShaderLocation(sh, "adjust")
 		vs.bones = rl.GetShaderLocation(sh, "bones")
 		vs.skinOn = rl.GetShaderLocation(sh, "skinOn")
 		vs.warpBox = rl.GetShaderLocation(sh, "warpBox")
@@ -442,6 +534,7 @@ vector_draw_deformed :: proc(c: ^Vector_Cache, pos: [2]f32, rotation: f32, scale
 	vs.material.maps[rl.MaterialMapIndex.ALBEDO].texture = c.gradTex if c.gradTex.id != 0 else rl.Texture2D{id = rlgl.GetTextureIdDefault(), width = 1, height = 1, mipmaps = 1, format = .UNCOMPRESSED_R8G8B8A8}
 	a := add
 	if vs.add >= 0 do rl.SetShaderValue(sh, rl.ShaderLocationIndex(vs.add), &a, .VEC4)
+	if slot >= 2 do vector_set_adjust(sh, vs.adjust, adjust)
 	on: f32 = 1 if c.skinUploaded && len(d.bones) > 0 else 0
 	if vs.skinOn >= 0 do rl.SetShaderValue(sh, rl.ShaderLocationIndex(vs.skinOn), &on, .FLOAT)
 	if on > 0 && vs.bones >= 0 {

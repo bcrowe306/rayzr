@@ -317,6 +317,9 @@ Viewport_VectorDraw :: proc(state: ^EditorState, dl: ^imgui.DrawList, mouseScree
 	mouse := world_to_doc(v, mouseWorld)
 	tol := 6 * doc_per_px(state, v)
 	vectordraw_toolbar(state)
+	// (Done on the toolbar left the mode: the rest of this frame must not
+	// read the edited node any more - vd.node is nil, #391.)
+	if !vd.active do return true
 	r := e.VectorShapeNode_Asset(v)
 	if r != nil {
 		if vd.shape >= len(r.doc.shapes) do vd.shape, vd.anchor = -1, -1

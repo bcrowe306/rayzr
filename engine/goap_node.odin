@@ -101,7 +101,7 @@ GoapNode_Init :: proc(g: ^GoapNode) {
 	g.resolveInterval = 1
 	g.distanceMultiplier = 0.01
 	g.moveSpeed = 120
-	g.renderable = false
+	g.renderable = true // (draws nothing; visible so its children draw - #388)
 	g.goal, g.action = -1, -1
 	g.keys = make([dynamic]Goap_Key, g.allocator)
 	g.goals = make([dynamic]Goap_Goal, g.allocator)
