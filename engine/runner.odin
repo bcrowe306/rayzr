@@ -1,8 +1,8 @@
 package engine
 
-import "core:dynlib"
 import "core:fmt"
 import "core:log"
+import "core:math"
 import os "osx"
 import "core:path/filepath"
 import "core:slice"
@@ -665,21 +665,31 @@ Runner_Frame :: proc(rs: ^Runner_State) -> bool {
 			}
 			// (Premultiplied: scene.odin draws the layers over the world so.)
 			rl.BeginBlendMode(.ALPHA_PREMULTIPLY)
+			exact := Runner_CopyIsExact(dest, target.texture)
+			if exact do rl.SetTextureFilter(target.texture, .POINT)
 			rl.DrawTexturePro(target.texture, {0, 0, f32(target.texture.width), -f32(target.texture.height)}, dest, {0, 0}, 0, rl.WHITE)
 			rl.EndBlendMode()
+			if exact {
+				rlgl.DrawRenderBatchActive()
+				rl.SetTextureFilter(target.texture, .POINT if video.sharpScaling else .BILINEAR)
+			}
 		} else {
 			// Copied as is: blending would let the bars' black through where the
 			// frame's alpha dropped (anti-aliased text, translucent sprites).
 			rlgl.DrawRenderBatchActive()
 			rlgl.DisableColorBlend()
 			if opaqueInCopy do Render_OpaqueCopyBegin()
-			xmode := os.get_env("RAYZR_X_BLIT", context.temp_allocator) // DEBUG(#331)
-			if xmode == "point" do rl.SetTextureFilter(frame, .POINT)
-			if xmode == "glblit" && runner_x_glblit(target, dest) {
-			} else if os.get_env("RAYZR_X_NOBLIT", context.temp_allocator) == "" do rl.DrawTexturePro(frame, {0, 0, f32(frame.width), -f32(frame.height)}, dest, {0, 0}, 0, rl.WHITE) // DEBUG(#331)
+			// (Pixel for pixel - the window the frame's size: nearest is the same
+			// pixels as bilinear, and software GL samples it at a fraction of
+			// the cost. Only the runner's own target: an effect's output keeps
+			// its filter.)
+			exact := frame.id == target.texture.id && Runner_CopyIsExact(dest, frame)
+			if exact do rl.SetTextureFilter(frame, .POINT)
+			rl.DrawTexturePro(frame, {0, 0, f32(frame.width), -f32(frame.height)}, dest, {0, 0}, 0, rl.WHITE)
 			if opaqueInCopy do Render_OpaqueCopyEnd()
 			rlgl.DrawRenderBatchActive()
 			rlgl.EnableColorBlend()
+			if exact do rl.SetTextureFilter(frame, .POINT if video.sharpScaling else .BILINEAR)
 		}
 		if filtered do Colorblind_End()
 		if opts.uncapped && opts.benchFrames <= 0 && opts.perfReport == "" do runner_draw_frame_time(rs)
@@ -750,6 +760,12 @@ Runner_OpaqueFrame :: proc(smooth: bool, clearAlpha: u8, effects: int, colorblin
 	if smooth || clearAlpha != 255 do return false, false
 	if effects > 0 || colorblind do return true, false
 	return false, true
+}
+
+// Runner_CopyIsExact: whether the frame lands on the window pixel for
+// pixel (its size, at a whole-pixel position): no filtering needed.
+Runner_CopyIsExact :: proc(dest: rl.Rectangle, tex: rl.Texture2D) -> bool {
+	return dest.width == f32(tex.width) && dest.height == f32(tex.height) && dest.x == math.floor(dest.x) && dest.y == math.floor(dest.y)
 }
 
 // Runner_CaptureFrame: the frame --screenshot / --dump-scene capture on -
@@ -871,35 +887,3 @@ runner_draw_frame_time :: proc(rs: ^Runner_State) {
 	rl.DrawText(cstring(&text[0]), 10, 9, 16, rl.LIME)
 }
 
-// DEBUG(#331): glBlitFramebuffer experiment (Linux).
-@(private = "file")
-x_gl: struct {
-	tried: bool,
-	bind:  proc "c" (target: u32, fb: u32),
-	blit:  proc "c" (sx0, sy0, sx1, sy1, dx0, dy0, dx1, dy1: i32, mask: u32, filter: u32),
-}
-
-@(private = "file")
-runner_x_glblit :: proc(target: ^rl.RenderTexture2D, dest: rl.Rectangle) -> bool {
-	when ODIN_OS != .Linux do return false
-	else {
-		if !x_gl.tried {
-			x_gl.tried = true
-			if lib, ok := dynlib.load_library("libGL.so.1"); ok {
-				x_gl.bind = auto_cast dynlib.symbol_address(lib, "glBindFramebuffer")
-				x_gl.blit = auto_cast dynlib.symbol_address(lib, "glBlitFramebuffer")
-			}
-		}
-		if x_gl.bind == nil || x_gl.blit == nil do return false
-		w, h := target.texture.width, target.texture.height
-		if i32(dest.width) != w || i32(dest.height) != h do return false
-		sh := rl.GetScreenHeight()
-		dx := i32(dest.x)
-		dy := sh - i32(dest.y) - h
-		rlgl.DrawRenderBatchActive()
-		x_gl.bind(0x8CA8, target.id)
-		x_gl.blit(0, 0, w, h, dx, dy, dx + w, dy + h, 0x4000, 0x2600)
-		x_gl.bind(0x8CA8, 0)
-		return true
-	}
-}

@@ -1,6 +1,7 @@
 package engine
 
 import "core:testing"
+import rl "vendor:raylib"
 
 // #358: --frames N alone ends the run after N frames. #362: a capture
 // (--screenshot / --dump-scene) is of frame N, not of max(25, N).
@@ -32,4 +33,16 @@ test_runner_opaque_frame :: proc(t: ^testing.T) {
 	testing.expect(t, !pass && !inCopy, "smooth camera: neither")
 	pass, inCopy = Runner_OpaqueFrame(false, 128, 0, false)
 	testing.expect(t, !pass && !inCopy, "see-through clear colour: neither")
+}
+
+// #331: the frame is copied with nearest filtering only when it lands on
+// the window pixel for pixel.
+@(test)
+test_runner_copy_is_exact :: proc(t: ^testing.T) {
+	tex := rl.Texture2D{width = 1280, height = 720}
+	testing.expect(t, Runner_CopyIsExact({0, 0, 1280, 720}, tex), "the window's size")
+	testing.expect(t, Runner_CopyIsExact({100, 40, 1280, 720}, tex), "centred in a bigger window, whole pixels")
+	testing.expect(t, !Runner_CopyIsExact({0.5, 0, 1280, 720}, tex), "half a pixel across")
+	testing.expect(t, !Runner_CopyIsExact({0, 0, 1920, 1080}, tex), "scaled up")
+	testing.expect(t, !Runner_CopyIsExact({0, 0, 640, 360}, tex), "scaled down")
 }
