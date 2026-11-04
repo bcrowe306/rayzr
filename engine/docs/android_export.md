@@ -29,10 +29,20 @@ needs:
   folder, or Homebrew's.
 - **Java 17 or newer**: `JAVA_HOME`, Android Studio's bundled JDK, or
   Homebrew's `openjdk`.
-- **bundletool** for the AAB: `bundletool-all-<version>.jar` from
-  github.com/google/bundletool/releases in `runners/android/` next to the
-  editor, or set `RAYZR_BUNDLETOOL` to its path. Without it the export
-  makes only the APK and says so.
+- **bundletool** for the AAB. Nothing to do: the first Android export
+  downloads bundletool 1.18.3 (about 33 MB, from
+  github.com/google/bundletool/releases), checks its SHA-256 and keeps it
+  in the editor's tools folder (`~/.config/rayzr_editor/tools`; on
+  Windows `%USERPROFILE%\.config\rayzr_editor\tools`). Later exports
+  reuse it. The editor keeps working while it downloads, and the status bar
+  shows how far it got. A jar you supply is used instead:
+  `RAYZR_BUNDLETOOL` set to its path, or a `bundletool*.jar` in
+  `runners/android/` next to the editor or in the SDK folder.
+  Offline, or if the download fails the checksum (it's thrown away), the
+  export makes only the APK. The log says how to add the jar by hand:
+  download `bundletool-all-1.18.3.jar`, check that its SHA-256 is
+  `a099cfa1543f55593bc2ed16a70a7c67fe54b1747bb7301f37fdfd6d91028e29`, and
+  put it in the tools folder.
 
 The NDK is only needed to build the runner itself
 (`scripts/build_android_runner.sh`). Editor releases ship it ready-made.

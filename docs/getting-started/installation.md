@@ -18,6 +18,16 @@ Get the latest version from the [download page](https://rayzr.app/download/)
 
 Each release lists the SHA-256 checksum of every file (`SHA256SUMS.txt`).
 
+## What it runs on
+
+- **macOS** 12 or newer, Apple silicon (M1 and later).
+- **Windows** 10 or 11, x64, with an OpenGL 3.3 graphics driver.
+- **Linux** x64 with glibc 2.35 or newer (Ubuntu 22.04, Debian 12, Fedora
+  36 and later), an OpenGL 3.3 driver and X11 or XWayland. The AppImage and
+  the `.tar.gz` use the libraries every desktop has: OpenGL (Mesa), X11 with
+  Xrandr, Xcursor, Xi and Xinerama, and ALSA for sound; the `.deb` installs
+  them.
+
 ## macOS
 
 1. Open the `.dmg` and drag **Rayzr Editor** to Applications.
@@ -32,7 +42,9 @@ Each release lists the SHA-256 checksum of every file (`SHA256SUMS.txt`).
 
 ## Linux
 
-- **AppImage**: `chmod +x rayzr-editor-*.AppImage`, then run it.
+- **AppImage**: `chmod +x rayzr-editor-*.AppImage`, then run it. Without
+  FUSE (some minimal installs and containers), run it with
+  `--appimage-extract-and-run`.
 - **Debian / Ubuntu**: `sudo apt install ./rayzr-editor-*-amd64.deb`, then
   start *Rayzr Editor* from your applications menu.
 - **Any distribution**: extract the `.tar.gz` and run `rayzr-editor` inside.

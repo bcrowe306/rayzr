@@ -1,0 +1,239 @@
+# Install checks (#330): the release packages of this commit, built exactly
+# as a release builds them (build-packages.yml, unsigned as until 1.0),
+# installed on fresh machines the way a user installs them - then, with the
+# installed editor: a project from a template, Play, export to every target
+# and the exports run (scripts/ci/install_check.sh: a PASS / FAIL / SKIP
+# line per step, a summary per package in the run's summary page).
+#   macOS     .dmg       macos-14, macos-15 (arm64: the release has no Intel editor)
+#   Windows   .zip       windows-2022, windows-2025 (Mesa's llvmpipe as the GPU driver)
+#   Ubuntu    .deb, .AppImage, .tar.gz   ubuntu-22.04, ubuntu-24.04
+#   Debian 12 .deb, .AppImage, .tar.gz   container (pinned digest) on Xvfb
+#   Fedora    .AppImage, .tar.gz         container (pinned digest) on Xvfb
+# GitHub's macOS VMs have no accelerated OpenGL: there the check installs,
+# checks the binaries and the runner says it can't open a window; the editor
+# steps run on a Mac (docs/contributing/release-checklist.md, with the real
+# Android device and the older macOS versions).
+#
+# When: by hand (Actions > Install check > Run workflow) and on pull
+# requests that change the packaging. Not on every pull request: it builds
+# every package first (the slow part: as long as a release build, ~30 min),
+# then 15 check jobs. Nothing is published: no release, no R2, no website.
+# Every third-party action is pinned to a commit, every image to a digest.
+name: Install check
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/release.yml
+      - .github/workflows/build-packages.yml
+      - .github/workflows/install-check.yml
+      - scripts/package_*
+      - scripts/ci/**
+      - scripts/odin_flags.sh
+      - scripts/build_runners.sh
+      - scripts/build_web_runner.sh
+      - scripts/build_android_runner.sh
+      - tests/package/**
+
+permissions:
+  contents: read
+
+concurrency:
+  group: install-check-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  VERSION: 0.0.0-check.${{ github.run_number }}
+  SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+
+jobs:
+  packages:
+    name: Packages
+    uses: ./.github/workflows/build-packages.yml
+    with:
+      version: 0.0.0-check.${{ github.run_number }}
+      sha: ${{ github.event.pull_request.head.sha || github.sha }}
+    # (No secrets: unsigned, as the releases are until 1.0.)
+
+  macos:
+    name: macOS ${{ matrix.os }} (.dmg)
+    needs: packages
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-14, macos-15]
+    steps:
+      # (The checkout gives the check its scripts and drives - no submodules,
+      # no compiler: the editor under test is the installed one.)
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ env.SHA }}
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: editor-macos
+          path: pkg
+      - name: Install check
+        run: |
+          export JAVA_HOME="${JAVA_HOME_17_arm64:-${JAVA_HOME_21_arm64:-${JAVA_HOME:-}}}"
+          scripts/ci/install_check.sh pkg/*.dmg --work "$RUNNER_TEMP/check" --version "$VERSION"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: install-check-${{ matrix.os }}-dmg
+          path: |
+            ${{ runner.temp }}/check/results.tsv
+            ${{ runner.temp }}/check/logs
+            ${{ runner.temp }}/check/shots
+          if-no-files-found: ignore
+          retention-days: 14
+
+  windows:
+    name: Windows ${{ matrix.os }} (.zip)
+    needs: packages
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2022, windows-2025]
+    defaults:
+      run:
+        shell: bash
+    env:
+      GALLIUM_DRIVER: llvmpipe
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ env.SHA }}
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: editor-windows
+          path: pkg
+      # (The runner has no GPU driver: Mesa's opengl32.dll next to the exes
+      # that open a window, after the check of what they import.)
+      - run: scripts/ci/mesa_windows.sh - "$RUNNER_TEMP/mesa"
+      - name: Install check
+        run: |
+          export JAVA_HOME="${JAVA_HOME_17_X64:-${JAVA_HOME:-}}"
+          scripts/ci/install_check.sh pkg/*.zip --work "$RUNNER_TEMP/check" --version "$VERSION" --gl-dlls "$RUNNER_TEMP/mesa"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: install-check-${{ matrix.os }}-zip
+          path: |
+            ${{ runner.temp }}/check/results.tsv
+            ${{ runner.temp }}/check/logs
+            ${{ runner.temp }}/check/shots
+          if-no-files-found: ignore
+          retention-days: 14
+
+  ubuntu:
+    name: Ubuntu ${{ matrix.os }} (${{ matrix.package }})
+    needs: packages
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, ubuntu-24.04]
+        package: [deb, AppImage, tar.gz]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ env.SHA }}
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: editor-linux
+          path: pkg
+      - run: command -v xvfb-run > /dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq xvfb; }
+      - name: Install check
+        run: |
+          export JAVA_HOME="${JAVA_HOME_17_X64:-${JAVA_HOME:-}}"
+          xvfb-run -a -s "-screen 0 1920x1080x24" \
+            scripts/ci/install_check.sh pkg/*.${{ matrix.package }} --work "$RUNNER_TEMP/check" --version "$VERSION"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: install-check-${{ matrix.os }}-${{ matrix.package }}
+          path: |
+            ${{ runner.temp }}/check/results.tsv
+            ${{ runner.temp }}/check/logs
+            ${{ runner.temp }}/check/shots
+          if-no-files-found: ignore
+          retention-days: 14
+
+  # Fresh distributions: a container with nothing but the base image, the
+  # check's own tools (Python, Xvfb) and - for the AppImage and .tar.gz, which
+  # bring no dependencies - the libraries any Linux desktop has (OpenGL,
+  # X11 and its RandR / Xcursor / XInput2 / Xinerama, ALSA: the Linux
+  # requirements in docs/getting-started). The .deb gets only what its
+  # Depends pull in. No Android SDK or Chrome there: those steps say SKIP.
+  container:
+    name: ${{ matrix.distro }} (${{ matrix.package }})
+    needs: packages
+    runs-on: ubuntu-24.04
+    container:
+      image: ${{ matrix.image }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { distro: Debian 12, family: debian, package: deb, image: "debian:12@sha256:d74df7598108a173a621eda4d58a2adbf850b2d9a9d81bc2cca1a6c21174a880" }
+          - { distro: Debian 12, family: debian, package: AppImage, image: "debian:12@sha256:d74df7598108a173a621eda4d58a2adbf850b2d9a9d81bc2cca1a6c21174a880" }
+          - { distro: Debian 12, family: debian, package: tar.gz, image: "debian:12@sha256:d74df7598108a173a621eda4d58a2adbf850b2d9a9d81bc2cca1a6c21174a880" }
+          - { distro: Fedora 45, family: fedora, package: AppImage, image: "fedora:45@sha256:a7d72ba2745b100a3351087472e5ee7b2450af7cf331e7673007e3817612839c" }
+          - { distro: Fedora 45, family: fedora, package: tar.gz, image: "fedora:45@sha256:a7d72ba2745b100a3351087472e5ee7b2450af7cf331e7673007e3817612839c" }
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: The check's tools
+        run: |
+          if [ "${{ matrix.family }}" = debian ]; then
+            apt-get update -qq
+            DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends python3 xvfb xauth perl > /dev/null
+          else
+            dnf install -y -q python3 xorg-x11-server-Xvfb perl-interpreter > /dev/null
+          fi
+      - name: A desktop's libraries (not for the .deb)
+        if: matrix.package != 'deb'
+        run: |
+          if [ "${{ matrix.family }}" = debian ]; then
+            DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends \
+              libgl1 libgl1-mesa-dri libx11-6 libxrandr2 libxcursor1 libxi6 libxinerama1 libasound2 > /dev/null
+          else
+            dnf install -y -q mesa-libGL mesa-dri-drivers libX11 libXrandr libXcursor libXi libXinerama alsa-lib > /dev/null
+          fi
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ env.SHA }}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: editor-linux
+          path: pkg
+      - name: Install check
+        run: |
+          Xvfb :99 -screen 0 1920x1080x24 -nolisten tcp > /tmp/xvfb.log 2>&1 &
+          export DISPLAY=:99
+          sleep 2
+          scripts/ci/install_check.sh pkg/*.${{ matrix.package }} --work /tmp/check --version "$VERSION"
+      # (runner.temp is the host's path in a container job: the results are
+      # copied into the workspace to upload them.)
+      - if: always()
+        run: mkdir -p check-results && cp -R /tmp/check/results.tsv /tmp/check/logs /tmp/check/shots check-results/ 2> /dev/null || true
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: install-check-${{ matrix.family }}-${{ matrix.package }}
+          path: check-results
+          if-no-files-found: ignore
+          retention-days: 14

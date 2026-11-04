@@ -1,0 +1,18 @@
+# Install check, part 1 (scripts/ci/install_check.sh, #330): the installed
+# editor, started on a copy of its bundled demo project, makes a new project
+# from the Platformer template (Help > Welcome), as a new user would.
+# Part 2 (install_play_export.drive) opens that project.
+wait 5
+click @menu:Help
+click @menu:Help/Welcome
+expect item:welcome.create == visible
+click @welcome.template:Platformer
+click @welcome.name
+key ctrl+a
+key cmd+a
+type Install Check
+click @welcome.create
+expect log contains Created Platformer project
+expect abs-file:$PROJECT/../Install_Check/project.json contains "name": "Install Check"
+expect abs-file:$PROJECT/../Install_Check/scripts/player.lua contains coyote
+screenshot created

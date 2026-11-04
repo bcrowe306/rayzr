@@ -18,7 +18,8 @@ import e "../engine"
 // the android-34 platform) and Java 17+ (jar, keytool, jarsigner) - found
 // through ANDROID_HOME / ANDROID_SDK_ROOT, the usual install folders and
 // JAVA_HOME. The AAB also needs bundletool (bundletool*.jar in
-// runners/android/ or the SDK folder, or RAYZR_BUNDLETOOL); without it only
+// runners/android/ or the SDK folder, or RAYZR_BUNDLETOOL; else the editor
+// downloads a pinned release once: android_bundletool.odin); without it only
 // the APK is made. scripts/package_android.sh does the same from a shell.
 //
 // Signing: the project's keystore and key alias (Export settings), its
@@ -162,9 +163,9 @@ android_manifest :: proc(cfg: ^e.ProjectConfig, id, label: string) -> string {
 `, id, code, xml_escape(version), xml_escape(label), orient)
 }
 
-// android_bundletool: bundletool's jar ("" = none: no AAB).
-@(private = "file")
-android_bundletool :: proc(runner, sdk: string) -> string {
+// Android_Bundletool: bundletool's jar ("" = none: no AAB) - what was put
+// there by hand first, then the one the editor downloaded (android_bundletool.odin).
+Android_Bundletool :: proc(state: ^EditorState, runner, sdk: string) -> string {
 	if v := os.get_env("RAYZR_BUNDLETOOL", context.temp_allocator); v != "" && os.is_file(v) do return v
 	for dir in ([]string{filepath.dir(runner, context.temp_allocator), sdk, Resource_Path("bin", "android_tools")}) {
 		infos, err := os.read_all_directory_by_path(dir, context.temp_allocator)
@@ -174,7 +175,7 @@ android_bundletool :: proc(runner, sdk: string) -> string {
 			return p
 		}
 	}
-	return ""
+	return Bundletool_Cached(Bundletool_ToolsDir(state.userDataDir))
 }
 
 // android_run: a tool to completion (in `dir`), with extra environment;
@@ -319,9 +320,9 @@ export_android :: proc(state: ^EditorState, cfg: ^e.ProjectConfig, runner, rayzr
 	Editor_Log(state, .Info, "Android: %s (%s)", apk, id)
 
 	// The AAB.
-	bundletool := android_bundletool(runner, sdk)
+	bundletool := Android_Bundletool(state, runner, sdk)
 	if bundletool == "" {
-		Editor_Log(state, .Warn, "Android export: no AAB - it needs bundletool: put bundletool-all.jar (github.com/google/bundletool/releases) in %s, or set RAYZR_BUNDLETOOL", filepath.dir(runner, context.temp_allocator))
+		Editor_Log(state, .Warn, "Android export: no AAB - it needs bundletool: put %s (%s) in %s, or set RAYZR_BUNDLETOOL; the next export tries the download again", BUNDLETOOL_JAR, BUNDLETOOL_URL, Bundletool_ToolsDir(state.userDataDir))
 		return strings.clone(dir, context.temp_allocator), true
 	}
 	protoApk := sub(stage, "proto.apk")

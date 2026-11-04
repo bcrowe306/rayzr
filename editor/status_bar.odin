@@ -61,6 +61,7 @@ StatusBar_Render :: proc(state: ^EditorState, width, displayH, barHeight: f32) {
 	}
 
 	UpdateCheck_StatusBar(state)
+	Bundletool_StatusBar(state)
 
 	io := imgui.GetIO()
 	world := Viewport_ScreenToWorld(state, {io.MousePos.x, io.MousePos.y})

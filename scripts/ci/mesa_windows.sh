@@ -7,6 +7,8 @@
 #
 #   scripts/ci/mesa_windows.sh bin/runners/windows/runner.exe "$RUNNER_TEMP/glrunner"
 #   GALLIUM_DRIVER=llvmpipe "$RUNNER_TEMP/glrunner/runner.exe" ...
+# (Runner "-": the DLLs only - the install checks copy them next to an
+# installed editor's exes, scripts/ci/install_check.sh --gl-dlls.)
 set -euo pipefail
 runner="$1"; out="$2"
 MESA=26.2.4
@@ -21,5 +23,5 @@ mkdir -p "$out" "$tmp/mesa"
 found=0
 while IFS= read -r dll; do cp "$dll" "$out/"; found=1; done < <(find "$tmp/mesa" -ipath '*/x64/*.dll')
 [ $found = 1 ] && [ -f "$out/opengl32.dll" ] || { echo "::error::no x64/opengl32.dll in mesa3d-$MESA-release-msvc.7z"; exit 1; }
-cp "$runner" "$out/"
+[ "$runner" = - ] || cp "$runner" "$out/"
 ls "$out"

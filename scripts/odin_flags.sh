@@ -5,7 +5,22 @@
 # User32.lib - otherwise rl.CloseWindow can resolve to Win32's (User32.lib
 # comes first on the link line through core:os) and the two collide.
 # (raylib stays static: the mixer pulls frames from raylib's decoders, which
-# raylib.dll doesn't export.)
+# raylib.dll doesn't export.) And the C runtime stays static (#330): Odin's
+# raylib.lib is built against the DLL one (/MD: its /DEFAULTLIB:MSVCRT), which
+# made every exe - the editor, the runners, exported games - need
+# VCRUNTIME140.dll and VCRUNTIME140_1.dll, which a fresh Windows doesn't have.
+# /NODEFAULTLIB:msvcrt.lib drops the DLL one, and the static one (what /MT
+# links: libcmt, libvcruntime, libucrt) is named as input libraries - not
+# /DEFAULTLIB: Odin's raylib bindings say /NODEFAULTLIB:libcmt (vendor/raylib/
+# raylib.odin), which removes libcmt from the default libraries, but not an
+# input named on the command line. raylib's /MD objects call the CRT through
+# __imp_ pointers, which the linker points at the static functions (LNK4217)
+# - but only at functions already linked: the CRT functions only raylib calls
+# are pulled in with /INCLUDE (RAYLIB_CRT: the __imp_ CRT symbols of Odin's
+# raylib.lib, `llvm-nm -u raylib.lib | grep __imp_` less Win32's - recheck it
+# when the Odin release changes).
+# (All in a linker response file: `odin build` takes one -extra-linker-flags
+# and the callers split this script's output on spaces.)
 # macOS in CI (release builds): the oldest macOS the app runs on, as its
 # Info.plist says (LSMinimumSystemVersion, scripts/package_editor.sh) -
 # without it Odin targets the build machine's macOS (0.6.0 needed 14).
@@ -13,9 +28,22 @@
 # link would warn.)
 #   odin build editor $(scripts/odin_flags.sh) ...
 MACOS_MIN=12.0
+RAYLIB_CRT="__acrt_iob_func __stdio_common_vfprintf __stdio_common_vsprintf __stdio_common_vsscanf
+	_access _chdir _controlfp_s _errno _fdsign _findclose _findfirst64i32 _findnext64i32 _ftelli64 _getcwd
+	_mkdir _stat64i32 _time64 _wfopen_s atof atoi atoll calloc exit fclose feof ferror fflush fgetc fgets
+	fmax fmaxf fmin fminf fopen fopen_s fread free frexp fseek ftell fwrite hypot ldexp malloc puts qsort
+	rand realloc rewind round roundf strcspn strerror strncmp strncpy strpbrk strspn strtok strtol strtoul
+	system ungetc"
 case "$(uname -s)" in
 	MINGW*|MSYS*|CYGWIN*)
-		echo "-extra-linker-flags:/WHOLEARCHIVE:$(cygpath -w "$(odin root)/vendor/raylib/windows/raylib.lib")" ;;
+		rsp="$(cd "$(dirname "$0")/.." && pwd)/bin/windows_link.rsp"
+		mkdir -p "$(dirname "$rsp")"
+		{
+			printf '/WHOLEARCHIVE:"%s"\n/NODEFAULTLIB:msvcrt.lib\nlibcmt.lib\nlibvcruntime.lib\nlibucrt.lib\n' "$(cygpath -w "$(odin root)/vendor/raylib/windows/raylib.lib")"
+			for f in $RAYLIB_CRT; do echo "/INCLUDE:$f"; done
+		} > "$rsp.$$"
+		mv -f "$rsp.$$" "$rsp" # (whole: builds run this in parallel)
+		echo "-extra-linker-flags:@$(cygpath -w "$rsp")" ;;
 	Darwin)
 		[ -n "${CI:-}" ] && echo "-minimum-os-version:$MACOS_MIN" ;;
 esac
