@@ -1,0 +1,27 @@
+# #391: Done on the Vector toolbar after drawing a shape leaves Edit Art
+# (the editor crashed: the rest of that frame still read the node being
+# edited, already let go of).
+wait 5
+key escape
+click @hier.add
+type vector
+click @addnode.create
+expect selected == VectorShape
+click @insp.vec.draw
+expect vd.active == true
+click @vd.tool:ellipse
+drag @node:VectorShape+-60,-60 @node:VectorShape+60,40
+expect vd.shapes == 1
+click @vd.tool:select
+click @node:VectorShape+0,-10
+click @vd.done
+wait 1
+expect vd.active == false
+expect selected == VectorShape
+screenshot after_done
+# Again: Edit Art, then Done straight away.
+click @insp.vec.draw
+expect vd.active == true
+click @vd.done
+wait 1
+expect vd.active == false
