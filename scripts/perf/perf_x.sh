@@ -29,12 +29,21 @@ for p in glob.glob("templates/vector_character/scenes/stage*.scene.json"):
     json.dump(d, open(p, "w"))
 PY
 }
-R=bin/perf/runner
-P="ArmBack LegBack LegFront Body Head Eyes Mouth ArmFront"
-Q="PepArmBack PepLegBack PepLegFront PepBody PepHead PepEyes PepMouth PepArmFront"
-cp -r templates/vector_character /tmp/vc_orig
-restore() { rm -rf templates/vector_character; cp -r /tmp/vc_orig templates/vector_character; }
-run new1 X=1 -- vector_character dungeon
-hide $P $Q; run nochars X=1 -- vector_character; restore
-hide Backdrop Backdrop2; run nobackdrop X=1 -- vector_character; restore
-run new2 X=1 -- vector_character dungeon
+sudo apt-get install -y -qq linux-tools-common linux-tools-$(uname -r) > /dev/null 2>&1 || sudo apt-get install -y -qq linux-tools-generic > /dev/null 2>&1
+sudo sysctl -w kernel.perf_event_paranoid=-1 kernel.kptr_restrict=0 > /dev/null
+PERFBIN=$(ls /usr/lib/linux-tools/*/perf 2>/dev/null | head -1); [ -n "$PERFBIN" ] || PERFBIN=perf
+prof() { # name template
+  cat > /tmp/wrap.sh <<W
+#!/bin/sh
+exec $PERFBIN record -F 499 --call-graph dwarf,16384 -o $PWD/perf/$1.data -- $PWD/bin/perf/runner "\$@"
+W
+  chmod +x /tmp/wrap.sh
+  PERF_TMP="$RUNNER_TEMP/perf" taskset -c 0,1 xvfb-run -a -s "-screen 0 1920x1080x24" \
+    python3 -u scripts/perf/perf.py --runner /tmp/wrap.sh --reps 1 --setup x --out "perf/$1.json" "$2" > "perf/$1.log" 2>&1
+  {
+    echo "=== $1 main thread, inclusive"
+    $PERFBIN report -i perf/$1.data --comm runner --children --sort sym --stdio -g none --percent-limit 0.7 2>/dev/null | grep "%" | head -90
+  } > perf/$1.txt
+  cat perf/$1.txt
+}
+prof prof_vc vector_character
