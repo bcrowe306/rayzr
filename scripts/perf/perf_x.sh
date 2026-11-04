@@ -30,11 +30,12 @@ for p in glob.glob("templates/vector_character/scenes/stage*.scene.json"):
 PY
 }
 R=bin/perf/runner
-T="vector_character dungeon hex visual_novel"
-run new1 X=1 -- $T
-run point1 RAYZR_X_BLIT=point -- $T
-run glblit1 RAYZR_X_BLIT=glblit -- $T
-run noblit RAYZR_X_NOBLIT=1 -- $T
-run new2 X=1 -- $T
-run point2 RAYZR_X_BLIT=point -- $T
-run glblit2 RAYZR_X_BLIT=glblit -- $T
+run new1 X=1 -- vector_character dungeon platformer hex visual_novel
+R=bin/perf/runner_base
+run base1 X=1 -- vector_character dungeon platformer hex visual_novel
+R=bin/perf/runner
+run new2 X=1 -- vector_character dungeon platformer hex visual_novel
+R=bin/perf/runner_base
+run base2 X=1 -- vector_character dungeon platformer hex visual_novel
+R=bin/perf/runner
+run new_noblit RAYZR_X_NOBLIT=1 -- vector_character platformer
