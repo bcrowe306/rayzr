@@ -86,6 +86,22 @@ rect_aabb :: proc(pos, size, origin: [2]f32, rotDeg: f32) -> rl.Rectangle {
 	return aabb_of(pts)
 }
 
+// local_box_aabb: world AABB of a box in a node's own space ({x0, y0, x1,
+// y1}) through its scale, rotation (degrees) and position - a negative
+// scale mirrors the box round the position, as the node's matrix draws it
+// (#390: a flipped shape with a corner pivot is to the left of it).
+@(private)
+local_box_aabb :: proc(pos: [2]f32, b: [4]f32, scale: [2]f32, rotDeg: f32) -> rl.Rectangle {
+	r := rotDeg * math.RAD_PER_DEG
+	c, s := math.cos(r), math.sin(r)
+	pts: [4][2]f32
+	for p, i in ([4][2]f32{{b[0], b[1]}, {b[2], b[1]}, {b[2], b[3]}, {b[0], b[3]}}) {
+		q := p * scale
+		pts[i] = pos + {q.x * c - q.y * s, q.x * s + q.y * c}
+	}
+	return aabb_of(pts)
+}
+
 // Node_RenderBounds: world AABB of what a node draws (ok = false: unknown,
 // so never culled).
 Node_RenderBounds :: proc(node: ^Node) -> (rect: rl.Rectangle, ok: bool) {
@@ -122,9 +138,7 @@ Node_RenderBounds :: proc(node: ^Node) -> (rect: rl.Rectangle, ok: bool) {
 	case VectorShapeNode:
 		v := cast(^VectorShapeNode)node
 		b := VectorShapeNode_LocalBounds(v) or_return
-		size := [2]f32{b[2] - b[0], b[3] - b[1]} * v.globalScale
-		origin := [2]f32{-b[0], -b[1]} * v.globalScale
-		return rect_aabb(v.globalPosition, {abs(size.x), abs(size.y)}, {abs(origin.x), abs(origin.y)}, v.globalRotation), true
+		return local_box_aabb(v.globalPosition, b, v.globalScale, v.globalRotation), true
 	case ParticleEmitterNode:
 		// Its particles (or Visibility Rect): off screen, not drawn (#128).
 		// GPU mode with Auto: where they are is only known to the shader.

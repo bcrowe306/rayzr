@@ -238,6 +238,25 @@
   }
  },
  {
+  "name": "mirrored (#390): a corner pivot and a negative scale draws to the left of / above the position - not culled while it's on screen (half off the right edge, flipped up from below the bottom)",
+  "project": "tests/vector/project",
+  "scene": "scenes/mirror.scene.json",
+  "frames": 6,
+  "expect": [
+   [
+    "MirroredEdge",
+    "exists",
+    "==",
+    true
+   ]
+  ],
+  "golden": {
+   "image": "tests/vector/expected/mirror.png",
+   "max_pixels": 0.02,
+   "threshold": 64
+  }
+ },
+ {
   "name": "collision from vector art: rolling hills (Outline loops) carved from Lua (a circle and a polygon; paints kept), a star (Solid pieces), a crate shaped by its art, balls settling; a Path Follow on a ring's outline",
   "project": "tests/vector/project",
   "scene": "scenes/collide.scene.json",
