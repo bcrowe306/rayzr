@@ -1,5 +1,6 @@
 package engine
 
+import "core:dynlib"
 import "core:fmt"
 import "core:log"
 import os "osx"
@@ -672,7 +673,10 @@ Runner_Frame :: proc(rs: ^Runner_State) -> bool {
 			rlgl.DrawRenderBatchActive()
 			rlgl.DisableColorBlend()
 			if opaqueInCopy do Render_OpaqueCopyBegin()
-			if os.get_env("RAYZR_X_NOBLIT", context.temp_allocator) == "" do rl.DrawTexturePro(frame, {0, 0, f32(frame.width), -f32(frame.height)}, dest, {0, 0}, 0, rl.WHITE) // DEBUG(#331)
+			xmode := os.get_env("RAYZR_X_BLIT", context.temp_allocator) // DEBUG(#331)
+			if xmode == "point" do rl.SetTextureFilter(frame, .POINT)
+			if xmode == "glblit" && runner_x_glblit(target, dest) {
+			} else if os.get_env("RAYZR_X_NOBLIT", context.temp_allocator) == "" do rl.DrawTexturePro(frame, {0, 0, f32(frame.width), -f32(frame.height)}, dest, {0, 0}, 0, rl.WHITE) // DEBUG(#331)
 			if opaqueInCopy do Render_OpaqueCopyEnd()
 			rlgl.DrawRenderBatchActive()
 			rlgl.EnableColorBlend()
@@ -865,4 +869,37 @@ runner_draw_frame_time :: proc(rs: ^Runner_State) {
 	}
 	rl.DrawRectangle(4, 4, 170, 24, {0, 0, 0, 170})
 	rl.DrawText(cstring(&text[0]), 10, 9, 16, rl.LIME)
+}
+
+// DEBUG(#331): glBlitFramebuffer experiment (Linux).
+@(private = "file")
+x_gl: struct {
+	tried: bool,
+	bind:  proc "c" (target: u32, fb: u32),
+	blit:  proc "c" (sx0, sy0, sx1, sy1, dx0, dy0, dx1, dy1: i32, mask: u32, filter: u32),
+}
+
+@(private = "file")
+runner_x_glblit :: proc(target: ^rl.RenderTexture2D, dest: rl.Rectangle) -> bool {
+	when ODIN_OS != .Linux do return false
+	else {
+		if !x_gl.tried {
+			x_gl.tried = true
+			if lib, ok := dynlib.load_library("libGL.so.1"); ok {
+				x_gl.bind = auto_cast dynlib.symbol_address(lib, "glBindFramebuffer")
+				x_gl.blit = auto_cast dynlib.symbol_address(lib, "glBlitFramebuffer")
+			}
+		}
+		if x_gl.bind == nil || x_gl.blit == nil do return false
+		w, h := target.texture.width, target.texture.height
+		if i32(dest.width) != w || i32(dest.height) != h do return false
+		sh := rl.GetScreenHeight()
+		dx := i32(dest.x)
+		dy := sh - i32(dest.y) - h
+		rlgl.DrawRenderBatchActive()
+		x_gl.bind(0x8CA8, target.id)
+		x_gl.blit(0, 0, w, h, dx, dy, dx + w, dy + h, 0x4000, 0x2600)
+		x_gl.bind(0x8CA8, 0)
+		return true
+	}
 }

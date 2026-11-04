@@ -27,10 +27,6 @@ jobs:
       - run: |
           mkdir -p bin/perf
           odin build runner -o:speed $(scripts/odin_flags.sh) -out:bin/perf/runner
-          git fetch -q --depth 1 origin 63150e5239fec2f6d38f36a0665ae42a57c21e06
-          git checkout 63150e5239fec2f6d38f36a0665ae42a57c21e06 -- engine runner
-          odin build runner -o:speed $(scripts/odin_flags.sh) -out:bin/perf/runner_base
-          git checkout HEAD -- engine runner
       - run: bash scripts/perf/perf_x.sh
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
