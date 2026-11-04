@@ -52,6 +52,10 @@ jobs:
       - run: scripts/ci/setup_deps.sh
       - name: Template play-throughs (web)
         run: CHROME="$(command -v google-chrome)" python3 scripts/templates/test_templates.py --web platformer shmup puzzle adventure rpg dungeon hex visual_novel vector_character
+      # The tutorials' projects too (the level generator's, #385: Odin's
+      # runtime start-up - computed globals - must run on the web).
+      - name: Tutorial play-throughs (web)
+        run: CHROME="$(command -v google-chrome)" python3 scripts/templates/test_templates.py --web --suite tests/tutorials/runtime_tests.json
 
   # The Android runner (linux_arm64 / android + the NDK), as release.yml
   # builds it; then a test app packaged and checked (APK + AAB). The runner

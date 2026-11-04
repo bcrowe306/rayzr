@@ -44,10 +44,25 @@ web_context :: proc "contextless" () -> runtime.Context {
 	return ctx
 }
 
+// web_startup_runtime: Odin's runtime start-up - the global variables
+// whose initial values are computed (a table that refers to another
+// global, e.g. the level generator's GEN_KINDS) and @(init) procs. A native
+// build runs it before main; here emscripten links the object and the page
+// calls main_start directly, so nothing else would (#385: every level
+// generator node type was "unknown" on the web). Once, before anything.
+@(private = "file")
+web_startup_runtime :: proc() {
+	@(static) done: bool
+	if done do return
+	done = true
+	runtime._startup_runtime()
+}
+
 // main_start: the page has written game.rayzr into the file system.
 @(export)
 main_start :: proc "c" () {
 	context = web_context()
+	web_startup_runtime()
 	opts := e.Run_Options{projectPath = "/game.rayzr", userDataDir = "/save"}
 	log.info("[web] starting /game.rayzr")
 	rs, ok := e.Runner_Start(opts)
@@ -68,6 +83,7 @@ main_start :: proc "c" () {
 @(export)
 main_start_test :: proc "c" () {
 	context = web_context()
+	web_startup_runtime()
 	text, err := os.read_entire_file("/test/args.txt")
 	if err != nil {
 		log.errorf("[web] no /test/args.txt: %v", err)
