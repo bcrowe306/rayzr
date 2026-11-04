@@ -3,8 +3,14 @@
 Rayzr is measured on deliberately weak reference setups, so a change that
 makes the editor or a game slower shows up before a user notices it. The
 harness is `scripts/perf/perf.py`; the **Performance** workflow
-(`.github/workflows/perf.yml`) runs it on the reference setups and fails
-when a target is missed or a number regresses beyond the margin.
+(`.github/workflows/perf.yml`) runs it on the reference setups. The weekly
+and manual runs fail when a target is missed or a number regresses beyond
+the margin; on pull requests (the Linux setup, when render / scene / editor
+viewport code changes) the job only reports: the table goes to the run's
+summary with misses marked OVER TARGET or REGRESSED, each miss is a
+warning annotation, and the job passes (`perf.py --check report.json
+--report-only`). A pull request's author reads the summary; the weekly run
+is the alarm.
 
 ## What is measured
 
@@ -25,6 +31,17 @@ The runner writes a frame-time report with `--perf-report <file.json>`
 |---|---|
 | `linux-llvmpipe-2core` | GitHub's Ubuntu 22.04 runner held to 2 cores (`taskset -c 0,1`, the X server too), Mesa's llvmpipe software OpenGL with 2 threads (`LIBGL_ALWAYS_SOFTWARE=1`, `LP_NUM_THREADS=2`) under Xvfb at 1280x720: no GPU, slower than any integrated graphics chip |
 | `android-emulator-api34` | The Android 14 (API 34) x86_64 emulator with Google APIs, 2 cores, 2 GB of RAM and SwiftShader GL; the arm64 runner runs through its ARM translation: a budget phone or slower |
+
+GitHub's Ubuntu runners come with different CPUs, and on software GL the
+CPU is the GPU: the same code's frame times differ by up to about 2x
+between them (Platformer p95: 7.7 ms on an AMD EPYC 9V45, 11.8 ms on an
+EPYC 9V74, 14 ms on an EPYC 7763 or a Xeon Platinum 8573C). The report
+names the CPU it ran on (`machine.cpu`, the table's first line). The
+`linux-llvmpipe-2core` baseline was recorded on an **AMD EPYC 9V74**, and
+a run is compared with the baseline only on the CPU it was recorded on;
+on any other CPU only the targets are checked (the table says so). The
+targets themselves are met on the 9V74; on the slowest CPUs seen the
+busiest templates come out at 17-20 ms (p95).
 
 ## Targets
 
@@ -47,7 +64,8 @@ Apple M2 Pro plays every template at about 1-2 ms a frame (p95).
 ## The baseline and the margin
 
 Besides the targets, each setup has a recorded baseline (`setups` in
-`tests/perf/baseline.json`). A number fails when it is more than the
+`tests/perf/baseline.json`, with the machine it was recorded on in
+`recorded`; it applies to runs on that CPU only). A number fails when it is more than the
 baseline plus `margin` (25%) plus `slack_ms` (1 ms for frame times, 250 ms
 for startup and Play): enough room for a shared CI machine's noise, not for
 a real slowdown. A setup with no baseline yet is checked against the
@@ -56,7 +74,9 @@ targets only.
 The baseline changes only on purpose, after a change that is meant to make
 things faster or that knowingly costs time:
 
-1. Run the **Performance** workflow (Actions > Performance > Run workflow).
+1. Run the **Performance** workflow (Actions > Performance > Run workflow);
+   check the table's first line for the CPU - re-run until it is the
+   baseline's (or record a new CPU on purpose, saying so).
 2. Download its artifact (`perf-linux-llvmpipe-2core`, `perf-android-emulator-api34`).
 3. `python3 scripts/perf/perf.py --update-baseline report-linux.json` (and
    the Android report), then commit `tests/perf/baseline.json` with the

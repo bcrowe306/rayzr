@@ -7,6 +7,7 @@ recorded baseline (tests/perf/baseline.json).
         --setup macos-local --out /tmp/claude-501/perf/report.json
     python3 scripts/perf/perf.py --android --setup android-emulator-api34 --out report.json
     python3 scripts/perf/perf.py --check report.json          # targets + baseline (exit 1 on a regression)
+    python3 scripts/perf/perf.py --check report.json --report-only  # the same, warnings only (pull requests)
     python3 scripts/perf/perf.py --table report.json          # the readable table again
     python3 scripts/perf/perf.py --update-baseline report.json  # its numbers become its setup's baseline
 
@@ -196,6 +197,12 @@ def check(report, baseline):
     margin = baseline.get("margin", 0.25)
     slack = baseline.get("slack_ms", {"frame": 1.0, "time": 250.0})
     base = baseline.get("setups", {}).get(setup, {})
+    # GitHub's runner CPUs vary (the same code's frame times differ by up to
+    # ~2x between them): the baseline is compared only on the CPU it was
+    # recorded on; another CPU is checked against the targets alone.
+    recorded_cpu = baseline.get("recorded", {}).get(setup, {}).get("machine", {}).get("cpu")
+    if base and recorded_cpu and recorded_cpu != report.get("machine", {}).get("cpu"):
+        base = {}
     problems, rows = [], []
     for tid, r in report.get("templates", {}).items():
         if not r.get("passed"):
@@ -252,8 +259,11 @@ def table(report, baseline=None):
         for name, value, t, b, status in rows:
             lines.append(f"{name:<44} {value:>9.2f} {t if t is not None else '-':>8} {b if b is not None else '-':>9}  {status}")
         lines.append("")
+        rec = baseline.get("recorded", {}).get(report["setup"], {}).get("machine", {}).get("cpu")
         if report["setup"] not in baseline.get("setups", {}):
             lines.append(f"(no baseline recorded for {report['setup']}: the targets only - --update-baseline records one)")
+        elif rec and rec != report["machine"].get("cpu"):
+            lines.append(f"(the {report['setup']} baseline was recorded on {rec}; this run's CPU differs: the targets only)")
         lines.append("PASS: every target met, no regression" if not problems else f"{len(problems)} problem(s):")
         lines += [f"  {p}" for p in problems]
     return "\n".join(lines)
@@ -282,6 +292,8 @@ def main():
     ap.add_argument("--out", help="write the JSON report here")
     ap.add_argument("--baseline", default=BASELINE)
     ap.add_argument("--check", metavar="REPORT", help="check a report against the targets and the baseline")
+    ap.add_argument("--report-only", action="store_true",
+                    help="with --check: report misses (a ::warning:: annotation each on GitHub Actions) but exit 0 - pull requests")
     ap.add_argument("--table", metavar="REPORT", help="print a report's table")
     ap.add_argument("--update-baseline", metavar="REPORT", help="record a report as its setup's baseline")
     ap.add_argument("templates", nargs="*")
@@ -295,7 +307,12 @@ def main():
         baseline = json.load(open(a.baseline))
         print(table(report, baseline))
         if a.check:
-            sys.exit(1 if check(report, baseline)[0] else 0)
+            problems = check(report, baseline)[0]
+            if a.report_only:
+                for p in problems:
+                    print(f"::warning title=Performance::{p}" if os.environ.get("GITHUB_ACTIONS") else f"warning: {p}")
+                return
+            sys.exit(1 if problems else 0)
         return
 
     log = lambda s: print(s, flush=True)  # noqa: E731

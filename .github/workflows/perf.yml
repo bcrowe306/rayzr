@@ -3,7 +3,9 @@
 # opens a large generated scene in the editor (idle, selecting, dragging,
 # Simulate, time-to-Play) and checks the numbers against the targets and
 # the recorded baseline in tests/perf/baseline.json (a regression beyond
-# its margin fails the job). The reports are uploaded as artifacts; a
+# its margin fails the job - on the weekly and manual runs; on pull
+# requests misses are reported as warnings and the job passes, since
+# GitHub's runner CPUs vary). The reports are uploaded as artifacts; a
 # baseline is updated deliberately (docs/contributing/performance.md):
 #   python3 scripts/perf/perf.py --update-baseline report-linux.json
 #
@@ -93,7 +95,10 @@ jobs:
         if: always() && hashFiles('perf/report-linux.json') != ''
         run: |
           python3 scripts/perf/perf.py --table perf/report-linux.json >> "$GITHUB_STEP_SUMMARY" || true
-          python3 scripts/perf/perf.py --check perf/report-linux.json
+          # Pull requests: reported, never failed (the runner's CPU varies);
+          # the weekly and manual runs fail on a miss or a regression.
+          only=""; [ "${{ github.event_name }}" = "pull_request" ] && only="--report-only"
+          python3 scripts/perf/perf.py --check perf/report-linux.json $only
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:

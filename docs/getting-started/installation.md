@@ -48,12 +48,15 @@ template game and the editor with a large scene on
 - the **Android 14 (API 34) x86_64 emulator** with **2 cores and 2 GB** of
   RAM (arm64 games through its ARM translation, software GL).
 
-There each template game holds **60 fps** (95 frames in 100 under
-16.7 ms; 20 ms on the emulator, where frames wait for its 60 Hz display)
-and starts in under 3 seconds (6 on the emulator); the editor stays
+On the Linux runner's baseline CPU (an AMD EPYC 9V74 held to 2 cores)
+each template game holds **60 fps** (95 frames in 100 under 16.7 ms; 20 ms
+on the emulator, where frames wait for its 60 Hz display) and starts in under 3 seconds (6 on the emulator); the editor stays
 responsive with a 5000-node scene, a 400x400 tile map or 5000 live
 particles open (30 fps or better idle, 20 fps or better while selecting
-and dragging), starts in under 8 seconds and plays a game in under 4. On
+and dragging), starts in under 8 seconds and plays a game in under 4. GitHub's runners come with different CPUs: on the slowest
+seen (an AMD EPYC 7763) the same games take up to about 1.5x as long, and
+the busiest (the Dungeon, the Vector Character) come out at 17-20 ms (p95)
+rather than 60 fps. On
 the recommended machines the same numbers are many times better: an
 Apple M2 Pro plays every template at 1-2 ms a frame.
 
