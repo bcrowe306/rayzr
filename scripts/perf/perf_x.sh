@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # DEBUG(#331): temporary llvmpipe experiments (removed before merge).
 set -u
-mkdir -p perf "$RUNNER_TEMP/perf"; grep -m1 "model name" /proc/cpuinfo
+mkdir -p perf "$RUNNER_TEMP/perf"
 run() { # name env... -- templates...
   name=$1; shift
   envs=(); while [ "$1" != "--" ]; do envs+=("$1"); shift; done; shift
   env "${envs[@]}" PERF_TMP="$RUNNER_TEMP/perf" taskset -c 0,1 xvfb-run -a -s "-screen 0 1920x1080x24" \
-    python3 -u scripts/perf/perf.py --runner "$R" --reps 2 --setup x --out "perf/$name.json" "$@" > "perf/$name.log" 2>&1
+    python3 -u scripts/perf/perf.py --runner bin/perf/runner --reps 2 --setup x --out "perf/$name.json" "$@" > "perf/$name.log" 2>&1
   python3 - "$name" "perf/$name.json" <<'PY'
 import json, sys
 d = json.load(open(sys.argv[2]))["templates"]
@@ -29,13 +29,8 @@ for p in glob.glob("templates/vector_character/scenes/stage*.scene.json"):
     json.dump(d, open(p, "w"))
 PY
 }
-R=bin/perf/runner
-run new1 X=1 -- vector_character dungeon platformer hex visual_novel
-R=bin/perf/runner_base
-run base1 X=1 -- vector_character dungeon platformer hex visual_novel
-R=bin/perf/runner
-run new2 X=1 -- vector_character dungeon platformer hex visual_novel
-R=bin/perf/runner_base
-run base2 X=1 -- vector_character dungeon platformer hex visual_novel
-R=bin/perf/runner
-run new_noblit RAYZR_X_NOBLIT=1 -- vector_character platformer
+cp -r templates/vector_character /tmp/vc_orig
+run base X=1 -- vector_character dungeon platformer
+hide Backdrop Backdrop2; run nobackdrop X=1 -- vector_character
+rm -rf templates/vector_character; cp -r /tmp/vc_orig templates/vector_character
+hide Backdrop Backdrop2 Rig PepRig Thorns1 Thorns2 Goal; run novector X=1 -- vector_character
