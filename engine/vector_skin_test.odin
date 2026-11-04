@@ -232,3 +232,20 @@ test_vector_skin_subdivides_what_bends :: proc(t: ^testing.T) {
 	testing.expect(t, len(c.mesh.idx) / 3 > bent, "a warp bends rigid parts too: split everywhere")
 	testing.expectf(t, ends(&c.mesh) > rigidEnds * 4, "warped: the ends split too (%d)", ends(&c.mesh))
 }
+
+// #389: bent shapes adjust their colour in the mesh's shader - the CPU
+// copy of its maths (the immediate path) greys at saturation 0, keeps the
+// colour with no adjustment, and rotates the hue.
+@(test)
+test_vector_adjust_color :: proc(t: ^testing.T) {
+	near :: proc(a, b: [3]f32) -> bool {return abs(a.x - b.x) < 0.01 && abs(a.y - b.y) < 0.01 && abs(a.z - b.z) < 0.01}
+	orange := [3]f32{1, 0.6, 0.2}
+	testing.expect(t, near(Vector_AdjustColor(orange, VECTOR_NO_ADJUST), orange), "no adjustment keeps the colour")
+	g := Vector_AdjustColor(orange, {0, 1, 0})
+	testing.expectf(t, near(g, {g.x, g.x, g.x}), "saturation 0 is grey: %v", g)
+	testing.expectf(t, abs(g.x - (0.299 + 0.587 * 0.6 + 0.114 * 0.2)) < 0.01, "the grey keeps the brightness: %v", g)
+	h := Vector_AdjustColor({1, 0, 0}, {1, 1, 120})
+	testing.expectf(t, h.y > 0.9 && h.x < 0.1 && h.z < 0.1, "hue 120 turns red green: %v", h)
+	c := Vector_AdjustColor({0.6, 0.5, 0.4}, {1, 2, 0})
+	testing.expectf(t, near(c, {0.7, 0.5, 0.3}), "contrast 2 doubles the distance from mid grey: %v", c)
+}

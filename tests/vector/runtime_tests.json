@@ -204,6 +204,40 @@
   }
  },
  {
+  "name": "skinning with colour filters (#389): saturation 0 greys bent limbs and warped art like the unbent filter path; hue and contrast too (GPU shader)",
+  "project": "tests/vector/project",
+  "scene": "scenes/skin_filters.scene.json",
+  "frames": 6,
+  "expect": [
+   [
+    "GreyLimb",
+    "exists",
+    "==",
+    true
+   ]
+  ],
+  "golden": {
+   "image": "tests/vector/expected/skin_filters.png",
+   "max_pixels": 0.02,
+   "threshold": 64
+  }
+ },
+ {
+  "name": "skinning with colour filters (#389): the immediate path adjusts the same on the CPU",
+  "project": "tests/vector/project",
+  "scene": "scenes/skin_filters.scene.json",
+  "frames": 6,
+  "env": {
+   "RAYZR_VECTOR_MODE": "immediate"
+  },
+  "expect": [],
+  "golden": {
+   "image": "tests/vector/expected/skin_filters.png",
+   "max_pixels": 0.02,
+   "threshold": 64
+  }
+ },
+ {
   "name": "collision from vector art: rolling hills (Outline loops) carved from Lua (a circle and a polygon; paints kept), a star (Solid pieces), a crate shaped by its art, balls settling; a Path Follow on a ring's outline",
   "project": "tests/vector/project",
   "scene": "scenes/collide.scene.json",

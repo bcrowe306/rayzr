@@ -410,13 +410,16 @@ VectorShapeNode_Render :: proc(node: ^Node, ctx: ^GameContext, dt: f32) {
 	cache, offset, ok := VectorShapeNode_Mesh(v, Vector_ScreenPixel(v.globalScale))
 	if !ok do return
 	mul, add := vector_color_effect(v)
+	// (Saturation / contrast / hue in the mesh's shader: bent art has no
+	// filter texture - #389 - and a texture not made yet draws this way too.)
+	adjust := [3]f32{v.saturation, v.contrast, v.hue}
 	if VectorShapeNode_Deformed(v) {
 		if d, bent := VectorShapeNode_Deform(v, cache, offset); bent {
-			Vector_Cache_Draw(cache, v.globalPosition, v.globalRotation, v.globalScale, mul, offset, add, &d)
+			Vector_Cache_Draw(cache, v.globalPosition, v.globalRotation, v.globalScale, mul, offset, add, &d, adjust)
 			return
 		}
 	}
-	Vector_Cache_Draw(cache, v.globalPosition, v.globalRotation, v.globalScale, mul, offset, add)
+	Vector_Cache_Draw(cache, v.globalPosition, v.globalRotation, v.globalScale, mul, offset, add, adjust = adjust)
 }
 
 // vector_node_warp: the warp's corners and box (mesh space) - an asset
