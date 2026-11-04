@@ -325,7 +325,7 @@ SmartSnap_Begin :: proc(state: ^EditorState, pivot: bool) {
 		}
 	}
 	for n in mgr.nodes {
-		if n == nil || n == scene.rootNode || n.transient || !n.enabled || !n.renderable || n.typeId == e.CameraNode do continue
+		if n == nil || n == scene.rootNode || n.transient || !n.enabled || !e.Node_VisibleInTree(n) || n.typeId == e.CameraNode do continue
 		if Editor_ViewHidden(state, n) do continue
 		if !(pivot && n == state.selectedNode) && moving(mgr, n, roots) do continue
 		q, isHandle := Node_Bounds(state, n)

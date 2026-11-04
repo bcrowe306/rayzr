@@ -253,7 +253,7 @@ Lighting_Prepare :: proc(scene: ^Scene, cam: rl.Camera2D, w, h: i32) -> bool {
 	}
 
 	for n in scene.manager.nodes {
-		if n == nil || n.typeId != LightNode || !n.enabled do continue
+		if n == nil || n.typeId != LightNode || !n.enabled || !Node_VisibleInTree(n) do continue // (hidden: no light, #388)
 		l := cast(^LightNode)n
 		r := l.radius * max(abs(l.globalScale.x), abs(l.globalScale.y))
 		if (r <= 0 && l.kind != .Directional) || l.energy <= 0 do continue

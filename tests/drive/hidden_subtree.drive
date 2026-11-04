@@ -1,0 +1,25 @@
+# #388: Visible off hides the node and its whole subtree in the editor's
+# viewport, as in the game. The platformer's level: the pause menu (hidden;
+# its shade and buttons visible) isn't drawn over the level; a selected
+# hidden node keeps a faint outline; shown, its children draw.
+# drive: project templates/platformer
+wait 5
+key escape
+dblclick @asset:scenes/level1.scene.json
+wait 10
+hover @viewport
+key shift+home
+wait 1
+expect node:PauseMenu.visible == false
+expect node:Shade.visible == true
+expect node:Shade.drawn == false
+expect node:Resume.drawn == false
+screenshot level_menu_hidden
+click @hier:PauseMenu
+wait 1
+screenshot hidden_selected
+click @insp.visible
+wait 1
+expect node:PauseMenu.visible == true
+expect node:Shade.drawn == true
+screenshot menu_shown

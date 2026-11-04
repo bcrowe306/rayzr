@@ -232,6 +232,13 @@ Viewport_InScreenLayer :: proc(n: ^Node) -> bool {
 	return false
 }
 
+// Node_VisibleInTree: the node and every parent are visible (Visible off
+// hides a node and its whole subtree - #388; it still updates).
+Node_VisibleInTree :: proc "contextless" (n: ^Node) -> bool {
+	for p := n; p != nil; p = p.parent do if !p.renderable do return false
+	return true
+}
+
 // Node_EnabledInTree: the node and every parent are enabled.
 Node_EnabledInTree :: proc(n: ^Node) -> bool {
 	for p := n; p != nil; p = p.parent do if !p.enabled do return false
@@ -388,4 +395,15 @@ Script_RegisterViewportBindings :: proc(L: ^lua.State) {
 	lua.pushcfunction(L, lua_viewport_save_png)
 	lua.setfield(L, -2, "viewport_save_png")
 	Lua_SetDeprecated(L, lua_viewport_save_png, "save_png", "viewport_save_png")
+}
+
+// Node_HiddenWasDefault: a node that draws nothing and used to be made
+// hidden (Timer, Behavior Tree, GOAP Agent, Oscillator): a scene saved it
+// "visible": false, which since #388 would hide its children - it loads
+// visible (as Sound nodes, #217).
+Node_HiddenWasDefault :: proc(n: ^Node) -> bool {
+	switch n.typeId {
+	case TimerNode, BehaviorTreeNode, GoapNode, OscillatorNode: return true
+	}
+	return false
 }

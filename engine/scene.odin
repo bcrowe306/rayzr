@@ -494,7 +494,7 @@ update_tree :: proc(scene: ^Scene, node: ^Node, gameContext: ^GameContext, delta
 }
 
 Scene_RenderNodeHirearchy :: proc(scene: ^Scene, node: ^Node, gameContext: ^GameContext, deltaTime: f32, layer: RenderLayer) {
-	if node == nil || !node.enabled do return
+	if node == nil || !node.enabled || !node.renderable do return // (hidden: its subtree too, #388)
 	children := GetChildrenView(scene.manager, node)
 	if node.renderable && node.layer == layer {
 		if node.render != nil do node->render(gameContext, deltaTime)
@@ -695,6 +695,8 @@ node_as_tilemap :: #force_inline proc(n: ^Node) -> (^TileMapNode, bool) {
 @(private = "file")
 render_walk :: proc(c: ^Render_Collect, m: ^NodeManager, node: ^Node, z: i32, key: f32) {
 	if node == nil || !node.enabled do return
+	// Visible off hides the node and its whole subtree (#388; they still update).
+	if !node.renderable do return
 	if Render_HideEditorHidden && node.editorHidden do return
 	if node.typeId == ViewportNode && (cast(^ViewportNode)node).mode == .Children {
 		// Its children draw into its texture only (viewport_node.odin).

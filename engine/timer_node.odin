@@ -21,7 +21,7 @@ TimerNode_Init :: proc(timer: ^TimerNode) {
 	timer.onDestroy = TimerNode_Destroy
 	timer.start = TimerNode_Start
 	timer.setDuration = TimerNode_SetDuration
-	timer.renderable = false
+	timer.renderable = true // (draws nothing; visible so its children draw - #388)
 	timer.elapsed = 0
 }
 

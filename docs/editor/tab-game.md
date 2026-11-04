@@ -68,7 +68,7 @@ something changed).
 | Click the arrow | Folds or unfolds the node's children. |
 | Hover | The node's path and type. |
 | Power button | The node's **enabled** (it updates). |
-| Eye | The node's **visible** (it is drawn). |
+| Eye | The node's **visible** (off: it and its children aren't drawn). |
 
 Disabled or hidden nodes are dimmed. Right-click a node:
 

@@ -94,7 +94,7 @@ TouchButtonNode_Init :: proc(b: ^TouchButtonNode) {
 
 // TouchControl_Shown: the control draws and takes fingers.
 TouchControl_Shown :: proc(n: ^Node, always: bool) -> bool {
-	if !n.enabled || !n.renderable do return false
+	if !n.enabled || !Node_VisibleInTree(n) do return false
 	gc := n.gameContext
 	if always || gc == nil || gc.game == nil do return true
 	return gc.game.inEditor || gc.game.input.touch.everTouched
@@ -110,7 +110,7 @@ TouchControl_Claim :: proc(game: ^Game, pos: [2]f32) -> ^Node {
 		case TouchJoystickNode:
 			j := cast(^TouchJoystickNode)n
 			// (A finger lands after the first touch: shown or showing now.)
-			if !j.enabled || !j.renderable do continue
+			if !j.enabled || !Node_VisibleInTree(j) do continue
 			if j.floating {
 				h := j.area * 0.5 * abs_scale(j)
 				if abs(pos.x - j.globalPosition.x) <= h.x && abs(pos.y - j.globalPosition.y) <= h.y do return n
@@ -119,7 +119,7 @@ TouchControl_Claim :: proc(game: ^Game, pos: [2]f32) -> ^Node {
 			}
 		case TouchButtonNode:
 			b := cast(^TouchButtonNode)n
-			if !b.enabled || !b.renderable do continue
+			if !b.enabled || !Node_VisibleInTree(b) do continue
 			if dist2(pos, b.globalPosition) <= sq(b.radius * 1.15 * abs_scale(b).x) do return n
 		}
 	}

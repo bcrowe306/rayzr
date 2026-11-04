@@ -97,7 +97,7 @@ OscillatorNode_Init :: proc(o: ^OscillatorNode) {
 	o.rate = 1
 	o.pulseWidth = 0.5
 	o.autostart = true
-	o.renderable = false
+	o.renderable = true // (draws nothing; visible so its children draw - #388)
 	o.curve.points[0], o.curve.points[1], o.curve.points[2] = {0, 0}, {0.5, 1}, {1, 0}
 	o.curve.count = 3
 	o.mappings = make([dynamic]Osc_Mapping, o.allocator)

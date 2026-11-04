@@ -198,7 +198,7 @@ Vector_FiltersPrepare :: proc(scene: ^Scene, zoom: f32) {
 	if scene == nil || scene.manager == nil || !rl.IsWindowReady() do return
 	any := false
 	for n in scene.manager.nodes {
-		if n == nil || !n.enabled || n.typeId != VectorShapeNode do continue
+		if n == nil || !n.enabled || n.typeId != VectorShapeNode || !Node_VisibleInTree(n) do continue
 		v := cast(^VectorShapeNode)n
 		if !Vector_FiltersActive(v) {
 			if v.filter.rt.id != 0 do Vector_FilterRelease(v)

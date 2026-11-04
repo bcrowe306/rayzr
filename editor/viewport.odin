@@ -425,11 +425,16 @@ Viewport_DrawSceneBounds :: proc(state: ^EditorState, view: rl.Rectangle) {
 		isSelected := node == state.selectedNode || Editor_IsSelected(state, node)
 		if !state.showBounds && !isSelected do continue
 		if Editor_ViewHidden(state, node) do continue
+		// Visible off (it or a parent: the subtree isn't drawn, #388): only
+		// a selected node's outline, faint - it can still be found.
+		hidden := !e.Node_VisibleInTree(node)
+		if hidden && !isSelected do continue
 		q, isHandle := Node_Bounds(state, node)
 		// Off screen: not drawn (5000 selected nodes drew 20000 corner
 		// circles a frame, most of them outside the view - #331).
 		if !bounds_in_view(q, view) do continue
 		col := rl.Color{92, 141, 255, 255} if isSelected else rl.Color{140, 150, 170, 90}
+		if hidden do col.a = 100
 		th := (2.0 if isSelected else 1.0) / state.cameraZoom
 		for i in 0 ..< 4 {
 			rl.DrawLineEx(q[i], q[(i + 1) % 4], th, col)
@@ -865,7 +870,7 @@ Viewport_BoxSelect :: proc(state: ^EditorState, mn, mx: [2]f32, additive: bool) 
 	if state.activeScene == nil do return
 	if !additive do Editor_ClearSelection(state)
 	for node in state.activeScene.manager.nodes {
-		if node == nil || node == state.activeScene.rootNode || !node.enabled || !node.renderable || node.transient do continue
+		if node == nil || node == state.activeScene.rootNode || !node.enabled || !e.Node_VisibleInTree(node) || node.transient do continue
 		if Editor_NodeLocked(state, node) || Editor_ViewLocked(state, node) || Editor_ViewHidden(state, node) do continue
 		q, _ := Node_Bounds(state, node)
 		bmn, bmx := q[0], q[0]
@@ -1144,7 +1149,7 @@ Viewport_PickNode :: proc(state: ^EditorState, worldPos: [2]f32) -> ^e.Node {
 	best, level: ^e.Node
 	bestLayer, bestRank := -1, -1
 	for node in state.activeScene.manager.nodes {
-		if node == nil || node == state.activeScene.rootNode || !node.enabled || !node.renderable do continue
+		if node == nil || node == state.activeScene.rootNode || !node.enabled || !e.Node_VisibleInTree(node) do continue
 		if Editor_ViewLocked(state, node) || Editor_ViewHidden(state, node) do continue
 		q, _ := Node_Bounds(state, node)
 		if !point_in_quad(worldPos, q) do continue
@@ -1250,7 +1255,7 @@ nodes_bounds :: proc(state: ^EditorState, onlySelected: bool) -> (mn, mx: [2]f32
 	for node in state.activeScene.manager.nodes {
 		if node == nil || node == state.activeScene.rootNode || node.typeId == e.CameraNode do continue
 		if onlySelected && !Editor_IsSelected(state, node) do continue
-		if !onlySelected && (!node.enabled || !node.renderable) do continue
+		if !onlySelected && (!node.enabled || !e.Node_VisibleInTree(node)) do continue
 		q, _ := Node_Bounds(state, node)
 		for p in q {
 			if !ok {

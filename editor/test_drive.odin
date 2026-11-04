@@ -1078,6 +1078,9 @@ Drive_Query :: proc(state: ^EditorState, q: string) -> (string, bool) {
 		case "scale": return fmt.tprintf("%.2f,%.2f", n.scale.x, n.scale.y), true
 		case "origin": return fmt.tprintf("%.2f,%.2f", n.pivot.x, n.pivot.y), true
 		case "visible": return "true" if n.renderable else "false", true
+		case "drawn": // (the viewport draws it: it and every parent visible, #388)
+			for b in e.Scene_CollectRenderables(state.activeScene) do for x in b do if x == n do return "true", true
+			return "false", true
 		case "material":
 			// "<shader> <blend>" ("" without a material)
 			if n.material == nil do return "", true

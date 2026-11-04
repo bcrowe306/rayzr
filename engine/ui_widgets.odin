@@ -278,7 +278,7 @@ UI_IsBlockedByActiveDropdown :: proc(gameContext: ^GameContext, self: rawptr, mo
 // ============================================================================
 
 UI_IsFocusable :: proc(elem: ^UIElement) -> bool {
-	if elem == nil || !elem.enabled || !elem.renderable || !elem.keyboardFocus do return false
+	if elem == nil || !elem.enabled || !Node_VisibleInTree(elem) || !elem.keyboardFocus do return false
 	return UI_IsFocusableType(elem.widgetType)
 }
 
@@ -295,17 +295,17 @@ UI_IsFocusableType :: proc(t: UIWidgetType) -> bool {
 }
 
 // UI_TakesInput: a widget reacts to the mouse and keys only while it's shown
-// (set_visible(false) hid it but left it clickable, #228); hidden, it lets
-// go of hover and focus.
+// (set_visible(false) hid it but left it clickable, #228) - also a hidden
+// parent's (#388); hidden, it lets go of hover and focus.
 UI_TakesInput :: proc(elem: ^UIElement) -> bool {
-	if elem.enabled && elem.renderable do return true
+	if elem.enabled && Node_VisibleInTree(elem) do return true
 	elem.hovered = false
 	elem.focused = false
 	return false
 }
 
 UI_CollectFocusableElementsRec :: proc(scene: ^Scene, node: ^Node, outList: ^[dynamic]^UIElement) {
-	if node == nil || !node.enabled do return
+	if node == nil || !node.enabled || !node.renderable do return // (a hidden subtree: none, #388)
 	if node.isUI {
 		elem := cast(^UIElement)node
 		if elem.widgetType != .None && UI_IsFocusable(elem) {
@@ -352,6 +352,7 @@ UI_FocusNode :: proc(game: ^Game, node: ^Node) -> string {
 	if !node.renderable do return "is hidden"
 	for p := node.parent; p != nil; p = p.parent {
 		if !p.enabled do return fmt.tprintf("is under a disabled node (%s)", p.name)
+		if !p.renderable do return fmt.tprintf("is under a hidden node (%s)", p.name)
 	}
 	scene := ui_scene_of(game, node)
 	if scene == nil || node.removing do return "is not in a running scene"
@@ -1437,7 +1438,7 @@ UI_UpdateActiveDropdownOverlay :: proc(gameContext: ^GameContext) {
 	if gameContext.game.activeDropdown == nil do return
 
 	dd := cast(^UIDropdownNode)gameContext.game.activeDropdown
-	if !dd.isOpen || !dd.enabled || !dd.renderable {
+	if !dd.isOpen || !dd.enabled || !Node_VisibleInTree(dd) {
 		dd.isOpen = false
 		gameContext.game.activeDropdown = nil
 		return
@@ -1498,7 +1499,7 @@ UI_RenderActiveDropdownOverlay :: proc(gameContext: ^GameContext) {
 	if gameContext.game.activeDropdown == nil do return
 
 	dd := cast(^UIDropdownNode)gameContext.game.activeDropdown
-	if !dd.isOpen || !dd.enabled || !dd.renderable do return
+	if !dd.isOpen || !dd.enabled || !Node_VisibleInTree(dd) do return
 
 	popupRect := UIDropdownNode_GetPopupRect(dd)
 	scaled := UI_BeginScaled(dd) // (with its UI-scale transform)

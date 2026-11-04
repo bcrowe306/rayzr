@@ -59,7 +59,7 @@ At the right end of a row:
 
 | Icon | What it does |
 |---|---|
-| **Eye** | Show or hide the node (in the game too). |
+| **Eye** | Show or hide the node and its children (in the game too; hidden nodes keep running). A selected hidden node keeps a faint outline in the viewport. |
 | **Low-vision eye** | The node is hidden in the editor only. Click to show it. |
 | **Lock** | The node is locked in the viewport. Click to unlock. |
 | **Script** (blue) | The node has a script. Hover for its file, click to open it. |

@@ -296,8 +296,9 @@ end
 return PauseMenu
 ```
 
-`set_enabled(false)` hides the menu and its buttons and stops their
-clicks; `set_visible(false)` would only stop the drawing. Opening it,
+`set_enabled(false)` hides the menu and its buttons, stops their clicks
+and their updates; `set_visible(false)` would hide them and stop their
+clicks too, but keep them updating. Opening it,
 `ui_focus()` gives **Resume** the keyboard and gamepad focus (section 6),
 so Enter resumes straight away. **Quit** unpauses first - the pause
 belongs to the game, not to the scene - and goes back to the title screen
