@@ -33,15 +33,26 @@ function Level:on_generated(seed)
     self:start_cave()
 end
 
--- start_cave: the player on the start point, the coins counted.
+-- start_cave: the player on the start point, the coins counted - less any
+-- right by the start (they'd be picked up before the player moves).
 function Level:start_cave()
     local start = Scene.find_by_tag("start")[1]
+    local sx, sy
     if start then
         -- (The player sits at the scene's root: its position is a world one.)
-        self.player:set_position(start:get_global_position())
+        sx, sy = start:get_global_position()
+        self.player:set_position(sx, sy)
     end
     self.got = 0
-    self.total = #Scene.find_by_tag("coin")
+    self.total = 0
+    for _, coin in ipairs(Scene.find_by_tag("coin")) do
+        local x, y = coin:get_global_position()
+        if sx and math.abs(x - sx) < 24 and math.abs(y - sy) < 24 then
+            coin:destroy()
+        else
+            self.total = self.total + 1
+        end
+    end
     self:show_coins()
 end
 
