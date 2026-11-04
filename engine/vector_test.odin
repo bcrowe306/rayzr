@@ -589,3 +589,55 @@ test_vector_clip :: proc(t: ^testing.T) {
 	Vector_Tessellate(&tess, shapes, 1, &m)
 	testing.expect(t, covered(&m, {45, 0}) && !covered(&m, {0, 0}) && !covered(&m, {80, 0}), "a ring-shaped clip")
 }
+
+// #331: two-stop linear pad gradients within their 0..1 become vertex
+// colours (the plain shader; the same pixels); anything else keeps its
+// per-pixel gradient.
+@(test)
+test_vector_bake_linear_gradients :: proc(t: ^testing.T) {
+	tess: Vector_Tess
+	defer Vector_Tess_Destroy(&tess)
+	mesh_of :: proc(tess: ^Vector_Tess, m: ^Vector_Mesh, paint: Vector_Paint) {
+		s := Vector_Shape{style = VECTOR_STYLE_DEFAULT}
+		Vector_Path_Init(&s.path)
+		defer Vector_Path_Destroy(&s.path)
+		Vector_Rect(&s.path, {0, 0}, {100, 100})
+		s.style.fill = true
+		s.style.stroke = false
+		s.style.fillPaint = paint
+		shapes := []Vector_Shape{s}
+		Vector_Tessellate(tess, shapes, 1, m)
+	}
+	gradient_verts :: proc(m: ^Vector_Mesh) -> int {
+		n := 0
+		for g in m.gi do if g.y > 0 do n += 1
+		return n
+	}
+	red, blue := [4]u8{255, 0, 0, 255}, [4]u8{0, 0, 255, 255}
+	{
+		// A sky: top to bottom, two stops - baked.
+		m: Vector_Mesh
+		defer Vector_Mesh_Destroy(&m)
+		mesh_of(&tess, &m, Vector_LinearGradient({0, 0}, {0, 100}, {{0, red}, {1, blue}}))
+		testing.expect(t, len(m.verts) > 0, "tessellated")
+		testing.expect_value(t, gradient_verts(&m), 0)
+		testing.expect_value(t, len(m.gradients), 0) // (no texture: the plain shader)
+		for v, i in m.verts {
+			tt := v.y / 100
+			want := [2]f32{clamp(255 * (1 - tt), 0, 255), clamp(255 * tt, 0, 255)}
+			col := m.cols[i]
+			testing.expectf(t, abs(f32(col.r) - want[0]) <= 1 && abs(f32(col.b) - want[1]) <= 1 && col.g == 0, "vertex %v: %v (want r %v b %v)", v, col, want[0], want[1])
+		}
+		testing.expect(t, covered(&m, {50, 50}), "drawn")
+	}
+	kept :: proc(t: ^testing.T, tess: ^Vector_Tess, paint: Vector_Paint, what: string) {
+		m: Vector_Mesh
+		defer Vector_Mesh_Destroy(&m)
+		mesh_of(tess, &m, paint)
+		testing.expectf(t, gradient_verts(&m) == len(m.verts) && len(m.gradients) == 1, "%s: per pixel (%d of %d gradient vertices)", what, gradient_verts(&m), len(m.verts))
+	}
+	kept(t, &tess, Vector_LinearGradient({0, 0}, {0, 100}, {{0, red}, {0.5, {0, 255, 0, 255}}, {1, blue}}), "three stops")
+	kept(t, &tess, Vector_LinearGradient({0, 0}, {0, 50}, {{0, red}, {1, blue}}), "padded past its end")
+	kept(t, &tess, Vector_LinearGradient({0, 0}, {0, 100}, {{0, red}, {1, blue}}, .Reflect), "reflect")
+	kept(t, &tess, Vector_RadialGradient({50, 50}, 50, {{0, red}, {1, blue}}), "radial")
+}

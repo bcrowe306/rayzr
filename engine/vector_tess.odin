@@ -144,6 +144,7 @@ Vector_Tessellate :: proc(t: ^Vector_Tess, shapes: []Vector_Shape, pixel: f32, m
 		}
 	}
 	mesh.curPaint = nil
+	Vector_MeshBakeLinearGradients(mesh)
 	if len(mesh.verts) > 0 {
 		b := [4]f32{max(f32), max(f32), min(f32), min(f32)}
 		for v in mesh.verts {
@@ -152,6 +153,56 @@ Vector_Tessellate :: proc(t: ^Vector_Tess, shapes: []Vector_Shape, pixel: f32, m
 		}
 		mesh.bounds = b
 	}
+}
+
+// Vector_MeshBakeLinearGradients turns gradient vertices into plain
+// coloured ones wherever that draws the same: a linear, pad gradient whose
+// baked row is a straight blend of its two ends (two stops: most SVG
+// skies and hills), every vertex of it within the gradient's 0..1 (a
+// little past for the edge fringe). The colour is linear in t and t is
+// linear across a triangle, so the vertex colours interpolate to the same
+// pixels (within two levels of rounding) - and a mesh left with no gradient
+// vertices draws through the plain shader (vector_mesh.odin): no texture
+// look-up and spread maths per pixel, which software GL pays for every
+// pixel of a fill (#331). Rows no vertex uses any more are dropped when
+// none is used.
+Vector_MeshBakeLinearGradients :: proc(m: ^Vector_Mesh) {
+	rows := len(m.gradients)
+	if rows == 0 do return
+	// Past 0..1 by this much (the fringe's outer vertices): extrapolated.
+	MARGIN :: 0.05
+	ok := make([]bool, rows, context.temp_allocator)
+	for r in 0 ..< rows {
+		row := &m.gradients[r]
+		ok[r] = true
+		check: for i in 0 ..< 256 {
+			for ch in 0 ..< 4 {
+				want := f32(row[0][ch]) + (f32(row[255][ch]) - f32(row[0][ch])) * f32(i) / 255
+				if abs(f32(row[i][ch]) - want) > 1 {ok[r] = false; break check}
+			}
+		}
+	}
+	for g, v in m.gi do if g.y > 0 {
+		r := clamp(int(g.x), 0, rows - 1)
+		mode := int(g.y + 0.5) - 1
+		t := m.gc[v].x
+		if mode != 0 || t < -MARGIN || t > 1 + MARGIN do ok[r] = false // (radial, reflect / repeat, past the ends)
+	}
+	used := 0
+	for &g, v in m.gi do if g.y > 0 {
+		r := clamp(int(g.x), 0, rows - 1)
+		if !ok[r] {used += 1; continue}
+		a, b := m.gradients[r][0], m.gradients[r][255]
+		t := m.gc[v].x
+		c: [4]u8
+		for ch in 0 ..< 4 do c[ch] = u8(clamp(f32(a[ch]) + (f32(b[ch]) - f32(a[ch])) * t + 0.5, 0, 255))
+		// (As the shader: the gradient's colour, its alpha times the vertex's coverage / opacity.)
+		c.a = u8((u32(c.a) * u32(m.cols[v].a) + 127) / 255)
+		m.cols[v] = c
+		m.gc[v] = {}
+		g = {}
+	}
+	if used == 0 do clear(&m.gradients)
 }
 
 @(private = "file")
