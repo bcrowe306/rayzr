@@ -576,12 +576,25 @@ lua_ldtk_get_int_grid_values :: proc "c" (L: ^lua.State) -> c.int {
 	def := Ldtk_GetLayerDefByName(ln.project, name)
 	if def == nil do return 1
 	for v, i in def.intGridValues {
-		lua.createtable(L, 0, 4)
+		lua.createtable(L, 0, 6)
 		set_int(L, "value", v.value)
 		set_str(L, "identifier", v.identifier)
 		push_color(L, {v.color.r, v.color.g, v.color.b, v.color.a})
 		lua.setfield(L, -2, "color")
-		set_str(L, "collision", LdtkCollisionType_Name(LdtkLevelNode_CollisionRule(ln, name, v.value).type))
+		rule := LdtkLevelNode_CollisionRule(ln, name, v.value)
+		set_str(L, "collision", LdtkCollisionType_Name(rule.type))
+		// The collision layers and mask its colliders are on (1-16; #405).
+		cat, mask := LdtkLevelNode_RuleLayers(ln, rule)
+		for set, k in ([]CollisionLayerSet{cat, mask}) {
+			lua.newtable(L)
+			n := 0
+			for l in CollisionLayer do if l in set {
+				n += 1
+				lua.pushinteger(L, lua.Integer(int(l) + 1))
+				lua.rawseti(L, -2, lua.Integer(n))
+			}
+			lua.setfield(L, -2, "layers" if k == 0 else "mask")
+		}
 		lua.rawseti(L, -2, lua.Integer(i + 1))
 	}
 	return 1

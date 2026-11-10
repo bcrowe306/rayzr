@@ -47,6 +47,7 @@ project instead of the demo project (the tutorials' drives,
 | `sound_effects.drive` | A Sound Effect with two sounds (the list's Add Sound; one imported), Random mode showing weights, the preview by mode and a row's own, Pitch Random set, reordered by dragging, one removed (saved as a single `audio` again). |
 | `properties_tab.drive` | The Inspector's Properties tab: a property added to a node with no script (one made; the node at the new default), a resource property with its class picked (then a resource picked in the Inspector), a rename in Edit, Remove (asks; undo restores). |
 | `ldtk_entity_icons.drive` | An LDtk level's entities drawn in the scene viewport (icons, else their boxes in their colour) with Draw Entity Tiles off. |
+| `ldtk_collision_layers.drive` | An LDtk level's collision layers and mask (#405): the default in the Inspector and on the LDtk tab's Collision page, an IntGrid value's own layers and mask, back to the level default (undo), saved with the scene. |
 | `file_browser.drive` | The bottom panel's Files tab (View > File Browser): a typed path, history (back / forward / up), a bookmark; image, sound (play / stop) and text previews; a search through sub-folders, the type filter; Load by type, a taken name skipped / replaced, into a chosen folder, several at once, a row dragged onto Assets; switching to another tab stops a playing sound. |
 | `assets.drive` | Asset folders collapse/expand (folder icons); the Scenes folder's + creates a scene. |
 | `code_shortcuts.drive` | Zed-style code editing: auto-closing pairs, line operations, multi-cursor, find/replace, go to line, LSP rename (with its preview: Apply) and format, font size, Go to File, reopen tab, command palette, Keyboard Shortcuts window. |
@@ -254,7 +255,8 @@ Queries:
   (Import Results open), `import.messages` (one `<file>: <status> <path> <message>` line each), `import.dialog`
 - `ldtk.node`, `ldtk.level`, `ldtk.world`, `ldtk.world-mode`, `ldtk.active-levels`, `ldtk.page`, `ldtk.rules`,
   `ldtk.link-rules`, `ldtk.mapping:<Entity>` (`auto` / `component <path>` / `node` / `none`),
-  `ldtk.collision:<Layer>:<value>`, `ldtk.layer-visible:<Layer>`, `ldtk.focus`, `ldtk.spawned`, `ldtk.links` (of the
+  `ldtk.collision:<Layer>:<value>`, `ldtk.collision-layers:<Layer>:<value>` (`default 1/all`, `own 2,3/1,4`),
+  `ldtk.default-layers` (`1/all`), `ldtk.layer-visible:<Layer>`, `ldtk.focus`, `ldtk.spawned`, `ldtk.links` (of the
   LDtk tab's level)
 - `shape.edit` (shape editing on), `shape:<Node>:<index>:<field>` with field `type offset size radius rotation
   vertices points count`; shape handles are items `shape<i>.<Kind><n>` (Move, Rotate, Radius, Edge 0-3,

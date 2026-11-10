@@ -82,6 +82,9 @@ can also hold components - coins, enemies, spikes - one per cell.
   body child named `<Name>_Colliders`, with one box per horizontal run of
   painted tiles (isometric: one slanted shape per run; staggered and hex:
   one per cell, the cell's shape). Its colliders also cast [Light](LightNode.md) shadows.
+  They are on the map's **Category Layers** and collide with its **Mask
+  Layers** (Node tab; Layer 1 and everything by default), like a physics
+  body's shapes.
   They are not saved and aren't there while you edit.
 - **Animated tiles**: pick a tile in the Tile Map tab, then the film
   button next to its number (**Animate**). In the **Tile Animation**
