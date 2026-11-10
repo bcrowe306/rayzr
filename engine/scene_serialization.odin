@@ -107,13 +107,16 @@ write_bool :: proc(w: ^Json_Writer, b: bool) {
 
 // asset_rel makes a resolved disk path relative to the project directory so
 // saved scenes stay portable (and work from a .rayzr package).
-@(private = "file")
 asset_rel :: proc(node: ^Node, path: string) -> string {
 	p := strings.trim_prefix(path, "./")
 	if node != nil && node.gameContext != nil && node.gameContext.game != nil {
-		dir := strings.trim_suffix(node.gameContext.game.assetManager.projectDir, "/")
-		if dir != "" && strings.has_prefix(p, dir) && len(p) > len(dir) && p[len(dir)] == '/' {
-			return p[len(dir) + 1:]
+		// (Compared with / on every platform: a Windows path resolved from
+		// the project has \ - it was saved absolute, #293.)
+		dir, _ := strings.replace_all(node.gameContext.game.assetManager.projectDir, "\\", "/", context.temp_allocator)
+		dir = strings.trim_suffix(dir, "/")
+		pn, _ := strings.replace_all(p, "\\", "/", context.temp_allocator)
+		if dir != "" && strings.has_prefix(pn, dir) && len(pn) > len(dir) && pn[len(dir)] == '/' {
+			return pn[len(dir) + 1:]
 		}
 	}
 	return p
@@ -507,6 +510,22 @@ write_node :: proc(w: ^Json_Writer, node: ^Node, manager: ^NodeManager) {
 				Json_Float(w, c.curve.points[i].x)
 				strings.write_string(&w.sb, ", ")
 				Json_Float(w, c.curve.points[i].y)
+				strings.write_byte(&w.sb, ']')
+			}
+			strings.write_byte(&w.sb, ']')
+		}
+		// Regions of the texture (#401): [[x, y, w, h], ...] when set.
+		if rg := &pen.emitter.regions; rg.count > 0 {
+			Json_Key(w, "particle_regions", &first)
+			strings.write_byte(&w.sb, '[')
+			for i in 0 ..< rg.count {
+				r := rg.rects[i]
+				if i > 0 do strings.write_string(&w.sb, ", ")
+				strings.write_byte(&w.sb, '[')
+				Json_Float(w, r.x); strings.write_string(&w.sb, ", ")
+				Json_Float(w, r.y); strings.write_string(&w.sb, ", ")
+				Json_Float(w, r.width); strings.write_string(&w.sb, ", ")
+				Json_Float(w, r.height)
 				strings.write_byte(&w.sb, ']')
 			}
 			strings.write_byte(&w.sb, ']')
@@ -1366,6 +1385,7 @@ read_node :: proc(scene: ^Scene, obj: json.Object, parent: ^Node, ctx: ^GameCont
 		for c in ([]struct {key: string, curve: ^ParticleCurve}{{"size_curve", &pen.emitter.sizeCurve}, {"alpha_curve", &pen.emitter.alphaCurve}, {"speed_curve", &pen.emitter.speedCurve}}) {
 			if arr, ok := sj_arr(obj, c.key); ok do ParticleCurve_FromJSON(c.curve, arr)
 		}
+		if arr, ok := sj_arr(obj, "particle_regions"); ok do ParticleRegions_FromJSON(&pen.emitter.regions, arr)
 		if stops, ok := sj_arr(obj, "color_ramp"); ok && len(stops) >= 1 {
 			ramp := &pen.emitter.colorRamp
 			ramp.count = 0

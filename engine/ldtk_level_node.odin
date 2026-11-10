@@ -24,7 +24,9 @@ import rl "vendor:raylib"
 //     (passable from below) or Trigger (an AreaNode raising body_entered /
 //     body_exited), with friction and restitution. Neighbouring cells with
 //     the same rule merge into a few large boxes. Without rules, the legacy
-//     collisionLayer + solidValues settings are used.
+//     collisionLayer + solidValues settings are used. Colliders are on the
+//     node's collision layers and mask (categoryLayers / maskLayers) unless
+//     a value's rule sets its own (#405: walls, platforms, water apart).
 //   - Entity mappings: what an LDtk entity spawns - Auto (the component
 //     components/<Identifier>.component.json if it exists; with Match
 //     Custom Nodes, else the project's custom node type of that name; else a
@@ -55,6 +57,10 @@ LdtkCollisionRule :: struct {
 	type:        LdtkCollisionType,
 	friction:    f32,
 	restitution: f32,
+	// Own collision layers and mask (#405); off: the node's.
+	customLayers:   bool,
+	categoryLayers: CollisionLayerSet,
+	maskLayers:     CollisionLayerSet,
 }
 
 LdtkSpawnMode :: enum {
@@ -108,6 +114,10 @@ LdtkLevelNode :: struct {
 	projectPath:         string,      // .ldtk file the project was loaded from (saved with the scene)
 	ownsProject:         bool,
 	enablePhysics:       bool `gui:"true"`,   // build colliders (collision rules)
+	// The colliders' layers and mask: the default for IntGrid values whose
+	// rule doesn't set its own (#405).
+	categoryLayers:      CollisionLayerSet `gui:"true"`,
+	maskLayers:          CollisionLayerSet `gui:"true"`,
 	spawnEntities:       bool `gui:"true"`,   // spawn entities when ready
 	parallax:            bool `gui:"true"`,   // LDtk layer parallax
 	drawBackground:      bool `gui:"true"`,
@@ -164,6 +174,8 @@ ldtk_node_init :: proc(node: ^LdtkLevelNode, scene: ^Scene, name: string) {
 	node.scene = scene
 	node.tintColor = rl.WHITE
 	node.enablePhysics = true
+	node.categoryLayers = DEFAULT_COLLISION_CATEGORIES
+	node.maskLayers = DEFAULT_COLLISION_MASK
 	node.collisionLayer = "Collisions"
 	node.solidValues = "1"
 	node.spawnEntities = true
@@ -461,17 +473,38 @@ LdtkLevelNode_SetCollisionRule :: proc(ln: ^LdtkLevelNode, rule: LdtkCollisionRu
 			if def.type != .IntGrid do continue
 			for v in def.intGridValues {
 				r := LdtkLevelNode_CollisionRule(ln, def.identifier, v.value)
-				if r.type != .None do append(&ln.collisionRules, LdtkCollisionRule{strings.clone(def.identifier, ln.allocator), v.value, r.type, r.friction, r.restitution})
+				if r.type != .None {
+					r.layer = strings.clone(def.identifier, ln.allocator)
+					append(&ln.collisionRules, r)
+				}
 			}
 		}
 	}
 	for &r in ln.collisionRules {
 		if r.layer == rule.layer && r.value == rule.value {
-			r.type, r.friction, r.restitution = rule.type, rule.friction, rule.restitution
+			layer := r.layer
+			r = rule
+			r.layer = layer
 			return
 		}
 	}
-	append(&ln.collisionRules, LdtkCollisionRule{strings.clone(rule.layer, ln.allocator), rule.value, rule.type, rule.friction, rule.restitution})
+	r := rule
+	r.layer = strings.clone(rule.layer, ln.allocator)
+	append(&ln.collisionRules, r)
+}
+
+// LdtkLevelNode_RuleLayers: the collision layers and mask a rule's
+// colliders are on (its own, else the node's).
+LdtkLevelNode_RuleLayers :: proc(ln: ^LdtkLevelNode, rule: LdtkCollisionRule) -> (category, mask: CollisionLayerSet) {
+	if rule.customLayers do return rule.categoryLayers, rule.maskLayers
+	return ln.categoryLayers, ln.maskLayers
+}
+
+// CollisionLayerSet_Names: "Layer1", "Layer3" (the stable names scenes save).
+CollisionLayerSet_Names :: proc(set: CollisionLayerSet, allocator := context.temp_allocator) -> []string {
+	out := make([dynamic]string, allocator)
+	for l in CollisionLayer do if l in set do append(&out, fmt.aprintf("%v", l, allocator = allocator))
+	return out[:]
 }
 
 @(private = "file")
@@ -531,6 +564,7 @@ LdtkLevelNode_BuildColliders :: proc(ln: ^LdtkLevelNode, ctx: ^GameContext, only
 		friction, restitution: f32,
 		value:                 int, // triggers: one area per value
 		layer:                 string,
+		category, mask:        CollisionLayerSet,
 	}
 	for lvl in ln.activeLevels {
 		off := LdtkLevelNode_LevelOffset(ln, lvl)
@@ -548,12 +582,13 @@ LdtkLevelNode_BuildColliders :: proc(ln: ^LdtkLevelNode, ctx: ^GameContext, only
 					k = -1
 					rule: LdtkCollisionRule
 					if overrideSolids != nil {
-						if slice.contains(overrideSolids, v) do rule = {layer.identifier, v, .Solid, DEFAULT_LDTK_FRICTION, DEFAULT_LDTK_RESTITUTION}
+						if slice.contains(overrideSolids, v) do rule = {layer = layer.identifier, value = v, type = .Solid, friction = DEFAULT_LDTK_FRICTION, restitution = DEFAULT_LDTK_RESTITUTION}
 					} else {
 						rule = LdtkLevelNode_CollisionRule(ln, layer.identifier, v)
 					}
 					if rule.type != .None {
-						m := Material{rule.type, rule.friction, rule.restitution, v if rule.type == .Trigger else -1, layer.identifier}
+						cat, mask := LdtkLevelNode_RuleLayers(ln, rule)
+						m := Material{rule.type, rule.friction, rule.restitution, v if rule.type == .Trigger else -1, layer.identifier, cat, mask}
 						for existing, mi in mats do if existing == m {k = mi; break}
 						if k < 0 {
 							append(&mats, m)
@@ -574,6 +609,8 @@ LdtkLevelNode_BuildColliders :: proc(ln: ^LdtkLevelNode, ctx: ^GameContext, only
 				shape := MakeBoxPhysicsShape(size.x, size.y, center, 0)
 				shape.friction = m.friction
 				shape.restitution = m.restitution
+				shape.categoryLayers = m.category
+				shape.maskLayers = m.mask
 				switch m.type {
 				case .None:
 				case .Solid:
@@ -1253,7 +1290,19 @@ Ldtk_WriteNodeConfig :: proc(w: ^Json_Writer, ln: ^LdtkLevelNode) {
 			if i > 0 do strings.write_string(sb, ", ")
 			strings.write_string(sb, "{\"layer\": ")
 			Json_String(w, r.layer)
-			fmt.sbprintf(sb, ", \"value\": %d, \"type\": \"%s\", \"friction\": %g, \"restitution\": %g}", r.value, LdtkCollisionType_Name(r.type), r.friction, r.restitution)
+			fmt.sbprintf(sb, ", \"value\": %d, \"type\": \"%s\", \"friction\": %g, \"restitution\": %g", r.value, LdtkCollisionType_Name(r.type), r.friction, r.restitution)
+			if r.customLayers {
+				// Own layers and mask (#405; absent: the node's).
+				for key, k in ([]string{"layers", "mask"}) {
+					fmt.sbprintf(sb, ", \"%s\": [", key)
+					for name, j in CollisionLayerSet_Names(r.categoryLayers if k == 0 else r.maskLayers) {
+						if j > 0 do strings.write_string(sb, ", ")
+						Json_String(w, name)
+					}
+					strings.write_byte(sb, ']')
+				}
+			}
+			strings.write_byte(sb, '}')
 		}
 		strings.write_byte(sb, ']')
 	}
@@ -1319,6 +1368,17 @@ Ldtk_WriteNodeConfig :: proc(w: ^Json_Writer, ln: ^LdtkLevelNode) {
 	}
 }
 
+// ldtk_layer_set: ["Layer1", "Layer3"] -> the set (unknown names skipped).
+@(private = "file")
+ldtk_layer_set :: proc(arr: json.Array) -> (set: CollisionLayerSet) {
+	for v in arr {
+		if s, ok := v.(json.String); ok {
+			if l, found := CollisionLayer_Parse(s); found do set += {l}
+		}
+	}
+	return
+}
+
 // Ldtk_ReadNodeConfig reads the "ldtk" object (and legacy properties) and
 // loads the project.
 Ldtk_ReadNodeConfig :: proc(ln: ^LdtkLevelNode, ldtkObj: json.Object, nodeObj: json.Object, projectPath: string) {
@@ -1342,6 +1402,13 @@ Ldtk_ReadNodeConfig :: proc(ln: ^LdtkLevelNode, ldtkObj: json.Object, nodeObj: j
 				friction = json_get_float(r, "friction", DEFAULT_LDTK_FRICTION),
 				restitution = json_get_float(r, "restitution", DEFAULT_LDTK_RESTITUTION),
 			})
+			rule := &ln.collisionRules[len(ln.collisionRules) - 1]
+			if cats, has := json_get_arr(r, "layers"); has {
+				rule.customLayers = true
+				rule.categoryLayers = ldtk_layer_set(cats)
+				rule.maskLayers = DEFAULT_COLLISION_MASK
+				if masks, hasMask := json_get_arr(r, "mask"); hasMask do rule.maskLayers = ldtk_layer_set(masks)
+			}
 		}
 	}
 	clear(&ln.entityMappings)

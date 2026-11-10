@@ -13,6 +13,7 @@ test_particle_sheet_frames :: proc(t: ^testing.T) {
 	ParticleEmitter_Init(&emitter)
 	defer ParticleEmitter_Destroy(&emitter)
 	emitter.sheetColumns, emitter.sheetRows = 2, 2
+	ParticleEmitter_ResolveFrames(&emitter, {texSize = {64, 64}})
 	p := Particle{age = 0.5, agePercent = 0.5, lifetime = 1, frameSeed = 7}
 
 	emitter.frameMode = .OverLifetime
@@ -25,6 +26,7 @@ test_particle_sheet_frames :: proc(t: ^testing.T) {
 	emitter.frameMode = .Random
 	testing.expect_value(t, Particle_Frame(&emitter, p), 3) // 7 % 4, fixed per particle
 	emitter.sheetColumns, emitter.sheetRows = 1, 1
+	ParticleEmitter_ResolveFrames(&emitter, {texSize = {64, 64}})
 	testing.expect_value(t, Particle_Frame(&emitter, p), 0)
 
 	// The frame's part of the texture.
@@ -32,6 +34,7 @@ test_particle_sheet_frames :: proc(t: ^testing.T) {
 	emitter.texture = &tex
 	emitter.localSpace = false
 	emitter.sheetColumns, emitter.sheetRows = 2, 2
+	ParticleEmitter_ResolveFrames(&emitter, {})
 	emitter.frameMode = .OverLifetime
 	p.shape, p.size, p.scale, p.alive = .Texture, {8, 8}, {1, 1}, true
 	p.agePercent = 0.99 // frame 3: bottom right

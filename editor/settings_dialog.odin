@@ -254,8 +254,10 @@ settings_save :: proc(state: ^EditorState) {
 		Editor_Log(state, .Error, "Failed to write %s/project.json", state.projectPath)
 		return
 	}
+	checksChanged := state.projectConfig.luaChecks != d.luaChecks
 	e.ProjectConfig_Destroy(&state.projectConfig)
 	state.projectConfig = e.ProjectConfig_Clone(d)
+	if checksChanged do Code_LuaChecksChanged(state) // .luarc.json + the language server (code_editor_lsp.odin)
 	e.Physics_SetLayerNames(state.projectConfig.collisionLayers[:])
 	state.game.physicsWorld.gravity = d.gravity
 	e.Transition_SetDefault(state.game, d.transition, d.transitionDuration, d.transitionEasing)
@@ -638,6 +640,13 @@ project_general :: proc(state: ^EditorState) {
 		imgui.Checkbox("##debug_draw", &d.debugDraw)
 		Drive_Item("settings.debug-draw")
 		UI_Tooltip("Draw collision shapes, joints and areas while the game runs (debugging). The editor's viewport shows them either way; scripts: Physics.set_debug_draw(false)")
+		UI_EndProps()
+	}
+	if UI_SectionHeader("Scripting", false) && UI_BeginProps("##scripting") {
+		UI_PropLabel("Lua Checks")
+		imgui.SetNextItemWidth(-1)
+		if k, changed := UI_Combo("settings.lua-checks", int(d.luaChecks), {"Relaxed", "Standard", "Strict"}); changed do d.luaChecks = e.Lua_Checks(k)
+		UI_Tooltip("How strictly the Code tab's language server (and VS Code, through the project's .luarc.json) checks the scripts.\nRelaxed: possible nils are hints, no whitespace or lowercase-global reports.\nStandard: lua-language-server's defaults (without trailing spaces).\nStrict: also unused and redefined locals and lowercase globals as warnings.\nA hand-written .luarc.json is left as it is.")
 		UI_EndProps()
 	}
 	if UI_SectionHeader("Developer Console", false) && UI_BeginProps("##console") {

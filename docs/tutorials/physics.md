@@ -96,7 +96,10 @@ collide with everything. In Crate Yard:
 | Coins and the float zone (Trigger Areas) | - | Player |
 
 So the coins notice the player and nothing else: a crate tumbling through
-a coin doesn't collect it. Scripts can change layers too:
+a coin doesn't collect it. Tile Maps and LDtk levels have **Category
+Layers** / **Mask Layers** too, for their generated colliders; an LDtk
+level can also give each IntGrid value its own (water on a layer of its
+own, say) in the LDtk tab's Collision page. Scripts can change layers too:
 `self.node:set_collision_layer("Props")`,
 `self.node:set_collision_mask("World", "Player")`.
 
@@ -285,6 +288,7 @@ FloatZone.properties = {
 ---@param body Node?
 function FloatZone:on_body_entered(body)
     if body and body:has_tag("player") then
+        ---@cast body CharacterMoverNode
         body:character_set_gravity_scale(self.gravity_scale)
         print("Floating")
     end
@@ -293,6 +297,7 @@ end
 ---@param body Node?
 function FloatZone:on_body_exited(body)
     if body and body:has_tag("player") then
+        ---@cast body CharacterMoverNode
         body:character_set_gravity_scale(1)
         print("Landed back in normal gravity")
     end
@@ -300,6 +305,10 @@ end
 
 return FloatZone
 ```
+
+`---@cast body CharacterMoverNode` tells the Code tab what the body is once
+it's known to be the player (a Character Mover): `body` is any node until
+then, and `character_set_gravity_scale` would be reported as unknown.
 
 An area also answers at any time: `area_is_overlapping()`,
 `area_get_overlap_count()`, `area_get_overlapping_nodes()`. Turn

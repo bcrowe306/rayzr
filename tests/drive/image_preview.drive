@@ -1,0 +1,90 @@
+# #399: double-click an image in Assets - a texture (with a slicing preset),
+# an Aseprite file, an SVG - and it opens in a tab beside the scene tabs,
+# the Viewport showing it: Fit / 1:1 / zoom, the pixel grid, the frames, the
+# info bar; a scene's tab shows the scene again; Cmd+W and x close a tab.
+exec mkdir -p $PROJECT/vectors $PROJECT/sprites
+exec cp assets/demo_project/textures/PlayerSheet.png $PROJECT/textures/sheet_zz.png
+exec cp tests/drive/fixtures/image_preview/sheet_zz.png.import.json $PROJECT/textures/sheet_zz.png.import.json
+exec cp tests/aseprite/fixtures/animation.aseprite $PROJECT/sprites/anim_zz.aseprite
+exec cp tests/vector/svg/figma_export.svg $PROJECT/vectors/card_zz.svg
+wait 5
+key escape
+expect imgpreview.active == 
+
+# A sprite sheet: its 4 x 12 slice shows as 48 frames.
+wait-until item:asset:textures/sheet_zz.png == visible timeout=600
+dblclick @asset:textures/sheet_zz.png
+wait 2
+expect imgpreview.active == textures/sheet_zz.png
+expect imgpreview.tabs == 1
+expect imgpreview.size == 1344x4032
+expect imgpreview.frames == 48
+expect item:imgtab:textures/sheet_zz.png == visible
+expect item:imgpreview.canvas == visible
+expect item:imgpreview.info == visible
+screenshot sheet_fit
+click @imgpreview.actual
+expect imgpreview.zoom == 100
+click @imgpreview.zoom-in
+expect imgpreview.zoom == 125
+scroll @imgpreview.canvas 3
+wait 1
+expect imgpreview.zoom >= 200
+click @imgpreview.fit
+hover @imgpreview.canvas+0,0
+wait 1
+screenshot sheet_hover
+
+# An Aseprite file: its 8 frames on one sheet, pixel art enlarged.
+dblclick @asset:sprites/anim_zz.aseprite
+wait 2
+expect imgpreview.active == sprites/anim_zz.aseprite
+expect imgpreview.tabs == 2
+expect imgpreview.frames == 8
+expect imgpreview.zoom >= 400
+screenshot aseprite_frames
+click @imgpreview.frames
+screenshot aseprite_no_frames
+
+# An SVG: rendered at 2x, no frames.
+dblclick @asset:vectors/card_zz.svg
+wait 2
+expect imgpreview.active == vectors/card_zz.svg
+expect imgpreview.tabs == 3
+expect imgpreview.frames == 0
+expect imgpreview.error == 
+click @imgpreview.actual
+expect imgpreview.zoom == 100
+screenshot svg
+
+# The scene's tab shows the scene; the image's tab the image again.
+click @scenetab:scenes/main.scene.json
+wait 2
+expect imgpreview.active == 
+expect item:viewport == visible
+click @imgtab:textures/sheet_zz.png
+wait 2
+expect imgpreview.active == textures/sheet_zz.png
+# Double-clicking an open image switches to its tab (no second tab).
+dblclick @asset:vectors/card_zz.svg
+wait 2
+expect imgpreview.active == vectors/card_zz.svg
+expect imgpreview.tabs == 3
+
+# Cmd+W closes the image's tab, not the scene's; then the rest.
+key cmd+w
+wait 2
+expect imgpreview.tabs == 2
+expect scene == scenes/main.scene.json
+rclick @imgtab:sprites/anim_zz.aseprite
+click @ctx:imgtab-close
+wait 2
+expect imgpreview.tabs == 1
+click @imgtab:textures/sheet_zz.png
+wait 1
+key cmd+w
+wait 2
+expect imgpreview.tabs == 0
+expect imgpreview.active == 
+expect item:viewport == visible
+screenshot closed

@@ -244,6 +244,7 @@ Asset_ContextMenu :: proc(state: ^EditorState, rel: string) {
 			if menu(ICON_FA_GLOBE, "Make Global", "make-global") do Editor_SetScriptGlobal(state, rel, true)
 		}
 	case .Texture:
+		if menu(ICON_FA_EYE, "Preview", "preview-image") do ImagePreview_Open(state, rel)
 		if menu(ICON_FA_PLUS, "Add Sprite to Scene", "add-sprite", hasScene) do Editor_DropAsset(state, rel, state.cameraPos)
 		if menu(ICON_FA_IMAGE, "Use on Selected Sprite", "use-texture", sel != nil && (sel.typeId == e.TextureNode || sel.typeId == e.AtlasSpriteNode)) {
 			Editor_RecordUndo(state, "Set texture")
@@ -277,6 +278,7 @@ Asset_ContextMenu :: proc(state: ^EditorState, rel: string) {
 			e.LdtkLevelNode_SetProject(cast(^e.LdtkLevelNode)sel, e.Project_ResolveAssetPath(&state.game.gameContext, rel), "")
 		}
 	case .Aseprite:
+		if menu(ICON_FA_EYE, "Preview", "preview-image") do ImagePreview_Open(state, rel)
 		if menu(ICON_FA_PLUS, "Add Sprite to Scene", "add-aseprite", hasScene) do Editor_DropAsset(state, rel, state.cameraPos)
 		if menu(ICON_FA_PERSON_RUNNING, "Use on Selected Aseprite Node", "use-aseprite", sel != nil && sel.typeId == e.AsepriteNode) {
 			Editor_RecordUndo(state, "Set Aseprite file")
@@ -301,6 +303,7 @@ Asset_ContextMenu :: proc(state: ^EditorState, rel: string) {
 		}
 		if menu(ICON_FA_PEN_TO_SQUARE, "Edit in Aseprite", "edit-aseprite") do Aseprite_Edit(state, full)
 	case .Vector:
+		if menu(ICON_FA_EYE, "Preview", "preview-image") do ImagePreview_Open(state, rel)
 		if menu(ICON_FA_PLUS, "Add Vector Shape to Scene", "add-vector", hasScene) do Editor_DropAsset(state, rel, state.cameraPos)
 		if menu(ICON_FA_PAINTBRUSH, "Use on Selected Vector Shape", "use-vector", sel != nil && sel.typeId == e.VectorShapeNode) {
 			Editor_RecordUndo(state, "Set vector file")

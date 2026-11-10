@@ -3,6 +3,8 @@
 -- (faster on the stone walkway) and opens the door in the Walls map with E.
 
 ---@class Player : ScriptInstanceBase
+---@field path_map TileMapNode
+---@field walls TileMapNode
 local Player = {}
 
 -- The door's tile in textures/dungeon.png (tiles count left to right, then
@@ -21,8 +23,8 @@ Player.properties = {
 }
 
 function Player:ready()
-    self.path_map = self.path_map or Scene.find_node("Path") ---@type TileMapNode
-    self.walls = self.walls or Scene.find_node("Walls") ---@type TileMapNode
+    self.path_map = self.path_map or Scene.find_node("Path")
+    self.walls = self.walls or Scene.find_node("Walls")
     self.hint = Scene.find_node("Hint") ---@type TextNode
     self.sprite = self.node:get_child("Sprite")
 end

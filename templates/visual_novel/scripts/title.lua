@@ -37,7 +37,9 @@ function Title:ready()
     end
     -- The keys and a gamepad: up / down move between the buttons, Enter (A)
     -- presses one - from Continue when there's a save, else New game.
-    Scene.find_node(Save.has("autosave") and "Continue" or "NewGame"):ui_focus()
+    local first = Scene.find_node(Save.has("autosave") and "Continue" or "NewGame")
+    ---@cast first UIButtonNode
+    first:ui_focus()
     self:show_endings()
 
     -- Settings: the sliders show the saved values; a change is saved and used.

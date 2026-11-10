@@ -3,6 +3,7 @@ package engine
 import "core:fmt"
 import "core:strings"
 import "core:testing"
+import "core:unicode"
 
 // The per-class get_property / set_property declarations in engine_api.lua
 // (between the "node properties" markers): each class's property paths as
@@ -17,6 +18,8 @@ test_lua_node_properties_definitions :: proc(t: ^testing.T) {
 	ProcessSceneChange(&game.sceneManager, &game.gameContext)
 
 	sb := strings.builder_make(context.temp_allocator)
+	bigEnums = make(map[string]string, allocator = context.temp_allocator)
+	bigEnumOrder = make([dynamic]string, context.temp_allocator)
 	strings.write_string(&sb, "-- node properties begin (generated from the engine: lua_properties_definitions_test.odin)\n")
 	for info in NODE_TYPES {
 		n := Node_CreateByTypeName(scene, info.name)
@@ -73,6 +76,12 @@ test_lua_node_properties_definitions :: proc(t: ^testing.T) {
 		}
 		fmt.sbprintf(&sb, "function %s:set_property(path, value, y) end\n", cls)
 	}
+	// The long enums (the icon names), one alias each, a value per line:
+	// on one line LuaLS stops reading the class's annotations (#403).
+	for alias in bigEnumOrder {
+		fmt.sbprintf(&sb, "\n---@alias %s\n", alias)
+		for e in strings.split(bigEnums[alias], "\x00", context.temp_allocator) do fmt.sbprintf(&sb, "---| %q\n", e)
+	}
 	strings.write_string(&sb, "-- node properties end\n")
 	want := strings.to_string(sb)
 
@@ -105,6 +114,15 @@ lua_example_value :: proc(p: Node_Property) -> string {
 	return "nil"
 }
 
+// Enums longer than this are written as an alias (bigEnums: alias -> the
+// values joined by NULs, in bigEnumOrder).
+@(private = "file")
+BIG_ENUM :: 64
+@(private = "file")
+bigEnums: map[string]string
+@(private = "file")
+bigEnumOrder: [dynamic]string
+
 // lua_prop_type: the Lua type of a property's value ("" = not scriptable).
 @(private = "file")
 lua_prop_type :: proc(p: Node_Property) -> string {
@@ -117,8 +135,27 @@ lua_prop_type :: proc(p: Node_Property) -> string {
 	case .String: return "string"
 	case .String_List: return "string[]"
 	case .Enum:
+		values := Property_EnumNames(p)
+		if len(values) > BIG_ENUM {
+			// An alias named after the property ("icon" -> IconName).
+			key := strings.join(values, "\x00", context.temp_allocator)
+			for alias, k in bigEnums do if k == key do return alias
+			base := Property_SnakeName(p.name)
+			sb := strings.builder_make(context.temp_allocator)
+			upper := true
+			for ch in base {
+				if ch == '_' {upper = true; continue}
+				strings.write_rune(&sb, unicode.to_upper(ch) if upper else ch)
+				upper = false
+			}
+			alias := fmt.tprintf("%sName", strings.to_string(sb))
+			if alias in bigEnums do alias = fmt.tprintf("%s%d", alias, len(bigEnums) + 1)
+			bigEnums[alias] = key
+			append(&bigEnumOrder, alias)
+			return alias
+		}
 		names := make([dynamic]string, context.temp_allocator)
-		for e in Property_EnumNames(p) do append(&names, fmt.tprintf("%q", e))
+		for e in values do append(&names, fmt.tprintf("%q", e))
 		return strings.join(names[:], "|", context.temp_allocator)
 	case .Bit_Set:
 	}

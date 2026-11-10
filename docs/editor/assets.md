@@ -130,9 +130,10 @@ the Code tab with unsaved edits must be saved before it can move.
 | Component | Adds an instance at the centre of the view. |
 | Custom node | Adds one at the centre of the view. |
 | Script, shader | Opens it in the Code tab. |
+| Texture | Opens a preview in a tab beside the scene tabs ([Image previews](viewport.md#image-previews)). |
 | LDtk level | Adds an LDtk Level node at the centre of the view. |
-| Aseprite file | Opens it in Aseprite (Settings > General > Basic > **Aseprite**). |
-| SVG | Opens it in your vector app. |
+| Aseprite file | Opens a preview of its frames in a tab ([Image previews](viewport.md#image-previews)). **Edit in Aseprite** (right-click) opens it in Aseprite (Settings > General > Basic > **Aseprite**). |
+| SVG | Opens a preview in a tab ([Image previews](viewport.md#image-previews)). **Edit in Vector App** (right-click) opens it in your vector app. |
 | Level generator | Opens the Level Generator window. |
 
 ### Dragging into the viewport
@@ -162,11 +163,11 @@ The first items depend on the type; the rest are on every asset.
 | Component | **Edit Component**, **New Component...**, **Select All Instances**, **Add to Scene**, **Add as Child of Selected** |
 | Custom node | **Add to Scene**, **Add as Child of Selected**, **Edit Script**, **Edit Type** (its defaults as a node), **Edit Definition** (the `.node.json` as text), **New Type Based on This...**, **Change Base Type...** |
 | Script | **Edit Script**, **Attach to Selected Node**, **Make Global** / **Remove Global** |
-| Texture | **Add Sprite to Scene**, **Use on Selected Sprite**, **Slice Sprite Sheet...**, **Generate Normal Map...** (a normal map from the sprite's shape and brightness, for lighting), **Use as Tileset of Selected Tile Map** |
+| Texture | **Preview**, **Add Sprite to Scene**, **Use on Selected Sprite**, **Slice Sprite Sheet...**, **Generate Normal Map...** (a normal map from the sprite's shape and brightness, for lighting), **Use as Tileset of Selected Tile Map** |
 | Audio | **Add Sound to Scene**, **Add Music to Scene**, **Use on Selected Sound/Music** |
 | LDtk level | **Edit in Level Tab**, **Add Level to Scene**, **Open in LDtk**, **Use on Selected Level** |
-| Aseprite file | **Add Sprite to Scene**, **Use on Selected Aseprite Node**, **Use as Tileset of Selected Tile Map**, **Edit in Aseprite** |
-| SVG | **Add Vector Shape to Scene**, **Use on Selected Vector Shape**, **Edit in Vector App** |
+| Aseprite file | **Preview**, **Add Sprite to Scene**, **Use on Selected Aseprite Node**, **Use as Tileset of Selected Tile Map**, **Edit in Aseprite** |
+| SVG | **Preview**, **Add Vector Shape to Scene**, **Use on Selected Vector Shape**, **Edit in Vector App** |
 | Resource | **Edit Class Script**, **New Resource of This Class...** |
 | Shader | **Edit Shader**, **Use on Selected Node** |
 | Level generator | **Open in Level Generator** |

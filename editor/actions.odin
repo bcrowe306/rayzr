@@ -221,7 +221,7 @@ Actions_Init :: proc() {
 		Editor_SaveSettings()
 	}, checked = proc(s: ^EditorState) -> bool {return GlobalSettings.showTabBars}})
 	// Scene tabs (scene_tabs.odin).
-	add({id = "scene.close_tab", category = "Scene", label = "Close Scene Tab", chords = k(ch(.W, P)), scope = .Scene, run = proc(s: ^EditorState) {SceneTabs_RequestClose(s, s.activeScene)}, enabled = proc(s: ^EditorState) -> bool {return len(SceneTabs_Open()) > 1}})
+	add({id = "scene.close_tab", category = "Scene", label = "Close Scene Tab", chords = k(ch(.W, P)), scope = .Scene, run = proc(s: ^EditorState) {if ImagePreview_Active() != nil do ImagePreview_CloseActive(); else do SceneTabs_RequestClose(s, s.activeScene)}, enabled = proc(s: ^EditorState) -> bool {return ImagePreview_Active() != nil || len(SceneTabs_Open()) > 1}})
 	add({id = "scene.next_tab", category = "Scene", label = "Next Scene Tab", chords = k(ch(.PageDown, CT), ch(.Tab, CT), ch(.RightArrow, PA)), scope = .Scene, run = proc(s: ^EditorState) {SceneTabs_Cycle(s, 1)}})
 	add({id = "scene.prev_tab", category = "Scene", label = "Previous Scene Tab", chords = k(ch(.PageUp, CT), ch(.Tab, Mods{.Ctrl, .Shift}), ch(.LeftArrow, PA)), scope = .Scene, run = proc(s: ^EditorState) {SceneTabs_Cycle(s, -1)}})
 	// Colour vision preview: the viewport as seen with a colour vision deficiency (simulated).
@@ -315,6 +315,9 @@ Actions_Init :: proc() {
 	add({id = "code.font_bigger", category = "Code", label = "Increase Font Size", chords = k(ch(.Equal, P)), scope = .Code, run = proc(s: ^EditorState) {Code_CmdFontSize(s, 1)}, repeat = true})
 	add({id = "code.font_smaller", category = "Code", label = "Decrease Font Size", chords = k(ch(.Minus, P)), scope = .Code, run = proc(s: ^EditorState) {Code_CmdFontSize(s, -1)}, repeat = true})
 	add({id = "code.font_reset", category = "Code", label = "Reset Font Size", chords = k(ch(._0, P)), scope = .Code, run = proc(s: ^EditorState) {Code_CmdFontSize(s, 0)}})
+	add({id = "tool.format_scenes", category = "Tools", label = "Format Scene Files", scope = .Global, run = Fmt_Project, enabled = proc(s: ^EditorState) -> bool {return s.projectPath != ""}})
+	add({id = "tool.setup_merge", category = "Tools", label = "Set Up Scene Merging", scope = .Global, run = MergeScene_Setup, enabled = proc(s: ^EditorState) -> bool {return s.projectPath != ""}})
+	add({id = "tool.merge_conflicts", category = "Tools", label = "Merge Conflicts...", scope = .Global, run = MergeConflicts_Open, enabled = proc(s: ^EditorState) -> bool {return s.projectPath != ""}})
 	add({id = "tool.new_plugin", category = "Tools", label = "New Plugin...", scope = .Global, run = proc(s: ^EditorState) {Prompt_Open(.NewPlugin, "My Plugin")}})
 	add({id = "code.new_script", category = "Code", label = "New Script", scope = .Global, run = proc(s: ^EditorState) {NewScriptDialog_Open(s)}})
 	add({id = "nodes.new_component", category = "Scene", label = "New Component", scope = .Global, run = proc(s: ^EditorState) {NewComponentDialog_Open(s)}})

@@ -199,6 +199,8 @@ top-left. `tilemap_cell_at(x, y)` turns a world position into a cell,
 -- (faster on the stone walkway) and opens the door in the Walls map with E.
 
 ---@class Player : ScriptInstanceBase
+---@field path_map TileMapNode
+---@field walls TileMapNode
 local Player = {}
 
 -- The door's tile in textures/dungeon.png (tiles count left to right, then
@@ -217,8 +219,8 @@ Player.properties = {
 }
 
 function Player:ready()
-    self.path_map = self.path_map or Scene.find_node("Path") ---@type TileMapNode
-    self.walls = self.walls or Scene.find_node("Walls") ---@type TileMapNode
+    self.path_map = self.path_map or Scene.find_node("Path")
+    self.walls = self.walls or Scene.find_node("Walls")
     self.hint = Scene.find_node("Hint") ---@type TextNode
     self.sprite = self.node:get_child("Sprite")
 end
@@ -251,6 +253,10 @@ end
 
 return Player
 ```
+
+The two `---@field` lines say what the node properties hold - Tile Maps -
+so the Code tab completes and checks the `tilemap_` calls on them (a node
+property is any node otherwise).
 
 On a **Solid** map the colliders follow a `tilemap_set_tile` at the end of
 the frame, and path finding (`nav_find_path`) sees the change: walk up to

@@ -134,7 +134,8 @@ Code_CmdCodeActions :: proc(state: ^EditorState) {
 	if cm.lspState == .Ready && doc.isLua {
 		code_lsp_sync(doc)
 		diags := make([dynamic]lsp.Diagnostic, context.temp_allocator)
-		for d in code_diagnostics(doc) do if d.range.start.line <= p.line && d.range.end.line >= p.line do append(&diags, d)
+		// The server's own (not the game's runtime problems: code_runtime_diag.odin).
+		for d in code_diagnostics(doc) do if d.source != "game" && d.range.start.line <= p.line && d.range.end.line >= p.line do append(&diags, d)
 		col := code_u16_col(buf.buffer_line_str(b, p.line), p.col)
 		acts.seq = cm.client.code_action_seq
 		lsp.client_request_code_action(&cm.client, doc.uri, lsp.Range{start = {p.line, col}, end = {p.line, col}}, diags[:])

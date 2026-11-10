@@ -1,17 +1,19 @@
 {
- "type": "StaticBodyNode",
- "name": "StaticPlatform",
- "uid": "platf000",
- "shapes": [
-  {
-   "type": "Box",
-   "size": [
-    400,
-    32
-   ],
-   "density": 0,
-   "friction": 0.8,
-   "restitution": 0
+  "format": 1,
+  "type": "StaticBodyNode",
+  "name": "StaticPlatform",
+  "uid": "platf000",
+  "position": [0, 0],
+  "scale": [1, 1],
+  "rotation": 0,
+  "enabled": true,
+  "visible": true,
+  "layer": 0,
+  "shapes": [
+    {"type": "Box", "offset": [0, 0], "rotation": 0, "radius": 20, "size": [400, 32], "cornerRadius": 4, "point1": [-25, 0], "point2": [25, 0], "vertexCount": 4, "isLoop": false, "density": 0, "friction": 0.8, "restitution": 0, "rollingResistance": 0, "tangentSpeed": 0, "isSensor": false, "enableSensorEvents": true, "enableContactEvents": true, "enableHitEvents": false, "enablePreSolveEvents": false, "categoryLayers": ["Layer1"], "maskLayers": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8", "Layer9", "Layer10", "Layer11", "Layer12", "Layer13", "Layer14", "Layer15", "Layer16"], "groupIndex": 0}
+  ],
+  "properties": {
+    "debugColor": "#4ade80ff",
+    "oneWay": false
   }
- ]
 }

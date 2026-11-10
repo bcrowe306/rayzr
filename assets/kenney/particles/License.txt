@@ -1,0 +1,9 @@
+particles.png: cells from two Kenney packs (www.kenney.nl), resized and
+put on one sheet (scripts/templates/prep_kenney_particles.sh):
+  Particle Pack (2018) - smoke, dirt, stars, circle, light
+  Foliage Sprites (2020) - the leaves
+
+License: Creative Commons Zero, CC0
+http://creativecommons.org/publicdomain/zero/1.0/
+This content is free to use in personal, educational and commercial projects.
+Support Kenney by crediting Kenney or www.kenney.nl (not mandatory).

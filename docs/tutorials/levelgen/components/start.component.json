@@ -1,7 +1,13 @@
 {
- "type": "Node",
- "name": "Start",
- "tags": [
-  "start"
- ]
+  "format": 1,
+  "type": "Node",
+  "name": "Start",
+  "uid": "pm698ueh",
+  "position": [0, 0],
+  "scale": [1, 1],
+  "rotation": 0,
+  "enabled": true,
+  "visible": true,
+  "layer": 0,
+  "tags": ["start"]
 }

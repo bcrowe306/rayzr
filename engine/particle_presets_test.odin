@@ -2,6 +2,7 @@ package engine
 
 import "core:testing"
 import lua "lua54"
+import rl "vendor:raylib"
 
 // #130: presets give an emitter a whole look, replacing the last one's.
 
@@ -51,4 +52,36 @@ test_particle_presets :: proc(t: ^testing.T) {
 
 	_, known := ParticlePreset_Parse("EXPLOSION")
 	testing.expect(t, known, "names parse in any case")
+}
+
+// #401: sheet presets use cells of the particle sheet (the node's texture).
+@(test)
+test_particle_sheet_presets :: proc(t: ^testing.T) {
+	game := new(Game)
+	InitializeGame(game)
+	defer game->terminate()
+	scene := game->createScene("sheet", false)
+	pen := ParticleEmitterNode_Create(scene, "Leaves")
+	pen.gameContext = &game.gameContext
+	ProcessNodeQueues(scene.manager, &game.gameContext)
+	em := &pen.emitter
+	ParticleEmitterNode_ApplyPreset(pen, .Leaves)
+	testing.expect_value(t, pen.texturePath, PARTICLE_SHEET)
+	testing.expect_value(t, em.shape, ParticleShape.Texture)
+	testing.expect_value(t, em.frameSource, ParticleFrameSource.Regions)
+	testing.expect_value(t, em.frameMode, ParticleFrameMode.Random)
+	testing.expect_value(t, em.regions.count, 8)
+	ParticleEmitterNode_ApplyPreset(pen, .Sparkle)
+	testing.expect_value(t, em.regions.count, 6)
+	testing.expect_value(t, em.regions.rects[0], rl.Rectangle{0, 128, 64, 64}) // (row 2)
+	testing.expect(t, em.frameRandomStart, "sparkle: random start")
+	// Fire after it: the sheet stays (a texture stays), its look doesn't pile up.
+	ParticleEmitterNode_ApplyPreset(pen, .Fire)
+	testing.expect_value(t, pen.texturePath, PARTICLE_SHEET)
+	testing.expect(t, !em.frameRandomStart && !em.randomFlipX, "look reset")
+	p, known := ParticlePreset_Parse("smoke_puff")
+	testing.expect(t, known && p == .SmokePuff, "smoke_puff")
+	p, known = ParticlePreset_Parse("Smoke Puff")
+	testing.expect(t, known && p == .SmokePuff, "Smoke Puff")
+	testing.expect(t, !ParticlePreset_UsesSheet(.Fire) && ParticlePreset_UsesSheet(.Debris), "uses sheet")
 }

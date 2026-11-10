@@ -21,7 +21,7 @@ expect abs-file:$PROJECT/../Drive_Plat_Zq/project.json contains "name": "Drive P
 expect abs-file:$PROJECT/../Drive_Plat_Zq/project.json contains "jump"
 expect abs-file:$PROJECT/../Drive_Plat_Zq/template.json == 
 expect abs-file:$PROJECT/../Drive_Plat_Zq/README.md contains Platformer
-exec bin/rayzr --project $PROJECT/../Drive_Plat_Zq --frames 40 --hidden --dump-scene $SHOTS/plat.json
+exec bin/rayzr --project $PROJECT/../Drive_Plat_Zq --scene scenes/level1.scene.json --frames 40 --hidden --dump-scene $SHOTS/plat.json
 expect abs-file:$SHOTS/plat.json contains "type": "CharacterMoverNode"
 expect abs-file:$SHOTS/plat.json contains "name": "Level"
 
@@ -32,7 +32,7 @@ click @welcome.name
 key cmd+a
 type Drive Top Zq
 click @welcome.create
-exec bin/rayzr --project $PROJECT/../Drive_Top_Zq --frames 40 --hidden --dump-scene $SHOTS/top.json
+exec bin/rayzr --project $PROJECT/../Drive_Top_Zq --scene scenes/floor1.scene.json --frames 40 --hidden --dump-scene $SHOTS/top.json
 expect abs-file:$SHOTS/top.json contains "scripts/player.lua"
 expect abs-file:$SHOTS/top.json contains "DialogueNode"
 
@@ -43,7 +43,7 @@ click @welcome.name
 key cmd+a
 type Drive Shmup Zq
 click @welcome.create
-exec bin/rayzr --project $PROJECT/../Drive_Shmup_Zq --frames 40 --hidden --dump-scene $SHOTS/shmup.json
+exec bin/rayzr --project $PROJECT/../Drive_Shmup_Zq --scene scenes/stage1.scene.json --frames 40 --hidden --dump-scene $SHOTS/shmup.json
 expect abs-file:$SHOTS/shmup.json contains "name": "Spawner"
 
 click @menu:Help
@@ -53,7 +53,7 @@ click @welcome.name
 key cmd+a
 type Drive Puzzle Zq
 click @welcome.create
-exec bin/rayzr --project $PROJECT/../Drive_Puzzle_Zq --frames 40 --hidden --dump-scene $SHOTS/puzzle.json
+exec bin/rayzr --project $PROJECT/../Drive_Puzzle_Zq --scene scenes/puzzle.scene.json --frames 40 --hidden --dump-scene $SHOTS/puzzle.json
 expect abs-file:$SHOTS/puzzle.json contains "name": "Crate"
 
 click @menu:Help

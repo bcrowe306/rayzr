@@ -10,9 +10,16 @@ textures/ (Kenney CC0 art from assets/kenney/), a README.md and
 template.json (name, description, icon, order). Levels are drawn as text
 maps here and turned into TileMap data / nodes, so they're easy to change:
 edit, run this, open the template in the editor.
+
+The scene and component files are then rewritten as the editor saves them
+(`editor --fmt`, #293), so opening and saving a template in the editor
+doesn't rewrite the whole file: it needs the editor built (bin/editor, or
+RAYZR_EDITOR=<path>; `odin build editor -out:bin/editor`).
 """
+import subprocess
 import json
 import os
+import re
 import shutil
 import sys
 
@@ -235,7 +242,8 @@ GAME_GLOBALS = [{"name": "Game", "script": "scripts/game.lua"}]
 def game_scripts(t, levels, lives=3, score_name="Score", lower_is_better=False, level_word="Level", extra=False):
     """scripts/game.lua (the global Game, with this game's levels) and menu.lua.
     extra: scripts/<template>/game_extra.lua is added to game.lua (this game's
-    own lines: the title's best, the result's score)."""
+    own lines: the title's best, the result's score), in place of the common
+    functions it redefines."""
     cfg = "\n".join([
         "-- This game (make_templates.py writes it): its levels, in order; the lives a",
         "-- run starts with; what the score counts; whether a lower result is better;",
@@ -250,7 +258,13 @@ def game_scripts(t, levels, lives=3, score_name="Score", lower_is_better=False, 
         src = f.read().replace("--$CONFIG$", cfg)
     if extra:
         with open(os.path.join(SCRIPTS, t.id, "game_extra.lua")) as f:
-            src = src.replace("\nreturn Game\n", "\n" + f.read() + "\nreturn Game\n")
+            more = f.read()
+        # Its functions replace the common ones of the same name (with their
+        # comments): both would be a duplicate (lua-language-server's
+        # duplicate-set-field, #403).
+        for name in re.findall(r"^function Game:(\w+)\(", more, re.M):
+            src = re.sub(r"(?:^--[^\n]*\n)*^function Game:%s\(.*?^end\n\n?" % name, "", src, flags=re.M | re.S)
+        src = src.replace("\nreturn Game\n", "\n" + more + "\nreturn Game\n")
     t.write("scripts/game.lua", src)
     t.script("menu", src="common")
 
@@ -921,11 +935,11 @@ def visual_novel():
                 "pivot": [0.5, 1], "visible": visible, "texture": f"textures/{who}_idle.png"}
 
     def button(name, label, w=260, h=48, size=24, **extra):
-        return {"type": "UIButtonNode", "name": name, "layer": 8,
+        return {"type": "UIButtonNode", "name": name, "layer": 7,
                 "properties": {"size": [w, h], "text": label, "fontSize": size, "normalColor": PANEL,
                                "hoverColor": ACCENT, "borderColor": BORDER, "textColor": "#eef0f6ff", **extra}}
 
-    def column(name, pos, size, children, title=None, layer=8):
+    def column(name, pos, size, children, title=None, layer=7):
         props = {"size": list(size), "direction": "Vertical", "alignment": "Center", "spacing": 12,
                  "paddingTop": 16, "paddingBottom": 16, "drawBackground": title is not None,
                  "drawBorder": title is not None, "showHeader": False, "backgroundColor": PANEL, "borderColor": BORDER}
@@ -946,7 +960,7 @@ def visual_novel():
     camera = {"type": "CameraNode", "name": "Camera", "position": [640, 360], "properties": {"isCurrent": True}}
 
     # The story: stage, the box, the buttons under it, the backlog, the slots.
-    quick = {"type": "UIContainerNode", "name": "QuickMenu", "position": [452, 684], "layer": 8,
+    quick = {"type": "UIContainerNode", "name": "QuickMenu", "position": [452, 684], "layer": 7,
              "properties": {"size": [688, 32], "direction": "Horizontal", "alignment": "Center", "spacing": 8,
                             "drawBackground": False, "drawBorder": False, "showHeader": False},
              # (mouse only: the arrows and Enter stay the story's - keyboardFocus off)
@@ -955,7 +969,7 @@ def visual_novel():
                  ("SaveButton", "Save"), ("LoadButton", "Load"), ("TitleButton", "Title"))]}
     log = {"type": "Node", "name": "Log", "children": [
         column("LogPanel", (90, 40), (1100, 640), [], title="Backlog  (wheel / up / down to scroll)"),
-        label("LogText", "", (120, 96), size=22, align="Left", pivot=(0, 0), layer=8, maxWidth=1040, lineSpacing=1.3),
+        label("LogText", "", (120, 96), size=22, align="Left", pivot=(0, 0), layer=7, maxWidth=1040, lineSpacing=1.3),
         dict(button("LogClose", "Close", w=140, h=40, size=20), position=[1030, 624]),
     ]}
     story = [
@@ -967,14 +981,14 @@ def visual_novel():
          "properties": {"size": [1000, 180], "fontSize": 26, "padding": 22, "revealSpeed": 40,
                         "panelColor": PANEL, "borderColor": BORDER, "choiceColor": ACCENT, "advanceAction": "confirm"}},
         quick,
-        dict(label("Ending", "", (640, 300), size=64, layer=8, pivot=(0.5, 0.5), color="#1e2840ff"), visible=False),
-        label("Toast", "", (1260, 16), size=22, align="Right", pivot=(1, 0), layer=8),
+        dict(label("Ending", "", (640, 300), size=64, layer=7, pivot=(0.5, 0.5), color="#1e2840ff"), visible=False),
+        label("Toast", "", (1260, 16), size=22, align="Right", pivot=(1, 0), layer=7),
         log, slots,
     ]
     t.json("scenes/story.scene.json", scene("story", story, background=(20, 22, 30, 255)))
 
     # The title screen.
-    sliders = [{"type": "UISliderNode", "name": n, "layer": 8,
+    sliders = [{"type": "UISliderNode", "name": n, "layer": 7,
                 "properties": {"size": [520, 36], "label": l, "labelWidth": 170, "minValue": lo, "maxValue": hi,
                                "value": v, "defaultValue": v, "isInteger": n == "TextSpeed"}}
                for n, l, lo, hi, v in (("TextSpeed", "Text speed", 10, 120, 40), ("AutoDelay", "Auto delay (s)", 0.3, 4, 1.2),
@@ -1104,8 +1118,8 @@ def dungeon_room(rows, name, room, seconds, style, ink, selected):
         n["tilemap"]["tile_size"] = TILE
         n["properties"].update({"layout": "Isometric", "cellSize": [CW, CH], "tileOffset": OFFSET})
         if ysort:
-            n["ySort"] = True
-            n["ySortOffset"] = sort_offset
+            n["y_sort"] = True
+            n["y_sort_offset"] = sort_offset
         return n
 
     walk = imap("Walk", [[-1] * W for _ in range(H)], 1, tileset="")
@@ -1123,7 +1137,7 @@ def dungeon_room(rows, name, room, seconds, style, ink, selected):
         imap("Floor", floor, 1),
         walk,
         {"type": "Node", "name": "Cursor", "layer": 1, "script": {"path": "scripts/cursor.lua"}},
-        {"type": "Node", "name": "World", "ySort": True, "children": [
+        {"type": "Node", "name": "World", "y_sort": True, "children": [
             # (Walls sort at their cell's top: a back wall is behind whoever stands
             # in its cell; props at its middle: in front of whoever is behind.)
             imap("Walls", walls, 2, ysort=True, solid=True, sort_offset=-56),
@@ -1306,7 +1320,7 @@ def hex_island_scene(rows, n, limit):
         m["tilemap"]["tile_size"] = tile
         m["properties"].update({"layout": "HexPointy", "stagger": "Odd", "cellSize": [CW, CH], "tileOffset": offset})
         if ysort:
-            m["ySort"] = True
+            m["y_sort"] = True
         if not tileset:
             del m["tilemap"]["tileset"]
         return m
@@ -1318,7 +1332,7 @@ def hex_island_scene(rows, n, limit):
         hmap("Walk", [[-1] * W for _ in range(H)], "", [65, 89], 1, [0, 0]),
         {"type": "Node", "name": "Island", "layer": 1,
          "script": {"path": "scripts/island.lua", "properties": {"island": n, "step_limit": limit}}},
-        {"type": "Node", "name": "World", "ySort": True, "children": [
+        {"type": "Node", "name": "World", "y_sort": True, "children": [
             hmap("Objects", objects, "textures/hex_objects.png", [65, 107], 2, [0, -25], ysort=True),
             {"type": "Node", "name": "Explorer", "position": [sx, sy], "script": {"path": "scripts/explorer.lua"},
              "children": [{"type": "TextureNode", "name": "Sprite", "position": [0, 6], "pivot": [0.5, 1], "layer": 2,
@@ -1752,8 +1766,20 @@ def vector_character():
 TEMPLATES = {"platformer": platformer, "rpg": rpg, "shmup": shmup, "puzzle": puzzle, "adventure": adventure,
              "visual_novel": visual_novel, "dungeon": dungeon, "hex": hex_island, "vector_character": vector_character}
 
+def editor_binary():
+    """The editor that formats the files (--fmt): RAYZR_EDITOR or bin/editor."""
+    exe = os.environ.get("RAYZR_EDITOR") or os.path.join(ROOT, "bin", "editor.exe" if os.name == "nt" else "editor")
+    if not os.path.isfile(exe):
+        sys.exit(f"make_templates.py: no editor at {exe} to format the scenes with (#293): "
+                 "odin build editor -out:bin/editor (or set RAYZR_EDITOR)")
+    return exe
+
+
 if __name__ == "__main__":
     which = sys.argv[1:] or list(TEMPLATES)
+    editor = editor_binary()
     for name in which:
         tpl = TEMPLATES[name]()
         print(f"templates/{tpl.id}")
+        # As the editor saves them (canonical_fmt.odin): small diffs once edited there.
+        subprocess.run([editor, "--fmt", os.path.join(OUT, tpl.id)], check=True, stdout=subprocess.DEVNULL)

@@ -1,0 +1,25 @@
+# #293: Tools > Format Scene Files rewrites the project's scene and component
+# files as the editor saves them (a hand-written one gets "format", uids and
+# the editor's layout); a file it would lose something of (an unknown key) is
+# left as it is with a warning; a scene open in a tab is left to its save.
+exec cp tests/drive/fixtures/format_scenes/messy_zz.scene.json $PROJECT/scenes/messy_zz.scene.json
+exec cp tests/drive/fixtures/format_scenes/odd_zz.scene.json $PROJECT/scenes/odd_zz.scene.json
+wait 5
+key escape
+expect file:scenes/messy_zz.scene.json !contains "uid"
+command tool.format_scenes
+wait 2
+expect file:scenes/messy_zz.scene.json contains "format": 1
+expect file:scenes/messy_zz.scene.json contains "uid": "
+expect file:scenes/messy_zz.scene.json contains "position": [100, 50]
+expect file:scenes/odd_zz.scene.json contains "mystery_zz": 1
+expect file:scenes/odd_zz.scene.json !contains "uid"
+expect log contains odd_zz.scene.json left as it is
+expect log contains open in a tab
+expect last-log contains Formatted
+expect log !contains Decommissioning
+screenshot formatted
+# Again: nothing left to format.
+command tool.format_scenes
+wait 2
+expect last-log contains Formatted 0

@@ -148,23 +148,8 @@ Ase_ResourceSheet :: proc(r: ^Ase_Resource, hide, show: string) -> ^Ase_Sheet {
 	if sheet != nil && sheet.version == r.version && sheet.texture.id != 0 do return sheet
 	if !rl.IsWindowReady() do return nil
 	doc := r.doc
-	n := max(len(doc.frames), 1)
-	cols := 1
-	for cols * cols < n do cols += 1
-	rows := (n + cols - 1) / cols
-	atlas := rl.GenImageColor(i32(cols * doc.width), i32(rows * doc.height), {0, 0, 0, 0})
+	atlas, cols := Ase_SheetImage(doc, Ase_Render_Options{visible = Ase_LayerOverrides(doc, hide, show, context.temp_allocator)})
 	defer rl.UnloadImage(atlas)
-	opts := Ase_Render_Options{visible = Ase_LayerOverrides(doc, hide, show, context.temp_allocator)}
-	frame := make([]u8, doc.width * doc.height * 4, context.temp_allocator)
-	dst := ([^]u8)(atlas.data)
-	stride := cols * doc.width * 4
-	for f in 0 ..< len(doc.frames) {
-		Ase_RenderFrame(doc, f, frame, opts)
-		cx, cy := (f % cols) * doc.width, (f / cols) * doc.height
-		for y in 0 ..< doc.height {
-			copy(dst[(cy + y) * stride + cx * 4:][:doc.width * 4], frame[y * doc.width * 4:][:doc.width * 4])
-		}
-	}
 	if sheet == nil {
 		sheet = new(Ase_Sheet, Engine_HeapAllocator())
 		sheet.key = strings.clone(key, Engine_HeapAllocator())
@@ -177,6 +162,34 @@ Ase_ResourceSheet :: proc(r: ^Ase_Resource, hide, show: string) -> ^Ase_Sheet {
 	sheet.cols = cols
 	sheet.version = r.version
 	return sheet
+}
+
+// Ase_SheetImage: every frame composited into one image, cols frames per
+// row (Ase_SheetColumns; cells are the sprite's size) - heap, the caller
+// unloads it.
+Ase_SheetImage :: proc(doc: ^Ase_Document, opts := Ase_Render_Options{}) -> (img: rl.Image, cols: int) {
+	n := max(len(doc.frames), 1)
+	cols = Ase_SheetColumns(n)
+	rows := (n + cols - 1) / cols
+	img = rl.GenImageColor(i32(cols * doc.width), i32(rows * doc.height), {0, 0, 0, 0})
+	frame := make([]u8, doc.width * doc.height * 4, context.temp_allocator)
+	dst := ([^]u8)(img.data)
+	stride := cols * doc.width * 4
+	for f in 0 ..< len(doc.frames) {
+		Ase_RenderFrame(doc, f, frame, opts)
+		cx, cy := (f % cols) * doc.width, (f / cols) * doc.height
+		for y in 0 ..< doc.height {
+			copy(dst[(cy + y) * stride + cx * 4:][:doc.width * 4], frame[y * doc.width * 4:][:doc.width * 4])
+		}
+	}
+	return
+}
+
+// Ase_SheetColumns: frames per row in a sheet of n frames (about square).
+Ase_SheetColumns :: proc(n: int) -> int {
+	cols := 1
+	for cols * cols < n do cols += 1
+	return cols
 }
 
 // Ase_SheetRect: a frame's cell in a sheet.

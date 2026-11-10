@@ -25,7 +25,8 @@ import imgui "lib/imgui"
 //               fields, which fields reach script properties, and the
 //               placed instances (click to frame one).
 //   Collision   per IntGrid layer and value: None / Solid / One-way /
-//               Trigger, friction and restitution.
+//               Trigger, friction and restitution, collision layers and
+//               mask (the level's default, or the value's own - #405).
 //   Links       EntityRef fields: rules (connect a signal to a method,
 //               parent target or source) and the references in the level.
 //   Level Fields, Enums, World (mini-map: click a level to open/frame it).
@@ -719,6 +720,28 @@ page_collision :: proc(state: ^EditorState, ln: ^e.LdtkLevelNode) {
 	imgui.Checkbox("Show colliders while simulating", &ln.drawDebugColliders)
 	Drive_Item("ldtk.show-colliders")
 	hint("What each IntGrid value builds when the level runs. Neighbouring cells with the same setting merge into a few large boxes.")
+	// The level's collision layers and mask: the default for every value
+	// that doesn't set its own (also in the Inspector).
+	imgui.AlignTextToFramePadding()
+	imgui.TextUnformatted("Default layers")
+	imgui.SameLine()
+	imgui.SetNextItemWidth(170)
+	if set := ln.categoryLayers; layer_set_combo("ldtk.layers.default", &set) {
+		Editor_RecordUndo(state, "LDtk collision layers")
+		ln.categoryLayers = set
+		e.LdtkLevelNode_Rebuild(ln)
+	}
+	UI_Tooltip("The collision layers the level's colliders are on, unless a value sets its own (Project Settings > General > Collision Layers names them)")
+	imgui.SameLine(0, 12)
+	imgui.TextUnformatted("Mask")
+	imgui.SameLine()
+	imgui.SetNextItemWidth(170)
+	if set := ln.maskLayers; layer_set_combo("ldtk.mask.default", &set) {
+		Editor_RecordUndo(state, "LDtk collision mask")
+		ln.maskLayers = set
+		e.LdtkLevelNode_Rebuild(ln)
+	}
+	UI_Tooltip("The collision layers the level's colliders collide with, unless a value sets its own")
 	for &def in proj.layerDefs {
 		if def.type != .IntGrid || len(def.intGridValues) == 0 do continue
 		any = true
@@ -731,13 +754,15 @@ page_collision :: proc(state: ^EditorState, ln: ^e.LdtkLevelNode) {
 			if layer := e.Ldtk_GetLayer(lvl, def.identifier); layer != nil do for v in layer.intGrid do counts[v] += 1
 		}
 		imgui.PushIDPtr(&def)
-		if imgui.BeginTable("##coll", 6, imgui.TableFlags_RowBg | imgui.TableFlags_BordersInnerH | imgui.TableFlags_SizingFixedFit) {
+		if imgui.BeginTable("##coll", 8, imgui.TableFlags_RowBg | imgui.TableFlags_BordersInnerH | imgui.TableFlags_SizingFixedFit) {
 			imgui.TableSetupColumn("", {.WidthFixed}, 22)
 			imgui.TableSetupColumn("Value", {.WidthStretch}, 0)
 			imgui.TableSetupColumn("Cells", {.WidthFixed}, 50)
 			imgui.TableSetupColumn("Collision", {.WidthFixed}, 130)
 			imgui.TableSetupColumn("Friction", {.WidthFixed}, 80)
 			imgui.TableSetupColumn("Bounce", {.WidthFixed}, 80)
+			imgui.TableSetupColumn("Layers", {.WidthFixed}, 120)
+			imgui.TableSetupColumn("Mask", {.WidthFixed}, 120)
 			imgui.TableHeadersRow()
 			for v in def.intGridValues {
 				imgui.PushIDInt(c.int(v.value))
@@ -785,6 +810,27 @@ page_collision :: proc(state: ^EditorState, ln: ^e.LdtkLevelNode) {
 					if imgui.IsItemActivated() do Editor_RecordUndo(state, "LDtk bounce")
 					if imgui.IsItemDeactivatedAfterEdit() do e.LdtkLevelNode_Rebuild(ln)
 				}
+				// Collision layers and mask: the level's default, or its own.
+				cat, mask := e.LdtkLevelNode_RuleLayers(ln, rule)
+				for k in 0 ..< 2 {
+					imgui.TableNextColumn()
+					if rule.type == .None do continue
+					set := cat if k == 0 else mask
+					useDefault := !rule.customLayers
+					imgui.SetNextItemWidth(-1)
+					id := fmt.tprintf("ldtk.coll-%s:%s:%d", "layers" if k == 0 else "mask", def.identifier, v.value)
+					if layer_set_combo(id, &set, &useDefault) {
+						Editor_RecordUndo(state, "LDtk collision layers")
+						// Its own starts from what it had (the default's).
+						rule.customLayers = !useDefault
+						rule.categoryLayers, rule.maskLayers = cat, mask
+						if k == 0 do rule.categoryLayers = set
+						else do rule.maskLayers = set
+						e.LdtkLevelNode_SetCollisionRule(ln, rule)
+						e.LdtkLevelNode_Rebuild(ln)
+					}
+					UI_Tooltip(fmt.tprintf("%s: %s", "The collision layers its colliders are on" if k == 0 else "The collision layers its colliders collide with", "the level's default" if useDefault else "its own"))
+				}
 				imgui.PopID()
 			}
 			imgui.EndTable()
@@ -792,6 +838,59 @@ page_collision :: proc(state: ^EditorState, ln: ^e.LdtkLevelNode) {
 		imgui.PopID()
 	}
 	if !any do UI_DimText("This project has no IntGrid layers.")
+}
+
+// layer_set_text: "All", "None", or the layers' names ("Walls, 3").
+@(private = "file")
+layer_set_text :: proc(set: e.CollisionLayerSet) -> string {
+	if set == e.DEFAULT_COLLISION_MASK do return "All"
+	if set == {} do return "None"
+	parts := make([dynamic]string, context.temp_allocator)
+	for l in e.CollisionLayer do if l in set {
+		name := e.collisionLayerNames[int(l)]
+		append(&parts, name if name != "" else fmt.tprint(int(l) + 1))
+	}
+	return strings.join(parts[:], ", ", context.temp_allocator)
+}
+
+// layer_set_combo: the 16 collision layers (the project's names) as
+// checkboxes; with useDefault, a "Level default" item first. Drives:
+// @<id>, then @<id>/default and @<id>/<1-16>.
+@(private = "file")
+layer_set_combo :: proc(id: string, set: ^e.CollisionLayerSet, useDefault: ^bool = nil) -> (changed: bool) {
+	preview := layer_set_text(set^)
+	if useDefault != nil && useDefault^ do preview = fmt.tprintf("Default: %s", preview)
+	if imgui.BeginCombo(fmt.ctprintf("##%s", id), strings.clone_to_cstring(preview, context.temp_allocator), {.HeightLarge}) {
+		if useDefault != nil {
+			if imgui.Checkbox("Level default", useDefault) do changed = true
+			Drive_Item(fmt.tprintf("%s/default", id))
+			UI_Tooltip("Use the level's layers and mask (the Inspector's Category / Mask Layers)")
+			imgui.Separator()
+		}
+		for l in e.CollisionLayer {
+			on := l in set^
+			if imgui.Checkbox(fmt.ctprintf("%s##%v", e.CollisionLayer_DisplayName(l), l), &on) {
+				if on do set^ += {l}
+				else do set^ -= {l}
+				if useDefault != nil do useDefault^ = false // picking a layer: its own
+				changed = true
+			}
+			Drive_Item(fmt.tprintf("%s/%d", id, int(l) + 1))
+		}
+		imgui.EndCombo()
+	}
+	Drive_Item(id)
+	return
+}
+
+// layer_set_query: "1,3" / "all" / "none" (drive queries).
+@(private = "file")
+layer_set_query :: proc(set: e.CollisionLayerSet) -> string {
+	if set == e.DEFAULT_COLLISION_MASK do return "all"
+	if set == {} do return "none"
+	parts := make([dynamic]string, context.temp_allocator)
+	for l in e.CollisionLayer do if l in set do append(&parts, fmt.tprint(int(l) + 1))
+	return strings.join(parts[:], ",", context.temp_allocator)
 }
 
 // --- Links ---------------------------------------------------------------------------
@@ -1071,6 +1170,8 @@ page_world :: proc(state: ^EditorState, ln: ^e.LdtkLevelNode) {
 // LdtkPanel_DriveQuery: ldtk.page, ldtk.node, ldtk.level, ldtk.world,
 // ldtk.world-mode, ldtk.active-levels, ldtk.rules, ldtk.link-rules,
 // ldtk.mapping:<entity>, ldtk.collision:<layer>:<value>,
+// ldtk.collision-layers:<layer>:<value> ("default 1/all", "own 2/1,3"),
+// ldtk.default-layers ("1/all"),
 // ldtk.layer-visible:<layer>, ldtk.focus, ldtk.links (resolved, simulating),
 // ldtk.spawned.
 LdtkPanel_DriveQuery :: proc(state: ^EditorState, q: string) -> (string, bool) {
@@ -1088,6 +1189,7 @@ LdtkPanel_DriveQuery :: proc(state: ^EditorState, q: string) -> (string, bool) {
 	case "ldtk.focus": return lp.focusIid, true
 	case "ldtk.links": return fmt.tprint(len(ln.links)), true
 	case "ldtk.spawned": return fmt.tprint(len(ln.spawnedEntities)), true
+	case "ldtk.default-layers": return fmt.tprintf("%s/%s", layer_set_query(ln.categoryLayers), layer_set_query(ln.maskLayers)), true
 	}
 	if strings.has_prefix(q, "ldtk.mapping:") {
 		m := e.LdtkLevelNode_EntityMapping(ln, q[13:])
@@ -1099,6 +1201,15 @@ LdtkPanel_DriveQuery :: proc(state: ^EditorState, q: string) -> (string, bool) {
 		v := 0
 		for ch in parts[1] do v = v * 10 + int(ch - '0')
 		return e.LdtkCollisionType_Name(e.LdtkLevelNode_CollisionRule(ln, parts[0], v).type), true
+	}
+	if strings.has_prefix(q, "ldtk.collision-layers:") {
+		parts := strings.split(q[22:], ":", context.temp_allocator)
+		if len(parts) != 2 do return "<layer:value>", true
+		v := 0
+		for ch in parts[1] do v = v * 10 + int(ch - '0')
+		rule := e.LdtkLevelNode_CollisionRule(ln, parts[0], v)
+		cat, mask := e.LdtkLevelNode_RuleLayers(ln, rule)
+		return fmt.tprintf("%s %s/%s", "own" if rule.customLayers else "default", layer_set_query(cat), layer_set_query(mask)), true
 	}
 	if strings.has_prefix(q, "ldtk.layer-visible:") {
 		if ln.level == nil do return "", true
