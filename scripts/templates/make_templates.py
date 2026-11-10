@@ -13,6 +13,7 @@ edit, run this, open the template in the editor.
 """
 import json
 import os
+import re
 import shutil
 import sys
 
@@ -235,7 +236,8 @@ GAME_GLOBALS = [{"name": "Game", "script": "scripts/game.lua"}]
 def game_scripts(t, levels, lives=3, score_name="Score", lower_is_better=False, level_word="Level", extra=False):
     """scripts/game.lua (the global Game, with this game's levels) and menu.lua.
     extra: scripts/<template>/game_extra.lua is added to game.lua (this game's
-    own lines: the title's best, the result's score)."""
+    own lines: the title's best, the result's score), in place of the common
+    functions it redefines."""
     cfg = "\n".join([
         "-- This game (make_templates.py writes it): its levels, in order; the lives a",
         "-- run starts with; what the score counts; whether a lower result is better;",
@@ -250,7 +252,13 @@ def game_scripts(t, levels, lives=3, score_name="Score", lower_is_better=False, 
         src = f.read().replace("--$CONFIG$", cfg)
     if extra:
         with open(os.path.join(SCRIPTS, t.id, "game_extra.lua")) as f:
-            src = src.replace("\nreturn Game\n", "\n" + f.read() + "\nreturn Game\n")
+            more = f.read()
+        # Its functions replace the common ones of the same name (with their
+        # comments): both would be a duplicate (lua-language-server's
+        # duplicate-set-field, #403).
+        for name in re.findall(r"^function Game:(\w+)\(", more, re.M):
+            src = re.sub(r"(?:^--[^\n]*\n)*^function Game:%s\(.*?^end\n\n?" % name, "", src, flags=re.M | re.S)
+        src = src.replace("\nreturn Game\n", "\n" + more + "\nreturn Game\n")
     t.write("scripts/game.lua", src)
     t.script("menu", src="common")
 

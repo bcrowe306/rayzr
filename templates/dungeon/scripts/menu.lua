@@ -25,7 +25,7 @@ function Menu:ready()
     self.items = {}
     for _, child in ipairs(self.node:get_children()) do
         if child:has_tag("item") then
-            table.insert(self.items, { node = child, name = child.name, label = child.text, color = child:get_property("color") })
+            table.insert(self.items, { node = child, name = child.name, label = child:get_property("text"), color = child:get_property("color") })
         end
     end
     self.index = 1
