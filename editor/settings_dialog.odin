@@ -312,6 +312,9 @@ settings_general :: proc(state: ^EditorState, h: f32) {
 				UI_PropLabel("Aseprite")
 				text_field("settings.aseprite-path", &s.asepritePath, strings.clone_to_cstring(Aseprite_DefaultPath(), context.temp_allocator))
 				UI_Tooltip("The Aseprite program Edit in Aseprite opens (empty: found where Aseprite installs; Steam too)")
+				UI_PropLabel("Registry Index")
+				text_field("settings.registry-url", &s.registryUrl, REGISTRY_INDEX_URL)
+				UI_Tooltip("The index Tools > Registry lists plugins and templates from (empty: the official one; a url or a local index.json)")
 				UI_EndProps()
 			}
 		case 1:

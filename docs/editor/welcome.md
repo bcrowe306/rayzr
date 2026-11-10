@@ -46,6 +46,7 @@ scenes and scripts.
 | Control | What it does |
 |---|---|
 | **Templates** | Click a card to pick it (hover for its description). **Empty** is a scene with a camera; **Menu** a title screen whose Play button opens the game scene. The game templates are small, complete games with pixel art, each with a README saying what's where and what to change first: **Platformer**, **Top-down RPG**, **Shoot 'em up**, **Puzzle (Sokoban)**, **Visual Novel**, **Isometric Dungeon**, **Hex Island** and **Vector Character**. See [Templates](../../templates/README.md). |
+| **Browse More Templates...** | Opens **Tools > Registry** showing community templates. One you install there is listed here with the others ([Registry](registry.md)). |
 | **Samples** | Bigger projects to explore, under *Samples - complete projects to explore*: **Platformer Adventure** (a title screen, two levels, saved progress, a pause menu) and **Asteroids** (the demo, using most of the engine). |
 | **Name** | The game's name (`My Game`). The project folder is the name with `_` for spaces. |
 | **Location** | The folder the project goes in (where you last made or opened one). **Browse...** picks it. The full path is shown under it. |

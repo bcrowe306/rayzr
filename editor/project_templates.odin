@@ -18,7 +18,8 @@ import rl "vendor:raylib"
 // templates/, built by scripts/templates/make_templates.py): Platformer,
 // Top-down RPG, Shoot 'em up, Puzzle, Visual Novel, Isometric Dungeon, Hex
 // Island, each with a template.json (name,
-// description, icon, order) and a preview.png. Samples are bigger projects
+// description, icon, order) and a preview.png. Templates installed from the
+// registry (#296) are listed too, from the user's templates folder. Samples are bigger projects
 // to look at (the Asteroids demo).
 // ============================================================================
 
@@ -54,10 +55,13 @@ Templates_List :: proc() -> []Template_Entry {
 		info := PROJECT_TEMPLATES[t]
 		append(&out, Template_Entry{name = info.name, icon = info.icon, description = info.description, order = -10 + int(t), builtin = t})
 	}
-	root := Resource_Path("templates")
-	if infos, err := os.read_all_directory_by_path(root, context.temp_allocator); err == nil {
+	// The editor's own templates, then the ones installed from the registry
+	// (Tools > Registry: the user's templates folder).
+	for root in ([]string{Resource_Path("templates"), Registry_TemplateRoot()}) {
+		infos, err := os.read_all_directory_by_path(root, context.temp_allocator)
+		if err != nil do continue
 		for fi in infos {
-			if fi.type != .Directory do continue
+			if fi.type != .Directory || strings.has_prefix(fi.name, ".") do continue
 			dir, _ := filepath.join({root, fi.name}, context.temp_allocator)
 			meta, _ := filepath.join({dir, "template.json"}, context.temp_allocator)
 			data, rerr := os.read_entire_file(meta, context.temp_allocator)

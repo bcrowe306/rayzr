@@ -1,0 +1,77 @@
+{
+  "format": 1,
+  "entries": [
+    {
+      "author": "Rayzr tests",
+      "license": "MIT",
+      "repo": "example/registry-fixture",
+      "id": "registry_hello_zz",
+      "kind": "plugin",
+      "name": "Registry Hello ZZ",
+      "version": "1.1.0",
+      "description": "Prints a line when it loads. (The registry drive installs it.)",
+      "url": "registry_hello_zz-1.1.0.zip",
+      "sha256": "8580c641f7ad302d1605a44a28cdbe9addca1eb88ef6e3dd8162c17c3fb3d323",
+      "rayzr": ">=1.0.0",
+      "screenshot": "hello_shot.png",
+      "tags": [
+        "test",
+        "hello"
+      ],
+      "permissions": []
+    },
+    {
+      "author": "Rayzr tests",
+      "license": "MIT",
+      "repo": "example/registry-fixture",
+      "id": "registry_blank_zz",
+      "kind": "template",
+      "name": "Registry Blank ZZ",
+      "version": "1.0.0",
+      "description": "An empty project: one scene.",
+      "url": "registry_blank_zz.zip",
+      "sha256": "964de77bd0d3b48b91adb0c8c1fc380a13a2a5134b2a6a815f95dafab34a4059",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "author": "Rayzr tests",
+      "license": "MIT",
+      "repo": "example/registry-fixture",
+      "id": "wrong_hash_zz",
+      "kind": "plugin",
+      "name": "Wrong Hash ZZ",
+      "version": "1.0.0",
+      "description": "Its zip isn't the one the index names.",
+      "url": "registry_hello_zz-1.0.0.zip",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "author": "Rayzr tests",
+      "license": "MIT",
+      "repo": "example/registry-fixture",
+      "id": "future_zz",
+      "kind": "plugin",
+      "name": "Future ZZ",
+      "version": "1.0.0",
+      "description": "Needs an editor from the future.",
+      "url": "registry_hello_zz-1.0.0.zip",
+      "sha256": "2a83f6264ec78a6a54d3ec62f3c6eff3113bf02eb2b8f77b407a3b4234144274",
+      "rayzr": ">=99.0.0"
+    },
+    {
+      "id": "Bad Id",
+      "kind": "plugin",
+      "version": "1",
+      "url": "x.zip",
+      "sha256": "2a83f6264ec78a6a54d3ec62f3c6eff3113bf02eb2b8f77b407a3b4234144274"
+    },
+    {
+      "id": "no_hash_zz",
+      "kind": "template",
+      "version": "1",
+      "url": "x.zip"
+    }
+  ]
+}

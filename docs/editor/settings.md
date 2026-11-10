@@ -58,6 +58,7 @@ The dialog is modal, so **F1** can't open this page while it's open: the
 | **Check for Updates** | At startup, looks for a newer Rayzr Editor release and shows it in the status bar. |
 | **Bottom Panel Follows Selection** | Selecting an AnimationPlayer, particle emitter, LDtk level, Tile Map, State Machine, Behavior Tree or GOAP node shows its tab in the bottom panel; selecting something else goes back to the tab you had. |
 | **Aseprite** | The Aseprite program **Edit in Aseprite** opens. Empty: found where Aseprite installs (Steam too). |
+| **Registry Index** | The index **Tools > Registry** lists plugins and templates from: a url, or a local `index.json`. Empty: the official one ([Registry](registry.md)). |
 
 ### General > Keymap
 
