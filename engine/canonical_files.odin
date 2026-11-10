@@ -39,7 +39,9 @@ Canonical_KindOf :: proc(path: string) -> Canonical_Kind {
 // Canonical_Format: a file's text as the editor would save it (rel: its
 // project-relative path, the uid seed). problem != "": not formatted (newer
 // format, unreadable, or a rewrite that would lose something).
-Canonical_Format :: proc(game: ^Game, rel: string, data: []u8, allocator := context.allocator) -> (out: string, problem: string) {
+Canonical_Format :: proc(game: ^Game, relPath: string, data: []u8, allocator := context.allocator) -> (out: string, problem: string) {
+	// (The uids are seeded from it: the same on every platform.)
+	rel, _ := strings.replace_all(relPath, "\\", "/", context.temp_allocator)
 	kind := Canonical_KindOf(rel)
 	if kind == .Unknown do return "", "not a scene or component file"
 	fk: Format_Kind = .Scene if kind == .Scene else .Component
