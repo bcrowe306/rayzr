@@ -1245,6 +1245,10 @@ AreaNode_RemoveShape :: proc(area: ^AreaNode, index: int) {
 AreaNode_HandleEnter :: proc(sensorNode: ^Node, visitorNode_in: ^Node, gameContext: ^GameContext) {
 	if sensorNode == nil || !Node_IsAlive(sensorNode) || sensorNode.typeId != AreaNode do return
 	visitorNode := visitorNode_in if Node_IsAlive(visitorNode_in) else nil
+	// An area (or a body) destroyed this frame is only queued for removal
+	// until the frame ends: it doesn't report entering any more (a coin
+	// destroyed under the player was still collected).
+	if sensorNode.removing || (visitorNode != nil && visitorNode.removing) do return
 
 	area := cast(^AreaNode)sensorNode
 	if !area.enabled || !area.monitoring do return

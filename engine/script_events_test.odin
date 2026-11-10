@@ -134,6 +134,50 @@ return A
 	testing.expect_value(t, area.overlapCount, 0)
 	ev := lua_events(game)
 	testing.expectf(t, ev == "entered:Crate,exited:nil", "area events: %s", ev)
+
+	// Destroyed this frame (queued for removal): no body_entered any more -
+	// neither for a body entering a destroyed area, nor a destroyed body.
+	other := Node_CreateByTypeName(scene, "DynamicBodyNode")
+	other.name = "Doomed"
+	RemoveNode(scene.manager, other)
+	AreaNode_HandleEnter(area, other, &game.gameContext)
+	testing.expect_value(t, area.overlapCount, 0)
+	ProcessNodeQueues(scene.manager, &game.gameContext)
+	third := Node_CreateByTypeName(scene, "DynamicBodyNode")
+	third.name = "Late"
+	RemoveNode(scene.manager, area)
+	AreaNode_HandleEnter(area, third, &game.gameContext)
+	ev = lua_events(game)
+	testing.expectf(t, ev == "entered:Crate,exited:nil", "events after the removals: %s", ev)
+}
+
+// A node destroyed in the frame it was created (before it was added - e.g.
+// a coin a level generator spawned, destroyed by the "generated" handler)
+// never enters the tree; it used to be added anyway, cut off from its
+// parent, its area still working.
+@(test)
+test_node_destroyed_before_added_never_enters :: proc(t: ^testing.T) {
+	game := new(Game)
+	InitializeGame(game)
+	defer game->terminate()
+	scene := game->createScene("spawned", true)
+	ProcessSceneChange(&game.sceneManager, &game.gameContext)
+	ProcessNodeQueues(scene.manager, &game.gameContext)
+	coin := Node_CreateByTypeName(scene, "AreaNode")
+	sprite := Node_CreateByTypeName(scene, "Node", coin)
+	kept := Node_CreateByTypeName(scene, "Node")
+	RemoveNode(scene.manager, coin)
+	ProcessNodeQueues(scene.manager, &game.gameContext)
+	testing.expect(t, !Node_IsAlive(coin), "the destroyed node is gone")
+	testing.expect(t, !Node_IsAlive(sprite), "its child too")
+	testing.expect(t, Node_IsAlive(kept), "the other new node is in")
+	testing.expect_value(t, len(scene.manager.addition), 0)
+	children := GetChildrenView(scene.manager, scene.rootNode)
+	testing.expect_value(t, len(children), 1)
+	if len(children) == 1 do testing.expect(t, children[0] == kept)
+	found := 0
+	for n in scene.manager.nodes do if n == kept do found += 1
+	testing.expect_value(t, found, 1)
 }
 
 @(test)
