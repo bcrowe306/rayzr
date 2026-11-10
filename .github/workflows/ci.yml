@@ -221,6 +221,10 @@ jobs:
         if: matrix.smoke
         run: python3 scripts/docs/check_docs.py --editor bin/editor
 
+      - name: Scene merge driver (git merges a scene by node, #293)
+        if: matrix.smoke
+        run: scripts/test_scene_merge.sh bin/editor
+
       - name: Lua language server (no warnings in the templates, tutorials and demo project)
         if: matrix.smoke
         run: |

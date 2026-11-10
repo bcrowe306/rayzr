@@ -1,0 +1,47 @@
+{
+  "format": 1,
+  "name": "conflict_zz",
+  "draw_bounds": false,
+  "root": {
+    "type": "Node",
+    "name": "root",
+    "uid": "rootzz01",
+    "position": [0, 0],
+    "scale": [1, 1],
+    "rotation": 0,
+    "enabled": true,
+    "visible": true,
+    "layer": 0,
+    "children": [
+      {
+        "type": "TextNode",
+        "name": "SignZz",
+        "uid": "signzz01",
+        "position": [500, 200],
+        "scale": [1, 1],
+        "rotation": 0,
+        "pivot": [0, 0],
+        "enabled": true,
+        "visible": true,
+        "layer": 3,
+        "properties": {
+          "text": "Ours",
+          "font": "",
+          "fontSize": 32,
+          "color": "#ffffffff",
+          "align": "Left",
+          "maxWidth": 0,
+          "lineSpacing": 1.2,
+          "richText": true,
+          "localized": false,
+          "rendering": "Auto",
+          "path": "",
+          "pathOffset": 0,
+          "pathAlign": "Left",
+          "pathUpright": false,
+          "revealSpeed": 0
+        }
+      }
+    ]
+  }
+}

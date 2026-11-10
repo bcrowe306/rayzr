@@ -54,6 +54,8 @@ editor_main :: proc() -> int {
 	for i := 1; i < len(os.args); i += 1 do if os.args[i] == "--fmt" do return Fmt_Run(os.args[i + 1:])
 	// --apply-update ...: the Windows updater helper (a copy of the exe; update_install.odin).
 	if len(os.args) > 1 && os.args[1] == "--apply-update" do return Update_HelperMain(os.args[2:])
+	// --merge-scene %O %A %B %P: the git merge driver for scenes (scene_merge.odin, #293).
+	for i := 1; i < len(os.args); i += 1 do if os.args[i] == "--merge-scene" do return MergeScene_Run(os.args[i + 1:])
 	Editor_MigrateLegacyConfig() // ~/.config/ore_editor -> rayzr_editor (editor_settings.odin)
 	CrashReports_Install() // crash reports (crash_reports.odin)
 	defer CrashReports_Shutdown()
@@ -295,6 +297,7 @@ editor_main :: proc() -> int {
 		Prompt_Render(&GlobalEditor)
 		AssetDelete_Render(&GlobalEditor)
 		AssetUsages_Render(&GlobalEditor)
+		MergeConflicts_Render(&GlobalEditor) // scene merge conflicts (scene_merge.odin, #293)
 		Slicer_Render(&GlobalEditor)
 		AtlasRegion_Render(&GlobalEditor)
 		Welcome_Render(&GlobalEditor)

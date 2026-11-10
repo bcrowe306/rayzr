@@ -83,6 +83,7 @@ BOTTOM_TABS := [?]struct {
 	{.Search, ICON_FA_MAGNIFYING_GLASS, "Search", "search"},
 	{.Files, ICON_FA_FOLDER_OPEN, "Files", "files"},
 	{.Tests, ICON_FA_CIRCLE_CHECK, "Tests", "tests"},
+	{.Git, ICON_FA_CODE_BRANCH, "Git", "git"},
 }
 
 // BottomPanel_SetTabShown shows or hides a tab (View > Bottom Panel; saved
@@ -176,6 +177,7 @@ BottomPanel_Render :: proc(state: ^EditorState) {
 				case .Search:     Code_SearchPanel(state)
 				case .Files:      FileBrowser_RenderTab(state)
 				case .Tests:      TestsPanel_Render(state)
+				case .Git:        GitPanel_Render(state)
 				}
 				imgui.EndTabItem()
 			}

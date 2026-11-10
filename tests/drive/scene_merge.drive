@@ -1,0 +1,40 @@
+# #293: a scene git merged with a conflict (editor --merge-scene wrote ours
+# into the file and the conflict into <scene>.merge.json): Tools > Merge
+# Conflicts lists it - the node, the field, ours / theirs / base; picking
+# theirs and Apply writes it into the file (theirs' other change, merged
+# cleanly, stays) and removes the sidecar.
+exec cp tests/drive/fixtures/scene_merge/conflict_zz.scene.json $PROJECT/scenes/conflict_zz.scene.json
+exec cp tests/drive/fixtures/scene_merge/conflict_zz.scene.json.merge.json $PROJECT/scenes/conflict_zz.scene.json.merge.json
+wait 5
+key escape
+command tool.merge_conflicts
+wait 2
+expect merge.open == true
+expect merge.files == 1
+expect merge.conflicts == 1
+expect item:merge.pick:0:theirs == visible
+expect item:merge.resolve == visible
+screenshot conflicts
+click @merge.pick:0:theirs
+click @merge.apply
+wait 2
+expect file:scenes/conflict_zz.scene.json contains "text": "Theirs"
+expect file:scenes/conflict_zz.scene.json contains "position": [500, 200]
+expect file:scenes/conflict_zz.scene.json.merge.json == 
+expect merge.files == 0
+expect merge.open == false
+expect last-log contains Resolved scenes/conflict_zz.scene.json
+
+# Tools > Set Up Scene Merging (the project in a git repository): the
+# driver in the clone's config, .gitattributes in the project; again: no
+# second copy of the lines.
+exec git init -q $PROJECT
+command tool.setup_merge
+wait 1
+expect file:.gitattributes contains *.scene.json merge=rayzr-scene
+expect file:.gitattributes contains *.component.json merge=rayzr-scene
+expect last-log contains Scene merging set up
+exec git -C $PROJECT config --get merge.rayzr-scene.driver
+command tool.setup_merge
+wait 1
+expect last-log contains set up for this clone
