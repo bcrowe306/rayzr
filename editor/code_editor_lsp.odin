@@ -9,6 +9,7 @@ import "core:time"
 import buf "../odin_editor/buffer"
 import lsp "../odin_editor/lsp"
 import imgui "lib/imgui"
+import e "../engine"
 
 // ============================================================================
 // Code editor <-> lua-language-server (LuaLS, built in lua-language-server/).
@@ -44,19 +45,32 @@ json_quote :: proc(sb: ^strings.Builder, s: string) {
 	strings.write_byte(sb, '"')
 }
 
-// code_lua_settings builds the LuaLS "Lua" settings section.
+// code_lua_settings builds the LuaLS "Lua" settings section (the project's
+// .luarc.json, when there is one, wins over these).
 @(private = "file")
-code_lua_settings :: proc(definitionsDir: string) -> string {
+code_lua_settings :: proc(definitionsDir: string, checks: e.Lua_Checks) -> string {
 	sb := strings.builder_make(context.temp_allocator)
 	strings.write_string(&sb, `{"Lua":{"runtime":{"version":"Lua 5.4"},"workspace":{"library":[`)
 	json_quote(&sb, definitionsDir)
-	strings.write_string(&sb, `],"checkThirdParty":false},"diagnostics":{"globals":[`)
-	for g, i in CODE_LUA_GLOBALS {
-		if i > 0 do strings.write_byte(&sb, ',')
-		json_quote(&sb, g)
-	}
-	strings.write_string(&sb, `]},"completion":{"callSnippet":"Replace"},"telemetry":{"enable":false}}}`)
+	strings.write_string(&sb, `],"checkThirdParty":false,"ignoreDir":[`)
+	json_quote(&sb, LUA_HISTORY_DIR)
+	strings.write_string(&sb, `]},"diagnostics":`)
+	strings.write_string(&sb, Lua_DiagnosticsJson(checks)) // (lua_project.odin)
+	strings.write_string(&sb, `,"completion":{"callSnippet":"Replace"},"telemetry":{"enable":false}}}`)
 	return strings.to_string(sb)
+}
+
+// Code_LuaChecksChanged: the project's Lua Checks preset changed (Project
+// Settings): .luarc.json is rewritten and the server re-reads its settings
+// (and re-checks the scripts).
+Code_LuaChecksChanged :: proc(state: ^EditorState) {
+	cm := &GlobalCode
+	defs := Lua_ProjectSetup(state)
+	if cm.lspState != .Ready && cm.lspState != .Starting do return
+	delete(cm.client.settings)
+	cm.client.settings = strings.clone(code_lua_settings(defs, state.projectConfig.luaChecks))
+	Params :: struct {settings: struct {}}
+	lsp.client_send_raw(&cm.client, lsp.encode_notification("workspace/didChangeConfiguration", Params{}, context.temp_allocator))
 }
 
 @(private = "file")
@@ -76,7 +90,7 @@ code_lsp_start :: proc(state: ^EditorState) {
 		return
 	}
 	defs := Lua_ProjectSetup(state)
-	cm.client.settings = strings.clone(code_lua_settings(defs))
+	cm.client.settings = strings.clone(code_lua_settings(defs, state.projectConfig.luaChecks))
 	root := state.projectPath
 	if !filepath.is_abs(root) {
 		cwd, _ := os.get_working_directory(context.temp_allocator)
@@ -101,8 +115,34 @@ code_lsp_start :: proc(state: ^EditorState) {
 	cm.lspState = .Starting
 }
 
+// Code_LspPushLibraryFile gives the language server the new text of a
+// definitions file the editor wrote (project_types.lua): the file stays open
+// in the server, each rewrite a didChange. lua-language-server 3.x ignores
+// workspace/didChangeWatchedFiles, and its own file watcher can report a
+// rewritten file as created - "already loaded", not read again - so it kept
+// the old types, and their warnings, until restarted (#403). A change to an
+// open file re-checks the other scripts (diagnostics.workspaceEvent
+// OnChange, lua_project.odin).
+Code_LspPushLibraryFile :: proc(path, text: string) {
+	cm := &GlobalCode
+	if cm.lspState != .Ready do return // (pushed when it is: code_lsp_update)
+	for d in cm.docs do if d.path == path && d.lspOpen do return // open in a Code tab: synced from there
+	uri := lsp.file_uri(path, context.temp_allocator)
+	if cm.libraryUri != uri {
+		delete(cm.libraryUri)
+		cm.libraryUri = strings.clone(uri)
+		cm.libraryVersion = 1
+		lsp.client_did_open(&cm.client, uri, "lua", text, cm.libraryVersion)
+		return
+	}
+	cm.libraryVersion += 1
+	lsp.client_did_change(&cm.client, uri, text, cm.libraryVersion)
+}
+
 code_lsp_shutdown :: proc() {
 	cm := &GlobalCode
+	delete(cm.libraryUri)
+	cm.libraryUri = ""
 	if cm.lspState != .Off do lsp.client_destroy(&cm.client)
 	cm.lspState = .Off
 }
@@ -129,6 +169,15 @@ code_lsp_update :: proc(state: ^EditorState) {
 	if cm.lspState == .Starting && cm.client.initialized {
 		cm.lspState = .Ready
 		cm.lspReadyAt = time.tick_now()
+		// The generated types as they are now (rewritten while it started?).
+		if state.projectPath != "" {
+			root := state.projectPath
+			if !filepath.is_abs(root) {
+				if abs, err := os.get_absolute_path(root, context.temp_allocator); err == nil do root = abs
+			}
+			path, _ := filepath.join({root, LUA_DEFINITIONS_DIR, LUA_TYPES_FILE}, context.temp_allocator)
+			if data, err := os.read_entire_file(path, context.temp_allocator); err == nil do Code_LspPushLibraryFile(path, string(data))
+		}
 	}
 	if cm.lspState != .Ready do return
 
@@ -202,6 +251,10 @@ code_lsp_did_close :: proc(doc: ^Code_Doc) {
 	if cm.lspState != .Ready || !doc.lspOpen do return
 	lsp.client_did_close(&cm.client, doc.uri)
 	doc.lspOpen = false
+	if cm.libraryUri == doc.uri { // (the generated types: opened again on the next push)
+		delete(cm.libraryUri)
+		cm.libraryUri = ""
+	}
 }
 
 @(private = "file")

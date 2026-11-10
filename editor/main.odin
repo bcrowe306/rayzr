@@ -48,6 +48,8 @@ editor_main :: proc() -> int {
 	for i := 1; i + 1 < len(os.args); i += 1 do if os.args[i] == "--dump-docs" do return DocsDump_Run(os.args[i + 1])
 	// --dump-shortcuts <page.md>: the Keyboard Shortcuts page's list (shortcuts_doc.odin).
 	for i := 1; i + 1 < len(os.args); i += 1 do if os.args[i] == "--dump-shortcuts" do return ShortcutsDoc_Run(os.args[i + 1])
+	// --lua-setup <project>: write its Lua tooling files and exit (lua_project.odin).
+	for i := 1; i + 1 < len(os.args); i += 1 do if os.args[i] == "--lua-setup" do return LuaSetup_Run(os.args[i + 1])
 	Editor_MigrateLegacyConfig() // ~/.config/ore_editor -> rayzr_editor (editor_settings.odin)
 	CrashReports_Install() // crash reports (crash_reports.odin)
 	defer CrashReports_Shutdown()

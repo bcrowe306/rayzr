@@ -1,8 +1,10 @@
 package editor
 
+import "core:fmt"
 import "core:os"
 import "core:path/filepath"
 import "core:strings"
+import e "../engine"
 
 // ============================================================================
 // Lua tooling files in the project.
@@ -29,8 +31,75 @@ write_if_changed :: proc(path, text: string) -> bool {
 	return os.write_entire_file(path, transmute([]u8)text) == nil
 }
 
+// The diagnostics presets (Project Settings > General > Scripting: Lua
+// Checks; "scripting": {"lua_checks"} in project.json, #403), the same in
+// .luarc.json and the Code tab's own server settings:
+//   Relaxed (default)  nil checks (need-check-nil) are hints, not warnings;
+//                      trailing spaces and lowercase globals (a test file's
+//                      test_* functions) aren't reported
+//   Standard           lua-language-server's defaults, without the trailing
+//                      space hints
+//   Strict             lua-language-server's defaults, and unused / redefined
+//                      locals and lowercase globals as warnings
+// Style checks (codestyle-check, spell-check, name-style-check) stay off in
+// all three, as lua-language-server has them. Every preset re-checks the
+// other scripts a second after a change (workspaceEvent OnChange): a fix in
+// one file, or in the generated types, clears the warnings it caused in
+// the others without saving them first.
+Lua_Checks_Settings :: struct {
+	disable:       []string,
+	severity:      [][2]string, // diagnostic -> severity
+	groupSeverity: [][2]string, // group -> severity
+}
+
+LUA_CHECKS_SETTINGS := [e.Lua_Checks]Lua_Checks_Settings{
+	.Relaxed  = {disable = {"trailing-space", "lowercase-global"}, severity = {{"need-check-nil", "Hint"}}},
+	.Standard = {disable = {"trailing-space"}},
+	.Strict   = {groupSeverity = {{"unused", "Warning"}, {"redefined", "Warning"}}, severity = {{"lowercase-global", "Warning"}}},
+}
+
+LUA_WORKSPACE_DELAY :: 1000 // ms after a change before the other scripts are re-checked
+
+@(private = "file")
+json_list :: proc(sb: ^strings.Builder, values: []string) {
+	strings.write_byte(sb, '[')
+	for v, i in values {
+		if i > 0 do strings.write_string(sb, ", ")
+		fmt.sbprintf(sb, "%q", v)
+	}
+	strings.write_byte(sb, ']')
+}
+
+@(private = "file")
+json_pairs :: proc(sb: ^strings.Builder, pairs: [][2]string) {
+	strings.write_byte(sb, '{')
+	for p, i in pairs {
+		if i > 0 do strings.write_string(sb, ", ")
+		fmt.sbprintf(sb, "%q: %q", p[0], p[1])
+	}
+	strings.write_byte(sb, '}')
+}
+
+// Lua_DiagnosticsJson: the "diagnostics" settings object of a preset (the
+// language server's nested form, for workspace/configuration).
+Lua_DiagnosticsJson :: proc(checks: e.Lua_Checks) -> string {
+	set := LUA_CHECKS_SETTINGS[checks]
+	sb := strings.builder_make(context.temp_allocator)
+	strings.write_string(&sb, `{"globals": `)
+	json_list(&sb, CODE_LUA_GLOBALS)
+	strings.write_string(&sb, `, "disable": `)
+	json_list(&sb, set.disable)
+	strings.write_string(&sb, `, "severity": `)
+	json_pairs(&sb, set.severity)
+	strings.write_string(&sb, `, "groupSeverity": `)
+	json_pairs(&sb, set.groupSeverity)
+	fmt.sbprintf(&sb, `, "workspaceEvent": "OnChange", "workspaceDelay": %d}`, LUA_WORKSPACE_DELAY)
+	return strings.to_string(sb)
+}
+
 // luarc_text: the .luarc.json the editor writes into projects.
-luarc_text :: proc() -> string {
+luarc_text :: proc(checks: e.Lua_Checks = .Relaxed) -> string {
+	set := LUA_CHECKS_SETTINGS[checks]
 	sb := strings.builder_make(context.temp_allocator)
 	strings.write_string(&sb, "{\n")
 	strings.write_string(&sb, "  \"$schema\": \"https://raw.githubusercontent.com/LuaLS/vscode-lua/master/setting/schema.json\",\n")
@@ -42,14 +111,23 @@ luarc_text :: proc() -> string {
 	// script's methods as duplicate fields (#264).
 	strings.write_string(&sb, "  \"workspace.ignoreDir\": [\"" + LUA_HISTORY_DIR + "\"],\n")
 	strings.write_string(&sb, "  \"completion.callSnippet\": \"Replace\",\n")
-	strings.write_string(&sb, "  \"diagnostics.globals\": [")
-	for g, i in CODE_LUA_GLOBALS {
-		if i > 0 do strings.write_string(&sb, ", ")
-		strings.write_byte(&sb, '"')
-		strings.write_string(&sb, g)
-		strings.write_byte(&sb, '"')
+	strings.write_string(&sb, "  \"diagnostics.globals\": ")
+	json_list(&sb, CODE_LUA_GLOBALS)
+	// The project's Lua Checks preset (LUA_CHECKS_SETTINGS).
+	fmt.sbprintf(&sb, ",\n  \"diagnostics.workspaceEvent\": \"OnChange\",\n  \"diagnostics.workspaceDelay\": %d", LUA_WORKSPACE_DELAY)
+	if len(set.disable) > 0 {
+		strings.write_string(&sb, ",\n  \"diagnostics.disable\": ")
+		json_list(&sb, set.disable)
 	}
-	strings.write_string(&sb, "]\n}\n")
+	if len(set.severity) > 0 {
+		strings.write_string(&sb, ",\n  \"diagnostics.severity\": ")
+		json_pairs(&sb, set.severity)
+	}
+	if len(set.groupSeverity) > 0 {
+		strings.write_string(&sb, ",\n  \"diagnostics.groupSeverity\": ")
+		json_pairs(&sb, set.groupSeverity)
+	}
+	strings.write_string(&sb, "\n}\n")
 	return strings.to_string(sb)
 }
 
@@ -75,8 +153,33 @@ Lua_ProjectSetup :: proc(state: ^EditorState) -> string {
 	existing, err := os.read_entire_file(luarc, context.temp_allocator)
 	// (".ore/definitions": ours, from before the rename.)
 	if err != nil || strings.contains(string(existing), LUA_DEFINITIONS_DIR) || strings.contains(string(existing), ".ore/definitions") {
-		write_if_changed(luarc, luarc_text())
+		write_if_changed(luarc, luarc_text(state.projectConfig.luaChecks))
 	}
 	Lua_WriteProjectTypes(state)
 	return strings.clone(defs, context.temp_allocator)
+}
+
+// LuaSetup_Run (--lua-setup <project>): writes a project's Lua tooling files
+// (.rayzr/definitions with project_types.lua, .luarc.json) without opening a
+// window, as the editor does when it opens the project - so
+// scripts/luals_check.sh can run `lua-language-server --check` over the
+// templates, tutorials and demo project with the same types the Code tab
+// sees (#403).
+LuaSetup_Run :: proc(project: string) -> int {
+	Resources_Init()
+	state := &GlobalEditor
+	state.game = new(e.Game)
+	e.InitializeGame(state.game)
+	state.projectPath = project
+	cfg, ok := e.Game_LoadProjectForEditing(state.game, project)
+	if !ok {
+		fmt.eprintfln("--lua-setup: no project at %s", project)
+		return 1
+	}
+	state.projectConfig = cfg
+	state.projectLoaded = true
+	defs := Lua_ProjectSetup(state)
+	if defs == "" do return 1
+	fmt.println(defs)
+	return 0
 }
