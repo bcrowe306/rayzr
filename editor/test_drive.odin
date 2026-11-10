@@ -837,6 +837,7 @@ Drive_Query :: proc(state: ^EditorState, q: string) -> (string, bool) {
 	if strings.has_prefix(q, "code.") do return Code_DriveQuery(q)
 	if strings.has_prefix(q, "vd.") do return VectorDraw_DriveQuery(state, q)
 	if strings.has_prefix(q, "imgpreview.") do return ImagePreview_DriveQuery(q)
+	if strings.has_prefix(q, "merge.") do return MergeConflicts_DriveQuery(q)
 	if strings.has_prefix(q, "plugin:") do return Plugins_DriveQuery(q)
 	if strings.has_prefix(q, "crash-") do return CrashReports_DriveQuery(q)
 	if strings.has_prefix(q, "aseprite-") do return Aseprite_DriveQuery(q)
