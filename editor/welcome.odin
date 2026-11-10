@@ -142,7 +142,7 @@ Welcome_Render :: proc(state: ^EditorState) {
 		chosen := entries[0]
 		for e in entries do if e.name == welcome.template do chosen = e
 		// (Templates scroll; the form below stays.)
-		if imgui.BeginChild("##welcome_templates", {0, -150}, {}, {}) {
+		if imgui.BeginChild("##welcome_templates", {0, -150 - imgui.GetFrameHeightWithSpacing()}, {}, {}) {
 			lastSample := false
 			for e in entries {
 				if e.sample && !lastSample {
@@ -154,6 +154,8 @@ Welcome_Render :: proc(state: ^EditorState) {
 			}
 		}
 		imgui.EndChild()
+		if UI_Button(fmt.tprintf("%s  Browse More Templates...", ICON_FA_PUZZLE_PIECE), "welcome.registry", {-1, 0}) do Registry_Open(state, 2)
+		UI_Tooltip("Community templates from the registry (Tools > Registry): installed ones show up here")
 		imgui.Dummy({0, 6})
 		if UI_BeginProps("##newproj") {
 			UI_PropLabel("Name")

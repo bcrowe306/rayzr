@@ -1,0 +1,117 @@
+# Tools > Registry (#296; registry.odin, registry_window.odin) against the
+# fixture index (tests/drive/fixtures/registry, make_fixture.py): the list,
+# search and kinds; installing a plugin (the trust dialog, the hash, it runs),
+# updating and removing it, into this project instead; a hash that doesn't
+# match is refused; a template shows in Welcome (and its Browse button opens
+# the window); offline shows the cached list. (Entries needing a newer editor:
+# registry_test.odin - a local build is 0.0.0-dev, which uses everything.)
+exec mkdir -p $PROJECT/registry_zz
+exec cp -R tests/drive/fixtures/registry/. $PROJECT/registry_zz/
+registry-url $PROJECT/registry_zz/index.json
+wait 5
+click @menu:Tools
+click @menu:Tools/Registry...
+wait-until registry.busy == false timeout=600
+expect registry.open == true
+expect registry.count == 4
+expect log contains Registry: skipped Bad Id
+expect log contains Registry: skipped no_hash_zz
+# Kinds and search.
+click @registry.kind:templates
+expect registry.count == 1
+click @registry.kind:plugins
+expect registry.count == 3
+click @registry.kind:all
+click @registry.search
+type hello
+expect registry.count == 1
+key backspace
+key backspace
+key backspace
+key backspace
+key backspace
+expect registry.count == 4
+# A plugin: the dialog first, then it's installed and runs.
+click @registry.item:registry_hello_zz
+wait 30
+expect item:registry.screenshot == visible
+screenshot registry
+click @registry.install
+wait 5
+expect item:registry.confirm.install == visible
+screenshot registry_confirm
+click @registry.confirm.install
+wait-until registry.registry_hello_zz == 1.0.0 timeout=600
+wait 10
+expect plugin:registry_hello_zz.state == running
+expect plugin:registry_hello_zz.log contains hello from the registry 1.0.0
+expect log contains Registry: installed Registry Hello ZZ 1.0.0 into your plugins
+screenshot registry_installed
+# An update (a newer index): the dialog again, then 1.1.0 runs.
+registry-url $PROJECT/registry_zz/index_v2.json
+click @registry.refresh
+wait-until registry.busy == false timeout=600
+expect item:registry.update == visible
+click @registry.update
+wait 5
+click @registry.confirm.install
+wait-until registry.registry_hello_zz == 1.1.0 timeout=600
+wait 10
+expect plugin:registry_hello_zz.log contains hello from the registry 1.1.0
+# Remove, then into this project instead (waits for the project's trust).
+click @registry.remove
+wait 5
+expect registry.registry_hello_zz ==
+expect plugin:registry_hello_zz.state == missing
+click @registry.install
+wait 5
+click @registry.confirm.project
+click @registry.confirm.install
+wait-until registry.registry_hello_zz == 1.1.0 project timeout=600
+wait 10
+expect file:plugins/registry_hello_zz/plugin.json contains 1.1.0
+expect plugin:registry_hello_zz.state == untrusted
+click @registry.remove
+wait 5
+expect registry.registry_hello_zz ==
+# Refused: the download's hash isn't the index's.
+click @registry.item:wrong_hash_zz
+click @registry.install
+wait 5
+click @registry.confirm.install
+wait-until registry.busy == false timeout=600
+wait 5
+expect log contains isn't the index's
+expect registry.wrong_hash_zz ==
+# A template: no dialog; Welcome lists it.
+click @registry.kind:templates
+click @registry.item:registry_blank_zz
+click @registry.install
+wait-until registry.registry_blank_zz == 1.0.0 timeout=600
+expect registry.templates contains Registry Blank ZZ
+click @menu:Help
+click @menu:Help/Welcome
+wait 5
+expect item:welcome.registry == visible
+screenshot welcome_registry
+# Browse More Templates: the window, showing templates.
+click @welcome.close
+click @registry.kind:plugins
+expect registry.count == 3
+click @menu:Help
+click @menu:Help/Welcome
+wait 5
+click @welcome.registry
+wait 5
+expect registry.count == 1
+expect item:registry.item:registry_blank_zz == visible
+click @welcome.close
+# Offline: the index can't be fetched - the cached list stays, with a note.
+exec rm $PROJECT/registry_zz/index_v2.json
+click @registry.kind:all
+click @registry.refresh
+wait-until registry.busy == false timeout=600
+expect registry.status contains Offline
+expect registry.status contains showing the list from
+expect registry.count == 4
+screenshot registry_offline

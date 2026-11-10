@@ -1,0 +1,7 @@
+{
+ "name": "Bonus Level",
+ "version": "1.0.0",
+ "scenes": [
+  "scenes/bonus.scene.json"
+ ]
+}

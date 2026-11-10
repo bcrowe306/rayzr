@@ -37,6 +37,8 @@ Run_Options :: struct {
 	test:           string, // --test [filter]: play the project's tests/*_test.lua (game_tests.odin); "*" all
 	console:        string, // --console "perf; outlines; open": the developer console on, these lines run once loaded (tests; dev_console.odin)
 	perfReport:     string, // --perf-report <file.json>: every frame's time and the startup times, written at the end (perf_report.odin; #331)
+	modsDir:        string, // --mods <dir>: another folder of mods (when the project allows mods: mods.odin)
+	noMods:         bool,   // --no-mods: play without the installed mods
 }
 
 // An --input-script event: `key` goes down / up at `frame`; pad events
@@ -283,6 +285,10 @@ Engine_ParseRunArgs :: proc(args: []string) -> (opts: Run_Options) {
 			opts.uncapped = true
 		case arg == "--perf-report" && next != "":
 			opts.perfReport = next; i += 1
+		case arg == "--mods" && next != "":
+			opts.modsDir = next; i += 1
+		case arg == "--no-mods":
+			opts.noMods = true
 		case !strings.has_prefix(arg, "-") && opts.projectPath == "":
 			opts.projectPath = arg
 		}
@@ -501,6 +507,11 @@ Runner_Start :: proc(opts: Run_Options) -> (^Runner_State, bool) {
 	InitEngineFonts(runner_font_path())
 	rs.fontsLoaded = true
 
+	// Mods (when the project allows them): their files over the game's,
+	// before the project loads; it runs script mods' main.lua before its
+	// first scene (Mods_Start; mods.odin).
+	Mods_Setup(game, &rs.video, opts)
+
 	// Load Project (populates scenes, sets gravity, activates initial_scene)
 	if !game->loadProject(projectPath) {
 		log.errorf("Failed to load project: %s", projectPath)
@@ -633,6 +644,7 @@ Runner_Frame :: proc(rs: ^Runner_State) -> bool {
 		rl.ClearBackground({0, 0, 0, 0} if renderPixel.smooth else Game_ClearColor(game))
 		{
 			Prof_Scope("game.run")
+			Mods_Frame(game, dt) // (mods' "scene_ready" / "update")
 			game->run(dt)
 		}
 		if !Tests_AfterFrame(game) do return false // (every test ran)
@@ -816,6 +828,7 @@ Runner_Stop :: proc(rs: ^Runner_State) {
 	if Tests_Active() do Tests_Shutdown(rs.game)
 	Recorder_Discard()
 	rs.game->terminate()
+	Mods_Reset()
 	// (After the game: its teardown stops the mixer's stream and unloads its
 	// sounds, which lock raylib's audio mutex - gone once the device is
 	// closed: Android's libc aborts on that, #384.)

@@ -505,6 +505,10 @@ drive_exec :: proc(d: ^TestDrive, state: ^EditorState, line: string) -> bool {
 		}
 		if !Action_Run(state, a) do drive_fail(d, fmt.tprintf("action %q is disabled", rest))
 		return true
+	case "registry-url":
+		// registry-url <url or path>: the index Tools > Registry reads (a fixture).
+		Registry_SetURL(rest)
+		return true
 	case "crash-rescan":
 		// crash-rescan: read the crash folder again (reports a drive put there; crash_reports.odin).
 		CrashReports_Rescan()
@@ -840,6 +844,7 @@ Drive_Query :: proc(state: ^EditorState, q: string) -> (string, bool) {
 	if strings.has_prefix(q, "merge.") do return MergeConflicts_DriveQuery(q)
 	if strings.has_prefix(q, "git.") do return GitPanel_DriveQuery(q)
 	if strings.has_prefix(q, "plugin:") do return Plugins_DriveQuery(q)
+	if strings.has_prefix(q, "registry.") do return Registry_DriveQuery(state, q)
 	if strings.has_prefix(q, "crash-") do return CrashReports_DriveQuery(q)
 	if strings.has_prefix(q, "aseprite-") do return Aseprite_DriveQuery(q)
 	if strings.has_prefix(q, "panel-open:") do return "true" if PluginPanels_IsOpen(q[len("panel-open:"):]) else "false", true

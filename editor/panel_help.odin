@@ -36,6 +36,7 @@ PANEL_HELP_PAGES := [?]struct {
 	{"normal-map", "Generate Normal Map"},
 	{"toolbar-menus", "Toolbar and Menus"},
 	{"welcome", "Welcome"},
+	{"registry", "Registry"},
 	{"keyboard-shortcuts", "Keyboard Shortcuts"},
 }
 

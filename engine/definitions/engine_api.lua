@@ -16137,6 +16137,160 @@ Resource = ResourceModule
 ---@type CrashModule
 Crash = CrashModule
 
+---A mod as Mods.list() shows it (players' mods: engine/docs/modding.md).
+---@class ModInfo
+---@field id string The mod's id (mod.json "id", else its folder's name)
+---@field name string Its display name (mod.json "name")
+---@field version string Its version (mod.json "version"; "0.0.0" when missing)
+---@field description string mod.json "description" ("" when missing)
+---@field author string mod.json "author" ("" when missing)
+---@field folder string Where it is installed
+---@field status "loaded"|"disabled"|"incompatible"|"missing_dependency"|"failed"|"stopped" Why it is or isn't running this launch
+---@field loaded boolean It is running this launch
+---@field enabled boolean The player's choice for the next launch (Mods.set_enabled)
+---@field error? string What went wrong (a bad mod.json, a missing dependency, a Lua error, the CPU budget)
+
+---A mod's files (Mods.fs inside a mod's Lua): paths are relative to the
+---mod's folder (read only); "save:" paths are in the mod's own save folder
+---(<user data>/mod_data/<id>/: read and write). Absolute paths and ".." are errors.
+---@class ModFS
+local ModFS = {}
+
+---Reads a file of the mod (or "save:" a file it saved).
+---
+---Example: `local cfg = Mods.fs.read("save:settings.json") or Mods.fs.read("defaults.json")`
+---@param path string A path in the mod's folder, or "save:<path>" in its save folder
+---@return string? text The file's contents, or nil when it isn't there
+function ModFS.read(path) end
+
+---Whether a file or folder exists.
+---
+---Example: `if not Mods.fs.exists("save:seen_intro") then show_intro() end`
+---@param path string A path in the mod's folder, or "save:<path>"
+---@return boolean exists
+function ModFS.exists(path) end
+
+---Lists a folder: names, sorted, folders ending in "/".
+---
+---Example: `for _, name in ipairs(Mods.fs.list("levels")) do Log.info(name) end`
+---@param folder? string A folder in the mod's folder or "save:<folder>"; default the mod's folder
+---@return string[] names Empty when the folder doesn't exist
+function ModFS.list(folder) end
+
+---Writes a file in the mod's save folder (folders are made as needed).
+---
+---Example: `Mods.fs.write("save:settings.json", '{"hard": true}')`
+---@param path string "save:<path>" (the mod's own folder is read-only: an error)
+---@param text string The contents
+---@return boolean ok true when it was written
+function ModFS.write(path, text) end
+
+---Makes a folder in the mod's save folder.
+---
+---Example: `Mods.fs.mkdir("save:replays")`
+---@param path string "save:<path>"
+---@return boolean ok
+function ModFS.mkdir(path) end
+
+---Removes a file or folder (with its contents) from the mod's save folder.
+---
+---Example: `Mods.fs.remove("save:replays")`
+---@param path string "save:<path>"
+---@return boolean ok true when something was removed
+function ModFS.remove(path) end
+
+---Players' mods (engine/docs/modding.md): what's installed, turning mods on
+---and off (applied on the next launch), and hooks mods listen to. Every game
+---has it; with mods off (the project's export setting "Mods") the lists are
+---empty. Inside a mod's Lua, Mods also has `fs` (ModFS: its files) and
+---`self` (ModInfo: the mod itself).
+---@class ModsModule
+---@field fs ModFS Inside a mod's Lua: its files (nil in the game's own scripts)
+---@field self ModInfo Inside a mod's Lua: the mod itself (nil in the game's own scripts)
+local ModsModule = {}
+
+---Every mod found - running or not (disabled, incompatible, failed...) - in load order.
+---
+---Example: `for _, m in ipairs(Mods.list()) do Log.info(m.name, m.version, m.status) end`
+---@return ModInfo[] mods
+function ModsModule.list() end
+
+---The ids of the mods running this launch, in load order.
+---
+---Example: `Log.info("mods: " .. table.concat(Mods.enabled(), ", "))`
+---@return string[] ids
+function ModsModule.enabled() end
+
+---Whether a mod is running this launch.
+---
+---Example: `if Mods.is_loaded("hard_mode") then enemy_speed = enemy_speed * 2 end`
+---@param id string The mod's id
+---@return boolean loaded
+function ModsModule.is_loaded(id) end
+
+---Turns a mod on or off for the next launch (written to <user data>/mods.json).
+---
+---Example: `Mods.set_enabled(mod.id, not mod.enabled)`
+---@param id string The mod's id
+---@param on? boolean Default true
+---@return boolean ok false when there's no such mod or mods.json couldn't be written
+function ModsModule.set_enabled(id, on) end
+
+---Sets the load order for the next launch: these ids first, in this order
+---(the others after, by their load_order); a mod still loads after its dependencies.
+---
+---Example: `Mods.set_order({"core_lib", "big_coins"})`
+---@param ids string[] Mod ids
+---@return boolean ok false when mods.json couldn't be written
+function ModsModule.set_order(ids) end
+
+---Whether a set_enabled / set_order change waits for the game to be restarted.
+---
+---Example: `restart_label.visible = Mods.restart_needed()`
+---@return boolean needed
+function ModsModule.restart_needed() end
+
+---What the game lets mods do: its export setting "Mods".
+---
+---Example: `if Mods.mode() == "off" then mods_button.visible = false end`
+---@return "off"|"assets"|"scripts" mode
+function ModsModule.mode() end
+
+---The folders the game looks in for mods (to tell players where to put them).
+---
+---Example: `help.text = "Put mods in " .. Mods.folders()[1]`
+---@return string[] folders mods/ next to the game, then mods/ in the user-data folder
+function ModsModule.folders() end
+
+---Listens for a mod hook: "mods_loaded" (every mod's main.lua ran),
+---"scene_ready" (the scene's name: a scene started), "update" (dt: every
+---frame), a name game scripts raise with Mods.emit, or any event-bus event
+---(Events.emit). A handler that errors stops its mod (in a game script: logged).
+---
+---Example: `Mods.on("scene_ready", function(name) if name == "level_1" then Scene.find_node("Coins"):set_text("Modded!") end end)`
+---@param event string The hook's name
+---@param fn fun(...: any) Called with the hook's values
+---@return integer id For Mods.off
+function ModsModule.on(event, fn) end
+
+---Stops a Mods.on handler.
+---
+---Example: `Mods.off(update_id)`
+---@param id integer What Mods.on returned
+---@return boolean removed false when it was already gone
+function ModsModule.off(id) end
+
+---Raises a hook mods listen to with Mods.on: how a game offers its own
+---hooks ("enemy_spawned", "shop_items"...). Only Mods.on handlers get it.
+---
+---Example: `Mods.emit("shop_items", items) -- mods may add to the table`
+---@param event string The hook's name
+---@param ... any Values passed to the handlers
+function ModsModule.emit(event, ...) end
+
+---@type ModsModule
+Mods = ModsModule
+
 ---@class NavigationModule
 local NavigationModule = {}
 

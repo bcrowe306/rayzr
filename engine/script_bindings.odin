@@ -5647,6 +5647,7 @@ RegisterEngineLuaBindings :: proc(L: ^lua.State, sm: ^ScriptManager) {
 	Script_RegisterVectorModule(L)
 	Script_RegisterPoolModule(L)
 	Script_RegisterEventsModule(L) // global events (script_events.odin)
+	Script_RegisterModsModule(L)   // players' mods (mods.odin)
 	Script_RegisterLevelGenModule(L) // procedural levels (level_gen.odin)
 	Script_RegisterAccessibilityModules(L) // Accessibility, Subtitles (accessibility.odin)
 	Script_RegisterSaveModule(L)
