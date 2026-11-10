@@ -80,11 +80,9 @@ Plugins_List :: proc() -> []^Plugin {
 }
 
 // Plugins_UserDir: where user plugins live.
+// (Under --user-data when given: drives and tests.)
 Plugins_UserDir :: proc() -> string {
-	home, err := os.user_home_dir(context.temp_allocator)
-	if err != nil do return ""
-	p, _ := filepath.join({home, ".config", "rayzr_editor", "plugins"}, context.temp_allocator)
-	return p
+	return Editor_UserDir("plugins", GlobalEditor.userDataDir)
 }
 
 // Plugins_Load discovers the project's and the user's plugins and starts
@@ -98,8 +96,9 @@ Plugins_Load :: proc(state: ^EditorState, ask := true) {
 	plugins.project = strings.clone(project)
 	projectDir, _ := filepath.join({project, "plugins"}, context.temp_allocator)
 	plugins_discover(projectDir, .Project)
-	// (Not while driving: tests don't run the user's own plugins.)
-	if user := Plugins_UserDir(); user != "" && !GlobalDrive.enabled do plugins_discover(user, .User)
+	// (Not while driving, unless the drive has its own --user-data folder:
+	// tests don't run the user's own plugins.)
+	if user := Plugins_UserDir(); user != "" && (!GlobalDrive.enabled || state.userDataDir != "") do plugins_discover(user, .User)
 	if len(plugins.list) == 0 do return
 	trusted, known := GlobalSettings.pluginTrust[plugins.project]
 	for p in plugins.list {
