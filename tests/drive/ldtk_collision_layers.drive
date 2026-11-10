@@ -1,0 +1,69 @@
+# LDtk collision layers and mask (#405): the level's default layers in the
+# Inspector and on the LDtk tab's Collision page, and an IntGrid value's own
+# layers and mask; saved with the scene.
+wait 5
+click @menu:View
+click @menu:View/Workspaces
+click @menu:Workspaces/Animation
+wait 3
+click @asset.new-scene
+
+drop-files @asset.search tests/drive/fixtures/ldtk/topdown.ldtk
+wait 3
+expect import.failed == 0
+dblclick @asset:levels/topdown.ldtk
+expect node:topdown.type == LdtkLevelNode
+expect ldtk.default-layers == 1/all
+
+# The level's default layers in the Inspector: Layer2 too.
+click @insp.prop:categoryLayers
+click @pick:Layer2
+click @insp.prop:categoryLayers
+expect ldtk.default-layers == 1,2/all
+screenshot ldtk_layers_inspector
+
+# The Collision page shows the default; walls get their own layer and mask.
+# (Popups near the bottom flip above their combo after their first frame:
+# the waits let them settle before clicking an item; clicking the combo
+# again closes it.)
+click @insp.ldtk.panel
+wait 2
+drag 640,519 640,330 12
+wait 2
+click @ldtk.page:Collision
+expect ldtk.collision:Collisions:1 == solid
+expect ldtk.collision-layers:Collisions:1 == default 1,2/all
+click @ldtk.coll-layers:Collisions:1
+wait 1
+click @ldtk.coll-layers:Collisions:1/3
+screenshot ldtk_layers_combo
+click @ldtk.coll-layers:Collisions:1
+expect ldtk.collision-layers:Collisions:1 == own 1,2,3/all
+click @ldtk.coll-mask:Collisions:1
+wait 1
+click @ldtk.coll-mask:Collisions:1/4
+click @ldtk.coll-mask:Collisions:1
+expect ldtk.collision-layers:Collisions:1 == own 1,2,3/1,2,3,5,6,7,8,9,10,11,12,13,14,15,16
+screenshot ldtk_layers_own
+
+# The page's default mask: a value on the default follows it.
+click @ldtk.mask.default
+wait 1
+click @ldtk.mask.default/16
+click @ldtk.mask.default
+expect ldtk.default-layers == 1,2/1,2,3,4,5,6,7,8,9,10,11,12,13,14,15
+
+# Saved with the scene.
+key ctrl+s
+expect file:scenes/new_scene.scene.json contains "layers": ["Layer1", "Layer2", "Layer3"]
+expect file:scenes/new_scene.scene.json contains "Layer16"
+
+# Back to the default.
+click @ldtk.coll-layers:Collisions:1
+wait 1
+click @ldtk.coll-layers:Collisions:1/default
+click @ldtk.coll-layers:Collisions:1
+expect ldtk.collision-layers:Collisions:1 == default 1,2/1,2,3,4,5,6,7,8,9,10,11,12,13,14,15
+screenshot ldtk_layers_default
+key ctrl+z
+expect ldtk.collision-layers:Collisions:1 == own 1,2,3/1,2,3,5,6,7,8,9,10,11,12,13,14,15,16

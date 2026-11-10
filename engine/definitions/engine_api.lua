@@ -11218,6 +11218,8 @@ function CameraNode:camera_clear_limits() end
 ---@field identifier string
 ---@field color LdtkColor
 ---@field collision string none, solid, one_way, trigger
+---@field layers integer[] Collision layers (1-16) its colliders are on: its rule's own, else the level's
+---@field mask integer[] Collision layers (1-16) its colliders collide with
 
 ---@class LdtkTile
 ---@field id integer Tile id in its tileset
