@@ -681,6 +681,7 @@ property_widget :: proc(state: ^EditorState, node: ^e.Node, p: e.Node_Property, 
 					Editor_RecordUndo(state, undoLabel)
 					e.Property_BitSetSet(p, i, on)
 				}
+				Drive_Item(fmt.tprintf("pick:%s", n))
 			}
 			imgui.EndCombo()
 		}
