@@ -155,6 +155,8 @@ commands to any menu.
 | **Sprite Sheet Slicer...** | | Cut a sprite sheet into frames. |
 | **New Plugin...** | | Start an editor plugin ([Plugins](plugins.md)). |
 | **Format Scene Files** | | Rewrite the project's scene and component files as the editor saves them, for small diffs ([Working in a team](team.md)). |
+| **Set Up Scene Merging** | | Let git merge scenes by node in this clone ([Working in a team](team.md#merging-scenes)). |
+| **Merge Conflicts...** | | The scenes git couldn't merge on its own: pick ours, theirs or base per field ([Working in a team](team.md#merge-conflicts)). |
 
 ### Game menu
 

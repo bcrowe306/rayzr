@@ -1,0 +1,14 @@
+{
+  "file": "scenes/conflict_zz.scene.json",
+  "conflicts": [
+    {
+      "kind": "Value",
+      "uid": "signzz01",
+      "name": "SignZz",
+      "field": "properties/text",
+      "base": "\"Base\"",
+      "ours": "\"Ours\"",
+      "theirs": "\"Theirs\""
+    }
+  ]
+}

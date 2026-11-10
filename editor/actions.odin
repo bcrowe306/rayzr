@@ -316,6 +316,8 @@ Actions_Init :: proc() {
 	add({id = "code.font_smaller", category = "Code", label = "Decrease Font Size", chords = k(ch(.Minus, P)), scope = .Code, run = proc(s: ^EditorState) {Code_CmdFontSize(s, -1)}, repeat = true})
 	add({id = "code.font_reset", category = "Code", label = "Reset Font Size", chords = k(ch(._0, P)), scope = .Code, run = proc(s: ^EditorState) {Code_CmdFontSize(s, 0)}})
 	add({id = "tool.format_scenes", category = "Tools", label = "Format Scene Files", scope = .Global, run = Fmt_Project, enabled = proc(s: ^EditorState) -> bool {return s.projectPath != ""}})
+	add({id = "tool.setup_merge", category = "Tools", label = "Set Up Scene Merging", scope = .Global, run = MergeScene_Setup, enabled = proc(s: ^EditorState) -> bool {return s.projectPath != ""}})
+	add({id = "tool.merge_conflicts", category = "Tools", label = "Merge Conflicts...", scope = .Global, run = MergeConflicts_Open, enabled = proc(s: ^EditorState) -> bool {return s.projectPath != ""}})
 	add({id = "tool.new_plugin", category = "Tools", label = "New Plugin...", scope = .Global, run = proc(s: ^EditorState) {Prompt_Open(.NewPlugin, "My Plugin")}})
 	add({id = "code.new_script", category = "Code", label = "New Script", scope = .Global, run = proc(s: ^EditorState) {NewScriptDialog_Open(s)}})
 	add({id = "nodes.new_component", category = "Scene", label = "New Component", scope = .Global, run = proc(s: ^EditorState) {NewComponentDialog_Open(s)}})
