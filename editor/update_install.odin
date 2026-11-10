@@ -6,6 +6,7 @@ import "core:encoding/hex"
 import "core:fmt"
 import "core:os"
 import "core:path/filepath"
+import "core:path/slashpath"
 import "core:strconv"
 import "core:strings"
 import "core:sync"
@@ -100,7 +101,8 @@ Update_DetectFrom :: proc(exe, appimage, platform: string) -> Update_Install {
 		return {.Windows_Folder, filepath.dir(exe, context.temp_allocator)}
 	case "linux":
 		if appimage != "" do return {.AppImage, appimage}
-		dir := filepath.dir(exe, context.temp_allocator)
+		// (Linux paths: "/" whatever the host - the tests run this on Windows too.)
+		dir := slashpath.dir(exe, context.temp_allocator)
 		if strings.has_prefix(dir, "/opt/") || strings.has_prefix(dir, "/usr/") do return {.Deb, dir}
 		return {.Linux_Folder, dir}
 	}
