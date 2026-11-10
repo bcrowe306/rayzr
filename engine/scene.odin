@@ -602,23 +602,36 @@ render_bucket :: proc(scene: ^Scene, nodes: []^Node, gameContext: ^GameContext, 
 		if renderNormalPass {
 			if !Lit_NodeDrawn(node) || node.material != nil do continue
 			normalPassNode = node
+			Pixel_BeginNode(node) // (snapped as in the colour pass)
 			if node.render != nil do node->render(gameContext, deltaTime)
+			Pixel_EndNode()
 			continue
 		}
-		// Game feel: blinked out, or drawn in a flash colour (game_feel.odin).
-		draw, flashing := true, false
-		if len(nodeFx) > 0 do draw, flashing = Fx_BeginDraw(node, node.material == nil)
-		if !draw do continue
-		defer if flashing do Fx_EndDraw()
-		renderStats.drawn += 1
-		withMaterial := node.material != nil && Material_Begin(node, gameContext)
-		scaled := node.isUI && access.uiScale != 1 && UI_BeginScaled(node) // (accessibility UI scale)
-		if node.render != nil do node->render(gameContext, deltaTime)
-		if node.scriptInstance != nil do Script_DrawNode(node, gameContext) // (on_draw: vector_canvas.odin)
-		if scaled do UI_EndScaled()
-		if withMaterial do Material_End(node)
+		// Native text / UI: drawn on the window after the frame (pixel_native.odin).
+		if Pixel_NativeTakes(node) do continue
+		Render_DrawNode(node, gameContext, deltaTime)
 		if scene.drawBounds && node.drawBounds != nil do node->drawBounds(gameContext, deltaTime)
 	}
+}
+
+// Render_DrawNode draws one node as a layer does: its game-feel flash, its
+// material, the accessibility UI scale, its pixel-art overrides and its
+// script's on_draw.
+Render_DrawNode :: proc(node: ^Node, gameContext: ^GameContext, deltaTime: f32) {
+	// Game feel: blinked out, or drawn in a flash colour (game_feel.odin).
+	draw, flashing := true, false
+	if len(nodeFx) > 0 do draw, flashing = Fx_BeginDraw(node, node.material == nil)
+	if !draw do return
+	defer if flashing do Fx_EndDraw()
+	renderStats.drawn += 1
+	withMaterial := node.material != nil && Material_Begin(node, gameContext)
+	scaled := node.isUI && access.uiScale != 1 && UI_BeginScaled(node) // (accessibility UI scale)
+	Pixel_BeginNode(node) // (its Texture Filter / Snap to Pixels: pixel_perfect.odin)
+	if node.render != nil do node->render(gameContext, deltaTime)
+	if node.scriptInstance != nil do Script_DrawNode(node, gameContext) // (on_draw: vector_canvas.odin)
+	Pixel_EndNode()
+	if scaled do UI_EndScaled()
+	if withMaterial do Material_End(node)
 }
 
 // Scene_CollectRenderables walks the enabled hierarchy once and returns the

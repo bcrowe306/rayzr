@@ -1024,6 +1024,12 @@ function UITabContainerNode:connect(event, handler) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 
 ---@alias NodeProperty
 ---| "position" # Vec2 - Position relative to the parent, in pixels (+y is down).
@@ -1037,6 +1043,9 @@ function UITabContainerNode:connect(event, handler) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 
 ---Reads an Inspector property by its path (vectors and colours as tables); "script.<name>" reads a field of the node's script.
 ---
@@ -1054,6 +1063,9 @@ function UITabContainerNode:connect(event, handler) end
 ---@overload fun(self: Node, path: "paused"): boolean
 ---@overload fun(self: Node, path: "enabled"): boolean
 ---@overload fun(self: Node, path: "visible"): boolean
+---@overload fun(self: Node, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: Node, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: Node, path: "pixel_text"): "Default"|"Native"|"Pixel"
 function Node:get_property(path) end
 
 ---Sets an Inspector property by its path: vectors as {x, y} or x, y; colours as {r, g, b[, a]} 0..1 or "#rrggbb[aa]"; enums by name; "script.<name>" a field of the node's script.
@@ -1073,6 +1085,9 @@ function Node:get_property(path) end
 ---@overload fun(self: Node, path: "paused", value: boolean)
 ---@overload fun(self: Node, path: "enabled", value: boolean)
 ---@overload fun(self: Node, path: "visible", value: boolean)
+---@overload fun(self: Node, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: Node, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: Node, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 function Node:set_property(path, value, y) end
 
 ---@class CameraNode
@@ -1091,6 +1106,12 @@ function Node:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field is_current boolean The camera the game renders through (one per scene).
 ---@field isCurrent boolean Same as is_current (the Inspector's name)
 ---@field follow_mode "Static"|"SingleTarget"|"MultiTarget"|"Manual" Static: stays put. Single Target: follows its Follow Target. Multi Target: frames all t...
@@ -1198,6 +1219,9 @@ function Node:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "is_current" # boolean - The camera the game renders through (one per scene).
 ---| "follow_mode" # "Static"|"SingleTarget"|"MultiTarget"|"Manual" - Static: stays put. Single Target: follows its Follow Target. Multi Target: frames all t...
 ---| "drag_type" # "None"|"SmoothDamp"|"SpringDamp"|"LookAhead"|"AutoSpeed" - How the camera catches up with its target: none (locked), smooth damp, spring, look-ahe...
@@ -1263,6 +1287,9 @@ function Node:set_property(path, value, y) end
 ---@overload fun(self: CameraNode, path: "paused"): boolean
 ---@overload fun(self: CameraNode, path: "enabled"): boolean
 ---@overload fun(self: CameraNode, path: "visible"): boolean
+---@overload fun(self: CameraNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: CameraNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: CameraNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: CameraNode, path: "is_current"): boolean
 ---@overload fun(self: CameraNode, path: "follow_mode"): "Static"|"SingleTarget"|"MultiTarget"|"Manual"
 ---@overload fun(self: CameraNode, path: "drag_type"): "None"|"SmoothDamp"|"SpringDamp"|"LookAhead"|"AutoSpeed"
@@ -1330,6 +1357,9 @@ function CameraNode:get_property(path) end
 ---@overload fun(self: CameraNode, path: "paused", value: boolean)
 ---@overload fun(self: CameraNode, path: "enabled", value: boolean)
 ---@overload fun(self: CameraNode, path: "visible", value: boolean)
+---@overload fun(self: CameraNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: CameraNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: CameraNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: CameraNode, path: "is_current", value: boolean)
 ---@overload fun(self: CameraNode, path: "follow_mode", value: "Static"|"SingleTarget"|"MultiTarget"|"Manual")
 ---@overload fun(self: CameraNode, path: "drag_type", value: "None"|"SmoothDamp"|"SpringDamp"|"LookAhead"|"AutoSpeed")
@@ -1396,6 +1426,12 @@ function CameraNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field mode "Single"|"All"|"Random"|"Sequential"|"Shuffle" What one spawn makes: Single (the first entry), All (every entry), Random (one by weigh...
 ---@field sequence_end "Loop"|"Ping_Pong"|"Stop" Sequential, after the last entry: Loop (the first again), Ping Pong (back down the list...
 ---@field sequenceEnd "Loop"|"Ping_Pong"|"Stop" Same as sequence_end (the Inspector's name)
@@ -1442,6 +1478,9 @@ function CameraNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "mode" # "Single"|"All"|"Random"|"Sequential"|"Shuffle" - What one spawn makes: Single (the first entry), All (every entry), Random (one by weigh...
 ---| "sequence_end" # "Loop"|"Ping_Pong"|"Stop" - Sequential, after the last entry: Loop (the first again), Ping Pong (back down the list...
 ---| "count" # integer - How many picks one spawn makes (a burst): with Random, Sequential and Shuffle each pick...
@@ -1480,6 +1519,9 @@ function CameraNode:set_property(path, value, y) end
 ---@overload fun(self: SpawnerNode, path: "paused"): boolean
 ---@overload fun(self: SpawnerNode, path: "enabled"): boolean
 ---@overload fun(self: SpawnerNode, path: "visible"): boolean
+---@overload fun(self: SpawnerNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: SpawnerNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: SpawnerNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: SpawnerNode, path: "mode"): "Single"|"All"|"Random"|"Sequential"|"Shuffle"
 ---@overload fun(self: SpawnerNode, path: "sequence_end"): "Loop"|"Ping_Pong"|"Stop"
 ---@overload fun(self: SpawnerNode, path: "count"): integer
@@ -1520,6 +1562,9 @@ function SpawnerNode:get_property(path) end
 ---@overload fun(self: SpawnerNode, path: "paused", value: boolean)
 ---@overload fun(self: SpawnerNode, path: "enabled", value: boolean)
 ---@overload fun(self: SpawnerNode, path: "visible", value: boolean)
+---@overload fun(self: SpawnerNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: SpawnerNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: SpawnerNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: SpawnerNode, path: "mode", value: "Single"|"All"|"Random"|"Sequential"|"Shuffle")
 ---@overload fun(self: SpawnerNode, path: "sequence_end", value: "Loop"|"Ping_Pong"|"Stop")
 ---@overload fun(self: SpawnerNode, path: "count", value: integer)
@@ -1559,6 +1604,12 @@ function SpawnerNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field generator string The generator it makes levels from (a .levelgen.json).
 ---@field tilemap string The TileMap it fills, as a path from this node; empty: its first TileMap child, else it...
 ---@field seed integer The level's seed: the same seed, the same level (0: the generator's own).
@@ -1595,6 +1646,9 @@ function SpawnerNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "generator" # string - The generator it makes levels from (a .levelgen.json).
 ---| "tilemap" # string - The TileMap it fills, as a path from this node; empty: its first TileMap child, else it...
 ---| "seed" # integer - The level's seed: the same seed, the same level (0: the generator's own).
@@ -1627,6 +1681,9 @@ function SpawnerNode:set_property(path, value, y) end
 ---@overload fun(self: LevelGeneratorNode, path: "paused"): boolean
 ---@overload fun(self: LevelGeneratorNode, path: "enabled"): boolean
 ---@overload fun(self: LevelGeneratorNode, path: "visible"): boolean
+---@overload fun(self: LevelGeneratorNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: LevelGeneratorNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: LevelGeneratorNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: LevelGeneratorNode, path: "generator"): string
 ---@overload fun(self: LevelGeneratorNode, path: "tilemap"): string
 ---@overload fun(self: LevelGeneratorNode, path: "seed"): integer
@@ -1661,6 +1718,9 @@ function LevelGeneratorNode:get_property(path) end
 ---@overload fun(self: LevelGeneratorNode, path: "paused", value: boolean)
 ---@overload fun(self: LevelGeneratorNode, path: "enabled", value: boolean)
 ---@overload fun(self: LevelGeneratorNode, path: "visible", value: boolean)
+---@overload fun(self: LevelGeneratorNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: LevelGeneratorNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: LevelGeneratorNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: LevelGeneratorNode, path: "generator", value: string)
 ---@overload fun(self: LevelGeneratorNode, path: "tilemap", value: string)
 ---@overload fun(self: LevelGeneratorNode, path: "seed", value: integer)
@@ -1695,6 +1755,12 @@ function LevelGeneratorNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field shininess number Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---@field tint number[] Multiplies the texture's colours (white = unchanged; alpha fades it).
 
@@ -1711,6 +1777,9 @@ function LevelGeneratorNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "shininess" # number - Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---| "tint" # number[] - Multiplies the texture's colours (white = unchanged; alpha fades it).
 
@@ -1731,6 +1800,9 @@ function LevelGeneratorNode:set_property(path, value, y) end
 ---@overload fun(self: TextureNode, path: "paused"): boolean
 ---@overload fun(self: TextureNode, path: "enabled"): boolean
 ---@overload fun(self: TextureNode, path: "visible"): boolean
+---@overload fun(self: TextureNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: TextureNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: TextureNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: TextureNode, path: "shininess"): number
 ---@overload fun(self: TextureNode, path: "tint"): number[]
 function TextureNode:get_property(path) end
@@ -1753,6 +1825,9 @@ function TextureNode:get_property(path) end
 ---@overload fun(self: TextureNode, path: "paused", value: boolean)
 ---@overload fun(self: TextureNode, path: "enabled", value: boolean)
 ---@overload fun(self: TextureNode, path: "visible", value: boolean)
+---@overload fun(self: TextureNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: TextureNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: TextureNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: TextureNode, path: "shininess", value: number)
 ---@overload fun(self: TextureNode, path: "tint", value: number[])
 function TextureNode:set_property(path, value, y) end
@@ -1774,6 +1849,12 @@ function TextureNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field shininess number Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---@field tint number[] Multiplies the texture's colours (white = unchanged; alpha fades it).
 
@@ -1790,6 +1871,9 @@ function TextureNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "shininess" # number - Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---| "tint" # number[] - Multiplies the texture's colours (white = unchanged; alpha fades it).
 
@@ -1810,6 +1894,9 @@ function TextureNode:set_property(path, value, y) end
 ---@overload fun(self: AtlasSpriteNode, path: "paused"): boolean
 ---@overload fun(self: AtlasSpriteNode, path: "enabled"): boolean
 ---@overload fun(self: AtlasSpriteNode, path: "visible"): boolean
+---@overload fun(self: AtlasSpriteNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: AtlasSpriteNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: AtlasSpriteNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: AtlasSpriteNode, path: "shininess"): number
 ---@overload fun(self: AtlasSpriteNode, path: "tint"): number[]
 function AtlasSpriteNode:get_property(path) end
@@ -1832,6 +1919,9 @@ function AtlasSpriteNode:get_property(path) end
 ---@overload fun(self: AtlasSpriteNode, path: "paused", value: boolean)
 ---@overload fun(self: AtlasSpriteNode, path: "enabled", value: boolean)
 ---@overload fun(self: AtlasSpriteNode, path: "visible", value: boolean)
+---@overload fun(self: AtlasSpriteNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: AtlasSpriteNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: AtlasSpriteNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: AtlasSpriteNode, path: "shininess", value: number)
 ---@overload fun(self: AtlasSpriteNode, path: "tint", value: number[])
 function AtlasSpriteNode:set_property(path, value, y) end
@@ -1853,6 +1943,12 @@ function AtlasSpriteNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field shininess number Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 
 ---@alias FrameAnimationNodeProperty
@@ -1868,6 +1964,9 @@ function AtlasSpriteNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "shininess" # number - Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 
 ---Reads an Inspector property by its path (vectors and colours as tables); "script.<name>" reads a field of the node's script.
@@ -1887,6 +1986,9 @@ function AtlasSpriteNode:set_property(path, value, y) end
 ---@overload fun(self: FrameAnimationNode, path: "paused"): boolean
 ---@overload fun(self: FrameAnimationNode, path: "enabled"): boolean
 ---@overload fun(self: FrameAnimationNode, path: "visible"): boolean
+---@overload fun(self: FrameAnimationNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: FrameAnimationNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: FrameAnimationNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: FrameAnimationNode, path: "shininess"): number
 function FrameAnimationNode:get_property(path) end
 
@@ -1908,6 +2010,9 @@ function FrameAnimationNode:get_property(path) end
 ---@overload fun(self: FrameAnimationNode, path: "paused", value: boolean)
 ---@overload fun(self: FrameAnimationNode, path: "enabled", value: boolean)
 ---@overload fun(self: FrameAnimationNode, path: "visible", value: boolean)
+---@overload fun(self: FrameAnimationNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: FrameAnimationNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: FrameAnimationNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: FrameAnimationNode, path: "shininess", value: number)
 function FrameAnimationNode:set_property(path, value, y) end
 
@@ -1928,6 +2033,12 @@ function FrameAnimationNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field shininess number Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---@field reverse boolean Play the animation backwards.
 ---@field autoplay boolean Start playing the current animation when the node becomes ready.
@@ -1948,6 +2059,9 @@ function FrameAnimationNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "shininess" # number - Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---| "reverse" # boolean - Play the animation backwards.
 ---| "autoplay" # boolean - Start playing the current animation when the node becomes ready.
@@ -1971,6 +2085,9 @@ function FrameAnimationNode:set_property(path, value, y) end
 ---@overload fun(self: AnimationPlayerNode, path: "paused"): boolean
 ---@overload fun(self: AnimationPlayerNode, path: "enabled"): boolean
 ---@overload fun(self: AnimationPlayerNode, path: "visible"): boolean
+---@overload fun(self: AnimationPlayerNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: AnimationPlayerNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: AnimationPlayerNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: AnimationPlayerNode, path: "shininess"): number
 ---@overload fun(self: AnimationPlayerNode, path: "reverse"): boolean
 ---@overload fun(self: AnimationPlayerNode, path: "autoplay"): boolean
@@ -1996,6 +2113,9 @@ function AnimationPlayerNode:get_property(path) end
 ---@overload fun(self: AnimationPlayerNode, path: "paused", value: boolean)
 ---@overload fun(self: AnimationPlayerNode, path: "enabled", value: boolean)
 ---@overload fun(self: AnimationPlayerNode, path: "visible", value: boolean)
+---@overload fun(self: AnimationPlayerNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: AnimationPlayerNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: AnimationPlayerNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: AnimationPlayerNode, path: "shininess", value: number)
 ---@overload fun(self: AnimationPlayerNode, path: "reverse", value: boolean)
 ---@overload fun(self: AnimationPlayerNode, path: "autoplay", value: boolean)
@@ -2020,6 +2140,12 @@ function AnimationPlayerNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field shininess number Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---@field file string The Aseprite file (.aseprite / .ase, project-relative). Saving it in Aseprite updates t...
 ---@field animation string The tag played (its direction and repeat count as set in Aseprite); empty = every frame...
@@ -2048,6 +2174,9 @@ function AnimationPlayerNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "shininess" # number - Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---| "file" # string - The Aseprite file (.aseprite / .ase, project-relative). Saving it in Aseprite updates t...
 ---| "animation" # string - The tag played (its direction and repeat count as set in Aseprite); empty = every frame...
@@ -2077,6 +2206,9 @@ function AnimationPlayerNode:set_property(path, value, y) end
 ---@overload fun(self: AsepriteNode, path: "paused"): boolean
 ---@overload fun(self: AsepriteNode, path: "enabled"): boolean
 ---@overload fun(self: AsepriteNode, path: "visible"): boolean
+---@overload fun(self: AsepriteNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: AsepriteNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: AsepriteNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: AsepriteNode, path: "shininess"): number
 ---@overload fun(self: AsepriteNode, path: "file"): string
 ---@overload fun(self: AsepriteNode, path: "animation"): string
@@ -2108,6 +2240,9 @@ function AsepriteNode:get_property(path) end
 ---@overload fun(self: AsepriteNode, path: "paused", value: boolean)
 ---@overload fun(self: AsepriteNode, path: "enabled", value: boolean)
 ---@overload fun(self: AsepriteNode, path: "visible", value: boolean)
+---@overload fun(self: AsepriteNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: AsepriteNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: AsepriteNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: AsepriteNode, path: "shininess", value: number)
 ---@overload fun(self: AsepriteNode, path: "file", value: string)
 ---@overload fun(self: AsepriteNode, path: "animation", value: string)
@@ -2137,6 +2272,12 @@ function AsepriteNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field active boolean Ticks the tree. Turning it off interrupts the running branch (tree_disabled); on again ...
 ---@field process_mode "Every_Frame"|"Manual" Every Frame: ticks in its update (every Tick Rate frames). Manual: only when a script c...
 ---@field processMode "Every_Frame"|"Manual" Same as process_mode (the Inspector's name)
@@ -2158,6 +2299,9 @@ function AsepriteNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "active" # boolean - Ticks the tree. Turning it off interrupts the running branch (tree_disabled); on again ...
 ---| "process_mode" # "Every_Frame"|"Manual" - Every Frame: ticks in its update (every Tick Rate frames). Manual: only when a script c...
 ---| "tick_rate" # integer - Ticks every this many frames (1: every frame). Higher is cheaper for many actors; timer...
@@ -2180,6 +2324,9 @@ function AsepriteNode:set_property(path, value, y) end
 ---@overload fun(self: BehaviorTreeNode, path: "paused"): boolean
 ---@overload fun(self: BehaviorTreeNode, path: "enabled"): boolean
 ---@overload fun(self: BehaviorTreeNode, path: "visible"): boolean
+---@overload fun(self: BehaviorTreeNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: BehaviorTreeNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: BehaviorTreeNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: BehaviorTreeNode, path: "active"): boolean
 ---@overload fun(self: BehaviorTreeNode, path: "process_mode"): "Every_Frame"|"Manual"
 ---@overload fun(self: BehaviorTreeNode, path: "tick_rate"): integer
@@ -2204,6 +2351,9 @@ function BehaviorTreeNode:get_property(path) end
 ---@overload fun(self: BehaviorTreeNode, path: "paused", value: boolean)
 ---@overload fun(self: BehaviorTreeNode, path: "enabled", value: boolean)
 ---@overload fun(self: BehaviorTreeNode, path: "visible", value: boolean)
+---@overload fun(self: BehaviorTreeNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: BehaviorTreeNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: BehaviorTreeNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: BehaviorTreeNode, path: "active", value: boolean)
 ---@overload fun(self: BehaviorTreeNode, path: "process_mode", value: "Every_Frame"|"Manual")
 ---@overload fun(self: BehaviorTreeNode, path: "tick_rate", value: integer)
@@ -2227,6 +2377,12 @@ function BehaviorTreeNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field active boolean Senses, plans and acts. Off stops the running action and forgets the plan.
 ---@field actor string The node it acts for (a path; empty: its parent): the one that moves to targets and who...
 ---@field request_all boolean Every goal is requested at the start (the cheapest reachable wins). Off: a script picks...
@@ -2250,6 +2406,9 @@ function BehaviorTreeNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "active" # boolean - Senses, plans and acts. Off stops the running action and forgets the plan.
 ---| "actor" # string - The node it acts for (a path; empty: its parent): the one that moves to targets and who...
 ---| "request_all" # boolean - Every goal is requested at the start (the cheapest reachable wins). Off: a script picks...
@@ -2273,6 +2432,9 @@ function BehaviorTreeNode:set_property(path, value, y) end
 ---@overload fun(self: GoapNode, path: "paused"): boolean
 ---@overload fun(self: GoapNode, path: "enabled"): boolean
 ---@overload fun(self: GoapNode, path: "visible"): boolean
+---@overload fun(self: GoapNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: GoapNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: GoapNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: GoapNode, path: "active"): boolean
 ---@overload fun(self: GoapNode, path: "actor"): string
 ---@overload fun(self: GoapNode, path: "request_all"): boolean
@@ -2298,6 +2460,9 @@ function GoapNode:get_property(path) end
 ---@overload fun(self: GoapNode, path: "paused", value: boolean)
 ---@overload fun(self: GoapNode, path: "enabled", value: boolean)
 ---@overload fun(self: GoapNode, path: "visible", value: boolean)
+---@overload fun(self: GoapNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: GoapNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: GoapNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: GoapNode, path: "active", value: boolean)
 ---@overload fun(self: GoapNode, path: "actor", value: string)
 ---@overload fun(self: GoapNode, path: "request_all", value: boolean)
@@ -2322,6 +2487,12 @@ function GoapNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field frame_tag string Frame Source Aseprite: the tag whose frames play ("" = every frame), in its direction (...
 ---@field frameTag string Same as frame_tag (the Inspector's name)
 ---@field sub_emitter string Sub-emitter: another Particle Emitter, as a path from this node (e.g. a child's name), ...
@@ -2343,6 +2514,9 @@ function GoapNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "emitter.amount" # integer - Particles alive at once (the pool size).
 ---| "emitter.lifetime" # number - Seconds each particle lives.
 ---| "emitter.lifetime_variance" # number - Each particle's lifetime varies by up to this fraction (0.3: 70%..130% of Lifetime).
@@ -2434,6 +2608,9 @@ function GoapNode:set_property(path, value, y) end
 ---@overload fun(self: ParticleEmitterNode, path: "paused"): boolean
 ---@overload fun(self: ParticleEmitterNode, path: "enabled"): boolean
 ---@overload fun(self: ParticleEmitterNode, path: "visible"): boolean
+---@overload fun(self: ParticleEmitterNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: ParticleEmitterNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: ParticleEmitterNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: ParticleEmitterNode, path: "emitter.amount"): integer
 ---@overload fun(self: ParticleEmitterNode, path: "emitter.lifetime"): number
 ---@overload fun(self: ParticleEmitterNode, path: "emitter.lifetime_variance"): number
@@ -2527,6 +2704,9 @@ function ParticleEmitterNode:get_property(path) end
 ---@overload fun(self: ParticleEmitterNode, path: "paused", value: boolean)
 ---@overload fun(self: ParticleEmitterNode, path: "enabled", value: boolean)
 ---@overload fun(self: ParticleEmitterNode, path: "visible", value: boolean)
+---@overload fun(self: ParticleEmitterNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: ParticleEmitterNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: ParticleEmitterNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: ParticleEmitterNode, path: "emitter.amount", value: integer)
 ---@overload fun(self: ParticleEmitterNode, path: "emitter.lifetime", value: number)
 ---@overload fun(self: ParticleEmitterNode, path: "emitter.lifetime_variance", value: number)
@@ -2619,6 +2799,12 @@ function ParticleEmitterNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field play_mode "Single"|"All"|"Sequential"|"Sequential_Reversed"|"Random"|"Shuffle" What a play starts from its sounds: Single (the chosen one), All (every sound at once),...
 ---@field playMode "Single"|"All"|"Sequential"|"Sequential_Reversed"|"Random"|"Shuffle" Same as play_mode (the Inspector's name)
 ---@field single integer Single mode: which sound plays (1 = the first in the list).
@@ -2655,6 +2841,9 @@ function ParticleEmitterNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "play_mode" # "Single"|"All"|"Sequential"|"Sequential_Reversed"|"Random"|"Shuffle" - What a play starts from its sounds: Single (the chosen one), All (every sound at once),...
 ---| "single" # integer - Single mode: which sound plays (1 = the first in the list).
 ---| "volume" # number - Volume (0-1), before the bus and master volumes.
@@ -2688,6 +2877,9 @@ function ParticleEmitterNode:set_property(path, value, y) end
 ---@overload fun(self: SoundNode, path: "paused"): boolean
 ---@overload fun(self: SoundNode, path: "enabled"): boolean
 ---@overload fun(self: SoundNode, path: "visible"): boolean
+---@overload fun(self: SoundNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: SoundNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: SoundNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: SoundNode, path: "play_mode"): "Single"|"All"|"Sequential"|"Sequential_Reversed"|"Random"|"Shuffle"
 ---@overload fun(self: SoundNode, path: "single"): integer
 ---@overload fun(self: SoundNode, path: "volume"): number
@@ -2723,6 +2915,9 @@ function SoundNode:get_property(path) end
 ---@overload fun(self: SoundNode, path: "paused", value: boolean)
 ---@overload fun(self: SoundNode, path: "enabled", value: boolean)
 ---@overload fun(self: SoundNode, path: "visible", value: boolean)
+---@overload fun(self: SoundNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: SoundNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: SoundNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: SoundNode, path: "play_mode", value: "Single"|"All"|"Sequential"|"Sequential_Reversed"|"Random"|"Shuffle")
 ---@overload fun(self: SoundNode, path: "single", value: integer)
 ---@overload fun(self: SoundNode, path: "volume", value: number)
@@ -2757,6 +2952,12 @@ function SoundNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field volume number Volume (0-1), before the bus and master volumes.
 ---@field pitch number Playback speed / pitch (1 = normal).
 ---@field pan number Stereo position: 0 left, 0.5 centre, 1 right.
@@ -2780,6 +2981,9 @@ function SoundNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "volume" # number - Volume (0-1), before the bus and master volumes.
 ---| "pitch" # number - Playback speed / pitch (1 = normal).
 ---| "pan" # number - Stereo position: 0 left, 0.5 centre, 1 right.
@@ -2806,6 +3010,9 @@ function SoundNode:set_property(path, value, y) end
 ---@overload fun(self: MusicNode, path: "paused"): boolean
 ---@overload fun(self: MusicNode, path: "enabled"): boolean
 ---@overload fun(self: MusicNode, path: "visible"): boolean
+---@overload fun(self: MusicNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: MusicNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: MusicNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: MusicNode, path: "volume"): number
 ---@overload fun(self: MusicNode, path: "pitch"): number
 ---@overload fun(self: MusicNode, path: "pan"): number
@@ -2834,6 +3041,9 @@ function MusicNode:get_property(path) end
 ---@overload fun(self: MusicNode, path: "paused", value: boolean)
 ---@overload fun(self: MusicNode, path: "enabled", value: boolean)
 ---@overload fun(self: MusicNode, path: "visible", value: boolean)
+---@overload fun(self: MusicNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: MusicNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: MusicNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: MusicNode, path: "volume", value: number)
 ---@overload fun(self: MusicNode, path: "pitch", value: number)
 ---@overload fun(self: MusicNode, path: "pan", value: number)
@@ -2861,6 +3071,12 @@ function MusicNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field debug_color number[] Colour of the collider outline drawn with Show Bounds & Colliders (and the game's debug...
 ---@field debugColor number[] Same as debug_color (the Inspector's name)
 ---@field one_way boolean Jump-through platform: bodies pass from below and land on top.
@@ -2878,6 +3094,9 @@ function MusicNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "debug_color" # number[] - Colour of the collider outline drawn with Show Bounds & Colliders (and the game's debug...
 ---| "one_way" # boolean - Jump-through platform: bodies pass from below and land on top.
 
@@ -2897,6 +3116,9 @@ function MusicNode:set_property(path, value, y) end
 ---@overload fun(self: StaticBodyNode, path: "paused"): boolean
 ---@overload fun(self: StaticBodyNode, path: "enabled"): boolean
 ---@overload fun(self: StaticBodyNode, path: "visible"): boolean
+---@overload fun(self: StaticBodyNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: StaticBodyNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: StaticBodyNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: StaticBodyNode, path: "debug_color"): number[]
 ---@overload fun(self: StaticBodyNode, path: "one_way"): boolean
 function StaticBodyNode:get_property(path) end
@@ -2918,6 +3140,9 @@ function StaticBodyNode:get_property(path) end
 ---@overload fun(self: StaticBodyNode, path: "paused", value: boolean)
 ---@overload fun(self: StaticBodyNode, path: "enabled", value: boolean)
 ---@overload fun(self: StaticBodyNode, path: "visible", value: boolean)
+---@overload fun(self: StaticBodyNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: StaticBodyNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: StaticBodyNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: StaticBodyNode, path: "debug_color", value: number[])
 ---@overload fun(self: StaticBodyNode, path: "one_way", value: boolean)
 function StaticBodyNode:set_property(path, value, y) end
@@ -2938,6 +3163,12 @@ function StaticBodyNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field linear_velocity Vec2 Velocity (px/s).
 ---@field linearVelocity Vec2 Same as linear_velocity (the Inspector's name)
 ---@field angular_velocity number Spin (degrees/s).
@@ -2974,6 +3205,9 @@ function StaticBodyNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "linear_velocity" # Vec2 - Velocity (px/s).
 ---| "angular_velocity" # number - Spin (degrees/s).
 ---| "linear_damping" # number - Slows movement over time (air drag).
@@ -3003,6 +3237,9 @@ function StaticBodyNode:set_property(path, value, y) end
 ---@overload fun(self: DynamicBodyNode, path: "paused"): boolean
 ---@overload fun(self: DynamicBodyNode, path: "enabled"): boolean
 ---@overload fun(self: DynamicBodyNode, path: "visible"): boolean
+---@overload fun(self: DynamicBodyNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: DynamicBodyNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: DynamicBodyNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: DynamicBodyNode, path: "linear_velocity"): Vec2
 ---@overload fun(self: DynamicBodyNode, path: "angular_velocity"): number
 ---@overload fun(self: DynamicBodyNode, path: "linear_damping"): number
@@ -3034,6 +3271,9 @@ function DynamicBodyNode:get_property(path) end
 ---@overload fun(self: DynamicBodyNode, path: "paused", value: boolean)
 ---@overload fun(self: DynamicBodyNode, path: "enabled", value: boolean)
 ---@overload fun(self: DynamicBodyNode, path: "visible", value: boolean)
+---@overload fun(self: DynamicBodyNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: DynamicBodyNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: DynamicBodyNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: DynamicBodyNode, path: "linear_velocity", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: DynamicBodyNode, path: "angular_velocity", value: number)
 ---@overload fun(self: DynamicBodyNode, path: "linear_damping", value: number)
@@ -3064,6 +3304,12 @@ function DynamicBodyNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field linear_velocity Vec2 Velocity (px/s).
 ---@field linearVelocity Vec2 Same as linear_velocity (the Inspector's name)
 ---@field angular_velocity number Spin (degrees/s).
@@ -3085,6 +3331,9 @@ function DynamicBodyNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "linear_velocity" # Vec2 - Velocity (px/s).
 ---| "angular_velocity" # number - Spin (degrees/s).
 ---| "one_way" # boolean - Jump-through platform: bodies pass from below and land on top.
@@ -3106,6 +3355,9 @@ function DynamicBodyNode:set_property(path, value, y) end
 ---@overload fun(self: KinematicBodyNode, path: "paused"): boolean
 ---@overload fun(self: KinematicBodyNode, path: "enabled"): boolean
 ---@overload fun(self: KinematicBodyNode, path: "visible"): boolean
+---@overload fun(self: KinematicBodyNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: KinematicBodyNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: KinematicBodyNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: KinematicBodyNode, path: "linear_velocity"): Vec2
 ---@overload fun(self: KinematicBodyNode, path: "angular_velocity"): number
 ---@overload fun(self: KinematicBodyNode, path: "one_way"): boolean
@@ -3129,6 +3381,9 @@ function KinematicBodyNode:get_property(path) end
 ---@overload fun(self: KinematicBodyNode, path: "paused", value: boolean)
 ---@overload fun(self: KinematicBodyNode, path: "enabled", value: boolean)
 ---@overload fun(self: KinematicBodyNode, path: "visible", value: boolean)
+---@overload fun(self: KinematicBodyNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: KinematicBodyNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: KinematicBodyNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: KinematicBodyNode, path: "linear_velocity", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: KinematicBodyNode, path: "angular_velocity", value: number)
 ---@overload fun(self: KinematicBodyNode, path: "one_way", value: boolean)
@@ -3151,6 +3406,12 @@ function KinematicBodyNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field radius number Capsule radius (px).
 ---@field height number Capsule height (px).
 ---@field velocity Vec2 Velocity now (px/s).
@@ -3190,6 +3451,9 @@ function KinematicBodyNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "radius" # number - Capsule radius (px).
 ---| "height" # number - Capsule height (px).
 ---| "velocity" # Vec2 (runtime) - Velocity now (px/s).
@@ -3222,6 +3486,9 @@ function KinematicBodyNode:set_property(path, value, y) end
 ---@overload fun(self: CharacterMoverNode, path: "paused"): boolean
 ---@overload fun(self: CharacterMoverNode, path: "enabled"): boolean
 ---@overload fun(self: CharacterMoverNode, path: "visible"): boolean
+---@overload fun(self: CharacterMoverNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: CharacterMoverNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: CharacterMoverNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: CharacterMoverNode, path: "radius"): number
 ---@overload fun(self: CharacterMoverNode, path: "height"): number
 ---@overload fun(self: CharacterMoverNode, path: "velocity"): Vec2
@@ -3256,6 +3523,9 @@ function CharacterMoverNode:get_property(path) end
 ---@overload fun(self: CharacterMoverNode, path: "paused", value: boolean)
 ---@overload fun(self: CharacterMoverNode, path: "enabled", value: boolean)
 ---@overload fun(self: CharacterMoverNode, path: "visible", value: boolean)
+---@overload fun(self: CharacterMoverNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: CharacterMoverNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: CharacterMoverNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: CharacterMoverNode, path: "radius", value: number)
 ---@overload fun(self: CharacterMoverNode, path: "height", value: number)
 ---@overload fun(self: CharacterMoverNode, path: "velocity", x: number|Vec2|number[], y?: number)
@@ -3289,6 +3559,12 @@ function CharacterMoverNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field monitoring boolean Detect overlapping bodies and emit body_entered / body_exited. Off: no events or overla...
 ---@field overlap_count integer Bodies overlapping now.
 ---@field overlapCount integer Same as overlap_count (the Inspector's name)
@@ -3311,6 +3587,9 @@ function CharacterMoverNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "monitoring" # boolean - Detect overlapping bodies and emit body_entered / body_exited. Off: no events or overla...
 ---| "overlap_count" # integer (runtime) - Bodies overlapping now.
 ---| "has_overlaps" # boolean (runtime) - Anything overlapping now.
@@ -3333,6 +3612,9 @@ function CharacterMoverNode:set_property(path, value, y) end
 ---@overload fun(self: AreaNode, path: "paused"): boolean
 ---@overload fun(self: AreaNode, path: "enabled"): boolean
 ---@overload fun(self: AreaNode, path: "visible"): boolean
+---@overload fun(self: AreaNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: AreaNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: AreaNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: AreaNode, path: "monitoring"): boolean
 ---@overload fun(self: AreaNode, path: "overlap_count"): integer
 ---@overload fun(self: AreaNode, path: "has_overlaps"): boolean
@@ -3357,6 +3639,9 @@ function AreaNode:get_property(path) end
 ---@overload fun(self: AreaNode, path: "paused", value: boolean)
 ---@overload fun(self: AreaNode, path: "enabled", value: boolean)
 ---@overload fun(self: AreaNode, path: "visible", value: boolean)
+---@overload fun(self: AreaNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: AreaNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: AreaNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: AreaNode, path: "monitoring", value: boolean)
 ---@overload fun(self: AreaNode, path: "overlap_count", value: integer)
 ---@overload fun(self: AreaNode, path: "has_overlaps", value: boolean)
@@ -3380,6 +3665,12 @@ function AreaNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field monitoring boolean Cast the ray each frame and emit hit_started / hit_ended events.
 ---@field direction Vec2 Direction of the ray (rotated with the node).
 ---@field length number Length of the ray (px).
@@ -3412,6 +3703,9 @@ function AreaNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "monitoring" # boolean - Cast the ray each frame and emit hit_started / hit_ended events.
 ---| "direction" # Vec2 - Direction of the ray (rotated with the node).
 ---| "length" # number - Length of the ray (px).
@@ -3440,6 +3734,9 @@ function AreaNode:set_property(path, value, y) end
 ---@overload fun(self: RaycastNode, path: "paused"): boolean
 ---@overload fun(self: RaycastNode, path: "enabled"): boolean
 ---@overload fun(self: RaycastNode, path: "visible"): boolean
+---@overload fun(self: RaycastNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: RaycastNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: RaycastNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: RaycastNode, path: "monitoring"): boolean
 ---@overload fun(self: RaycastNode, path: "direction"): Vec2
 ---@overload fun(self: RaycastNode, path: "length"): number
@@ -3470,6 +3767,9 @@ function RaycastNode:get_property(path) end
 ---@overload fun(self: RaycastNode, path: "paused", value: boolean)
 ---@overload fun(self: RaycastNode, path: "enabled", value: boolean)
 ---@overload fun(self: RaycastNode, path: "visible", value: boolean)
+---@overload fun(self: RaycastNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: RaycastNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: RaycastNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: RaycastNode, path: "monitoring", value: boolean)
 ---@overload fun(self: RaycastNode, path: "direction", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: RaycastNode, path: "length", value: number)
@@ -3499,6 +3799,12 @@ function RaycastNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field size Vec2 The rectangle (centred on the node, scaled with it) the camera has to see.
 ---@field margin number Grows the camera's view by this many pixels: fires a little before it really shows.
 ---@field action "None"|"Pause_Parent"|"Disable_Parent"|"Remove_Parent" What happens to the parent off screen: Pause (stops updating, resumes when seen), Disab...
@@ -3517,6 +3823,9 @@ function RaycastNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "size" # Vec2 - The rectangle (centred on the node, scaled with it) the camera has to see.
 ---| "margin" # number - Grows the camera's view by this many pixels: fires a little before it really shows.
 ---| "action" # "None"|"Pause_Parent"|"Disable_Parent"|"Remove_Parent" - What happens to the parent off screen: Pause (stops updating, resumes when seen), Disab...
@@ -3538,6 +3847,9 @@ function RaycastNode:set_property(path, value, y) end
 ---@overload fun(self: VisibilityNotifierNode, path: "paused"): boolean
 ---@overload fun(self: VisibilityNotifierNode, path: "enabled"): boolean
 ---@overload fun(self: VisibilityNotifierNode, path: "visible"): boolean
+---@overload fun(self: VisibilityNotifierNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: VisibilityNotifierNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: VisibilityNotifierNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: VisibilityNotifierNode, path: "size"): Vec2
 ---@overload fun(self: VisibilityNotifierNode, path: "margin"): number
 ---@overload fun(self: VisibilityNotifierNode, path: "action"): "None"|"Pause_Parent"|"Disable_Parent"|"Remove_Parent"
@@ -3561,6 +3873,9 @@ function VisibilityNotifierNode:get_property(path) end
 ---@overload fun(self: VisibilityNotifierNode, path: "paused", value: boolean)
 ---@overload fun(self: VisibilityNotifierNode, path: "enabled", value: boolean)
 ---@overload fun(self: VisibilityNotifierNode, path: "visible", value: boolean)
+---@overload fun(self: VisibilityNotifierNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: VisibilityNotifierNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: VisibilityNotifierNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: VisibilityNotifierNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: VisibilityNotifierNode, path: "margin", value: number)
 ---@overload fun(self: VisibilityNotifierNode, path: "action", value: "None"|"Pause_Parent"|"Disable_Parent"|"Remove_Parent")
@@ -3583,6 +3898,12 @@ function VisibilityNotifierNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field anchor "TopLeft"|"Top"|"TopRight"|"Left"|"Center"|"Right"|"BottomLeft"|"Bottom"|"BottomRight" The point of the screen it sits at (its position is an offset from it): top left ... bo...
 
 ---@alias ScreenLayerNodeProperty
@@ -3597,6 +3918,9 @@ function VisibilityNotifierNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "anchor" # "TopLeft"|"Top"|"TopRight"|"Left"|"Center"|"Right"|"BottomLeft"|"Bottom"|"BottomRight" - The point of the screen it sits at (its position is an offset from it): top left ... bo...
 
 ---Reads an Inspector property by its path (vectors and colours as tables); "script.<name>" reads a field of the node's script.
@@ -3615,6 +3939,9 @@ function VisibilityNotifierNode:set_property(path, value, y) end
 ---@overload fun(self: ScreenLayerNode, path: "paused"): boolean
 ---@overload fun(self: ScreenLayerNode, path: "enabled"): boolean
 ---@overload fun(self: ScreenLayerNode, path: "visible"): boolean
+---@overload fun(self: ScreenLayerNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: ScreenLayerNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: ScreenLayerNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: ScreenLayerNode, path: "anchor"): "TopLeft"|"Top"|"TopRight"|"Left"|"Center"|"Right"|"BottomLeft"|"Bottom"|"BottomRight"
 function ScreenLayerNode:get_property(path) end
 
@@ -3635,6 +3962,9 @@ function ScreenLayerNode:get_property(path) end
 ---@overload fun(self: ScreenLayerNode, path: "paused", value: boolean)
 ---@overload fun(self: ScreenLayerNode, path: "enabled", value: boolean)
 ---@overload fun(self: ScreenLayerNode, path: "visible", value: boolean)
+---@overload fun(self: ScreenLayerNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: ScreenLayerNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: ScreenLayerNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: ScreenLayerNode, path: "anchor", value: "TopLeft"|"Top"|"TopRight"|"Left"|"Center"|"Right"|"BottomLeft"|"Bottom"|"BottomRight")
 function ScreenLayerNode:set_property(path, value, y) end
 
@@ -3654,6 +3984,12 @@ function ScreenLayerNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field radius number The base's radius: the thumb this far from the middle is a full push.
 ---@field knob_radius number The knob's radius (the part under the thumb).
 ---@field knobRadius number Same as knob_radius (the Inspector's name)
@@ -3686,6 +4022,9 @@ function ScreenLayerNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "radius" # number - The base's radius: the thumb this far from the middle is a full push.
 ---| "knob_radius" # number - The knob's radius (the part under the thumb).
 ---| "floating" # boolean - The joystick appears where the thumb lands (anywhere in Area) instead of staying put - ...
@@ -3715,6 +4054,9 @@ function ScreenLayerNode:set_property(path, value, y) end
 ---@overload fun(self: TouchJoystickNode, path: "paused"): boolean
 ---@overload fun(self: TouchJoystickNode, path: "enabled"): boolean
 ---@overload fun(self: TouchJoystickNode, path: "visible"): boolean
+---@overload fun(self: TouchJoystickNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: TouchJoystickNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: TouchJoystickNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: TouchJoystickNode, path: "radius"): number
 ---@overload fun(self: TouchJoystickNode, path: "knob_radius"): number
 ---@overload fun(self: TouchJoystickNode, path: "floating"): boolean
@@ -3746,6 +4088,9 @@ function TouchJoystickNode:get_property(path) end
 ---@overload fun(self: TouchJoystickNode, path: "paused", value: boolean)
 ---@overload fun(self: TouchJoystickNode, path: "enabled", value: boolean)
 ---@overload fun(self: TouchJoystickNode, path: "visible", value: boolean)
+---@overload fun(self: TouchJoystickNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: TouchJoystickNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: TouchJoystickNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: TouchJoystickNode, path: "radius", value: number)
 ---@overload fun(self: TouchJoystickNode, path: "knob_radius", value: number)
 ---@overload fun(self: TouchJoystickNode, path: "floating", value: boolean)
@@ -3776,6 +4121,12 @@ function TouchJoystickNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field radius number The button's radius (a finger a little outside still counts).
 ---@field action string The input action it presses while a finger is on it ("jump", "fire", a project action);...
 ---@field label string Text drawn on it ("A", "Jump").
@@ -3801,6 +4152,9 @@ function TouchJoystickNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "radius" # number - The button's radius (a finger a little outside still counts).
 ---| "action" # string - The input action it presses while a finger is on it ("jump", "fire", a project action);...
 ---| "label" # string - Text drawn on it ("A", "Jump").
@@ -3826,6 +4180,9 @@ function TouchJoystickNode:set_property(path, value, y) end
 ---@overload fun(self: TouchButtonNode, path: "paused"): boolean
 ---@overload fun(self: TouchButtonNode, path: "enabled"): boolean
 ---@overload fun(self: TouchButtonNode, path: "visible"): boolean
+---@overload fun(self: TouchButtonNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: TouchButtonNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: TouchButtonNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: TouchButtonNode, path: "radius"): number
 ---@overload fun(self: TouchButtonNode, path: "action"): string
 ---@overload fun(self: TouchButtonNode, path: "label"): string
@@ -3853,6 +4210,9 @@ function TouchButtonNode:get_property(path) end
 ---@overload fun(self: TouchButtonNode, path: "paused", value: boolean)
 ---@overload fun(self: TouchButtonNode, path: "enabled", value: boolean)
 ---@overload fun(self: TouchButtonNode, path: "visible", value: boolean)
+---@overload fun(self: TouchButtonNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: TouchButtonNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: TouchButtonNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: TouchButtonNode, path: "radius", value: number)
 ---@overload fun(self: TouchButtonNode, path: "action", value: string)
 ---@overload fun(self: TouchButtonNode, path: "label", value: string)
@@ -3879,6 +4239,12 @@ function TouchButtonNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field mode "World"|"Children" World: the running scene through the viewport's Camera child (add one: its follow targe...
 ---@field size Vec2 The size it's drawn at (Display), in px.
 ---@field render_size Vec2 How many pixels it renders (0, 0: Size). Smaller is cheaper and pixelated - a 160x90 mi...
@@ -3903,6 +4269,9 @@ function TouchButtonNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "mode" # "World"|"Children" - World: the running scene through the viewport's Camera child (add one: its follow targe...
 ---| "size" # Vec2 - The size it's drawn at (Display), in px.
 ---| "render_size" # Vec2 - How many pixels it renders (0, 0: Size). Smaller is cheaper and pixelated - a 160x90 mi...
@@ -3928,6 +4297,9 @@ function TouchButtonNode:set_property(path, value, y) end
 ---@overload fun(self: ViewportNode, path: "paused"): boolean
 ---@overload fun(self: ViewportNode, path: "enabled"): boolean
 ---@overload fun(self: ViewportNode, path: "visible"): boolean
+---@overload fun(self: ViewportNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: ViewportNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: ViewportNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: ViewportNode, path: "mode"): "World"|"Children"
 ---@overload fun(self: ViewportNode, path: "size"): Vec2
 ---@overload fun(self: ViewportNode, path: "render_size"): Vec2
@@ -3955,6 +4327,9 @@ function ViewportNode:get_property(path) end
 ---@overload fun(self: ViewportNode, path: "paused", value: boolean)
 ---@overload fun(self: ViewportNode, path: "enabled", value: boolean)
 ---@overload fun(self: ViewportNode, path: "visible", value: boolean)
+---@overload fun(self: ViewportNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: ViewportNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: ViewportNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: ViewportNode, path: "mode", value: "World"|"Children")
 ---@overload fun(self: ViewportNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: ViewportNode, path: "render_size", x: number|Vec2|number[], y?: number)
@@ -3981,6 +4356,12 @@ function ViewportNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field wave "Sine"|"Triangle"|"Square"|"Saw"|"Reverse_Saw"|"Random"|"Smooth_Noise"|"Curve" The wave's shape: Sine, Triangle, Square (high for Pulse Width), Saw, Reverse Saw, Rand...
 ---@field rate_unit "Hertz"|"Seconds" How Rate is read: Hertz (cycles a second) or Seconds (how long one cycle takes).
 ---@field rateUnit "Hertz"|"Seconds" Same as rate_unit (the Inspector's name)
@@ -4003,6 +4384,9 @@ function ViewportNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "wave" # "Sine"|"Triangle"|"Square"|"Saw"|"Reverse_Saw"|"Random"|"Smooth_Noise"|"Curve" - The wave's shape: Sine, Triangle, Square (high for Pulse Width), Saw, Reverse Saw, Rand...
 ---| "rate_unit" # "Hertz"|"Seconds" - How Rate is read: Hertz (cycles a second) or Seconds (how long one cycle takes).
 ---| "rate" # number - How fast it runs: cycles a second (Hertz) or seconds a cycle (Seconds). 0 holds it still.
@@ -4027,6 +4411,9 @@ function ViewportNode:set_property(path, value, y) end
 ---@overload fun(self: OscillatorNode, path: "paused"): boolean
 ---@overload fun(self: OscillatorNode, path: "enabled"): boolean
 ---@overload fun(self: OscillatorNode, path: "visible"): boolean
+---@overload fun(self: OscillatorNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: OscillatorNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: OscillatorNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: OscillatorNode, path: "wave"): "Sine"|"Triangle"|"Square"|"Saw"|"Reverse_Saw"|"Random"|"Smooth_Noise"|"Curve"
 ---@overload fun(self: OscillatorNode, path: "rate_unit"): "Hertz"|"Seconds"
 ---@overload fun(self: OscillatorNode, path: "rate"): number
@@ -4053,6 +4440,9 @@ function OscillatorNode:get_property(path) end
 ---@overload fun(self: OscillatorNode, path: "paused", value: boolean)
 ---@overload fun(self: OscillatorNode, path: "enabled", value: boolean)
 ---@overload fun(self: OscillatorNode, path: "visible", value: boolean)
+---@overload fun(self: OscillatorNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: OscillatorNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: OscillatorNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: OscillatorNode, path: "wave", value: "Sine"|"Triangle"|"Square"|"Saw"|"Reverse_Saw"|"Random"|"Smooth_Noise"|"Curve")
 ---@overload fun(self: OscillatorNode, path: "rate_unit", value: "Hertz"|"Seconds")
 ---@overload fun(self: OscillatorNode, path: "rate", value: number)
@@ -4078,6 +4468,12 @@ function OscillatorNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field file string The skeleton: a Spine .json export or a DragonBones _ske.json (project-relative).
 ---@field atlas string Its texture atlas; empty = next to it (name.atlas for Spine, name_tex.json for DragonBo...
 ---@field armature string DragonBones: the armature to show (empty = the first).
@@ -4104,6 +4500,9 @@ function OscillatorNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "file" # string - The skeleton: a Spine .json export or a DragonBones _ske.json (project-relative).
 ---| "atlas" # string - Its texture atlas; empty = next to it (name.atlas for Spine, name_tex.json for DragonBo...
 ---| "armature" # string - DragonBones: the armature to show (empty = the first).
@@ -4132,6 +4531,9 @@ function OscillatorNode:set_property(path, value, y) end
 ---@overload fun(self: SkeletonNode, path: "paused"): boolean
 ---@overload fun(self: SkeletonNode, path: "enabled"): boolean
 ---@overload fun(self: SkeletonNode, path: "visible"): boolean
+---@overload fun(self: SkeletonNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: SkeletonNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: SkeletonNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: SkeletonNode, path: "file"): string
 ---@overload fun(self: SkeletonNode, path: "atlas"): string
 ---@overload fun(self: SkeletonNode, path: "armature"): string
@@ -4162,6 +4564,9 @@ function SkeletonNode:get_property(path) end
 ---@overload fun(self: SkeletonNode, path: "paused", value: boolean)
 ---@overload fun(self: SkeletonNode, path: "enabled", value: boolean)
 ---@overload fun(self: SkeletonNode, path: "visible", value: boolean)
+---@overload fun(self: SkeletonNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: SkeletonNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: SkeletonNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: SkeletonNode, path: "file", value: string)
 ---@overload fun(self: SkeletonNode, path: "atlas", value: string)
 ---@overload fun(self: SkeletonNode, path: "armature", value: string)
@@ -4191,6 +4596,12 @@ function SkeletonNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field bone string The parent skeleton's bone this node follows (its children ride along: a weapon in the ...
 ---@field follow_rotation boolean Turn with the bone.
 ---@field followRotation boolean Same as follow_rotation (the Inspector's name)
@@ -4209,6 +4620,9 @@ function SkeletonNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "bone" # string - The parent skeleton's bone this node follows (its children ride along: a weapon in the ...
 ---| "follow_rotation" # boolean - Turn with the bone.
 ---| "follow_scale" # boolean - Scale with the bone.
@@ -4229,6 +4643,9 @@ function SkeletonNode:set_property(path, value, y) end
 ---@overload fun(self: BoneAttachmentNode, path: "paused"): boolean
 ---@overload fun(self: BoneAttachmentNode, path: "enabled"): boolean
 ---@overload fun(self: BoneAttachmentNode, path: "visible"): boolean
+---@overload fun(self: BoneAttachmentNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: BoneAttachmentNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: BoneAttachmentNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: BoneAttachmentNode, path: "bone"): string
 ---@overload fun(self: BoneAttachmentNode, path: "follow_rotation"): boolean
 ---@overload fun(self: BoneAttachmentNode, path: "follow_scale"): boolean
@@ -4251,6 +4668,9 @@ function BoneAttachmentNode:get_property(path) end
 ---@overload fun(self: BoneAttachmentNode, path: "paused", value: boolean)
 ---@overload fun(self: BoneAttachmentNode, path: "enabled", value: boolean)
 ---@overload fun(self: BoneAttachmentNode, path: "visible", value: boolean)
+---@overload fun(self: BoneAttachmentNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: BoneAttachmentNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: BoneAttachmentNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: BoneAttachmentNode, path: "bone", value: string)
 ---@overload fun(self: BoneAttachmentNode, path: "follow_rotation", value: boolean)
 ---@overload fun(self: BoneAttachmentNode, path: "follow_scale", value: boolean)
@@ -4272,6 +4692,12 @@ function BoneAttachmentNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field priority integer The host camera shows the enabled advanced camera with the highest priority (a tie: the...
 ---@field follow_mode "None"|"Glued"|"Simple"|"Group"|"Path"|"Framed" None (stays where placed), Glued (exactly on the target), Simple (offset, damping, look...
 ---@field followMode "None"|"Glued"|"Simple"|"Group"|"Path"|"Framed" Same as follow_mode (the Inspector's name)
@@ -4337,6 +4763,9 @@ function BoneAttachmentNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "priority" # integer - The host camera shows the enabled advanced camera with the highest priority (a tie: the...
 ---| "follow_mode" # "None"|"Glued"|"Simple"|"Group"|"Path"|"Framed" - None (stays where placed), Glued (exactly on the target), Simple (offset, damping, look...
 ---| "follow_target" # string - The node it follows (a path like Player or ../Hero).
@@ -4383,6 +4812,9 @@ function BoneAttachmentNode:set_property(path, value, y) end
 ---@overload fun(self: AdvancedCameraNode, path: "paused"): boolean
 ---@overload fun(self: AdvancedCameraNode, path: "enabled"): boolean
 ---@overload fun(self: AdvancedCameraNode, path: "visible"): boolean
+---@overload fun(self: AdvancedCameraNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: AdvancedCameraNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: AdvancedCameraNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: AdvancedCameraNode, path: "priority"): integer
 ---@overload fun(self: AdvancedCameraNode, path: "follow_mode"): "None"|"Glued"|"Simple"|"Group"|"Path"|"Framed"
 ---@overload fun(self: AdvancedCameraNode, path: "follow_target"): string
@@ -4431,6 +4863,9 @@ function AdvancedCameraNode:get_property(path) end
 ---@overload fun(self: AdvancedCameraNode, path: "paused", value: boolean)
 ---@overload fun(self: AdvancedCameraNode, path: "enabled", value: boolean)
 ---@overload fun(self: AdvancedCameraNode, path: "visible", value: boolean)
+---@overload fun(self: AdvancedCameraNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: AdvancedCameraNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: AdvancedCameraNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: AdvancedCameraNode, path: "priority", value: integer)
 ---@overload fun(self: AdvancedCameraNode, path: "follow_mode", value: "None"|"Glued"|"Simple"|"Group"|"Path"|"Framed")
 ---@overload fun(self: AdvancedCameraNode, path: "follow_target", value: string)
@@ -4478,6 +4913,12 @@ function AdvancedCameraNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field closed boolean Join the last point back to the first (a loop).
 ---@field bake_interval number Distance between the points the curve is turned into (px): smaller follows the curve mo...
 ---@field bakeInterval number Same as bake_interval (the Inspector's name)
@@ -4497,6 +4938,9 @@ function AdvancedCameraNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "closed" # boolean - Join the last point back to the first (a loop).
 ---| "bake_interval" # number - Distance between the points the curve is turned into (px): smaller follows the curve mo...
 ---| "line_width" # number - Draw the path in the game this wide (rails, ropes); 0 = invisible (the editor always sh...
@@ -4518,6 +4962,9 @@ function AdvancedCameraNode:set_property(path, value, y) end
 ---@overload fun(self: PathNode, path: "paused"): boolean
 ---@overload fun(self: PathNode, path: "enabled"): boolean
 ---@overload fun(self: PathNode, path: "visible"): boolean
+---@overload fun(self: PathNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: PathNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: PathNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: PathNode, path: "closed"): boolean
 ---@overload fun(self: PathNode, path: "bake_interval"): number
 ---@overload fun(self: PathNode, path: "line_width"): number
@@ -4541,6 +4988,9 @@ function PathNode:get_property(path) end
 ---@overload fun(self: PathNode, path: "paused", value: boolean)
 ---@overload fun(self: PathNode, path: "enabled", value: boolean)
 ---@overload fun(self: PathNode, path: "visible", value: boolean)
+---@overload fun(self: PathNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: PathNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: PathNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: PathNode, path: "closed", value: boolean)
 ---@overload fun(self: PathNode, path: "bake_interval", value: number)
 ---@overload fun(self: PathNode, path: "line_width", value: number)
@@ -4563,6 +5013,12 @@ function PathNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field size Vec2 The area agents find paths in, from the node's position (px).
 ---@field cell_size number Size of a grid cell (px): smaller follows walls more closely, larger finds paths faster.
 ---@field cellSize number Same as cell_size (the Inspector's name)
@@ -4585,6 +5041,9 @@ function PathNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "size" # Vec2 - The area agents find paths in, from the node's position (px).
 ---| "cell_size" # number - Size of a grid cell (px): smaller follows walls more closely, larger finds paths faster.
 ---| "use_physics" # boolean - Static bodies' collision shapes inside the area block.
@@ -4607,6 +5066,9 @@ function PathNode:set_property(path, value, y) end
 ---@overload fun(self: NavigationRegionNode, path: "paused"): boolean
 ---@overload fun(self: NavigationRegionNode, path: "enabled"): boolean
 ---@overload fun(self: NavigationRegionNode, path: "visible"): boolean
+---@overload fun(self: NavigationRegionNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: NavigationRegionNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: NavigationRegionNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: NavigationRegionNode, path: "size"): Vec2
 ---@overload fun(self: NavigationRegionNode, path: "cell_size"): number
 ---@overload fun(self: NavigationRegionNode, path: "use_physics"): boolean
@@ -4631,6 +5093,9 @@ function NavigationRegionNode:get_property(path) end
 ---@overload fun(self: NavigationRegionNode, path: "paused", value: boolean)
 ---@overload fun(self: NavigationRegionNode, path: "enabled", value: boolean)
 ---@overload fun(self: NavigationRegionNode, path: "visible", value: boolean)
+---@overload fun(self: NavigationRegionNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: NavigationRegionNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: NavigationRegionNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: NavigationRegionNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: NavigationRegionNode, path: "cell_size", value: number)
 ---@overload fun(self: NavigationRegionNode, path: "use_physics", value: boolean)
@@ -4654,6 +5119,12 @@ function NavigationRegionNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field speed number How fast it moves along its path (px/s).
 ---@field radius number Its size: paths keep this far from walls, and agents keep this far apart.
 ---@field arrive_distance number How close to the target counts as arrived (px).
@@ -4679,6 +5150,9 @@ function NavigationRegionNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "speed" # number - How fast it moves along its path (px/s).
 ---| "radius" # number - Its size: paths keep this far from walls, and agents keep this far apart.
 ---| "arrive_distance" # number - How close to the target counts as arrived (px).
@@ -4704,6 +5178,9 @@ function NavigationRegionNode:set_property(path, value, y) end
 ---@overload fun(self: NavigationAgentNode, path: "paused"): boolean
 ---@overload fun(self: NavigationAgentNode, path: "enabled"): boolean
 ---@overload fun(self: NavigationAgentNode, path: "visible"): boolean
+---@overload fun(self: NavigationAgentNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: NavigationAgentNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: NavigationAgentNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: NavigationAgentNode, path: "speed"): number
 ---@overload fun(self: NavigationAgentNode, path: "radius"): number
 ---@overload fun(self: NavigationAgentNode, path: "arrive_distance"): number
@@ -4731,6 +5208,9 @@ function NavigationAgentNode:get_property(path) end
 ---@overload fun(self: NavigationAgentNode, path: "paused", value: boolean)
 ---@overload fun(self: NavigationAgentNode, path: "enabled", value: boolean)
 ---@overload fun(self: NavigationAgentNode, path: "visible", value: boolean)
+---@overload fun(self: NavigationAgentNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: NavigationAgentNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: NavigationAgentNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: NavigationAgentNode, path: "speed", value: number)
 ---@overload fun(self: NavigationAgentNode, path: "radius", value: number)
 ---@overload fun(self: NavigationAgentNode, path: "arrive_distance", value: number)
@@ -4757,6 +5237,12 @@ function NavigationAgentNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field progress number Distance travelled along the parent path (px). Set it to place the follower; scripts ca...
 ---@field speed number Pixels per second it moves along the path by itself (negative: backwards; 0: only scrip...
 ---@field loop "Stop"|"Loop"|"PingPong" At the end: Stop (path_finished), Loop (start again) or Ping Pong (turn back).
@@ -4776,6 +5262,9 @@ function NavigationAgentNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "progress" # number - Distance travelled along the parent path (px). Set it to place the follower; scripts ca...
 ---| "speed" # number - Pixels per second it moves along the path by itself (negative: backwards; 0: only scrip...
 ---| "loop" # "Stop"|"Loop"|"PingPong" - At the end: Stop (path_finished), Loop (start again) or Ping Pong (turn back).
@@ -4798,6 +5287,9 @@ function NavigationAgentNode:set_property(path, value, y) end
 ---@overload fun(self: PathFollowNode, path: "paused"): boolean
 ---@overload fun(self: PathFollowNode, path: "enabled"): boolean
 ---@overload fun(self: PathFollowNode, path: "visible"): boolean
+---@overload fun(self: PathFollowNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: PathFollowNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: PathFollowNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: PathFollowNode, path: "progress"): number
 ---@overload fun(self: PathFollowNode, path: "speed"): number
 ---@overload fun(self: PathFollowNode, path: "loop"): "Stop"|"Loop"|"PingPong"
@@ -4822,6 +5314,9 @@ function PathFollowNode:get_property(path) end
 ---@overload fun(self: PathFollowNode, path: "paused", value: boolean)
 ---@overload fun(self: PathFollowNode, path: "enabled", value: boolean)
 ---@overload fun(self: PathFollowNode, path: "visible", value: boolean)
+---@overload fun(self: PathFollowNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: PathFollowNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: PathFollowNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: PathFollowNode, path: "progress", value: number)
 ---@overload fun(self: PathFollowNode, path: "speed", value: number)
 ---@overload fun(self: PathFollowNode, path: "loop", value: "Stop"|"Loop"|"PingPong")
@@ -4845,6 +5340,12 @@ function PathFollowNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field shininess number Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---@field enable_physics boolean Build colliders from IntGrid cells whose collision rule is Solid / One Way.
 ---@field enablePhysics boolean Same as enable_physics (the Inspector's name)
@@ -4876,6 +5377,9 @@ function PathFollowNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "shininess" # number - Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---| "enable_physics" # boolean - Build colliders from IntGrid cells whose collision rule is Solid / One Way.
 ---| "spawn_entities" # boolean - Spawn the level's entities (mapped to components) when ready.
@@ -4903,6 +5407,9 @@ function PathFollowNode:set_property(path, value, y) end
 ---@overload fun(self: LdtkLevelNode, path: "paused"): boolean
 ---@overload fun(self: LdtkLevelNode, path: "enabled"): boolean
 ---@overload fun(self: LdtkLevelNode, path: "visible"): boolean
+---@overload fun(self: LdtkLevelNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: LdtkLevelNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: LdtkLevelNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: LdtkLevelNode, path: "shininess"): number
 ---@overload fun(self: LdtkLevelNode, path: "enable_physics"): boolean
 ---@overload fun(self: LdtkLevelNode, path: "spawn_entities"): boolean
@@ -4932,6 +5439,9 @@ function LdtkLevelNode:get_property(path) end
 ---@overload fun(self: LdtkLevelNode, path: "paused", value: boolean)
 ---@overload fun(self: LdtkLevelNode, path: "enabled", value: boolean)
 ---@overload fun(self: LdtkLevelNode, path: "visible", value: boolean)
+---@overload fun(self: LdtkLevelNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: LdtkLevelNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: LdtkLevelNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: LdtkLevelNode, path: "shininess", value: number)
 ---@overload fun(self: LdtkLevelNode, path: "enable_physics", value: boolean)
 ---@overload fun(self: LdtkLevelNode, path: "spawn_entities", value: boolean)
@@ -4960,6 +5470,12 @@ function LdtkLevelNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field shininess number Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---@field solid boolean Build static colliders for the painted tiles.
 ---@field tint number[] Multiplies the texture's colours (white = unchanged; alpha fades it).
@@ -4984,6 +5500,9 @@ function LdtkLevelNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "shininess" # number - Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---| "solid" # boolean - Build static colliders for the painted tiles.
 ---| "tint" # number[] - Multiplies the texture's colours (white = unchanged; alpha fades it).
@@ -5009,6 +5528,9 @@ function LdtkLevelNode:set_property(path, value, y) end
 ---@overload fun(self: TileMapNode, path: "paused"): boolean
 ---@overload fun(self: TileMapNode, path: "enabled"): boolean
 ---@overload fun(self: TileMapNode, path: "visible"): boolean
+---@overload fun(self: TileMapNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: TileMapNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: TileMapNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: TileMapNode, path: "shininess"): number
 ---@overload fun(self: TileMapNode, path: "solid"): boolean
 ---@overload fun(self: TileMapNode, path: "tint"): number[]
@@ -5036,6 +5558,9 @@ function TileMapNode:get_property(path) end
 ---@overload fun(self: TileMapNode, path: "paused", value: boolean)
 ---@overload fun(self: TileMapNode, path: "enabled", value: boolean)
 ---@overload fun(self: TileMapNode, path: "visible", value: boolean)
+---@overload fun(self: TileMapNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: TileMapNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: TileMapNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: TileMapNode, path: "shininess", value: number)
 ---@overload fun(self: TileMapNode, path: "solid", value: boolean)
 ---@overload fun(self: TileMapNode, path: "tint", value: number[])
@@ -5062,6 +5587,12 @@ function TileMapNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field kind "Point"|"Spot"|"Directional" Point: shines all round. Spot: a cone along the node's rotation. Directional: the sun -...
 ---@field color number[] Colour of the light.
 ---@field energy number Brightness multiplier.
@@ -5086,6 +5617,9 @@ function TileMapNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "kind" # "Point"|"Spot"|"Directional" - Point: shines all round. Spot: a cone along the node's rotation. Directional: the sun -...
 ---| "color" # number[] - Colour of the light.
 ---| "energy" # number - Brightness multiplier.
@@ -5113,6 +5647,9 @@ function TileMapNode:set_property(path, value, y) end
 ---@overload fun(self: LightNode, path: "paused"): boolean
 ---@overload fun(self: LightNode, path: "enabled"): boolean
 ---@overload fun(self: LightNode, path: "visible"): boolean
+---@overload fun(self: LightNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: LightNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: LightNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: LightNode, path: "kind"): "Point"|"Spot"|"Directional"
 ---@overload fun(self: LightNode, path: "color"): number[]
 ---@overload fun(self: LightNode, path: "energy"): number
@@ -5142,6 +5679,9 @@ function LightNode:get_property(path) end
 ---@overload fun(self: LightNode, path: "paused", value: boolean)
 ---@overload fun(self: LightNode, path: "enabled", value: boolean)
 ---@overload fun(self: LightNode, path: "visible", value: boolean)
+---@overload fun(self: LightNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: LightNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: LightNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: LightNode, path: "kind", value: "Point"|"Spot"|"Directional")
 ---@overload fun(self: LightNode, path: "color", value: number[])
 ---@overload fun(self: LightNode, path: "energy", value: number)
@@ -5170,6 +5710,12 @@ function LightNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field debug_color number[] Colour of the line drawn between the anchors.
 ---@field debugColor number[] Same as debug_color (the Inspector's name)
 
@@ -5185,6 +5731,9 @@ function LightNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "joint.type" # "Distance"|"Filter"|"Motor"|"Mouse"|"Prismatic"|"Revolute"|"Weld"|"Wheel" - Kind of joint; only that kind's settings are shown.
 ---| "joint.distance.local_anchor_a" # Vec2 - Anchor on body A, relative to its origin (px).
 ---| "joint.distance.local_anchor_b" # Vec2 - Anchor on body B, relative to its origin (px).
@@ -5278,6 +5827,9 @@ function LightNode:set_property(path, value, y) end
 ---@overload fun(self: JointNode, path: "paused"): boolean
 ---@overload fun(self: JointNode, path: "enabled"): boolean
 ---@overload fun(self: JointNode, path: "visible"): boolean
+---@overload fun(self: JointNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: JointNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: JointNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: JointNode, path: "joint.type"): "Distance"|"Filter"|"Motor"|"Mouse"|"Prismatic"|"Revolute"|"Weld"|"Wheel"
 ---@overload fun(self: JointNode, path: "joint.distance.local_anchor_a"): Vec2
 ---@overload fun(self: JointNode, path: "joint.distance.local_anchor_b"): Vec2
@@ -5373,6 +5925,9 @@ function JointNode:get_property(path) end
 ---@overload fun(self: JointNode, path: "paused", value: boolean)
 ---@overload fun(self: JointNode, path: "enabled", value: boolean)
 ---@overload fun(self: JointNode, path: "visible", value: boolean)
+---@overload fun(self: JointNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: JointNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: JointNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: JointNode, path: "joint.type", value: "Distance"|"Filter"|"Motor"|"Mouse"|"Prismatic"|"Revolute"|"Weld"|"Wheel")
 ---@overload fun(self: JointNode, path: "joint.distance.local_anchor_a", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: JointNode, path: "joint.distance.local_anchor_b", x: number|Vec2|number[], y?: number)
@@ -5468,6 +6023,12 @@ function JointNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field text string The text; rich text markup when Rich Text is on, a locale key when Localized.
 ---@field font string Project font (.ttf / .otf / .fnt; "" = the engine font).
 ---@field font_size number Text size (px).
@@ -5505,6 +6066,9 @@ function JointNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "text" # string - The text; rich text markup when Rich Text is on, a locale key when Localized.
 ---| "font" # string - Project font (.ttf / .otf / .fnt; "" = the engine font).
 ---| "font_size" # number - Text size (px).
@@ -5538,6 +6102,9 @@ function JointNode:set_property(path, value, y) end
 ---@overload fun(self: TextNode, path: "paused"): boolean
 ---@overload fun(self: TextNode, path: "enabled"): boolean
 ---@overload fun(self: TextNode, path: "visible"): boolean
+---@overload fun(self: TextNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: TextNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: TextNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: TextNode, path: "text"): string
 ---@overload fun(self: TextNode, path: "font"): string
 ---@overload fun(self: TextNode, path: "font_size"): number
@@ -5573,6 +6140,9 @@ function TextNode:get_property(path) end
 ---@overload fun(self: TextNode, path: "paused", value: boolean)
 ---@overload fun(self: TextNode, path: "enabled", value: boolean)
 ---@overload fun(self: TextNode, path: "visible", value: boolean)
+---@overload fun(self: TextNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: TextNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: TextNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: TextNode, path: "text", value: string)
 ---@overload fun(self: TextNode, path: "font", value: string)
 ---@overload fun(self: TextNode, path: "font_size", value: number)
@@ -5606,6 +6176,12 @@ function TextNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -5648,6 +6224,9 @@ function TextNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "font" # string - Project font ("" = the engine font).
@@ -5682,6 +6261,9 @@ function TextNode:set_property(path, value, y) end
 ---@overload fun(self: DialogueNode, path: "paused"): boolean
 ---@overload fun(self: DialogueNode, path: "enabled"): boolean
 ---@overload fun(self: DialogueNode, path: "visible"): boolean
+---@overload fun(self: DialogueNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: DialogueNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: DialogueNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: DialogueNode, path: "size"): Vec2
 ---@overload fun(self: DialogueNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: DialogueNode, path: "font"): string
@@ -5718,6 +6300,9 @@ function DialogueNode:get_property(path) end
 ---@overload fun(self: DialogueNode, path: "paused", value: boolean)
 ---@overload fun(self: DialogueNode, path: "enabled", value: boolean)
 ---@overload fun(self: DialogueNode, path: "visible", value: boolean)
+---@overload fun(self: DialogueNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: DialogueNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: DialogueNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: DialogueNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: DialogueNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: DialogueNode, path: "font", value: string)
@@ -5753,6 +6338,12 @@ function DialogueNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field mouth string The mouth: a Vector Shape whose group's frames are mouth shapes (path from this node, e...
 ---@field sound string The voice it plays (with Play, autoplay or lipsync_play).
 ---@field cues string Rhubarb Lip Sync's output (TSV or JSON); empty: the sound's .json / .tsv beside it.
@@ -5773,6 +6364,9 @@ function DialogueNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "mouth" # string - The mouth: a Vector Shape whose group's frames are mouth shapes (path from this node, e...
 ---| "sound" # string - The voice it plays (with Play, autoplay or lipsync_play).
 ---| "cues" # string - Rhubarb Lip Sync's output (TSV or JSON); empty: the sound's .json / .tsv beside it.
@@ -5797,6 +6391,9 @@ function DialogueNode:set_property(path, value, y) end
 ---@overload fun(self: LipSyncNode, path: "paused"): boolean
 ---@overload fun(self: LipSyncNode, path: "enabled"): boolean
 ---@overload fun(self: LipSyncNode, path: "visible"): boolean
+---@overload fun(self: LipSyncNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: LipSyncNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: LipSyncNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: LipSyncNode, path: "mouth"): string
 ---@overload fun(self: LipSyncNode, path: "sound"): string
 ---@overload fun(self: LipSyncNode, path: "cues"): string
@@ -5823,6 +6420,9 @@ function LipSyncNode:get_property(path) end
 ---@overload fun(self: LipSyncNode, path: "paused", value: boolean)
 ---@overload fun(self: LipSyncNode, path: "enabled", value: boolean)
 ---@overload fun(self: LipSyncNode, path: "visible", value: boolean)
+---@overload fun(self: LipSyncNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: LipSyncNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: LipSyncNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: LipSyncNode, path: "mouth", value: string)
 ---@overload fun(self: LipSyncNode, path: "sound", value: string)
 ---@overload fun(self: LipSyncNode, path: "cues", value: string)
@@ -5849,6 +6449,12 @@ function LipSyncNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field shininess number Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---@field texture_path string Texture to slice.
 ---@field texturePath string Same as texture_path (the Inspector's name)
@@ -5872,6 +6478,9 @@ function LipSyncNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "shininess" # number - Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---| "texture_path" # string - Texture to slice.
 ---| "size" # Vec2 - Drawn size (px); the borders keep their size, the middle stretches.
@@ -5896,6 +6505,9 @@ function LipSyncNode:set_property(path, value, y) end
 ---@overload fun(self: NineSliceNode, path: "paused"): boolean
 ---@overload fun(self: NineSliceNode, path: "enabled"): boolean
 ---@overload fun(self: NineSliceNode, path: "visible"): boolean
+---@overload fun(self: NineSliceNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: NineSliceNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: NineSliceNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: NineSliceNode, path: "shininess"): number
 ---@overload fun(self: NineSliceNode, path: "texture_path"): string
 ---@overload fun(self: NineSliceNode, path: "size"): Vec2
@@ -5922,6 +6534,9 @@ function NineSliceNode:get_property(path) end
 ---@overload fun(self: NineSliceNode, path: "paused", value: boolean)
 ---@overload fun(self: NineSliceNode, path: "enabled", value: boolean)
 ---@overload fun(self: NineSliceNode, path: "visible", value: boolean)
+---@overload fun(self: NineSliceNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: NineSliceNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: NineSliceNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: NineSliceNode, path: "shininess", value: number)
 ---@overload fun(self: NineSliceNode, path: "texture_path", value: string)
 ---@overload fun(self: NineSliceNode, path: "size", x: number|Vec2|number[], y?: number)
@@ -5946,6 +6561,12 @@ function NineSliceNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field texture_path string Background texture.
 ---@field texturePath string Same as texture_path (the Inspector's name)
 ---@field factor Vec2 Movement relative to the camera: 1 moves with the world, 0 stays fixed on screen.
@@ -5969,6 +6590,9 @@ function NineSliceNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "texture_path" # string - Background texture.
 ---| "factor" # Vec2 - Movement relative to the camera: 1 moves with the world, 0 stays fixed on screen.
 ---| "repeat_x" # boolean - Tile horizontally to fill the view.
@@ -5992,6 +6616,9 @@ function NineSliceNode:set_property(path, value, y) end
 ---@overload fun(self: ParallaxNode, path: "paused"): boolean
 ---@overload fun(self: ParallaxNode, path: "enabled"): boolean
 ---@overload fun(self: ParallaxNode, path: "visible"): boolean
+---@overload fun(self: ParallaxNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: ParallaxNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: ParallaxNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: ParallaxNode, path: "texture_path"): string
 ---@overload fun(self: ParallaxNode, path: "factor"): Vec2
 ---@overload fun(self: ParallaxNode, path: "repeat_x"): boolean
@@ -6017,6 +6644,9 @@ function ParallaxNode:get_property(path) end
 ---@overload fun(self: ParallaxNode, path: "paused", value: boolean)
 ---@overload fun(self: ParallaxNode, path: "enabled", value: boolean)
 ---@overload fun(self: ParallaxNode, path: "visible", value: boolean)
+---@overload fun(self: ParallaxNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: ParallaxNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: ParallaxNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: ParallaxNode, path: "texture_path", value: string)
 ---@overload fun(self: ParallaxNode, path: "factor", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: ParallaxNode, path: "repeat_x", value: boolean)
@@ -6041,6 +6671,12 @@ function ParallaxNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field width number Line thickness (px).
 ---@field color number[] Line colour.
 ---@field closed boolean Join the last point to the first.
@@ -6058,6 +6694,9 @@ function ParallaxNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "width" # number - Line thickness (px).
 ---| "color" # number[] - Line colour.
 ---| "closed" # boolean - Join the last point to the first.
@@ -6079,6 +6718,9 @@ function ParallaxNode:set_property(path, value, y) end
 ---@overload fun(self: LineNode, path: "paused"): boolean
 ---@overload fun(self: LineNode, path: "enabled"): boolean
 ---@overload fun(self: LineNode, path: "visible"): boolean
+---@overload fun(self: LineNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: LineNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: LineNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: LineNode, path: "width"): number
 ---@overload fun(self: LineNode, path: "color"): number[]
 ---@overload fun(self: LineNode, path: "closed"): boolean
@@ -6102,6 +6744,9 @@ function LineNode:get_property(path) end
 ---@overload fun(self: LineNode, path: "paused", value: boolean)
 ---@overload fun(self: LineNode, path: "enabled", value: boolean)
 ---@overload fun(self: LineNode, path: "visible", value: boolean)
+---@overload fun(self: LineNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: LineNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: LineNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: LineNode, path: "width", value: number)
 ---@overload fun(self: LineNode, path: "color", value: number[])
 ---@overload fun(self: LineNode, path: "closed", value: boolean)
@@ -6124,6 +6769,12 @@ function LineNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field file string The SVG it draws (project path); empty: the preset. Reloads when the file is saved.
 ---@field group string A symbol: draw only this named group of the file (Inkscape layer, Illustrator group; "a...
 ---@field frame integer Part swapping: show only this child group of the group (mouths, hands, eyes); -1 shows ...
@@ -6205,6 +6856,9 @@ function LineNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "file" # string - The SVG it draws (project path); empty: the preset. Reloads when the file is saved.
 ---| "group" # string - A symbol: draw only this named group of the file (Inkscape layer, Illustrator group; "a...
 ---| "frame" # integer - Part swapping: show only this child group of the group (mouths, hands, eyes); -1 shows ...
@@ -6262,6 +6916,9 @@ function LineNode:set_property(path, value, y) end
 ---@overload fun(self: VectorShapeNode, path: "paused"): boolean
 ---@overload fun(self: VectorShapeNode, path: "enabled"): boolean
 ---@overload fun(self: VectorShapeNode, path: "visible"): boolean
+---@overload fun(self: VectorShapeNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: VectorShapeNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: VectorShapeNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: VectorShapeNode, path: "file"): string
 ---@overload fun(self: VectorShapeNode, path: "group"): string
 ---@overload fun(self: VectorShapeNode, path: "frame"): integer
@@ -6321,6 +6978,9 @@ function VectorShapeNode:get_property(path) end
 ---@overload fun(self: VectorShapeNode, path: "paused", value: boolean)
 ---@overload fun(self: VectorShapeNode, path: "enabled", value: boolean)
 ---@overload fun(self: VectorShapeNode, path: "visible", value: boolean)
+---@overload fun(self: VectorShapeNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: VectorShapeNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: VectorShapeNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: VectorShapeNode, path: "file", value: string)
 ---@overload fun(self: VectorShapeNode, path: "group", value: string)
 ---@overload fun(self: VectorShapeNode, path: "frame", value: integer)
@@ -6379,6 +7039,12 @@ function VectorShapeNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field lifetime number Seconds a point of the trail lasts.
 ---@field width number Width at the head (it tapers to the tail; px).
 ---@field color number[] Colour at the head.
@@ -6400,6 +7066,9 @@ function VectorShapeNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "lifetime" # number - Seconds a point of the trail lasts.
 ---| "width" # number - Width at the head (it tapers to the tail; px).
 ---| "color" # number[] - Colour at the head.
@@ -6423,6 +7092,9 @@ function VectorShapeNode:set_property(path, value, y) end
 ---@overload fun(self: TrailNode, path: "paused"): boolean
 ---@overload fun(self: TrailNode, path: "enabled"): boolean
 ---@overload fun(self: TrailNode, path: "visible"): boolean
+---@overload fun(self: TrailNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: TrailNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: TrailNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: TrailNode, path: "lifetime"): number
 ---@overload fun(self: TrailNode, path: "width"): number
 ---@overload fun(self: TrailNode, path: "color"): number[]
@@ -6448,6 +7120,9 @@ function TrailNode:get_property(path) end
 ---@overload fun(self: TrailNode, path: "paused", value: boolean)
 ---@overload fun(self: TrailNode, path: "enabled", value: boolean)
 ---@overload fun(self: TrailNode, path: "visible", value: boolean)
+---@overload fun(self: TrailNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: TrailNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: TrailNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: TrailNode, path: "lifetime", value: number)
 ---@overload fun(self: TrailNode, path: "width", value: number)
 ---@overload fun(self: TrailNode, path: "color", value: number[])
@@ -6472,6 +7147,12 @@ function TrailNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -6519,6 +7200,9 @@ function TrailNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "title" # string - Header text.
@@ -6556,6 +7240,9 @@ function TrailNode:set_property(path, value, y) end
 ---@overload fun(self: UIContainerNode, path: "paused"): boolean
 ---@overload fun(self: UIContainerNode, path: "enabled"): boolean
 ---@overload fun(self: UIContainerNode, path: "visible"): boolean
+---@overload fun(self: UIContainerNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: UIContainerNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: UIContainerNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: UIContainerNode, path: "size"): Vec2
 ---@overload fun(self: UIContainerNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UIContainerNode, path: "title"): string
@@ -6595,6 +7282,9 @@ function UIContainerNode:get_property(path) end
 ---@overload fun(self: UIContainerNode, path: "paused", value: boolean)
 ---@overload fun(self: UIContainerNode, path: "enabled", value: boolean)
 ---@overload fun(self: UIContainerNode, path: "visible", value: boolean)
+---@overload fun(self: UIContainerNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: UIContainerNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: UIContainerNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: UIContainerNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UIContainerNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UIContainerNode, path: "title", value: string)
@@ -6633,6 +7323,12 @@ function UIContainerNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -6659,6 +7355,9 @@ function UIContainerNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "text" # string - Label text.
@@ -6684,6 +7383,9 @@ function UIContainerNode:set_property(path, value, y) end
 ---@overload fun(self: UILabelNode, path: "paused"): boolean
 ---@overload fun(self: UILabelNode, path: "enabled"): boolean
 ---@overload fun(self: UILabelNode, path: "visible"): boolean
+---@overload fun(self: UILabelNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: UILabelNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: UILabelNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: UILabelNode, path: "size"): Vec2
 ---@overload fun(self: UILabelNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UILabelNode, path: "text"): string
@@ -6711,6 +7413,9 @@ function UILabelNode:get_property(path) end
 ---@overload fun(self: UILabelNode, path: "paused", value: boolean)
 ---@overload fun(self: UILabelNode, path: "enabled", value: boolean)
 ---@overload fun(self: UILabelNode, path: "visible", value: boolean)
+---@overload fun(self: UILabelNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: UILabelNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: UILabelNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: UILabelNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UILabelNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UILabelNode, path: "text", value: string)
@@ -6737,6 +7442,12 @@ function UILabelNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -6770,6 +7481,9 @@ function UILabelNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "text" # string - Button caption.
@@ -6799,6 +7513,9 @@ function UILabelNode:set_property(path, value, y) end
 ---@overload fun(self: UIButtonNode, path: "paused"): boolean
 ---@overload fun(self: UIButtonNode, path: "enabled"): boolean
 ---@overload fun(self: UIButtonNode, path: "visible"): boolean
+---@overload fun(self: UIButtonNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: UIButtonNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: UIButtonNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: UIButtonNode, path: "size"): Vec2
 ---@overload fun(self: UIButtonNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UIButtonNode, path: "text"): string
@@ -6830,6 +7547,9 @@ function UIButtonNode:get_property(path) end
 ---@overload fun(self: UIButtonNode, path: "paused", value: boolean)
 ---@overload fun(self: UIButtonNode, path: "enabled", value: boolean)
 ---@overload fun(self: UIButtonNode, path: "visible", value: boolean)
+---@overload fun(self: UIButtonNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: UIButtonNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: UIButtonNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: UIButtonNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UIButtonNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UIButtonNode, path: "text", value: string)
@@ -6860,6 +7580,12 @@ function UIButtonNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -6892,6 +7618,9 @@ function UIButtonNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "label" # string - Caption shown next to the control.
@@ -6920,6 +7649,9 @@ function UIButtonNode:set_property(path, value, y) end
 ---@overload fun(self: UISliderNode, path: "paused"): boolean
 ---@overload fun(self: UISliderNode, path: "enabled"): boolean
 ---@overload fun(self: UISliderNode, path: "visible"): boolean
+---@overload fun(self: UISliderNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: UISliderNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: UISliderNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: UISliderNode, path: "size"): Vec2
 ---@overload fun(self: UISliderNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UISliderNode, path: "label"): string
@@ -6950,6 +7682,9 @@ function UISliderNode:get_property(path) end
 ---@overload fun(self: UISliderNode, path: "paused", value: boolean)
 ---@overload fun(self: UISliderNode, path: "enabled", value: boolean)
 ---@overload fun(self: UISliderNode, path: "visible", value: boolean)
+---@overload fun(self: UISliderNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: UISliderNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: UISliderNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: UISliderNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UISliderNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UISliderNode, path: "label", value: string)
@@ -6979,6 +7714,12 @@ function UISliderNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -7003,6 +7744,9 @@ function UISliderNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "label" # string - Caption shown next to the control.
@@ -7027,6 +7771,9 @@ function UISliderNode:set_property(path, value, y) end
 ---@overload fun(self: UICheckboxNode, path: "paused"): boolean
 ---@overload fun(self: UICheckboxNode, path: "enabled"): boolean
 ---@overload fun(self: UICheckboxNode, path: "visible"): boolean
+---@overload fun(self: UICheckboxNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: UICheckboxNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: UICheckboxNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: UICheckboxNode, path: "size"): Vec2
 ---@overload fun(self: UICheckboxNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UICheckboxNode, path: "label"): string
@@ -7053,6 +7800,9 @@ function UICheckboxNode:get_property(path) end
 ---@overload fun(self: UICheckboxNode, path: "paused", value: boolean)
 ---@overload fun(self: UICheckboxNode, path: "enabled", value: boolean)
 ---@overload fun(self: UICheckboxNode, path: "visible", value: boolean)
+---@overload fun(self: UICheckboxNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: UICheckboxNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: UICheckboxNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: UICheckboxNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UICheckboxNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UICheckboxNode, path: "label", value: string)
@@ -7078,6 +7828,12 @@ function UICheckboxNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -7105,6 +7861,9 @@ function UICheckboxNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "label" # string - Caption shown next to the control.
@@ -7131,6 +7890,9 @@ function UICheckboxNode:set_property(path, value, y) end
 ---@overload fun(self: UIProgressBarNode, path: "paused"): boolean
 ---@overload fun(self: UIProgressBarNode, path: "enabled"): boolean
 ---@overload fun(self: UIProgressBarNode, path: "visible"): boolean
+---@overload fun(self: UIProgressBarNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: UIProgressBarNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: UIProgressBarNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: UIProgressBarNode, path: "size"): Vec2
 ---@overload fun(self: UIProgressBarNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UIProgressBarNode, path: "label"): string
@@ -7159,6 +7921,9 @@ function UIProgressBarNode:get_property(path) end
 ---@overload fun(self: UIProgressBarNode, path: "paused", value: boolean)
 ---@overload fun(self: UIProgressBarNode, path: "enabled", value: boolean)
 ---@overload fun(self: UIProgressBarNode, path: "visible", value: boolean)
+---@overload fun(self: UIProgressBarNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: UIProgressBarNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: UIProgressBarNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: UIProgressBarNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UIProgressBarNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UIProgressBarNode, path: "label", value: string)
@@ -7186,6 +7951,12 @@ function UIProgressBarNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -7209,6 +7980,9 @@ function UIProgressBarNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "label" # string - Caption shown next to the control.
@@ -7233,6 +8007,9 @@ function UIProgressBarNode:set_property(path, value, y) end
 ---@overload fun(self: UITextInputNode, path: "paused"): boolean
 ---@overload fun(self: UITextInputNode, path: "enabled"): boolean
 ---@overload fun(self: UITextInputNode, path: "visible"): boolean
+---@overload fun(self: UITextInputNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: UITextInputNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: UITextInputNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: UITextInputNode, path: "size"): Vec2
 ---@overload fun(self: UITextInputNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UITextInputNode, path: "label"): string
@@ -7259,6 +8036,9 @@ function UITextInputNode:get_property(path) end
 ---@overload fun(self: UITextInputNode, path: "paused", value: boolean)
 ---@overload fun(self: UITextInputNode, path: "enabled", value: boolean)
 ---@overload fun(self: UITextInputNode, path: "visible", value: boolean)
+---@overload fun(self: UITextInputNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: UITextInputNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: UITextInputNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: UITextInputNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UITextInputNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UITextInputNode, path: "label", value: string)
@@ -7284,6 +8064,12 @@ function UITextInputNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -7310,6 +8096,9 @@ function UITextInputNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "label" # string - Caption shown next to the control.
@@ -7335,6 +8124,9 @@ function UITextInputNode:set_property(path, value, y) end
 ---@overload fun(self: UIDropdownNode, path: "paused"): boolean
 ---@overload fun(self: UIDropdownNode, path: "enabled"): boolean
 ---@overload fun(self: UIDropdownNode, path: "visible"): boolean
+---@overload fun(self: UIDropdownNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: UIDropdownNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: UIDropdownNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: UIDropdownNode, path: "size"): Vec2
 ---@overload fun(self: UIDropdownNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UIDropdownNode, path: "label"): string
@@ -7362,6 +8154,9 @@ function UIDropdownNode:get_property(path) end
 ---@overload fun(self: UIDropdownNode, path: "paused", value: boolean)
 ---@overload fun(self: UIDropdownNode, path: "enabled", value: boolean)
 ---@overload fun(self: UIDropdownNode, path: "visible", value: boolean)
+---@overload fun(self: UIDropdownNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: UIDropdownNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: UIDropdownNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: UIDropdownNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UIDropdownNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UIDropdownNode, path: "label", value: string)
@@ -7388,6 +8183,12 @@ function UIDropdownNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -7413,6 +8214,9 @@ function UIDropdownNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "label" # string - Caption shown next to the control.
@@ -7438,6 +8242,9 @@ function UIDropdownNode:set_property(path, value, y) end
 ---@overload fun(self: UIRadioGroupNode, path: "paused"): boolean
 ---@overload fun(self: UIRadioGroupNode, path: "enabled"): boolean
 ---@overload fun(self: UIRadioGroupNode, path: "visible"): boolean
+---@overload fun(self: UIRadioGroupNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: UIRadioGroupNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: UIRadioGroupNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: UIRadioGroupNode, path: "size"): Vec2
 ---@overload fun(self: UIRadioGroupNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UIRadioGroupNode, path: "label"): string
@@ -7465,6 +8272,9 @@ function UIRadioGroupNode:get_property(path) end
 ---@overload fun(self: UIRadioGroupNode, path: "paused", value: boolean)
 ---@overload fun(self: UIRadioGroupNode, path: "enabled", value: boolean)
 ---@overload fun(self: UIRadioGroupNode, path: "visible", value: boolean)
+---@overload fun(self: UIRadioGroupNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: UIRadioGroupNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: UIRadioGroupNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: UIRadioGroupNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UIRadioGroupNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UIRadioGroupNode, path: "label", value: string)
@@ -7491,6 +8301,12 @@ function UIRadioGroupNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -7509,6 +8325,9 @@ function UIRadioGroupNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "label" # string - Caption shown next to the control.
@@ -7530,6 +8349,9 @@ function UIRadioGroupNode:set_property(path, value, y) end
 ---@overload fun(self: UIToggleSwitchNode, path: "paused"): boolean
 ---@overload fun(self: UIToggleSwitchNode, path: "enabled"): boolean
 ---@overload fun(self: UIToggleSwitchNode, path: "visible"): boolean
+---@overload fun(self: UIToggleSwitchNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: UIToggleSwitchNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: UIToggleSwitchNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: UIToggleSwitchNode, path: "size"): Vec2
 ---@overload fun(self: UIToggleSwitchNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UIToggleSwitchNode, path: "label"): string
@@ -7553,6 +8375,9 @@ function UIToggleSwitchNode:get_property(path) end
 ---@overload fun(self: UIToggleSwitchNode, path: "paused", value: boolean)
 ---@overload fun(self: UIToggleSwitchNode, path: "enabled", value: boolean)
 ---@overload fun(self: UIToggleSwitchNode, path: "visible", value: boolean)
+---@overload fun(self: UIToggleSwitchNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: UIToggleSwitchNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: UIToggleSwitchNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: UIToggleSwitchNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UIToggleSwitchNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UIToggleSwitchNode, path: "label", value: string)
@@ -7575,6 +8400,12 @@ function UIToggleSwitchNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -7599,6 +8430,9 @@ function UIToggleSwitchNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "label" # string - Caption shown next to the control.
@@ -7623,6 +8457,9 @@ function UIToggleSwitchNode:set_property(path, value, y) end
 ---@overload fun(self: UIKnobNode, path: "paused"): boolean
 ---@overload fun(self: UIKnobNode, path: "enabled"): boolean
 ---@overload fun(self: UIKnobNode, path: "visible"): boolean
+---@overload fun(self: UIKnobNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: UIKnobNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: UIKnobNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: UIKnobNode, path: "size"): Vec2
 ---@overload fun(self: UIKnobNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UIKnobNode, path: "label"): string
@@ -7649,6 +8486,9 @@ function UIKnobNode:get_property(path) end
 ---@overload fun(self: UIKnobNode, path: "paused", value: boolean)
 ---@overload fun(self: UIKnobNode, path: "enabled", value: boolean)
 ---@overload fun(self: UIKnobNode, path: "visible", value: boolean)
+---@overload fun(self: UIKnobNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: UIKnobNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: UIKnobNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: UIKnobNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UIKnobNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UIKnobNode, path: "label", value: string)
@@ -7674,6 +8514,12 @@ function UIKnobNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -7703,6 +8549,9 @@ function UIKnobNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "label" # string - Caption shown next to the control.
@@ -7730,6 +8579,9 @@ function UIKnobNode:set_property(path, value, y) end
 ---@overload fun(self: UINotchedSliderNode, path: "paused"): boolean
 ---@overload fun(self: UINotchedSliderNode, path: "enabled"): boolean
 ---@overload fun(self: UINotchedSliderNode, path: "visible"): boolean
+---@overload fun(self: UINotchedSliderNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: UINotchedSliderNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: UINotchedSliderNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: UINotchedSliderNode, path: "size"): Vec2
 ---@overload fun(self: UINotchedSliderNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UINotchedSliderNode, path: "label"): string
@@ -7759,6 +8611,9 @@ function UINotchedSliderNode:get_property(path) end
 ---@overload fun(self: UINotchedSliderNode, path: "paused", value: boolean)
 ---@overload fun(self: UINotchedSliderNode, path: "enabled", value: boolean)
 ---@overload fun(self: UINotchedSliderNode, path: "visible", value: boolean)
+---@overload fun(self: UINotchedSliderNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: UINotchedSliderNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: UINotchedSliderNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: UINotchedSliderNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UINotchedSliderNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UINotchedSliderNode, path: "label", value: string)
@@ -7787,6 +8642,12 @@ function UINotchedSliderNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -7812,6 +8673,9 @@ function UINotchedSliderNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "label" # string - Caption shown next to the control.
@@ -7836,6 +8700,9 @@ function UINotchedSliderNode:set_property(path, value, y) end
 ---@overload fun(self: UIVolumeFaderNode, path: "paused"): boolean
 ---@overload fun(self: UIVolumeFaderNode, path: "enabled"): boolean
 ---@overload fun(self: UIVolumeFaderNode, path: "visible"): boolean
+---@overload fun(self: UIVolumeFaderNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: UIVolumeFaderNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: UIVolumeFaderNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: UIVolumeFaderNode, path: "size"): Vec2
 ---@overload fun(self: UIVolumeFaderNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UIVolumeFaderNode, path: "label"): string
@@ -7862,6 +8729,9 @@ function UIVolumeFaderNode:get_property(path) end
 ---@overload fun(self: UIVolumeFaderNode, path: "paused", value: boolean)
 ---@overload fun(self: UIVolumeFaderNode, path: "enabled", value: boolean)
 ---@overload fun(self: UIVolumeFaderNode, path: "visible", value: boolean)
+---@overload fun(self: UIVolumeFaderNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: UIVolumeFaderNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: UIVolumeFaderNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: UIVolumeFaderNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UIVolumeFaderNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UIVolumeFaderNode, path: "label", value: string)
@@ -7887,6 +8757,12 @@ function UIVolumeFaderNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -7913,6 +8789,9 @@ function UIVolumeFaderNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "label" # string - Caption shown next to the control.
@@ -7938,6 +8817,9 @@ function UIVolumeFaderNode:set_property(path, value, y) end
 ---@overload fun(self: UIVolumeMeterNode, path: "paused"): boolean
 ---@overload fun(self: UIVolumeMeterNode, path: "enabled"): boolean
 ---@overload fun(self: UIVolumeMeterNode, path: "visible"): boolean
+---@overload fun(self: UIVolumeMeterNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: UIVolumeMeterNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: UIVolumeMeterNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: UIVolumeMeterNode, path: "size"): Vec2
 ---@overload fun(self: UIVolumeMeterNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UIVolumeMeterNode, path: "label"): string
@@ -7965,6 +8847,9 @@ function UIVolumeMeterNode:get_property(path) end
 ---@overload fun(self: UIVolumeMeterNode, path: "paused", value: boolean)
 ---@overload fun(self: UIVolumeMeterNode, path: "enabled", value: boolean)
 ---@overload fun(self: UIVolumeMeterNode, path: "visible", value: boolean)
+---@overload fun(self: UIVolumeMeterNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: UIVolumeMeterNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: UIVolumeMeterNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: UIVolumeMeterNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UIVolumeMeterNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UIVolumeMeterNode, path: "label", value: string)
@@ -7991,6 +8876,12 @@ function UIVolumeMeterNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -8010,6 +8901,9 @@ function UIVolumeMeterNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "label" # string - Text at the start of the line ("" = a plain line); with text it's at least 18 px tall.
@@ -8031,6 +8925,9 @@ function UIVolumeMeterNode:set_property(path, value, y) end
 ---@overload fun(self: UISeparatorNode, path: "paused"): boolean
 ---@overload fun(self: UISeparatorNode, path: "enabled"): boolean
 ---@overload fun(self: UISeparatorNode, path: "visible"): boolean
+---@overload fun(self: UISeparatorNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: UISeparatorNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: UISeparatorNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: UISeparatorNode, path: "size"): Vec2
 ---@overload fun(self: UISeparatorNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UISeparatorNode, path: "label"): string
@@ -8054,6 +8951,9 @@ function UISeparatorNode:get_property(path) end
 ---@overload fun(self: UISeparatorNode, path: "paused", value: boolean)
 ---@overload fun(self: UISeparatorNode, path: "enabled", value: boolean)
 ---@overload fun(self: UISeparatorNode, path: "visible", value: boolean)
+---@overload fun(self: UISeparatorNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: UISeparatorNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: UISeparatorNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: UISeparatorNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UISeparatorNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UISeparatorNode, path: "label", value: string)
@@ -8076,6 +8976,12 @@ function UISeparatorNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -8128,6 +9034,9 @@ function UISeparatorNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "title" # string - Heading above the plot.
@@ -8166,6 +9075,9 @@ function UISeparatorNode:set_property(path, value, y) end
 ---@overload fun(self: UIXYPlotNode, path: "paused"): boolean
 ---@overload fun(self: UIXYPlotNode, path: "enabled"): boolean
 ---@overload fun(self: UIXYPlotNode, path: "visible"): boolean
+---@overload fun(self: UIXYPlotNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: UIXYPlotNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: UIXYPlotNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: UIXYPlotNode, path: "size"): Vec2
 ---@overload fun(self: UIXYPlotNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UIXYPlotNode, path: "title"): string
@@ -8206,6 +9118,9 @@ function UIXYPlotNode:get_property(path) end
 ---@overload fun(self: UIXYPlotNode, path: "paused", value: boolean)
 ---@overload fun(self: UIXYPlotNode, path: "enabled", value: boolean)
 ---@overload fun(self: UIXYPlotNode, path: "visible", value: boolean)
+---@overload fun(self: UIXYPlotNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: UIXYPlotNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: UIXYPlotNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: UIXYPlotNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UIXYPlotNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UIXYPlotNode, path: "title", value: string)
@@ -8245,6 +9160,12 @@ function UIXYPlotNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -8266,6 +9187,9 @@ function UIXYPlotNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "items" # string[] - The rows, one a line.
@@ -8288,6 +9212,9 @@ function UIXYPlotNode:set_property(path, value, y) end
 ---@overload fun(self: UIListViewNode, path: "paused"): boolean
 ---@overload fun(self: UIListViewNode, path: "enabled"): boolean
 ---@overload fun(self: UIListViewNode, path: "visible"): boolean
+---@overload fun(self: UIListViewNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: UIListViewNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: UIListViewNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: UIListViewNode, path: "size"): Vec2
 ---@overload fun(self: UIListViewNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UIListViewNode, path: "items"): string[]
@@ -8312,6 +9239,9 @@ function UIListViewNode:get_property(path) end
 ---@overload fun(self: UIListViewNode, path: "paused", value: boolean)
 ---@overload fun(self: UIListViewNode, path: "enabled", value: boolean)
 ---@overload fun(self: UIListViewNode, path: "visible", value: boolean)
+---@overload fun(self: UIListViewNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: UIListViewNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: UIListViewNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: UIListViewNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UIListViewNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UIListViewNode, path: "items", value: string[])
@@ -8335,6 +9265,12 @@ function UIListViewNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -8356,6 +9292,9 @@ function UIListViewNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "selected_id" # integer - Id of the selected item (-1 = none).
@@ -8378,6 +9317,9 @@ function UIListViewNode:set_property(path, value, y) end
 ---@overload fun(self: UITreeViewNode, path: "paused"): boolean
 ---@overload fun(self: UITreeViewNode, path: "enabled"): boolean
 ---@overload fun(self: UITreeViewNode, path: "visible"): boolean
+---@overload fun(self: UITreeViewNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: UITreeViewNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: UITreeViewNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: UITreeViewNode, path: "size"): Vec2
 ---@overload fun(self: UITreeViewNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UITreeViewNode, path: "selected_id"): integer
@@ -8402,6 +9344,9 @@ function UITreeViewNode:get_property(path) end
 ---@overload fun(self: UITreeViewNode, path: "paused", value: boolean)
 ---@overload fun(self: UITreeViewNode, path: "enabled", value: boolean)
 ---@overload fun(self: UITreeViewNode, path: "visible", value: boolean)
+---@overload fun(self: UITreeViewNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: UITreeViewNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: UITreeViewNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: UITreeViewNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UITreeViewNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UITreeViewNode, path: "selected_id", value: integer)
@@ -8425,6 +9370,12 @@ function UITreeViewNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -8448,6 +9399,9 @@ function UITreeViewNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "selected_index" # integer - Index of the selected item (-1 = none).
@@ -8471,6 +9425,9 @@ function UITreeViewNode:set_property(path, value, y) end
 ---@overload fun(self: UIUnorderedListNode, path: "paused"): boolean
 ---@overload fun(self: UIUnorderedListNode, path: "enabled"): boolean
 ---@overload fun(self: UIUnorderedListNode, path: "visible"): boolean
+---@overload fun(self: UIUnorderedListNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: UIUnorderedListNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: UIUnorderedListNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: UIUnorderedListNode, path: "size"): Vec2
 ---@overload fun(self: UIUnorderedListNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UIUnorderedListNode, path: "selected_index"): integer
@@ -8496,6 +9453,9 @@ function UIUnorderedListNode:get_property(path) end
 ---@overload fun(self: UIUnorderedListNode, path: "paused", value: boolean)
 ---@overload fun(self: UIUnorderedListNode, path: "enabled", value: boolean)
 ---@overload fun(self: UIUnorderedListNode, path: "visible", value: boolean)
+---@overload fun(self: UIUnorderedListNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: UIUnorderedListNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: UIUnorderedListNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: UIUnorderedListNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UIUnorderedListNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UIUnorderedListNode, path: "selected_index", value: integer)
@@ -8520,6 +9480,12 @@ function UIUnorderedListNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -8544,6 +9510,9 @@ function UIUnorderedListNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "selected_index" # integer - Index of the selected item (-1 = none).
@@ -8568,6 +9537,9 @@ function UIUnorderedListNode:set_property(path, value, y) end
 ---@overload fun(self: UIOrderedListNode, path: "paused"): boolean
 ---@overload fun(self: UIOrderedListNode, path: "enabled"): boolean
 ---@overload fun(self: UIOrderedListNode, path: "visible"): boolean
+---@overload fun(self: UIOrderedListNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: UIOrderedListNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: UIOrderedListNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: UIOrderedListNode, path: "size"): Vec2
 ---@overload fun(self: UIOrderedListNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UIOrderedListNode, path: "selected_index"): integer
@@ -8594,6 +9566,9 @@ function UIOrderedListNode:get_property(path) end
 ---@overload fun(self: UIOrderedListNode, path: "paused", value: boolean)
 ---@overload fun(self: UIOrderedListNode, path: "enabled", value: boolean)
 ---@overload fun(self: UIOrderedListNode, path: "visible", value: boolean)
+---@overload fun(self: UIOrderedListNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: UIOrderedListNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: UIOrderedListNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: UIOrderedListNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UIOrderedListNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UIOrderedListNode, path: "selected_index", value: integer)
@@ -8619,6 +9594,12 @@ function UIOrderedListNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -8647,6 +9628,9 @@ function UIOrderedListNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "selected_row" # integer - Index of the selected row.
@@ -8673,6 +9657,9 @@ function UIOrderedListNode:set_property(path, value, y) end
 ---@overload fun(self: UITableNode, path: "paused"): boolean
 ---@overload fun(self: UITableNode, path: "enabled"): boolean
 ---@overload fun(self: UITableNode, path: "visible"): boolean
+---@overload fun(self: UITableNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: UITableNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: UITableNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: UITableNode, path: "size"): Vec2
 ---@overload fun(self: UITableNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UITableNode, path: "selected_row"): integer
@@ -8701,6 +9688,9 @@ function UITableNode:get_property(path) end
 ---@overload fun(self: UITableNode, path: "paused", value: boolean)
 ---@overload fun(self: UITableNode, path: "enabled", value: boolean)
 ---@overload fun(self: UITableNode, path: "visible", value: boolean)
+---@overload fun(self: UITableNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: UITableNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: UITableNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: UITableNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UITableNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UITableNode, path: "selected_row", value: integer)
@@ -8728,6 +9718,12 @@ function UITableNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -8749,6 +9745,9 @@ function UITableNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "icon" # IconName - Icon shown (Font Awesome).
@@ -8772,6 +9771,9 @@ function UITableNode:set_property(path, value, y) end
 ---@overload fun(self: UIIconNode, path: "paused"): boolean
 ---@overload fun(self: UIIconNode, path: "enabled"): boolean
 ---@overload fun(self: UIIconNode, path: "visible"): boolean
+---@overload fun(self: UIIconNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: UIIconNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: UIIconNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: UIIconNode, path: "size"): Vec2
 ---@overload fun(self: UIIconNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UIIconNode, path: "icon"): IconName
@@ -8797,6 +9799,9 @@ function UIIconNode:get_property(path) end
 ---@overload fun(self: UIIconNode, path: "paused", value: boolean)
 ---@overload fun(self: UIIconNode, path: "enabled", value: boolean)
 ---@overload fun(self: UIIconNode, path: "visible", value: boolean)
+---@overload fun(self: UIIconNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: UIIconNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: UIIconNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: UIIconNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UIIconNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UIIconNode, path: "icon", value: IconName)
@@ -8821,6 +9826,12 @@ function UIIconNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -8843,6 +9854,9 @@ function UIIconNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "active_toggle_id" # integer - Id of the pressed toggle button.
@@ -8866,6 +9880,9 @@ function UIIconNode:set_property(path, value, y) end
 ---@overload fun(self: UIToolbarNode, path: "paused"): boolean
 ---@overload fun(self: UIToolbarNode, path: "enabled"): boolean
 ---@overload fun(self: UIToolbarNode, path: "visible"): boolean
+---@overload fun(self: UIToolbarNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: UIToolbarNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: UIToolbarNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: UIToolbarNode, path: "size"): Vec2
 ---@overload fun(self: UIToolbarNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UIToolbarNode, path: "active_toggle_id"): integer
@@ -8891,6 +9908,9 @@ function UIToolbarNode:get_property(path) end
 ---@overload fun(self: UIToolbarNode, path: "paused", value: boolean)
 ---@overload fun(self: UIToolbarNode, path: "enabled", value: boolean)
 ---@overload fun(self: UIToolbarNode, path: "visible", value: boolean)
+---@overload fun(self: UIToolbarNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: UIToolbarNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: UIToolbarNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: UIToolbarNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UIToolbarNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UIToolbarNode, path: "active_toggle_id", value: integer)
@@ -8915,6 +9935,12 @@ function UIToolbarNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -8970,6 +9996,9 @@ function UIToolbarNode:set_property(path, value, y) end
 ---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
 ---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
 ---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "title" # string - Header text.
@@ -9011,6 +10040,9 @@ function UIToolbarNode:set_property(path, value, y) end
 ---@overload fun(self: UITabContainerNode, path: "paused"): boolean
 ---@overload fun(self: UITabContainerNode, path: "enabled"): boolean
 ---@overload fun(self: UITabContainerNode, path: "visible"): boolean
+---@overload fun(self: UITabContainerNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: UITabContainerNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: UITabContainerNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
 ---@overload fun(self: UITabContainerNode, path: "size"): Vec2
 ---@overload fun(self: UITabContainerNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UITabContainerNode, path: "title"): string
@@ -9054,6 +10086,9 @@ function UITabContainerNode:get_property(path) end
 ---@overload fun(self: UITabContainerNode, path: "paused", value: boolean)
 ---@overload fun(self: UITabContainerNode, path: "enabled", value: boolean)
 ---@overload fun(self: UITabContainerNode, path: "visible", value: boolean)
+---@overload fun(self: UITabContainerNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: UITabContainerNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: UITabContainerNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
 ---@overload fun(self: UITabContainerNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UITabContainerNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UITabContainerNode, path: "title", value: string)
@@ -15101,6 +16136,160 @@ Resource = ResourceModule
 
 ---@type CrashModule
 Crash = CrashModule
+
+---A mod as Mods.list() shows it (players' mods: engine/docs/modding.md).
+---@class ModInfo
+---@field id string The mod's id (mod.json "id", else its folder's name)
+---@field name string Its display name (mod.json "name")
+---@field version string Its version (mod.json "version"; "0.0.0" when missing)
+---@field description string mod.json "description" ("" when missing)
+---@field author string mod.json "author" ("" when missing)
+---@field folder string Where it is installed
+---@field status "loaded"|"disabled"|"incompatible"|"missing_dependency"|"failed"|"stopped" Why it is or isn't running this launch
+---@field loaded boolean It is running this launch
+---@field enabled boolean The player's choice for the next launch (Mods.set_enabled)
+---@field error? string What went wrong (a bad mod.json, a missing dependency, a Lua error, the CPU budget)
+
+---A mod's files (Mods.fs inside a mod's Lua): paths are relative to the
+---mod's folder (read only); "save:" paths are in the mod's own save folder
+---(<user data>/mod_data/<id>/: read and write). Absolute paths and ".." are errors.
+---@class ModFS
+local ModFS = {}
+
+---Reads a file of the mod (or "save:" a file it saved).
+---
+---Example: `local cfg = Mods.fs.read("save:settings.json") or Mods.fs.read("defaults.json")`
+---@param path string A path in the mod's folder, or "save:<path>" in its save folder
+---@return string? text The file's contents, or nil when it isn't there
+function ModFS.read(path) end
+
+---Whether a file or folder exists.
+---
+---Example: `if not Mods.fs.exists("save:seen_intro") then show_intro() end`
+---@param path string A path in the mod's folder, or "save:<path>"
+---@return boolean exists
+function ModFS.exists(path) end
+
+---Lists a folder: names, sorted, folders ending in "/".
+---
+---Example: `for _, name in ipairs(Mods.fs.list("levels")) do Log.info(name) end`
+---@param folder? string A folder in the mod's folder or "save:<folder>"; default the mod's folder
+---@return string[] names Empty when the folder doesn't exist
+function ModFS.list(folder) end
+
+---Writes a file in the mod's save folder (folders are made as needed).
+---
+---Example: `Mods.fs.write("save:settings.json", '{"hard": true}')`
+---@param path string "save:<path>" (the mod's own folder is read-only: an error)
+---@param text string The contents
+---@return boolean ok true when it was written
+function ModFS.write(path, text) end
+
+---Makes a folder in the mod's save folder.
+---
+---Example: `Mods.fs.mkdir("save:replays")`
+---@param path string "save:<path>"
+---@return boolean ok
+function ModFS.mkdir(path) end
+
+---Removes a file or folder (with its contents) from the mod's save folder.
+---
+---Example: `Mods.fs.remove("save:replays")`
+---@param path string "save:<path>"
+---@return boolean ok true when something was removed
+function ModFS.remove(path) end
+
+---Players' mods (engine/docs/modding.md): what's installed, turning mods on
+---and off (applied on the next launch), and hooks mods listen to. Every game
+---has it; with mods off (the project's export setting "Mods") the lists are
+---empty. Inside a mod's Lua, Mods also has `fs` (ModFS: its files) and
+---`self` (ModInfo: the mod itself).
+---@class ModsModule
+---@field fs ModFS Inside a mod's Lua: its files (nil in the game's own scripts)
+---@field self ModInfo Inside a mod's Lua: the mod itself (nil in the game's own scripts)
+local ModsModule = {}
+
+---Every mod found - running or not (disabled, incompatible, failed...) - in load order.
+---
+---Example: `for _, m in ipairs(Mods.list()) do Log.info(m.name, m.version, m.status) end`
+---@return ModInfo[] mods
+function ModsModule.list() end
+
+---The ids of the mods running this launch, in load order.
+---
+---Example: `Log.info("mods: " .. table.concat(Mods.enabled(), ", "))`
+---@return string[] ids
+function ModsModule.enabled() end
+
+---Whether a mod is running this launch.
+---
+---Example: `if Mods.is_loaded("hard_mode") then enemy_speed = enemy_speed * 2 end`
+---@param id string The mod's id
+---@return boolean loaded
+function ModsModule.is_loaded(id) end
+
+---Turns a mod on or off for the next launch (written to <user data>/mods.json).
+---
+---Example: `Mods.set_enabled(mod.id, not mod.enabled)`
+---@param id string The mod's id
+---@param on? boolean Default true
+---@return boolean ok false when there's no such mod or mods.json couldn't be written
+function ModsModule.set_enabled(id, on) end
+
+---Sets the load order for the next launch: these ids first, in this order
+---(the others after, by their load_order); a mod still loads after its dependencies.
+---
+---Example: `Mods.set_order({"core_lib", "big_coins"})`
+---@param ids string[] Mod ids
+---@return boolean ok false when mods.json couldn't be written
+function ModsModule.set_order(ids) end
+
+---Whether a set_enabled / set_order change waits for the game to be restarted.
+---
+---Example: `restart_label.visible = Mods.restart_needed()`
+---@return boolean needed
+function ModsModule.restart_needed() end
+
+---What the game lets mods do: its export setting "Mods".
+---
+---Example: `if Mods.mode() == "off" then mods_button.visible = false end`
+---@return "off"|"assets"|"scripts" mode
+function ModsModule.mode() end
+
+---The folders the game looks in for mods (to tell players where to put them).
+---
+---Example: `help.text = "Put mods in " .. Mods.folders()[1]`
+---@return string[] folders mods/ next to the game, then mods/ in the user-data folder
+function ModsModule.folders() end
+
+---Listens for a mod hook: "mods_loaded" (every mod's main.lua ran),
+---"scene_ready" (the scene's name: a scene started), "update" (dt: every
+---frame), a name game scripts raise with Mods.emit, or any event-bus event
+---(Events.emit). A handler that errors stops its mod (in a game script: logged).
+---
+---Example: `Mods.on("scene_ready", function(name) if name == "level_1" then Scene.find_node("Coins"):set_text("Modded!") end end)`
+---@param event string The hook's name
+---@param fn fun(...: any) Called with the hook's values
+---@return integer id For Mods.off
+function ModsModule.on(event, fn) end
+
+---Stops a Mods.on handler.
+---
+---Example: `Mods.off(update_id)`
+---@param id integer What Mods.on returned
+---@return boolean removed false when it was already gone
+function ModsModule.off(id) end
+
+---Raises a hook mods listen to with Mods.on: how a game offers its own
+---hooks ("enemy_spawned", "shop_items"...). Only Mods.on handlers get it.
+---
+---Example: `Mods.emit("shop_items", items) -- mods may add to the table`
+---@param event string The hook's name
+---@param ... any Values passed to the handlers
+function ModsModule.emit(event, ...) end
+
+---@type ModsModule
+Mods = ModsModule
 
 ---@class NavigationModule
 local NavigationModule = {}

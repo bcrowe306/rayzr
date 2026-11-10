@@ -1,0 +1,26 @@
+[
+ {
+  "name": "pixel render (#409): 320x180 at 4x (Integer, Pixel Snap, Smooth Camera) - the camera follows a sprite (still on screen), tiles and sprites on whole game pixels, a Native UI label crisp over the frame, Pixel world text",
+  "project": "tests/pixel_render/project",
+  "scene": "scenes/scroll.scene.json",
+  "frames": 45,
+  "expect": [["Mover", "exists", "==", true], ["Hud", "exists", "==", true]],
+  "golden": {"image": "tests/pixel_render/expected/scroll.png", "max_pixels": 0.01, "threshold": 40}
+ },
+ {
+  "name": "pixel render (#409): the camera between game pixels (it follows an unsnapped rig at x 160.25) - the world shifted by the camera's sub-pixel offset (one screen pixel at 4x: the same on every GPU), a Native world text node moved with it",
+  "project": "tests/pixel_render/project",
+  "scene": "scenes/pan.scene.json",
+  "frames": 45,
+  "expect": [["Rig", "exists", "==", true], ["NativeText", "exists", "==", true]],
+  "golden": {"image": "tests/pixel_render/expected/pan.png", "max_pixels": 0.01, "threshold": 40}
+ },
+ {
+  "name": "pixel render (#409): Fit at 3.125x (1000x700) with Sharp Pixels - sharp-bilinear scaling (every game pixel the same width), the Native label crisp",
+  "project": "tests/pixel_render/fit_project",
+  "scene": "scenes/pan.scene.json",
+  "frames": 45,
+  "expect": [["Hud", "exists", "==", true]],
+  "golden": {"image": "tests/pixel_render/expected/fit.png", "max_pixels": 0.01, "threshold": 40}
+ }
+]

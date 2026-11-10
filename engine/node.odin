@@ -42,6 +42,11 @@ Node :: struct {
 	ySortOffset: f32,
 	liveSlot: u32,    // its slot in the live-node table (+1; 0 = not registered; events.odin)
 	layer: RenderLayer,
+	// Pixel art (pixel_perfect.odin, #409): this node's Texture Filter, Snap
+	// to Pixels, and (text / UI) where it draws when the frame is scaled up.
+	pixelFilter: Pixel_Filter,
+	pixelSnap:   Pixel_Snap,
+	pixelText:   Pixel_Text,
 	renderable: bool `gui:"true"`,
 	enabled: bool `gui:"true"`,
 	ySort: bool,

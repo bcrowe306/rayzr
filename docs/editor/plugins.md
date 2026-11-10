@@ -28,6 +28,10 @@ main file, permissions) and its Lua files:
 | `plugins/<id>/` in the project | This project only. It's part of the project, so it travels with it (and its trust is asked, below). |
 | `~/.config/rayzr_editor/plugins/<id>/` | Every project you open (**User Plugins Folder** in Settings > Plugins opens it). |
 
+**Tools > Registry** installs community plugins into either folder
+([Registry](registry.md)); [Publishing a plugin or
+template](publishing.md) says how to list your own there.
+
 ## What's in it
 
 ### Project Plugins (the trust prompt)

@@ -1,0 +1,35 @@
+# Docs screenshots (#296): Tools > Registry and its install dialog
+# (docs/editor/registry.md), from the fixture index
+# (tests/drive/fixtures/registry). F1 in the window opens the page.
+exec mkdir -p $PROJECT/registry_zz
+exec cp -R tests/drive/fixtures/registry/. $PROJECT/registry_zz/
+registry-url $PROJECT/registry_zz/index.json
+wait 5
+key escape
+click @menu:Tools
+click @menu:Tools/Registry...
+wait-until registry.busy == false timeout=600
+click @registry.item:registry_hello_zz
+wait 30
+move 1270,710
+annotate @registry.search Search by name, author, description or tag
+annotate @registry.kind:all All, Plugins or Templates
+annotate @registry.refresh Fetch the list again
+annotate @registry.item:registry_hello_zz Plugins and templates (a check: installed)
+annotate @registry.install Install, Update, Remove
+annotate @registry.screenshot Its screenshot, description, permissions and source
+screenshot editor_registry
+click @registry.install
+wait 5
+move 1270,710
+annotate @registry.confirm.user For every project, or only this one
+annotate @registry.confirm.install Download, check the SHA-256 and install
+screenshot editor_registry_install
+click @registry.confirm.install
+wait-until registry.registry_hello_zz == 1.0.0 timeout=600
+wait 10
+# F1: this page.
+key f1
+wait 2
+expect noderef.open == true
+expect noderef.page == editor/registry

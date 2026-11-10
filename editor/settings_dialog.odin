@@ -313,6 +313,9 @@ settings_general :: proc(state: ^EditorState, h: f32) {
 				UI_PropLabel("Aseprite")
 				text_field("settings.aseprite-path", &s.asepritePath, strings.clone_to_cstring(Aseprite_DefaultPath(), context.temp_allocator))
 				UI_Tooltip("The Aseprite program Edit in Aseprite opens (empty: found where Aseprite installs; Steam too)")
+				UI_PropLabel("Registry Index")
+				text_field("settings.registry-url", &s.registryUrl, REGISTRY_INDEX_URL)
+				UI_Tooltip("The index Tools > Registry lists plugins and templates from (empty: the official one; a url or a local index.json)")
 				UI_EndProps()
 			}
 		case 1:
@@ -910,12 +913,18 @@ project_video :: proc(state: ^EditorState) {
 	if imgui.SliderInt("##fps", &fps, 30, 240) do d.targetFPS = int(fps)
 	Drive_Item("settings.fps")
 	check("settings.fullscreen", "Fullscreen", &d.fullscreen, "Cover the whole screen at its own resolution (the game is scaled to it). Scripts: Engine.set_fullscreen(true)")
-	check("settings.sharp-scaling", "Sharp Pixels", &d.sharpScaling, "Scale the game to the window nearest-neighbour - crisp pixel art; off: smooth")
-	check("settings.integer-scaling", "Integer Scaling", &d.integerScaling, "Scale by a whole number (2x, 3x...) with bars around: every game pixel the same size on screen")
-	check("settings.pixel-snap", "Pixel Snap", &d.pixelSnap, "The camera and sprites sit on whole game pixels: no shimmering or uneven pixels")
+	// Pixel art (pixel_perfect.odin; nodes override the filter and snap in
+	// the Inspector's Pixels section, #409).
+	imgui.SeparatorText("Pixel Art")
+	UI_PropLabel("Scaling")
+	if idx, changed := UI_Combo("settings.scaling", 0 if d.integerScaling else 1, []string{"Integer (whole multiples)", "Fit (fill the window)"}); changed do d.integerScaling = idx == 0
+	UI_Tooltip("Integer: the game is scaled by a whole number (2x, 3x...) with bars around - every game pixel exactly the same size. Fit: scaled to fill the window; with Sharp Pixels through a sharp-bilinear filter - pixels stay crisp and all the same size (only their edges blend), no uneven columns")
+	check("settings.sharp-scaling", "Sharp Pixels", &d.sharpScaling, "Scale the game to the window without blurring its pixels - crisp pixel art (nearest-neighbour at whole scales, sharp-bilinear at others); off: smooth. Text and UI set to Native draw at the window's resolution either way")
+	check("settings.pixel-snap", "Pixel Snap", &d.pixelSnap, "The camera, sprites, tiles, particles and text sit on whole game pixels: no shimmering or uneven pixels. A node's Pixels > Snap to Pixels overrides it")
 	if !d.pixelSnap do imgui.BeginDisabled()
-	check("settings.smooth-camera", "Smooth Camera", &d.smoothCamera, "With Pixel Snap: keep the camera's sub-pixel motion when scaling up (slow pans glide instead of stepping a game pixel at a time); UI layers stay put")
+	check("settings.smooth-camera", "Smooth Camera", &d.smoothCamera, "With Pixel Snap: keep the camera's sub-pixel motion when scaling up (pans glide instead of stepping a game pixel at a time); the node the camera follows stays still, the world stepping with it while the camera is locked on")
 	if !d.pixelSnap do imgui.EndDisabled()
+	imgui.Separator()
 	check("settings.vsync", "VSync", &d.vsync)
 	check("settings.resizable", "Resizable Window", &d.resizable)
 	check("settings.msaa", "Anti-aliasing (MSAA 4x)", &d.msaa)
@@ -1015,6 +1024,26 @@ project_export :: proc(state: ^EditorState) {
 		}
 		check("settings.compress", "Compress Package", &x.compress)
 		check("settings.include-font", "Include UI Font", &x.includeFont)
+		// Players' mods (engine/mods.odin, engine/docs/modding.md).
+		UI_PropLabel("Mods")
+		imgui.SetNextItemWidth(-1)
+		modsLabel :: proc(m: e.Mods_Mode) -> string {
+			switch m {
+			case .Off: return "Off"
+			case .Assets: return "Assets only (files)"
+			case .Scripts: return "Assets + scripts (sandboxed Lua)"
+			}
+			return ""
+		}
+		if imgui.BeginCombo("##settings.mods", strings.clone_to_cstring(modsLabel(x.mods), context.temp_allocator)) {
+			for m in e.Mods_Mode {
+				if imgui.Selectable(strings.clone_to_cstring(modsLabel(m), context.temp_allocator), m == x.mods) do x.mods = m
+				Drive_Item(fmt.tprintf("pick:mods-%s", e.Mods_ModeName(m)))
+			}
+			imgui.EndCombo()
+		}
+		Drive_Item("settings.mods")
+		UI_Tooltip("What players' mods may do in the exported game (desktop only). Off: no mods. Assets only: a mod's files replace the game's at the same path (textures, sounds, scenes, data) and add new ones. Assets + scripts: mods' Lua runs too, sandboxed (no io / os, a CPU budget). Mods go in mods/ next to the game or in the player's user-data folder")
 		hasMac := false
 		for &p in e.Export_EffectivePresets(x) do if p.target == .MacOS do hasMac = true
 		if hasMac {

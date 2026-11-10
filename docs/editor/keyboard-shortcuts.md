@@ -187,6 +187,10 @@ In the list below, **Where** is *Anywhere* (global), *Scene editing* or
 | Scale Tool | `R` | Scene editing |
 | Sprite Sheet Slicer... |  | Anywhere |
 | Pan Tool | `T` | Scene editing |
+| Format Scene Files |  | Anywhere |
+| Set Up Scene Merging |  | Anywhere |
+| Merge Conflicts... |  | Anywhere |
+| Registry... |  | Anywhere |
 | New Plugin... |  | Anywhere |
 
 ### Scene

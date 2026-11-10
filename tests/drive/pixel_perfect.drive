@@ -1,11 +1,13 @@
-# Pixel-perfect settings (Project Settings > Video): Smooth Camera is off
-# until Pixel Snap is on; the three settings are saved in project.json.
+# Pixel-perfect settings (Project Settings > Video > Pixel Art): Scaling
+# (Integer / Fit: #409), Smooth Camera off until Pixel Snap is on; the
+# settings are saved in project.json.
 wait 5
 key ctrl+comma
 expect project-settings-open == true
 click @settings.tab:project
 click @settings.page:Video
-click @settings.integer-scaling
+click @settings.scaling
+click @pick:Integer (whole multiples)
 click @settings.pixel-snap
 click @settings.smooth-camera
 screenshot video_settings

@@ -1,0 +1,128 @@
+[
+ {
+  "name": "mods: an exported game with mods next to it - an asset override, hooks, a replaced script (sandboxed), a broken, an endless and an incompatible mod",
+  "project": "tests/mods/game",
+  "export": true,
+  "mods": "tests/mods/mods",
+  "frames": 30,
+  "expect": [
+   [
+    "Title",
+    "text",
+    "==",
+    "Modded Title!"
+   ],
+   [
+    "Status",
+    "text",
+    "==",
+    "hello main sandboxed"
+   ],
+   [
+    "Counter",
+    "text",
+    "contains",
+    "mod "
+   ],
+   [
+    "Counter",
+    "text",
+    "contains",
+    "sandboxed"
+   ],
+   [
+    "@scene",
+    "name",
+    "==",
+    "main"
+   ]
+  ]
+ },
+ {
+  "name": "mods: the player's mods.json turns one off, the user-data folder's copy of a mod wins",
+  "project": "tests/mods/game",
+  "export": true,
+  "mods": "tests/mods/mods",
+  "user_mods": "tests/mods/user_mods",
+  "frames": 20,
+  "user_files": {
+   "mods.json": {
+    "disabled": [
+     "hello",
+     "scripted"
+    ]
+   }
+  },
+  "expect": [
+   [
+    "Title",
+    "text",
+    "==",
+    "User Title"
+   ],
+   [
+    "Status",
+    "text",
+    "==",
+    "waiting"
+   ],
+   [
+    "Counter",
+    "text",
+    "contains",
+    "game "
+   ]
+  ]
+ },
+ {
+  "name": "mods: a mod's new scene (mod.json scenes), changed to from the game's scene",
+  "project": "tests/mods/game",
+  "export": true,
+  "user_mods": "tests/mods/user_bonus",
+  "frames": 20,
+  "expect": [
+   [
+    "@scene",
+    "name",
+    "==",
+    "bonus"
+   ],
+   [
+    "BonusText",
+    "text",
+    "==",
+    "A level from a mod"
+   ]
+  ]
+ },
+ {
+  "name": "mods: --no-mods plays the game as shipped",
+  "project": "tests/mods/game",
+  "export": true,
+  "mods": "tests/mods/mods",
+  "args": [
+   "--no-mods"
+  ],
+  "frames": 20,
+  "expect": [
+   [
+    "Title",
+    "text",
+    "==",
+    "Base Game"
+   ],
+   [
+    "Status",
+    "text",
+    "==",
+    "waiting"
+   ],
+   [
+    "Counter",
+    "text",
+    "contains",
+    "game "
+   ]
+  ]
+ }
+]

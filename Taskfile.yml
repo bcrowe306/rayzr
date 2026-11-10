@@ -82,6 +82,7 @@ tasks:
             - python3 scripts/docs/check_docs.py --editor bin/editor
             - python3 scripts/docs/test_export_site.py
             - python3 scripts/ci/test_publish_r2.py
+            - python3 -I scripts/registry/test_check_index.py
     docs:export:
         desc: Export this checkout's docs as the website's bundle (build/docs_bundle)
         cmds:

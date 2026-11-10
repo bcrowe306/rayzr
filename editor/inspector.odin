@@ -342,6 +342,7 @@ inspector_body :: proc(state: ^EditorState) {
 	}
 	inspector_properties(state, node)
 	if !isRoot do Inspector_Tags(state, node)
+	if !isRoot do inspector_pixels(state, node) // (inspector_material.odin)
 	if !isRoot do inspector_material(state, node)
 	if !isRoot do inspector_script(state, node)
 	if !isRoot do Inspector_Signals(state, node)

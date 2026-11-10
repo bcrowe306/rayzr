@@ -1,0 +1,27 @@
+{
+ "name": "bonus",
+ "background": [
+  40,
+  20,
+  30,
+  255
+ ],
+ "root": {
+  "type": "Node",
+  "name": "root",
+  "children": [
+   {
+    "type": "TextNode",
+    "name": "BonusText",
+    "position": [
+     10,
+     10
+    ],
+    "properties": {
+     "text": "A level from a mod",
+     "fontSize": 24
+    }
+   }
+  ]
+ }
+}

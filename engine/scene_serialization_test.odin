@@ -68,6 +68,7 @@ test_every_node_type_round_trips :: proc(t: ^testing.T) {
 	// One node of each type with non-default values.
 	for info in NODE_TYPES {
 		n := Node_CreateByTypeName(scene, info.name)
+		if n != nil do n.pixelFilter, n.pixelSnap, n.pixelText = .Smooth, .Off, .Native // (#409's overrides round-trip too)
 		n.name = strings.clone(fmt.tprintf("My %s \"quoted\"", info.name), n.allocator)
 		n.position = {12.5, -40.25}
 		n.scale = {0.455, 2}

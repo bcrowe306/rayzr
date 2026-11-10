@@ -2,7 +2,7 @@
   "width": 1280,
   "height": 720,
   "callouts": [
-    {"label": "Open Project... (and recent projects above)", "x": 222, "y": 274, "w": 299, "h": 25},
+    {"label": "Open Project... (and recent projects above)", "x": 222, "y": 244, "w": 299, "h": 25},
     {"label": "Templates and samples: click one", "x": 526, "y": 329, "w": 526, "h": 64},
     {"label": "Name and Location of the new project", "x": 727, "y": 506, "w": 330, "h": 25},
     {"label": "Create Project: makes it and opens it", "x": 530, "y": 595, "w": 527, "h": 25}

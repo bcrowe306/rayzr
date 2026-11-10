@@ -2,7 +2,8 @@
 # github.com/bcrowe306/rayzr_website; docs/contributing/docs.md):
 #   - check: the docs are complete and in step with the code
 #     (scripts/docs/check_docs.py; nodes.json freshness is checked in ci.yml,
-#     which builds the editor), the exporter's and the R2 publisher's tests;
+#     which builds the editor), the exporter's and the R2 publisher's tests,
+#     and the registry index checker's (scripts/registry, #296);
 #   - site (pull requests): the website built and tested with this pull
 #     request's docs as the dev version (its link check, end-to-end tests),
 #     deployed to a preview URL. Production deploys come from release.yml
@@ -33,6 +34,7 @@ jobs:
       - run: python3 scripts/docs/check_docs.py
       - run: python3 scripts/docs/test_export_site.py
       - run: python3 scripts/ci/test_publish_r2.py
+      - run: python3 -I scripts/registry/test_check_index.py
 
   site:
     if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'

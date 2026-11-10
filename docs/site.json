@@ -69,6 +69,8 @@
         { "file": "docs/editor/tab-git.md", "slug": "editor/tab-git" },
         { "file": "docs/editor/node-reference.md", "slug": "editor/node-reference" },
         { "file": "docs/editor/plugins.md", "slug": "editor/plugin-manager" },
+        { "file": "docs/editor/registry.md", "slug": "editor/registry" },
+        { "file": "docs/editor/publishing.md", "slug": "editor/publishing", "label": "Publishing a plugin or template" },
         { "file": "editor/README.md", "slug": "editor/manual", "label": "Editor manual" },
         { "file": "editor/CODE_EDITOR.md", "slug": "editor/code", "label": "Code tab: full reference" },
         { "file": "engine/docs/level_editor.md", "slug": "editor/level-editor" },
@@ -106,6 +108,7 @@
         { "file": "engine/docs/gamepads.md", "slug": "guides/gamepads" },
         { "file": "engine/docs/accessibility.md", "slug": "guides/accessibility" },
         { "file": "engine/docs/crash_reports.md", "slug": "guides/crash-reports" },
+        { "file": "engine/docs/modding.md", "slug": "guides/modding" },
         { "file": "engine/docs/web_export.md", "slug": "guides/web-export" },
         { "file": "engine/docs/android_export.md", "slug": "guides/android-export" },
         { "file": "engine/docs/compatibility.md", "slug": "guides/compatibility", "label": "Project compatibility" }

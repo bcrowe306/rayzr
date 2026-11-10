@@ -106,6 +106,7 @@ Export_Settings :: struct {
 	targets:        bit_set[Export_Target],
 	compress:       bool,             // compress the .rayzr package
 	includeFont:    bool,             // ship the UI font next to the runner
+	mods:           Mods_Mode,        // "mods": off / assets / scripts - what players' mods may do (mods.odin; desktop only)
 	// macOS .app
 	bundleId:       string,           // "" = com.rayzr.<executable, lower case>
 	macSign:        string,           // codesign identity: "" = ad-hoc, "none" = don't sign
@@ -448,6 +449,7 @@ Project_ParseConfig :: proc(jsonBytes: []u8, allocator := context.allocator) -> 
 		cfg.export.androidKeyAlias = strings.clone(json_get_string(exportObj, "android_key_alias", ""), allocator)
 		cfg.export.compress = json_get_bool(exportObj, "compress", cfg.export.compress)
 		cfg.export.includeFont = json_get_bool(exportObj, "include_font", cfg.export.includeFont)
+		cfg.export.mods = Mods_ParseMode(json_get_string(exportObj, "mods", "off"))
 		Export_PresetsParse(exportObj, &cfg.export, allocator)
 		if arr, has := json_get_arr(exportObj, "targets"); has {
 			cfg.export.targets = {}
@@ -602,6 +604,7 @@ Project_SerializeToJSON :: proc(cfg: ^ProjectConfig, allocator := context.alloca
 		n += 1
 	}
 	fmt.sbprintf(&sb, "], \"compress\": %t, \"include_font\": %t", cfg.export.compress, cfg.export.includeFont)
+	if cfg.export.mods != .Off do fmt.sbprintf(&sb, ", \"mods\": \"%s\"", Mods_ModeName(cfg.export.mods))
 	if cfg.export.bundleId != "" {strings.write_string(&sb, ", \"bundle_id\": "); jstr(&sb, cfg.export.bundleId)}
 	if cfg.export.macSign != "" {strings.write_string(&sb, ", \"macos_sign\": "); jstr(&sb, cfg.export.macSign)}
 	if cfg.export.macNotaryProfile != "" {strings.write_string(&sb, ", \"macos_notary_profile\": "); jstr(&sb, cfg.export.macNotaryProfile)}
@@ -734,6 +737,9 @@ Game_LoadProjectConfig :: proc(game: ^Game, cfg: ^ProjectConfig, activate := tru
 	if activate {
 		// The game (not the editor, which shows colliders itself).
 		game.physicsWorld.drawPhysicsDebug = cfg.debugDraw
+		// Players' mods (when the runner set them up: mods.odin): their
+		// scenes, and script mods' main.lua before the first scene starts.
+		Mods_Start(game)
 		ProcessSceneChange(&game.sceneManager, &game.gameContext)
 	}
 	return true

@@ -37,6 +37,8 @@ Run_Options :: struct {
 	test:           string, // --test [filter]: play the project's tests/*_test.lua (game_tests.odin); "*" all
 	console:        string, // --console "perf; outlines; open": the developer console on, these lines run once loaded (tests; dev_console.odin)
 	perfReport:     string, // --perf-report <file.json>: every frame's time and the startup times, written at the end (perf_report.odin; #331)
+	modsDir:        string, // --mods <dir>: another folder of mods (when the project allows mods: mods.odin)
+	noMods:         bool,   // --no-mods: play without the installed mods
 }
 
 // An --input-script event: `key` goes down / up at `frame`; pad events
@@ -283,6 +285,10 @@ Engine_ParseRunArgs :: proc(args: []string) -> (opts: Run_Options) {
 			opts.uncapped = true
 		case arg == "--perf-report" && next != "":
 			opts.perfReport = next; i += 1
+		case arg == "--mods" && next != "":
+			opts.modsDir = next; i += 1
+		case arg == "--no-mods":
+			opts.noMods = true
 		case !strings.has_prefix(arg, "-") && opts.projectPath == "":
 			opts.projectPath = arg
 		}
@@ -501,6 +507,11 @@ Runner_Start :: proc(opts: Run_Options) -> (^Runner_State, bool) {
 	InitEngineFonts(runner_font_path())
 	rs.fontsLoaded = true
 
+	// Mods (when the project allows them): their files over the game's,
+	// before the project loads; it runs script mods' main.lua before its
+	// first scene (Mods_Start; mods.odin).
+	Mods_Setup(game, &rs.video, opts)
+
 	// Load Project (populates scenes, sets gravity, activates initial_scene)
 	if !game->loadProject(projectPath) {
 		log.errorf("Failed to load project: %s", projectPath)
@@ -624,6 +635,8 @@ Runner_Frame :: proc(rs: ^Runner_State) -> bool {
 
 		frameStart := time.tick_now()
 		Prof_Begin("frame")
+		// Native text / UI: kept while the frame draws, drawn on the window after (#409).
+		Pixel_NativeBegin(target, dest, vw, vh, Scene_TransitionActive(game))
 		Render_SetFrameTarget(target)
 		rl.BeginTextureMode(target^)
 		// Smooth camera: the world gets its own texture; the frame holds the
@@ -631,6 +644,7 @@ Runner_Frame :: proc(rs: ^Runner_State) -> bool {
 		rl.ClearBackground({0, 0, 0, 0} if renderPixel.smooth else Game_ClearColor(game))
 		{
 			Prof_Scope("game.run")
+			Mods_Frame(game, dt) // (mods' "scene_ready" / "update")
 			game->run(dt)
 		}
 		if !Tests_AfterFrame(game) do return false // (every test ran)
@@ -661,13 +675,15 @@ Runner_Frame :: proc(rs: ^Runner_State) -> bool {
 			if renderPixel.usedWorld {
 				world := renderPixel.world.texture
 				if effects := Scene_PostEffects(game.sceneManager.currentScene); len(effects) > 0 do world = Post_Process(effects, world, &game.gameContext)
-				Pixel_DrawWorld(world, dest, vw, vh)
+				Pixel_DrawWorld(world, dest, vw, vh, video.sharpScaling && !filtered)
 			}
 			// (Premultiplied: scene.odin draws the layers over the world so.)
 			rl.BeginBlendMode(.ALPHA_PREMULTIPLY)
 			exact := Runner_CopyIsExact(dest, target.texture)
 			if exact do rl.SetTextureFilter(target.texture, .POINT)
+			sharp := !exact && video.sharpScaling && !filtered && !Pixel_IsWholeScale(dest, vw, vh) && Pixel_SharpBegin(target.texture, vw, vh, dest)
 			rl.DrawTexturePro(target.texture, {0, 0, f32(target.texture.width), -f32(target.texture.height)}, dest, {0, 0}, 0, rl.WHITE)
+			if sharp do Pixel_SharpEnd(target.texture)
 			rl.EndBlendMode()
 			if exact {
 				rlgl.DrawRenderBatchActive()
@@ -685,13 +701,25 @@ Runner_Frame :: proc(rs: ^Runner_State) -> bool {
 			// its filter.)
 			exact := frame.id == target.texture.id && Runner_CopyIsExact(dest, frame)
 			if exact do rl.SetTextureFilter(frame, .POINT)
+			// Sharp Pixels at a fractional scale (Fit): sharp-bilinear - every
+			// game pixel the same size, no uneven columns (#409).
+			sharp := false
+			if !exact && video.sharpScaling && !filtered && !Pixel_IsWholeScale(dest, vw, vh) {
+				if opaqueInCopy do Render_OpaqueCopyEnd()
+				sharp = Pixel_SharpBegin(frame, vw, vh, dest, opaque = opaqueInCopy)
+				if !sharp && opaqueInCopy do Render_OpaqueCopyBegin()
+			}
 			rl.DrawTexturePro(frame, {0, 0, f32(frame.width), -f32(frame.height)}, dest, {0, 0}, 0, rl.WHITE)
-			if opaqueInCopy do Render_OpaqueCopyEnd()
+			if sharp {
+				Pixel_SharpEnd(frame)
+				if frame.id != target.texture.id do rl.SetTextureFilter(frame, .BILINEAR) // (an effect's output keeps its own)
+			} else if opaqueInCopy do Render_OpaqueCopyEnd()
 			rlgl.DrawRenderBatchActive()
 			rlgl.EnableColorBlend()
 			if exact do rl.SetTextureFilter(frame, .POINT if video.sharpScaling else .BILINEAR)
 		}
 		if filtered do Colorblind_End()
+		Pixel_DrawNative(&game.gameContext, dest, vw, vh) // (Native text / UI, at the window's resolution)
 		if opts.uncapped && opts.benchFrames <= 0 && opts.perfReport == "" do runner_draw_frame_time(rs)
 		Console_DrawScreen(game) // (the developer console and its overlays)
 		Prof_Begin("present")
@@ -800,6 +828,7 @@ Runner_Stop :: proc(rs: ^Runner_State) {
 	if Tests_Active() do Tests_Shutdown(rs.game)
 	Recorder_Discard()
 	rs.game->terminate()
+	Mods_Reset()
 	// (After the game: its teardown stops the mixer's stream and unloads its
 	// sounds, which lock raylib's audio mutex - gone once the device is
 	// closed: Android's libc aborts on that, #384.)

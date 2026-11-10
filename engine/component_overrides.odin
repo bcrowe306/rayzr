@@ -279,7 +279,7 @@ strip_uids :: proc(v: ^json.Value) {
 
 // The keys of an instance saved as a link (write_node's link form).
 @(private = "file")
-LINK_FORM_KEYS :: []string{"type", "name", "uid", "position", "scale", "rotation", "pivot", "enabled", "visible", "layer", "z_index", "y_sort", "y_sort_offset", "pause_mode", "paused", "editor_locked", "editor_hidden", "tags", "component", "overrides", "connections"}
+LINK_FORM_KEYS :: []string{"type", "name", "uid", "position", "scale", "rotation", "pivot", "enabled", "visible", "layer", "z_index", "y_sort", "y_sort_offset", "pause_mode", "texture_filter", "pixel_snap", "text_pixels", "paused", "editor_locked", "editor_hidden", "tags", "component", "overrides", "connections"}
 
 // to_link_form: instances inside a node added to an instance are saved as
 // links with their own overrides (the full serialization expands them).
