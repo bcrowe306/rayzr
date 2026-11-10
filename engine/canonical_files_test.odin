@@ -93,3 +93,19 @@ test_repo_scene_files_are_canonical :: proc(t: ^testing.T) {
 		game->terminate()
 	}
 }
+
+// A path resolved on Windows (backslashes, a drive) is saved project-
+// relative with / - it was saved absolute (#293: found by the Windows run).
+@(test)
+test_asset_rel_windows_paths :: proc(t: ^testing.T) {
+	game := new(Game)
+	InitializeGame(game)
+	defer game->terminate()
+	AssetManager_SetProjectDir(&game.assetManager, `D:\a\rayzr\templates\adventure`)
+	n := Node{}
+	n.gameContext = &game.gameContext
+	testing.expect_value(t, asset_rel(&n, `D:\a\rayzr\templates\adventure\textures\tiles.png`), "textures/tiles.png")
+	testing.expect_value(t, asset_rel(&n, `D:/a/rayzr/templates/adventure/textures/tiles.png`), "textures/tiles.png")
+	testing.expect_value(t, asset_rel(&n, "textures/tiles.png"), "textures/tiles.png")
+	testing.expect_value(t, asset_rel(&n, `D:\elsewhere\x.png`), `D:\elsewhere\x.png`)
+}
