@@ -221,7 +221,7 @@ Actions_Init :: proc() {
 		Editor_SaveSettings()
 	}, checked = proc(s: ^EditorState) -> bool {return GlobalSettings.showTabBars}})
 	// Scene tabs (scene_tabs.odin).
-	add({id = "scene.close_tab", category = "Scene", label = "Close Scene Tab", chords = k(ch(.W, P)), scope = .Scene, run = proc(s: ^EditorState) {SceneTabs_RequestClose(s, s.activeScene)}, enabled = proc(s: ^EditorState) -> bool {return len(SceneTabs_Open()) > 1}})
+	add({id = "scene.close_tab", category = "Scene", label = "Close Scene Tab", chords = k(ch(.W, P)), scope = .Scene, run = proc(s: ^EditorState) {if ImagePreview_Active() != nil do ImagePreview_CloseActive(); else do SceneTabs_RequestClose(s, s.activeScene)}, enabled = proc(s: ^EditorState) -> bool {return ImagePreview_Active() != nil || len(SceneTabs_Open()) > 1}})
 	add({id = "scene.next_tab", category = "Scene", label = "Next Scene Tab", chords = k(ch(.PageDown, CT), ch(.Tab, CT), ch(.RightArrow, PA)), scope = .Scene, run = proc(s: ^EditorState) {SceneTabs_Cycle(s, 1)}})
 	add({id = "scene.prev_tab", category = "Scene", label = "Previous Scene Tab", chords = k(ch(.PageUp, CT), ch(.Tab, Mods{.Ctrl, .Shift}), ch(.LeftArrow, PA)), scope = .Scene, run = proc(s: ^EditorState) {SceneTabs_Cycle(s, -1)}})
 	// Colour vision preview: the viewport as seen with a colour vision deficiency (simulated).

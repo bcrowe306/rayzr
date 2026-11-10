@@ -363,8 +363,7 @@ asset_events :: proc(state: ^EditorState, rel: string, kind: Asset_Kind, full, n
 		case .Script: Editor_OpenScript(state, rel)
 		case .Level: Editor_AddLevel(state, rel, state.cameraPos)
 		case .Shader: Editor_OpenScript(state, rel)
-		case .Aseprite: Aseprite_Edit(state, full)
-		case .Vector: Vector_EditExternal(state, full)
+		case .Texture, .Aseprite, .Vector: ImagePreview_Open(state, rel) // (a tab beside the scenes', #399)
 		case .Generator: LevelGenEditor_Open(state, rel)
 		}
 	}
@@ -419,12 +418,12 @@ asset_tooltip :: proc(k: Asset_Kind, rel: string) -> string {
 	#partial switch k {
 	case .Scene: return fmt.tprintf("%s - double-click to open", rel)
 	case .Component: return fmt.tprintf("%s - double-click or drag into the viewport to add", rel)
-	case .Texture: return fmt.tprintf("%s - drag into the viewport to add a sprite", rel)
+	case .Texture: return fmt.tprintf("%s - double-click to preview; drag into the viewport to add a sprite", rel)
 	case .Audio: return fmt.tprintf("%s - drag into the viewport to add a sound", rel)
 	case .Script: return fmt.tprintf("%s - drag onto a node in the viewport to attach (or right-click > Make Global)", rel)
 	case .Level: return fmt.tprintf("%s - LDtk project: double-click or drag into the viewport to add a level", rel)
-	case .Aseprite: return fmt.tprintf("%s - Aseprite: drag into the viewport to add (its tags play); double-click to edit in Aseprite", rel)
-	case .Vector: return fmt.tprintf("%s - vector art (SVG): drag into the viewport to add, or onto a Vector Shape to use it; double-click to edit it in your vector app", rel)
+	case .Aseprite: return fmt.tprintf("%s - Aseprite: double-click to preview its frames; drag into the viewport to add (its tags play)", rel)
+	case .Vector: return fmt.tprintf("%s - vector art (SVG): double-click to preview; drag into the viewport to add, or onto a Vector Shape to use it", rel)
 	case .Resource: return fmt.tprintf("%s - a resource: data of a Lua resource class; pick it in a script's resource property, or Resource.load it", rel)
 	case .CustomNode: return fmt.tprintf("%s - a custom node type: double-click or drag into the viewport to add one", rel)
 	case .Generator: return fmt.tprintf("%s - a procedural level generator: double-click to edit its graph; LevelGen.generate it into a TileMap", rel)

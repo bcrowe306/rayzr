@@ -153,12 +153,13 @@ scene_tabs_close :: proc(state: ^EditorState, scene: ^e.Scene) {
 // the save prompt of a tab being closed).
 SceneTabs_Draw :: proc(state: ^EditorState) {
 	scene_tabs_track(state)
-	if len(tabs.open) == 0 do return
+	if len(tabs.open) == 0 && ImagePreview_Count() == 0 do return
 	switched := state.activeScene != tabs.lastActive
 	flags: imgui.TabBarFlags = {.Reorderable, .FittingPolicyScroll, .TabListPopupButton}
 	if imgui.BeginTabBar("##scene_tabs", flags) {
 		closeReq: ^e.Scene
 		pick: ^e.Scene
+		sceneShown := false
 		for s in tabs.open {
 			label := scene_tab_label(state, s)
 			tf: imgui.TabItemFlags
@@ -184,12 +185,16 @@ SceneTabs_Draw :: proc(state: ^EditorState) {
 				imgui.EndPopup()
 			}
 			if visible {
+				sceneShown = true
 				if !switched && s != state.activeScene do pick = s
 				imgui.EndTabItem()
 			}
 			if !open do closeReq = s
 		}
+		// Image previews (#399): their tabs after the scenes'.
+		ImagePreview_TabItems(state, sceneShown, switched)
 		imgui.EndTabBar()
+		ImagePreview_EndFrame()
 		if pick != nil do SceneTabs_Activate(state, pick)
 		if closeReq != nil do SceneTabs_RequestClose(state, closeReq)
 	}

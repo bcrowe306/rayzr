@@ -88,75 +88,86 @@ Viewport_UpdateAndRender :: proc(state: ^EditorState) {
 		driveNoScroll = true // the wheel zooms here: drives never "scroll" it
 		defer driveNoScroll = false
 		SceneTabs_Draw(state) // open scenes as tabs (scene_tabs.odin)
-		// Available region for rendering
-		avail := imgui.GetContentRegionAvail()
-		reqW := i32(math.max(f32(64.0), avail.x))
-		reqH := i32(math.max(f32(64.0), avail.y))
-
-		// Resize render texture if viewport size changed
-		if state.renderTexture.id == 0 ||
-		   state.renderTexture.texture.width != reqW ||
-		   state.renderTexture.texture.height != reqH {
-			if state.renderTexture.id != 0 {
-				rl.UnloadRenderTexture(state.renderTexture)
-			}
-			state.renderTexture = rl.LoadRenderTexture(reqW, reqH)
-			state.viewportSize = {f32(reqW), f32(reqH)}
-		}
-
-		viewportShownFrame = imgui.GetFrameCount()
-		cursorScreen := imgui.GetCursorScreenPos()
-		state.viewportPos = {cursorScreen.x, cursorScreen.y}
-		state.viewportSize = {f32(reqW), f32(reqH)}
-
-		// Render the Raylib scene into renderTexture
-		Viewport_RenderOffscreen(state)
-
-		// Post effects (PostEffectNodes), previewed with lighting.
-		@(static) shown: rl.Texture2D
-		shown = state.renderTexture.texture
-		if viewportLighting && state.activeScene != nil {
-			if effects := e.Scene_PostEffects(state.activeScene); len(effects) > 0 {
-				shown = e.Post_Process(effects, shown, &state.game.gameContext)
-			}
-		}
-
-		// Colour vision preview (View menu): simulated.
-		if viewportVision != .None do shown = e.Colorblind_Process(shown, viewportVision, 1, true)
-
-		// Render texture image into ImGui
-		imgui.Image(
-			transmute(imgui.TextureID)&shown,
-			imgui.Vec2{f32(reqW), f32(reqH)},
-			imgui.Vec2{0, 1},
-			imgui.Vec2{1, 0},
-			imgui.Vec4{1, 1, 1, 1},
-			imgui.Vec4{0, 0, 0, 0},
-		)
-
-		Drive_Item("viewport")
-		{
-			io := imgui.GetIO()
-			AssetBrowser_HandleViewportDrop(state, Viewport_ScreenToWorld(state, {io.MousePos.x, io.MousePos.y}))
-			Library_HandleViewportDrop(state, Viewport_ScreenToWorld(state, {io.MousePos.x, io.MousePos.y})) // (a symbol from the Library)
-		}
-		state.viewportHovered = imgui.IsItemHovered()
-		state.viewportFocused = imgui.IsWindowFocused()
-		// Overlay buttons over the image take the mouse from the viewport.
-		if ShapeEdit_Overlay(state) do state.viewportHovered = false
-		state.viewportDockId = imgui.GetWindowDockID()
-
-		// Interactive Gizmo overlays & mouse controls
-		Viewport_HandleInputAndGizmos(state)
-		// An empty scene: a hint in the middle.
-		if state.activeScene != nil && state.activeScene.rootNode != nil && len(e.GetChildrenView(state.activeScene.manager, state.activeScene.rootNode)) == 0 {
-			msg := fmt.ctprintf("%s  Empty scene: " + CMD + "+A adds a node, or drop images, components and levels here", ICON_FA_WAND_MAGIC_SPARKLES)
-			w := imgui.CalcTextSize(msg).x
-			c := state.viewportPos + state.viewportSize * 0.5
-			imgui.DrawList_AddText(imgui.GetWindowDrawList(), {c.x - w * 0.5, c.y - 8}, col_u32(UI_TEXT_DIM), msg)
-		}
+		if p := ImagePreview_Active(); p != nil {
+			// An image's tab (#399): its preview instead of the scene.
+			state.viewportHovered, state.viewportFocused = false, false
+			ImagePreview_Draw(state, p)
+		} else do viewport_scene(state)
 	}
 	imgui.End()
+}
+
+// viewport_scene: the active scene rendered into the viewport, its
+// drops, gizmos and input.
+@(private = "file")
+viewport_scene :: proc(state: ^EditorState) {
+	// Available region for rendering
+	avail := imgui.GetContentRegionAvail()
+	reqW := i32(math.max(f32(64.0), avail.x))
+	reqH := i32(math.max(f32(64.0), avail.y))
+
+	// Resize render texture if viewport size changed
+	if state.renderTexture.id == 0 ||
+	   state.renderTexture.texture.width != reqW ||
+	   state.renderTexture.texture.height != reqH {
+		if state.renderTexture.id != 0 {
+			rl.UnloadRenderTexture(state.renderTexture)
+		}
+		state.renderTexture = rl.LoadRenderTexture(reqW, reqH)
+		state.viewportSize = {f32(reqW), f32(reqH)}
+	}
+
+	viewportShownFrame = imgui.GetFrameCount()
+	cursorScreen := imgui.GetCursorScreenPos()
+	state.viewportPos = {cursorScreen.x, cursorScreen.y}
+	state.viewportSize = {f32(reqW), f32(reqH)}
+
+	// Render the Raylib scene into renderTexture
+	Viewport_RenderOffscreen(state)
+
+	// Post effects (PostEffectNodes), previewed with lighting.
+	@(static) shown: rl.Texture2D
+	shown = state.renderTexture.texture
+	if viewportLighting && state.activeScene != nil {
+		if effects := e.Scene_PostEffects(state.activeScene); len(effects) > 0 {
+			shown = e.Post_Process(effects, shown, &state.game.gameContext)
+		}
+	}
+
+	// Colour vision preview (View menu): simulated.
+	if viewportVision != .None do shown = e.Colorblind_Process(shown, viewportVision, 1, true)
+
+	// Render texture image into ImGui
+	imgui.Image(
+		transmute(imgui.TextureID)&shown,
+		imgui.Vec2{f32(reqW), f32(reqH)},
+		imgui.Vec2{0, 1},
+		imgui.Vec2{1, 0},
+		imgui.Vec4{1, 1, 1, 1},
+		imgui.Vec4{0, 0, 0, 0},
+	)
+
+	Drive_Item("viewport")
+	{
+		io := imgui.GetIO()
+		AssetBrowser_HandleViewportDrop(state, Viewport_ScreenToWorld(state, {io.MousePos.x, io.MousePos.y}))
+		Library_HandleViewportDrop(state, Viewport_ScreenToWorld(state, {io.MousePos.x, io.MousePos.y})) // (a symbol from the Library)
+	}
+	state.viewportHovered = imgui.IsItemHovered()
+	state.viewportFocused = imgui.IsWindowFocused()
+	// Overlay buttons over the image take the mouse from the viewport.
+	if ShapeEdit_Overlay(state) do state.viewportHovered = false
+	state.viewportDockId = imgui.GetWindowDockID()
+
+	// Interactive Gizmo overlays & mouse controls
+	Viewport_HandleInputAndGizmos(state)
+	// An empty scene: a hint in the middle.
+	if state.activeScene != nil && state.activeScene.rootNode != nil && len(e.GetChildrenView(state.activeScene.manager, state.activeScene.rootNode)) == 0 {
+		msg := fmt.ctprintf("%s  Empty scene: " + CMD + "+A adds a node, or drop images, components and levels here", ICON_FA_WAND_MAGIC_SPARKLES)
+		w := imgui.CalcTextSize(msg).x
+		c := state.viewportPos + state.viewportSize * 0.5
+		imgui.DrawList_AddText(imgui.GetWindowDrawList(), {c.x - w * 0.5, c.y - 8}, col_u32(UI_TEXT_DIM), msg)
+	}
 }
 
 // Render Raylib offscreen framebuffer
