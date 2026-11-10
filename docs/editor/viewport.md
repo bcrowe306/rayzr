@@ -187,6 +187,36 @@ removes a polygon point while editing shapes and erases while painting
 tiles. In vector edit mode, right-clicking an anchor (Nodes tool) makes it
 **Smooth**, **Symmetric** or **Corner**.
 
+### Image previews
+
+Double-click a texture, an Aseprite file or an SVG in [Assets](assets.md)
+(or right-click it > **Preview**) and it opens in a tab of its own beside
+the scene tabs. While that tab is selected, the viewport shows the image
+instead of the scene; click a scene tab to go back. Each image keeps its
+tab until you close it (**x**, middle-click or Cmd+W); double-clicking an
+image that is already open switches to its tab.
+
+| | |
+|---|---|
+| Mouse wheel | Zooms at the cursor. |
+| Drag (left or middle button) | Pans. |
+| **Fit** (expand icon) | The whole image in the view. Small images are enlarged in whole steps (at most 8x), so pixel art stays crisp. |
+| **1:1** | Actual size: one image pixel per screen pixel (an SVG: its document size). |
+| **-** / **+** | Zoom out / in; the zoom is between them. |
+| **Pixel grid** (grid icon) | Lines between the pixels, from 800% zoom. |
+| **Frames** (cells icon) | The frames the image is cut into, numbered: a texture's slicing preset (**Slice Sprite Sheet...**, saved in its [import settings](assets.md)), an Aseprite file's frames. Shown only when it has frames. |
+
+A checkerboard shows behind transparent pixels, and a texture is drawn with
+its import filter (**Point** keeps pixels sharp). An Aseprite file shows
+every frame on one sheet; an SVG is drawn at twice its size, so it stays
+sharp when you zoom in.
+
+The bar under the image shows its size (an SVG: its document size), the
+file type and size, a texture's filter and wrap (and **mipmaps** or
+**atlas** when set), how many frames it has, and the pixel under the mouse:
+its position and colour (`#RRGGBBAA`) with a swatch. A file that changes on
+disk reloads in its tab.
+
 ### Simulate
 
 **Game > Simulate in Editor** (F7) runs the scene's scripts, physics and
