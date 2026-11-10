@@ -1,1165 +1,736 @@
 {
- "name": "room1",
- "background": [
-  24,
-  20,
-  26,
-  255
- ],
- "root": {
-  "type": "Node",
-  "name": "root",
-  "children": [
-   {
-    "type": "CameraNode",
-    "name": "Camera",
-    "position": [
-     128.0,
-     384.0
-    ],
-    "follow": "../World/Hero",
-    "properties": {
-     "isCurrent": true,
-     "followMode": "SingleTarget",
-     "dragType": "SmoothDamp"
-    }
-   },
-   {
+  "format": 1,
+  "name": "room1",
+  "draw_bounds": false,
+  "background": [24, 20, 26, 255],
+  "root": {
     "type": "Node",
-    "name": "Dungeon",
-    "script": {
-     "path": "scripts/dungeon.lua",
-     "properties": {
-      "room": 1,
-      "time_limit": 60
-     }
-    }
-   },
-   {
-    "type": "TileMapNode",
-    "name": "Floor",
-    "position": [
-     0,
-     0
-    ],
-    "layer": 1,
-    "z_index": 0,
-    "tilemap": {
-     "tileset": "textures/dungeon.png",
-     "tile_size": [
-      128,
-      144
-     ],
-     "map_size": [
-      10,
-      10
-     ],
-     "data": [
-      [
-       6,
-       0
-      ],
-      [
-       1,
-       1
-      ],
-      [
-       8,
-       0
-      ],
-      [
-       1,
-       1
-      ],
-      [
-       1,
-       0
-      ],
-      [
-       1,
-       1
-      ],
-      [
-       2,
-       0
-      ],
-      [
-       1,
-       1
-      ],
-      [
-       30,
-       0
-      ],
-      [
-       2,
-       1
-      ],
-      [
-       1,
-       0
-      ],
-      [
-       1,
-       -1
-      ],
-      [
-       1,
-       1
-      ],
-      [
-       1,
-       0
-      ],
-      [
-       1,
-       1
-      ],
-      [
-       5,
-       0
-      ],
-      [
-       1,
-       1
-      ],
-      [
-       3,
-       0
-      ],
-      [
-       1,
-       1
-      ],
-      [
-       4,
-       0
-      ],
-      [
-       2,
-       1
-      ],
-      [
-       4,
-       0
-      ],
-      [
-       1,
-       1
-      ],
-      [
-       3,
-       0
-      ],
-      [
-       1,
-       1
-      ],
-      [
-       3,
-       0
-      ],
-      [
-       2,
-       -1
-      ],
-      [
-       2,
-       0
-      ],
-      [
-       1,
-       1
-      ],
-      [
-       9,
-       0
-      ]
-     ]
-    },
-    "properties": {
-     "solid": false,
-     "layout": "Isometric",
-     "cellSize": [
-      128,
-      64
-     ],
-     "tileOffset": [
-      0,
-      10
-     ]
-    }
-   },
-   {
-    "type": "TileMapNode",
-    "name": "Walk",
-    "position": [
-     0,
-     0
-    ],
-    "layer": 1,
-    "z_index": 0,
-    "tilemap": {
-     "tile_size": [
-      128,
-      144
-     ],
-     "map_size": [
-      10,
-      10
-     ],
-     "data": [
-      [
-       100,
-       -1
-      ]
-     ]
-    },
-    "properties": {
-     "solid": false,
-     "layout": "Isometric",
-     "cellSize": [
-      128,
-      64
-     ],
-     "tileOffset": [
-      0,
-      10
-     ]
-    }
-   },
-   {
-    "type": "Node",
-    "name": "Cursor",
-    "layer": 1,
-    "script": {
-     "path": "scripts/cursor.lua"
-    }
-   },
-   {
-    "type": "Node",
-    "name": "World",
-    "ySort": true,
+    "name": "root",
+    "uid": "p8a7tzdr",
+    "position": [0, 0],
+    "scale": [1, 1],
+    "rotation": 0,
+    "enabled": true,
+    "visible": true,
+    "layer": 0,
     "children": [
-     {
-      "type": "TileMapNode",
-      "name": "Walls",
-      "position": [
-       0,
-       0
-      ],
-      "layer": 2,
-      "z_index": 0,
-      "tilemap": {
-       "tileset": "textures/dungeon.png",
-       "tile_size": [
-        128,
-        144
-       ],
-       "map_size": [
-        10,
-        10
-       ],
-       "data": [
-        [
-         1,
-         14
-        ],
-        [
-         2,
-         10
-        ],
-        [
-         1,
-         26
-        ],
-        [
-         2,
-         10
-        ],
-        [
-         1,
-         18
-        ],
-        [
-         3,
-         10
-        ],
-        [
-         1,
-         9
-        ],
-        [
-         9,
-         -1
-        ],
-        [
-         1,
-         9
-        ],
-        [
-         9,
-         -1
-        ],
-        [
-         1,
-         9
-        ],
-        [
-         9,
-         -1
-        ],
-        [
-         1,
-         25
-        ],
-        [
-         9,
-         -1
-        ],
-        [
-         1,
-         9
-        ],
-        [
-         9,
-         -1
-        ],
-        [
-         1,
-         9
-        ],
-        [
-         3,
-         10
-        ],
-        [
-         6,
-         -1
-        ],
-        [
-         1,
-         9
-        ],
-        [
-         9,
-         -1
-        ],
-        [
-         1,
-         9
-        ],
-        [
-         9,
-         -1
-        ],
-        [
-         1,
-         9
-        ],
-        [
-         9,
-         -1
-        ]
-       ]
-      },
-      "properties": {
-       "solid": true,
-       "layout": "Isometric",
-       "cellSize": [
-        128,
-        64
-       ],
-       "tileOffset": [
-        0,
-        10
-       ]
-      },
-      "ySort": true,
-      "ySortOffset": -56
-     },
-     {
-      "type": "TileMapNode",
-      "name": "Props",
-      "position": [
-       0,
-       0
-      ],
-      "layer": 2,
-      "z_index": 0,
-      "tilemap": {
-       "tileset": "textures/dungeon.png",
-       "tile_size": [
-        128,
-        144
-       ],
-       "map_size": [
-        10,
-        10
-       ],
-       "data": [
-        [
-         11,
-         -1
-        ],
-        [
-         1,
-         47
-        ],
-        [
-         6,
-         -1
-        ],
-        [
-         1,
-         40
-        ],
-        [
-         14,
-         -1
-        ],
-        [
-         1,
-         45
-        ],
-        [
-         2,
-         -1
-        ],
-        [
-         1,
-         45
-        ],
-        [
-         31,
-         -1
-        ],
-        [
-         1,
-         34
-        ],
-        [
-         8,
-         -1
-        ],
-        [
-         1,
-         46
-        ],
-        [
-         3,
-         -1
-        ],
-        [
-         1,
-         41
-        ],
-        [
-         1,
-         -1
-        ],
-        [
-         1,
-         45
-        ],
-        [
-         14,
-         -1
-        ],
-        [
-         1,
-         44
-        ],
-        [
-         1,
-         -1
-        ]
-       ]
-      },
-      "properties": {
-       "solid": true,
-       "layout": "Isometric",
-       "cellSize": [
-        128,
-        64
-       ],
-       "tileOffset": [
-        0,
-        10
-       ]
-      },
-      "ySort": true,
-      "ySortOffset": -24
-     },
-     {
-      "type": "CharacterMoverNode",
-      "name": "Hero",
-      "position": [
-       128.0,
-       384.0
-      ],
-      "tags": [
-       "player"
-      ],
-      "shapes": [
-       {
-        "type": "Circle",
-        "radius": 10
-       }
-      ],
-      "properties": {
-       "controlMode": "Script",
-       "categoryLayers": [
-        "Layer2"
-       ],
-       "maskLayers": [
-        "Layer1"
-       ]
-      },
-      "script": {
-       "path": "scripts/hero.lua"
-      },
-      "children": [
-       {
-        "type": "AnimationPlayerNode",
-        "name": "Sprite",
-        "position": [
-         0,
-         0
-        ],
-        "pivot": [
-         0.5,
-         0.8809523809523809
-        ],
-        "layer": 2,
-        "z_index": 0,
-        "fps": 8,
-        "animation": "idle_2",
-        "default_animation": "idle_2",
-        "animations": [
-         {
-          "name": "idle_0",
-          "loop": true,
-          "fps": 1,
-          "sheet": "textures/hero.png",
-          "grid": [
-           11,
-           8
-          ],
-          "cells": [
-           0
-          ],
-          "start": 0,
-          "end": 0
-         },
-         {
-          "name": "run_0",
-          "loop": true,
-          "fps": 16,
-          "sheet": "textures/hero.png",
-          "grid": [
-           11,
-           8
-          ],
-          "cells": [
-           1,
-           2,
-           3,
-           4,
-           5,
-           6,
-           7,
-           8,
-           9,
-           10
-          ],
-          "start": 0,
-          "end": 9
-         },
-         {
-          "name": "idle_1",
-          "loop": true,
-          "fps": 1,
-          "sheet": "textures/hero.png",
-          "grid": [
-           11,
-           8
-          ],
-          "cells": [
-           11
-          ],
-          "start": 0,
-          "end": 0
-         },
-         {
-          "name": "run_1",
-          "loop": true,
-          "fps": 16,
-          "sheet": "textures/hero.png",
-          "grid": [
-           11,
-           8
-          ],
-          "cells": [
-           12,
-           13,
-           14,
-           15,
-           16,
-           17,
-           18,
-           19,
-           20,
-           21
-          ],
-          "start": 0,
-          "end": 9
-         },
-         {
-          "name": "idle_2",
-          "loop": true,
-          "fps": 1,
-          "sheet": "textures/hero.png",
-          "grid": [
-           11,
-           8
-          ],
-          "cells": [
-           22
-          ],
-          "start": 0,
-          "end": 0
-         },
-         {
-          "name": "run_2",
-          "loop": true,
-          "fps": 16,
-          "sheet": "textures/hero.png",
-          "grid": [
-           11,
-           8
-          ],
-          "cells": [
-           23,
-           24,
-           25,
-           26,
-           27,
-           28,
-           29,
-           30,
-           31,
-           32
-          ],
-          "start": 0,
-          "end": 9
-         },
-         {
-          "name": "idle_3",
-          "loop": true,
-          "fps": 1,
-          "sheet": "textures/hero.png",
-          "grid": [
-           11,
-           8
-          ],
-          "cells": [
-           33
-          ],
-          "start": 0,
-          "end": 0
-         },
-         {
-          "name": "run_3",
-          "loop": true,
-          "fps": 16,
-          "sheet": "textures/hero.png",
-          "grid": [
-           11,
-           8
-          ],
-          "cells": [
-           34,
-           35,
-           36,
-           37,
-           38,
-           39,
-           40,
-           41,
-           42,
-           43
-          ],
-          "start": 0,
-          "end": 9
-         },
-         {
-          "name": "idle_4",
-          "loop": true,
-          "fps": 1,
-          "sheet": "textures/hero.png",
-          "grid": [
-           11,
-           8
-          ],
-          "cells": [
-           44
-          ],
-          "start": 0,
-          "end": 0
-         },
-         {
-          "name": "run_4",
-          "loop": true,
-          "fps": 16,
-          "sheet": "textures/hero.png",
-          "grid": [
-           11,
-           8
-          ],
-          "cells": [
-           45,
-           46,
-           47,
-           48,
-           49,
-           50,
-           51,
-           52,
-           53,
-           54
-          ],
-          "start": 0,
-          "end": 9
-         },
-         {
-          "name": "idle_5",
-          "loop": true,
-          "fps": 1,
-          "sheet": "textures/hero.png",
-          "grid": [
-           11,
-           8
-          ],
-          "cells": [
-           55
-          ],
-          "start": 0,
-          "end": 0
-         },
-         {
-          "name": "run_5",
-          "loop": true,
-          "fps": 16,
-          "sheet": "textures/hero.png",
-          "grid": [
-           11,
-           8
-          ],
-          "cells": [
-           56,
-           57,
-           58,
-           59,
-           60,
-           61,
-           62,
-           63,
-           64,
-           65
-          ],
-          "start": 0,
-          "end": 9
-         },
-         {
-          "name": "idle_6",
-          "loop": true,
-          "fps": 1,
-          "sheet": "textures/hero.png",
-          "grid": [
-           11,
-           8
-          ],
-          "cells": [
-           66
-          ],
-          "start": 0,
-          "end": 0
-         },
-         {
-          "name": "run_6",
-          "loop": true,
-          "fps": 16,
-          "sheet": "textures/hero.png",
-          "grid": [
-           11,
-           8
-          ],
-          "cells": [
-           67,
-           68,
-           69,
-           70,
-           71,
-           72,
-           73,
-           74,
-           75,
-           76
-          ],
-          "start": 0,
-          "end": 9
-         },
-         {
-          "name": "idle_7",
-          "loop": true,
-          "fps": 1,
-          "sheet": "textures/hero.png",
-          "grid": [
-           11,
-           8
-          ],
-          "cells": [
-           77
-          ],
-          "start": 0,
-          "end": 0
-         },
-         {
-          "name": "run_7",
-          "loop": true,
-          "fps": 16,
-          "sheet": "textures/hero.png",
-          "grid": [
-           11,
-           8
-          ],
-          "cells": [
-           78,
-           79,
-           80,
-           81,
-           82,
-           83,
-           84,
-           85,
-           86,
-           87
-          ],
-          "start": 0,
-          "end": 9
-         }
-        ],
+      {
+        "type": "CameraNode",
+        "name": "Camera",
+        "uid": "21umrx7q",
+        "position": [128, 384],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
+        "follow": "../World/Hero",
         "properties": {
-         "autoplay": true
+          "isCurrent": true,
+          "followMode": "SingleTarget",
+          "dragType": "SmoothDamp",
+          "targetPosition": [0, 0],
+          "smoothDrag": true,
+          "smoothDragSpeed": [0.2, 0.2],
+          "springConstant": 15,
+          "dampingRatio": 1,
+          "predictionTime": [0.5, 0.5],
+          "maxDistance": [100000, 100000],
+          "offset": [0, 0],
+          "smoothOffset": true,
+          "smoothOffsetSpeed": 0.2,
+          "screenOffset": [640, 360],
+          "customScreenOffset": false,
+          "targetRotation": 0,
+          "allowRotation": true,
+          "smoothRotation": true,
+          "smoothRotationSpeed": 0.2,
+          "targetZoom": 1,
+          "smoothZoom": true,
+          "smoothZoomSpeed": 0.2,
+          "minZoom": 0.1,
+          "maxZoom": 10,
+          "autoZoom": true,
+          "zoomMargin": 0.1,
+          "hasLimits": false,
+          "smoothLimit": true,
+          "leftLimit": -1000000,
+          "rightLimit": 1000000,
+          "topLimit": -1000000,
+          "bottomLimit": 1000000,
+          "useHMargins": false,
+          "useVMargins": false,
+          "leftMargin": 0.25,
+          "rightMargin": 0.25,
+          "topMargin": 0.25,
+          "bottomMargin": 0.25,
+          "enableMouseFollow": false,
+          "mouseInfluence": [0.2, 0.2],
+          "shakePreset": "Custom",
+          "shakeTypes": ["Vertical", "Horizontal", "Random"],
+          "shakeSpeed": 15,
+          "shakeIntensity": 10,
+          "shakeTrauma": 1
         }
-       },
-       {
-        "type": "NavigationAgentNode",
-        "name": "Agent",
+      },
+      {
+        "type": "Node",
+        "name": "Dungeon",
+        "uid": "tfnpnycy",
+        "position": [0, 0],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
+        "script": {
+          "path": "scripts/dungeon.lua",
+          "properties": {
+            "room": 1,
+            "time_limit": 60
+          }
+        }
+      },
+      {
+        "type": "TileMapNode",
+        "name": "Floor",
+        "uid": "k6u4owh9",
+        "position": [0, 0],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 1,
+        "tilemap": {"tileset": "textures/dungeon.png", "tile_size": [128, 144], "map_size": [10, 10], "data": [[6, 0], [1, 1], [8, 0], [1, 1], [1, 0], [1, 1], [2, 0], [1, 1], [30, 0], [2, 1], [1, 0], [1, -1], [1, 1], [1, 0], [1, 1], [5, 0], [1, 1], [3, 0], [1, 1], [4, 0], [2, 1], [4, 0], [1, 1], [3, 0], [1, 1], [3, 0], [2, -1], [2, 0], [1, 1], [9, 0]]},
         "properties": {
-         "speed": 150,
-         "radius": 0,
-         "arriveDistance": 4,
-         "repathInterval": 0.5,
-         "navMap": "../../../Walk",
-         "moveParent": true,
-         "avoidance": false
+          "shininess": 0,
+          "solid": false,
+          "categoryLayers": ["Layer1"],
+          "maskLayers": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8", "Layer9", "Layer10", "Layer11", "Layer12", "Layer13", "Layer14", "Layer15", "Layer16"],
+          "tint": "#ffffffff",
+          "layout": "Isometric",
+          "stagger": "Odd",
+          "cellSize": [128, 64],
+          "tileOffset": [0, 10],
+          "asepriteLayer": ""
         }
-       }
-      ]
-     }
+      },
+      {
+        "type": "TileMapNode",
+        "name": "Walk",
+        "uid": "ng0avx6n",
+        "position": [0, 0],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 1,
+        "tilemap": {"tileset": "", "tile_size": [128, 144], "map_size": [10, 10], "data": [[100, -1]]},
+        "properties": {
+          "shininess": 0,
+          "solid": false,
+          "categoryLayers": ["Layer1"],
+          "maskLayers": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8", "Layer9", "Layer10", "Layer11", "Layer12", "Layer13", "Layer14", "Layer15", "Layer16"],
+          "tint": "#ffffffff",
+          "layout": "Isometric",
+          "stagger": "Odd",
+          "cellSize": [128, 64],
+          "tileOffset": [0, 10],
+          "asepriteLayer": ""
+        }
+      },
+      {
+        "type": "Node",
+        "name": "Cursor",
+        "uid": "y2dkms9u",
+        "position": [0, 0],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 1,
+        "script": {
+          "path": "scripts/cursor.lua"
+        }
+      },
+      {
+        "type": "Node",
+        "name": "World",
+        "uid": "xj57tb30",
+        "position": [0, 0],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
+        "y_sort": true,
+        "children": [
+          {
+            "type": "TileMapNode",
+            "name": "Walls",
+            "uid": "aq7gzrh3",
+            "position": [0, 0],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 2,
+            "y_sort": true,
+            "y_sort_offset": -56,
+            "tilemap": {"tileset": "textures/dungeon.png", "tile_size": [128, 144], "map_size": [10, 10], "data": [[1, 14], [2, 10], [1, 26], [2, 10], [1, 18], [3, 10], [1, 9], [9, -1], [1, 9], [9, -1], [1, 9], [9, -1], [1, 25], [9, -1], [1, 9], [9, -1], [1, 9], [3, 10], [6, -1], [1, 9], [9, -1], [1, 9], [9, -1], [1, 9], [9, -1]]},
+            "properties": {
+              "shininess": 0,
+              "solid": true,
+              "categoryLayers": ["Layer1"],
+              "maskLayers": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8", "Layer9", "Layer10", "Layer11", "Layer12", "Layer13", "Layer14", "Layer15", "Layer16"],
+              "tint": "#ffffffff",
+              "layout": "Isometric",
+              "stagger": "Odd",
+              "cellSize": [128, 64],
+              "tileOffset": [0, 10],
+              "asepriteLayer": ""
+            }
+          },
+          {
+            "type": "TileMapNode",
+            "name": "Props",
+            "uid": "lckqqmka",
+            "position": [0, 0],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 2,
+            "y_sort": true,
+            "y_sort_offset": -24,
+            "tilemap": {"tileset": "textures/dungeon.png", "tile_size": [128, 144], "map_size": [10, 10], "data": [[11, -1], [1, 47], [6, -1], [1, 40], [14, -1], [1, 45], [2, -1], [1, 45], [31, -1], [1, 34], [8, -1], [1, 46], [3, -1], [1, 41], [1, -1], [1, 45], [14, -1], [1, 44], [1, -1]]},
+            "properties": {
+              "shininess": 0,
+              "solid": true,
+              "categoryLayers": ["Layer1"],
+              "maskLayers": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8", "Layer9", "Layer10", "Layer11", "Layer12", "Layer13", "Layer14", "Layer15", "Layer16"],
+              "tint": "#ffffffff",
+              "layout": "Isometric",
+              "stagger": "Odd",
+              "cellSize": [128, 64],
+              "tileOffset": [0, 10],
+              "asepriteLayer": ""
+            }
+          },
+          {
+            "type": "CharacterMoverNode",
+            "name": "Hero",
+            "uid": "wyw0ihnh",
+            "position": [128, 384],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 0,
+            "tags": ["player"],
+            "shapes": [
+              {"type": "Circle", "offset": [0, 0], "rotation": 0, "radius": 10, "size": [40, 40], "cornerRadius": 4, "point1": [-25, 0], "point2": [25, 0], "vertexCount": 4, "isLoop": false, "density": 1, "friction": 0.6, "restitution": 0.2, "rollingResistance": 0, "tangentSpeed": 0, "isSensor": false, "enableSensorEvents": true, "enableContactEvents": true, "enableHitEvents": false, "enablePreSolveEvents": false, "categoryLayers": ["Layer1"], "maskLayers": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8", "Layer9", "Layer10", "Layer11", "Layer12", "Layer13", "Layer14", "Layer15", "Layer16"], "groupIndex": 0}
+            ],
+            "properties": {
+              "radius": 14,
+              "height": 28,
+              "maxSpeed": 240,
+              "acceleration": 1200,
+              "jumpSpeed": 320,
+              "gravityScale": 1,
+              "pushLimit": 500,
+              "clipVelocity": true,
+              "enableKeyboardInput": true,
+              "playerIndex": 1,
+              "categoryLayers": ["Layer2"],
+              "maskLayers": ["Layer1"],
+              "debugColor": "#facc15ff",
+              "controlMode": "Script"
+            },
+            "script": {
+              "path": "scripts/hero.lua",
+              "properties": {
+                "speed": 150
+              }
+            },
+            "children": [
+              {
+                "type": "AnimationPlayerNode",
+                "name": "Sprite",
+                "uid": "vonwoezy",
+                "position": [0, 0],
+                "scale": [1, 1],
+                "rotation": 0,
+                "pivot": [0.5, 0.881],
+                "enabled": true,
+                "visible": true,
+                "layer": 2,
+                "fps": 8,
+                "animation": "idle_2",
+                "default_animation": "idle_2",
+                "animations": [
+                  {"name": "idle_0", "loop": true, "flip_x": false, "flip_y": false, "fps": 1, "sheet": "textures/hero.png", "grid": [11, 8], "start": 0, "end": 0, "cells": [0]},
+                  {"name": "run_0", "loop": true, "flip_x": false, "flip_y": false, "fps": 16, "sheet": "textures/hero.png", "grid": [11, 8], "start": 0, "end": 9, "cells": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]},
+                  {"name": "idle_1", "loop": true, "flip_x": false, "flip_y": false, "fps": 1, "sheet": "textures/hero.png", "grid": [11, 8], "start": 0, "end": 0, "cells": [11]},
+                  {"name": "run_1", "loop": true, "flip_x": false, "flip_y": false, "fps": 16, "sheet": "textures/hero.png", "grid": [11, 8], "start": 0, "end": 9, "cells": [12, 13, 14, 15, 16, 17, 18, 19, 20, 21]},
+                  {"name": "idle_2", "loop": true, "flip_x": false, "flip_y": false, "fps": 1, "sheet": "textures/hero.png", "grid": [11, 8], "start": 0, "end": 0, "cells": [22]},
+                  {"name": "run_2", "loop": true, "flip_x": false, "flip_y": false, "fps": 16, "sheet": "textures/hero.png", "grid": [11, 8], "start": 0, "end": 9, "cells": [23, 24, 25, 26, 27, 28, 29, 30, 31, 32]},
+                  {"name": "idle_3", "loop": true, "flip_x": false, "flip_y": false, "fps": 1, "sheet": "textures/hero.png", "grid": [11, 8], "start": 0, "end": 0, "cells": [33]},
+                  {"name": "run_3", "loop": true, "flip_x": false, "flip_y": false, "fps": 16, "sheet": "textures/hero.png", "grid": [11, 8], "start": 0, "end": 9, "cells": [34, 35, 36, 37, 38, 39, 40, 41, 42, 43]},
+                  {"name": "idle_4", "loop": true, "flip_x": false, "flip_y": false, "fps": 1, "sheet": "textures/hero.png", "grid": [11, 8], "start": 0, "end": 0, "cells": [44]},
+                  {"name": "run_4", "loop": true, "flip_x": false, "flip_y": false, "fps": 16, "sheet": "textures/hero.png", "grid": [11, 8], "start": 0, "end": 9, "cells": [45, 46, 47, 48, 49, 50, 51, 52, 53, 54]},
+                  {"name": "idle_5", "loop": true, "flip_x": false, "flip_y": false, "fps": 1, "sheet": "textures/hero.png", "grid": [11, 8], "start": 0, "end": 0, "cells": [55]},
+                  {"name": "run_5", "loop": true, "flip_x": false, "flip_y": false, "fps": 16, "sheet": "textures/hero.png", "grid": [11, 8], "start": 0, "end": 9, "cells": [56, 57, 58, 59, 60, 61, 62, 63, 64, 65]},
+                  {"name": "idle_6", "loop": true, "flip_x": false, "flip_y": false, "fps": 1, "sheet": "textures/hero.png", "grid": [11, 8], "start": 0, "end": 0, "cells": [66]},
+                  {"name": "run_6", "loop": true, "flip_x": false, "flip_y": false, "fps": 16, "sheet": "textures/hero.png", "grid": [11, 8], "start": 0, "end": 9, "cells": [67, 68, 69, 70, 71, 72, 73, 74, 75, 76]},
+                  {"name": "idle_7", "loop": true, "flip_x": false, "flip_y": false, "fps": 1, "sheet": "textures/hero.png", "grid": [11, 8], "start": 0, "end": 0, "cells": [77]},
+                  {"name": "run_7", "loop": true, "flip_x": false, "flip_y": false, "fps": 16, "sheet": "textures/hero.png", "grid": [11, 8], "start": 0, "end": 9, "cells": [78, 79, 80, 81, 82, 83, 84, 85, 86, 87]}
+                ],
+                "properties": {
+                  "shininess": 0,
+                  "reverse": false,
+                  "autoplay": true
+                }
+              },
+              {
+                "type": "NavigationAgentNode",
+                "name": "Agent",
+                "uid": "ov9hou92",
+                "position": [0, 0],
+                "scale": [1, 1],
+                "rotation": 0,
+                "enabled": true,
+                "visible": true,
+                "layer": 0,
+                "properties": {
+                  "speed": 150,
+                  "radius": 0,
+                  "arriveDistance": 4,
+                  "repathInterval": 0.5,
+                  "navMap": "../../../Walk",
+                  "moveParent": true,
+                  "avoidance": false
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "TextNode",
+        "name": "RoomText",
+        "uid": "cpprdp6q",
+        "position": [16, 12],
+        "scale": [1, 1],
+        "rotation": 0,
+        "pivot": [0, 0],
+        "enabled": true,
+        "visible": true,
+        "layer": 7,
+        "properties": {
+          "text": "",
+          "font": "fonts/kenney_pixel.ttf",
+          "fontSize": 32,
+          "color": "#e9dcc2ff",
+          "align": "Left",
+          "maxWidth": 0,
+          "lineSpacing": 1.2,
+          "richText": true,
+          "localized": false,
+          "rendering": "Auto",
+          "path": "",
+          "pathOffset": 0,
+          "pathAlign": "Left",
+          "pathUpright": false,
+          "revealSpeed": 0
+        }
+      },
+      {
+        "type": "TextNode",
+        "name": "KeyIcon",
+        "uid": "fzvwkqv3",
+        "position": [16, 52],
+        "scale": [1, 1],
+        "rotation": 0,
+        "pivot": [0, 0],
+        "enabled": true,
+        "visible": true,
+        "layer": 7,
+        "properties": {
+          "text": "Key: no",
+          "font": "fonts/kenney_pixel.ttf",
+          "fontSize": 32,
+          "color": "#f5d76eff",
+          "align": "Left",
+          "maxWidth": 0,
+          "lineSpacing": 1.2,
+          "richText": true,
+          "localized": false,
+          "rendering": "Auto",
+          "path": "",
+          "pathOffset": 0,
+          "pathAlign": "Left",
+          "pathUpright": false,
+          "revealSpeed": 0
+        }
+      },
+      {
+        "type": "TextNode",
+        "name": "Time",
+        "uid": "2v8839so",
+        "position": [16, 92],
+        "scale": [1, 1],
+        "rotation": 0,
+        "pivot": [0, 0],
+        "enabled": true,
+        "visible": true,
+        "layer": 7,
+        "properties": {
+          "text": "",
+          "font": "fonts/kenney_pixel.ttf",
+          "fontSize": 32,
+          "color": "#e9dcc2ff",
+          "align": "Left",
+          "maxWidth": 0,
+          "lineSpacing": 1.2,
+          "richText": true,
+          "localized": false,
+          "rendering": "Auto",
+          "path": "",
+          "pathOffset": 0,
+          "pathAlign": "Left",
+          "pathUpright": false,
+          "revealSpeed": 0
+        }
+      },
+      {
+        "type": "TextNode",
+        "name": "Lives",
+        "uid": "pm56ff4x",
+        "position": [1264, 12],
+        "scale": [1, 1],
+        "rotation": 0,
+        "pivot": [1, 0],
+        "enabled": true,
+        "visible": true,
+        "layer": 7,
+        "properties": {
+          "text": "",
+          "font": "fonts/kenney_pixel.ttf",
+          "fontSize": 32,
+          "color": "#e9dcc2ff",
+          "align": "Right",
+          "maxWidth": 0,
+          "lineSpacing": 1.2,
+          "richText": true,
+          "localized": false,
+          "rendering": "Auto",
+          "path": "",
+          "pathOffset": 0,
+          "pathAlign": "Left",
+          "pathUpright": false,
+          "revealSpeed": 0
+        }
+      },
+      {
+        "type": "TextNode",
+        "name": "Hint",
+        "uid": "h3y39g6a",
+        "position": [640, 640],
+        "scale": [1, 1],
+        "rotation": 0,
+        "pivot": [0.5, 0],
+        "enabled": true,
+        "visible": true,
+        "layer": 7,
+        "properties": {
+          "text": "",
+          "font": "fonts/kenney_pixel.ttf",
+          "fontSize": 32,
+          "color": "#ffffffff",
+          "align": "Center",
+          "maxWidth": 0,
+          "lineSpacing": 1.2,
+          "richText": true,
+          "localized": false,
+          "rendering": "Auto",
+          "path": "",
+          "pathOffset": 0,
+          "pathAlign": "Left",
+          "pathUpright": false,
+          "revealSpeed": 0
+        }
+      },
+      {
+        "type": "TextNode",
+        "name": "Message",
+        "uid": "im5h2xc4",
+        "position": [640, 120],
+        "scale": [1, 1],
+        "rotation": 0,
+        "pivot": [0.5, 0.5],
+        "enabled": true,
+        "visible": true,
+        "layer": 7,
+        "properties": {
+          "text": "",
+          "font": "fonts/kenney_pixel.ttf",
+          "fontSize": 48,
+          "color": "#ffffffff",
+          "align": "Center",
+          "maxWidth": 0,
+          "lineSpacing": 1.2,
+          "richText": true,
+          "localized": false,
+          "rendering": "Auto",
+          "path": "",
+          "pathOffset": 0,
+          "pathAlign": "Left",
+          "pathUpright": false,
+          "revealSpeed": 0
+        }
+      },
+      {
+        "type": "TextNode",
+        "name": "Help",
+        "uid": "ziot0vyd",
+        "position": [1264, 690],
+        "scale": [1, 1],
+        "rotation": 0,
+        "pivot": [1, 1],
+        "enabled": true,
+        "visible": true,
+        "layer": 7,
+        "properties": {
+          "text": "Click to walk   WASD / arrows walk   E open   Esc pause",
+          "font": "fonts/kenney_pixel.ttf",
+          "fontSize": 32,
+          "color": "#ffffff99",
+          "align": "Right",
+          "maxWidth": 0,
+          "lineSpacing": 1.2,
+          "richText": true,
+          "localized": false,
+          "rendering": "Auto",
+          "path": "",
+          "pathOffset": 0,
+          "pathAlign": "Left",
+          "pathUpright": false,
+          "revealSpeed": 0
+        }
+      },
+      {
+        "type": "Node",
+        "name": "PauseMenu",
+        "uid": "w8iott90",
+        "position": [0, 0],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": false,
+        "layer": 7,
+        "pause_mode": "always",
+        "script": {
+          "path": "scripts/menu.lua",
+          "properties": {
+            "item_height": 56,
+            "item_width": 640,
+            "kind": "pause",
+            "selected": "#e74c3cff"
+          }
+        },
+        "children": [
+          {
+            "type": "UIContainerNode",
+            "name": "Shade",
+            "uid": "7g7enrv6",
+            "position": [0, 0],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "size": [1280, 720],
+              "keyboardFocus": true,
+              "title": "Panel",
+              "direction": "Vertical",
+              "alignment": "Stretch",
+              "spacing": 8,
+              "paddingTop": 14,
+              "paddingBottom": 14,
+              "paddingLeft": 14,
+              "paddingRight": 14,
+              "columns": 0,
+              "autoSizeHeight": false,
+              "drawBackground": true,
+              "drawBorder": false,
+              "showHeader": false,
+              "headerHeight": 36,
+              "backgroundColor": "#14141ec8",
+              "headerColor": "#1c202aff",
+              "borderColor": "#373e4eff",
+              "titleColor": "#eef0f6ff"
+            }
+          },
+          {
+            "type": "TextNode",
+            "name": "Heading",
+            "uid": "sg5kldpv",
+            "position": [640, 184],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "text": "Paused",
+              "font": "fonts/kenney_pixel.ttf",
+              "fontSize": 96,
+              "color": "#ffffffff",
+              "align": "Center",
+              "maxWidth": 0,
+              "lineSpacing": 1.2,
+              "richText": true,
+              "localized": false,
+              "rendering": "Auto",
+              "path": "",
+              "pathOffset": 0,
+              "pathAlign": "Left",
+              "pathUpright": false,
+              "revealSpeed": 0
+            }
+          },
+          {
+            "type": "TextNode",
+            "name": "Resume",
+            "uid": "hus9uimo",
+            "position": [640, 336],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "tags": ["item"],
+            "properties": {
+              "text": "Resume",
+              "font": "fonts/kenney_pixel.ttf",
+              "fontSize": 48,
+              "color": "#ffffffff",
+              "align": "Center",
+              "maxWidth": 0,
+              "lineSpacing": 1.2,
+              "richText": true,
+              "localized": false,
+              "rendering": "Auto",
+              "path": "",
+              "pathOffset": 0,
+              "pathAlign": "Left",
+              "pathUpright": false,
+              "revealSpeed": 0
+            }
+          },
+          {
+            "type": "TextNode",
+            "name": "Restart",
+            "uid": "68gz2ojh",
+            "position": [640, 400],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "tags": ["item"],
+            "properties": {
+              "text": "Restart level",
+              "font": "fonts/kenney_pixel.ttf",
+              "fontSize": 48,
+              "color": "#ffffffff",
+              "align": "Center",
+              "maxWidth": 0,
+              "lineSpacing": 1.2,
+              "richText": true,
+              "localized": false,
+              "rendering": "Auto",
+              "path": "",
+              "pathOffset": 0,
+              "pathAlign": "Left",
+              "pathUpright": false,
+              "revealSpeed": 0
+            }
+          },
+          {
+            "type": "TextNode",
+            "name": "Title",
+            "uid": "f3x5mnmr",
+            "position": [640, 464],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "tags": ["item"],
+            "properties": {
+              "text": "Title screen",
+              "font": "fonts/kenney_pixel.ttf",
+              "fontSize": 48,
+              "color": "#ffffffff",
+              "align": "Center",
+              "maxWidth": 0,
+              "lineSpacing": 1.2,
+              "richText": true,
+              "localized": false,
+              "rendering": "Auto",
+              "path": "",
+              "pathOffset": 0,
+              "pathAlign": "Left",
+              "pathUpright": false,
+              "revealSpeed": 0
+            }
+          }
+        ]
+      },
+      {
+        "type": "ScreenLayerNode",
+        "name": "TouchTop",
+        "uid": "dzfm33g8",
+        "position": [0, 0],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 7,
+        "properties": {
+          "anchor": "TopRight"
+        },
+        "children": [
+          {
+            "type": "TouchButtonNode",
+            "name": "TouchPause",
+            "uid": "y1703zb0",
+            "position": [-60, 60],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "radius": 34,
+              "action": "pause",
+              "label": "II",
+              "fontSize": 24,
+              "color": "#ffffff3c",
+              "pressedColor": "#ffffff8c",
+              "textColor": "#ffffffdc",
+              "alwaysShow": false
+            }
+          }
+        ]
+      }
     ]
-   },
-   {
-    "type": "TextNode",
-    "name": "RoomText",
-    "position": [
-     16,
-     12
-    ],
-    "pivot": [
-     0,
-     0
-    ],
-    "layer": 7,
-    "properties": {
-     "text": "",
-     "font": "fonts/kenney_pixel.ttf",
-     "fontSize": 32,
-     "align": "Left",
-     "color": "#e9dcc2ff"
-    }
-   },
-   {
-    "type": "TextNode",
-    "name": "KeyIcon",
-    "position": [
-     16,
-     52
-    ],
-    "pivot": [
-     0,
-     0
-    ],
-    "layer": 7,
-    "properties": {
-     "text": "Key: no",
-     "font": "fonts/kenney_pixel.ttf",
-     "fontSize": 32,
-     "align": "Left",
-     "color": "#f5d76eff"
-    }
-   },
-   {
-    "type": "TextNode",
-    "name": "Time",
-    "position": [
-     16,
-     92
-    ],
-    "pivot": [
-     0,
-     0
-    ],
-    "layer": 7,
-    "properties": {
-     "text": "",
-     "font": "fonts/kenney_pixel.ttf",
-     "fontSize": 32,
-     "align": "Left",
-     "color": "#e9dcc2ff"
-    }
-   },
-   {
-    "type": "TextNode",
-    "name": "Lives",
-    "position": [
-     1264,
-     12
-    ],
-    "pivot": [
-     1,
-     0
-    ],
-    "layer": 7,
-    "properties": {
-     "text": "",
-     "font": "fonts/kenney_pixel.ttf",
-     "fontSize": 32,
-     "align": "Right",
-     "color": "#e9dcc2ff"
-    }
-   },
-   {
-    "type": "TextNode",
-    "name": "Hint",
-    "position": [
-     640,
-     640
-    ],
-    "pivot": [
-     0.5,
-     0
-    ],
-    "layer": 7,
-    "properties": {
-     "text": "",
-     "font": "fonts/kenney_pixel.ttf",
-     "fontSize": 32,
-     "align": "Center",
-     "color": "#ffffffff"
-    }
-   },
-   {
-    "type": "TextNode",
-    "name": "Message",
-    "position": [
-     640,
-     120
-    ],
-    "pivot": [
-     0.5,
-     0.5
-    ],
-    "layer": 7,
-    "properties": {
-     "text": "",
-     "font": "fonts/kenney_pixel.ttf",
-     "fontSize": 48,
-     "align": "Center",
-     "color": "#ffffffff"
-    }
-   },
-   {
-    "type": "TextNode",
-    "name": "Help",
-    "position": [
-     1264,
-     690
-    ],
-    "pivot": [
-     1,
-     1
-    ],
-    "layer": 7,
-    "properties": {
-     "text": "Click to walk   WASD / arrows walk   E open   Esc pause",
-     "font": "fonts/kenney_pixel.ttf",
-     "fontSize": 32,
-     "align": "Right",
-     "color": "#ffffff99"
-    }
-   },
-   {
-    "type": "Node",
-    "name": "PauseMenu",
-    "layer": 7,
-    "script": {
-     "path": "scripts/menu.lua",
-     "properties": {
-      "kind": "pause",
-      "item_width": 640,
-      "item_height": 56,
-      "selected": "#e74c3cff"
-     }
-    },
-    "children": [
-     {
-      "type": "UIContainerNode",
-      "name": "Shade",
-      "layer": 7,
-      "position": [
-       0,
-       0
-      ],
-      "properties": {
-       "size": [
-        1280,
-        720
-       ],
-       "drawBackground": true,
-       "drawBorder": false,
-       "showHeader": false,
-       "backgroundColor": "#14141ec8"
-      }
-     },
-     {
-      "type": "TextNode",
-      "name": "Heading",
-      "position": [
-       640.0,
-       184.0
-      ],
-      "pivot": [
-       0.5,
-       0.5
-      ],
-      "layer": 7,
-      "properties": {
-       "text": "Paused",
-       "font": "fonts/kenney_pixel.ttf",
-       "fontSize": 96,
-       "align": "Center",
-       "color": "#ffffffff"
-      }
-     },
-     {
-      "type": "TextNode",
-      "name": "Resume",
-      "position": [
-       640.0,
-       336.0
-      ],
-      "pivot": [
-       0.5,
-       0.5
-      ],
-      "layer": 7,
-      "properties": {
-       "text": "Resume",
-       "font": "fonts/kenney_pixel.ttf",
-       "fontSize": 48,
-       "align": "Center",
-       "color": "#ffffffff"
-      },
-      "tags": [
-       "item"
-      ]
-     },
-     {
-      "type": "TextNode",
-      "name": "Restart",
-      "position": [
-       640.0,
-       400.0
-      ],
-      "pivot": [
-       0.5,
-       0.5
-      ],
-      "layer": 7,
-      "properties": {
-       "text": "Restart level",
-       "font": "fonts/kenney_pixel.ttf",
-       "fontSize": 48,
-       "align": "Center",
-       "color": "#ffffffff"
-      },
-      "tags": [
-       "item"
-      ]
-     },
-     {
-      "type": "TextNode",
-      "name": "Title",
-      "position": [
-       640.0,
-       464.0
-      ],
-      "pivot": [
-       0.5,
-       0.5
-      ],
-      "layer": 7,
-      "properties": {
-       "text": "Title screen",
-       "font": "fonts/kenney_pixel.ttf",
-       "fontSize": 48,
-       "align": "Center",
-       "color": "#ffffffff"
-      },
-      "tags": [
-       "item"
-      ]
-     }
-    ],
-    "visible": false,
-    "pause_mode": "always"
-   },
-   {
-    "type": "ScreenLayerNode",
-    "name": "TouchTop",
-    "properties": {
-     "anchor": "TopRight"
-    },
-    "children": [
-     {
-      "type": "TouchButtonNode",
-      "name": "TouchPause",
-      "position": [
-       -60.0,
-       60.0
-      ],
-      "properties": {
-       "radius": 34.0,
-       "action": "pause",
-       "label": "II",
-       "fontSize": 24.0
-      }
-     }
-    ]
-   }
-  ]
- }
+  }
 }

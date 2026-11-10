@@ -1,197 +1,219 @@
 {
- "name": "main",
- "background": [
-  37,
-  19,
-  26,
-  255
- ],
- "root": {
-  "type": "Node",
-  "name": "root",
-  "children": [
-   {
-    "type": "LevelGeneratorNode",
-    "name": "Generator",
-    "position": [
-     0,
-     0
-    ],
-    "properties": {
-     "generator": "levels/cave.levelgen.json",
-     "seed": 0,
-     "randomSeed": true,
-     "generateOnReady": true,
-     "attempts": 10
-    },
-    "script": {
-     "path": "scripts/level.lua"
-    },
+  "format": 1,
+  "name": "main",
+  "draw_bounds": false,
+  "background": [37, 19, 26, 255],
+  "root": {
+    "type": "Node",
+    "name": "root",
+    "uid": "o1jhed83",
+    "position": [0, 0],
+    "scale": [1, 1],
+    "rotation": 0,
+    "enabled": true,
+    "visible": true,
+    "layer": 0,
     "children": [
-     {
-      "type": "TileMapNode",
-      "name": "Walls",
-      "position": [
-       0,
-       0
-      ],
-      "layer": 1,
-      "z_index": 0,
-      "tilemap": {
-       "tileset": "textures/dungeon.png",
-       "tile_size": [
-        16,
-        16
-       ],
-       "map_size": [
-        40,
-        22
-       ],
-       "data": [
-        [
-         880,
-         -1
+      {
+        "type": "LevelGeneratorNode",
+        "name": "Generator",
+        "uid": "7dkkhh9s",
+        "position": [0, 0],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
+        "level_generator": {"params": []},
+        "properties": {
+          "generator": "levels/cave.levelgen.json",
+          "tilemap": "",
+          "seed": 0,
+          "randomSeed": true,
+          "generateOnReady": true,
+          "background": false,
+          "attempts": 10,
+          "rebakeNavigation": false,
+          "chunked": false,
+          "chunkSize": 32,
+          "chunkRadius": 2,
+          "cameraPath": ""
+        },
+        "script": {
+          "path": "scripts/level.lua"
+        },
+        "children": [
+          {
+            "type": "TileMapNode",
+            "name": "Walls",
+            "uid": "zw7uv45i",
+            "position": [0, 0],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 1,
+            "tilemap": {"tileset": "textures/dungeon.png", "tile_size": [16, 16], "map_size": [40, 22], "data": [[880, -1]]},
+            "properties": {
+              "shininess": 0,
+              "solid": true,
+              "categoryLayers": ["Layer1"],
+              "maskLayers": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8", "Layer9", "Layer10", "Layer11", "Layer12", "Layer13", "Layer14", "Layer15", "Layer16"],
+              "tint": "#ffffffff",
+              "layout": "Square",
+              "stagger": "Odd",
+              "cellSize": [0, 0],
+              "tileOffset": [0, 0],
+              "asepriteLayer": ""
+            }
+          },
+          {
+            "type": "TileMapNode",
+            "name": "Floor",
+            "uid": "m95y8mai",
+            "position": [0, 0],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 1,
+            "z_index": -1,
+            "tilemap": {"tileset": "textures/dungeon.png", "tile_size": [16, 16], "map_size": [40, 22], "data": [[880, -1]]},
+            "properties": {
+              "shininess": 0,
+              "solid": false,
+              "categoryLayers": ["Layer1"],
+              "maskLayers": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8", "Layer9", "Layer10", "Layer11", "Layer12", "Layer13", "Layer14", "Layer15", "Layer16"],
+              "tint": "#ffffffff",
+              "layout": "Square",
+              "stagger": "Odd",
+              "cellSize": [0, 0],
+              "tileOffset": [0, 0],
+              "asepriteLayer": ""
+            }
+          }
         ]
-       ]
       },
-      "properties": {
-       "solid": true
-      }
-     },
-     {
-      "type": "TileMapNode",
-      "name": "Floor",
-      "position": [
-       0,
-       0
-      ],
-      "layer": 1,
-      "z_index": -1,
-      "tilemap": {
-       "tileset": "textures/dungeon.png",
-       "tile_size": [
-        16,
-        16
-       ],
-       "map_size": [
-        40,
-        22
-       ],
-       "data": [
-        [
-         880,
-         -1
+      {
+        "type": "CharacterMoverNode",
+        "name": "Player",
+        "uid": "q3eb1mwx",
+        "position": [320, 180],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
+        "tags": ["player"],
+        "shapes": [
+          {"type": "Capsule", "offset": [0, 0], "rotation": 0, "radius": 5, "size": [10, 2], "cornerRadius": 4, "point1": [-25, 0], "point2": [25, 0], "vertexCount": 4, "isLoop": false, "density": 1, "friction": 0.6, "restitution": 0.2, "rollingResistance": 0, "tangentSpeed": 0, "isSensor": false, "enableSensorEvents": true, "enableContactEvents": true, "enableHitEvents": false, "enablePreSolveEvents": false, "categoryLayers": ["Layer1"], "maskLayers": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8", "Layer9", "Layer10", "Layer11", "Layer12", "Layer13", "Layer14", "Layer15", "Layer16"], "groupIndex": 0}
+        ],
+        "properties": {
+          "radius": 14,
+          "height": 28,
+          "maxSpeed": 240,
+          "acceleration": 1200,
+          "jumpSpeed": 320,
+          "gravityScale": 1,
+          "pushLimit": 500,
+          "clipVelocity": true,
+          "enableKeyboardInput": true,
+          "playerIndex": 1,
+          "categoryLayers": ["Layer1"],
+          "maskLayers": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8", "Layer9", "Layer10", "Layer11", "Layer12", "Layer13", "Layer14", "Layer15", "Layer16"],
+          "debugColor": "#facc15ff",
+          "controlMode": "Script"
+        },
+        "script": {
+          "path": "scripts/player.lua",
+          "properties": {
+            "speed": 110
+          }
+        },
+        "children": [
+          {
+            "type": "AnimationPlayerNode",
+            "name": "Sprite",
+            "uid": "y7rir880",
+            "position": [0, -3],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 2,
+            "fps": 8,
+            "animation": "idle",
+            "default_animation": "idle",
+            "animations": [
+              {"name": "idle", "loop": true, "flip_x": false, "flip_y": false, "fps": 1, "sheet": "textures/dungeon.png", "grid": [12, 11], "start": 0, "end": 0, "cells": [96]}
+            ],
+            "properties": {
+              "shininess": 0,
+              "reverse": false,
+              "autoplay": true
+            }
+          }
         ]
-       ]
+      },
+      {
+        "type": "TextNode",
+        "name": "Info",
+        "uid": "55c2r1x0",
+        "position": [8, 2],
+        "scale": [1, 1],
+        "rotation": 0,
+        "pivot": [0, 0],
+        "enabled": true,
+        "visible": true,
+        "layer": 7,
+        "properties": {
+          "text": "",
+          "font": "",
+          "fontSize": 20,
+          "color": "#ffffffff",
+          "align": "Left",
+          "maxWidth": 0,
+          "lineSpacing": 1.2,
+          "richText": true,
+          "localized": false,
+          "rendering": "Auto",
+          "path": "",
+          "pathOffset": 0,
+          "pathAlign": "Left",
+          "pathUpright": false,
+          "revealSpeed": 0
+        }
+      },
+      {
+        "type": "TextNode",
+        "name": "Coins",
+        "uid": "2i5fj6dx",
+        "position": [632, 2],
+        "scale": [1, 1],
+        "rotation": 0,
+        "pivot": [1, 0],
+        "enabled": true,
+        "visible": true,
+        "layer": 7,
+        "properties": {
+          "text": "",
+          "font": "",
+          "fontSize": 20,
+          "color": "#ffffffff",
+          "align": "Right",
+          "maxWidth": 0,
+          "lineSpacing": 1.2,
+          "richText": true,
+          "localized": false,
+          "rendering": "Auto",
+          "path": "",
+          "pathOffset": 0,
+          "pathAlign": "Left",
+          "pathUpright": false,
+          "revealSpeed": 0
+        }
       }
-     }
     ]
-   },
-   {
-    "type": "CharacterMoverNode",
-    "name": "Player",
-    "position": [
-     320,
-     180
-    ],
-    "tags": [
-     "player"
-    ],
-    "shapes": [
-     {
-      "type": "Capsule",
-      "radius": 5,
-      "size": [
-       10,
-       2
-      ]
-     }
-    ],
-    "properties": {
-     "controlMode": "Script"
-    },
-    "script": {
-     "path": "scripts/player.lua",
-     "properties": {}
-    },
-    "children": [
-     {
-      "type": "AnimationPlayerNode",
-      "name": "Sprite",
-      "position": [
-       0,
-       -3
-      ],
-      "pivot": [
-       0.5,
-       0.5
-      ],
-      "layer": 2,
-      "z_index": 0,
-      "fps": 8,
-      "animation": "idle",
-      "default_animation": "idle",
-      "animations": [
-       {
-        "name": "idle",
-        "loop": true,
-        "fps": 1,
-        "sheet": "textures/dungeon.png",
-        "grid": [
-         12,
-         11
-        ],
-        "cells": [
-         96
-        ],
-        "start": 0,
-        "end": 0
-       }
-      ],
-      "properties": {
-       "autoplay": true
-      }
-     }
-    ]
-   },
-   {
-    "type": "TextNode",
-    "name": "Info",
-    "position": [
-     8,
-     2
-    ],
-    "pivot": [
-     0,
-     0
-    ],
-    "layer": 7,
-    "properties": {
-     "text": "",
-     "fontSize": 20,
-     "align": "Left",
-     "color": "#ffffffff"
-    }
-   },
-   {
-    "type": "TextNode",
-    "name": "Coins",
-    "position": [
-     632,
-     2
-    ],
-    "pivot": [
-     1,
-     0
-    ],
-    "layer": 7,
-    "properties": {
-     "text": "",
-     "fontSize": 20,
-     "align": "Right",
-     "color": "#ffffffff"
-    }
-   }
-  ]
- }
+  }
 }

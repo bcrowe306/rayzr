@@ -1,17 +1,29 @@
 {
- "type": "DynamicBodyNode",
- "name": "PhysicsCrate",
- "uid": "crate000",
- "shapes": [
-  {
-   "type": "Box",
-   "size": [
-    64,
-    64
-   ],
-   "density": 1.5,
-   "friction": 0.4,
-   "restitution": 0.2
+  "format": 1,
+  "type": "DynamicBodyNode",
+  "name": "PhysicsCrate",
+  "uid": "crate000",
+  "position": [0, 0],
+  "scale": [1, 1],
+  "rotation": 0,
+  "enabled": true,
+  "visible": true,
+  "layer": 0,
+  "shapes": [
+    {"type": "Box", "offset": [0, 0], "rotation": 0, "radius": 20, "size": [64, 64], "cornerRadius": 4, "point1": [-25, 0], "point2": [25, 0], "vertexCount": 4, "isLoop": false, "density": 1.5, "friction": 0.4, "restitution": 0.2, "rollingResistance": 0, "tangentSpeed": 0, "isSensor": false, "enableSensorEvents": true, "enableContactEvents": true, "enableHitEvents": false, "enablePreSolveEvents": false, "categoryLayers": ["Layer1"], "maskLayers": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8", "Layer9", "Layer10", "Layer11", "Layer12", "Layer13", "Layer14", "Layer15", "Layer16"], "groupIndex": 0}
+  ],
+  "properties": {
+    "linearVelocity": [0, 0],
+    "angularVelocity": 0,
+    "linearDamping": 0.05,
+    "angularDamping": 0.05,
+    "gravityScale": 1,
+    "sleepThreshold": 1.5,
+    "enableSleep": true,
+    "isAwake": true,
+    "fixedRotation": false,
+    "isBullet": false,
+    "allowFastRotation": false,
+    "debugColor": "#60a5faff"
   }
- ]
 }

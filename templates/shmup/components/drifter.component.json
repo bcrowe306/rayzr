@@ -1,57 +1,49 @@
 {
- "type": "Node",
- "name": "Drifter",
- "tags": [
-  "enemy"
- ],
- "script": {
-  "path": "scripts/enemy.lua",
-  "properties": {
-   "speed": 50,
-   "wobble": 18,
-   "hp": 1,
-   "shoots": false,
-   "points": 100
-  }
- },
- "children": [
-  {
-   "type": "AnimationPlayerNode",
-   "name": "Sprite",
-   "position": [
-    0,
-    0
-   ],
-   "pivot": [
-    0.5,
-    0.5
-   ],
-   "layer": 2,
-   "z_index": 0,
-   "fps": 8,
-   "animation": "idle",
-   "default_animation": "idle",
-   "animations": [
-    {
-     "name": "idle",
-     "loop": true,
-     "fps": 1,
-     "sheet": "textures/ships.png",
-     "grid": [
-      4,
-      6
-     ],
-     "cells": [
-      17
-     ],
-     "start": 0,
-     "end": 0
+  "format": 1,
+  "type": "Node",
+  "name": "Drifter",
+  "uid": "xqylzcun",
+  "position": [0, 0],
+  "scale": [1, 1],
+  "rotation": 0,
+  "enabled": true,
+  "visible": true,
+  "layer": 0,
+  "tags": ["enemy"],
+  "script": {
+    "path": "scripts/enemy.lua",
+    "properties": {
+      "hp": 1,
+      "points": 100,
+      "radius": 10,
+      "shoots": false,
+      "speed": 50,
+      "wobble": 18
     }
-   ],
-   "properties": {
-    "autoplay": true
-   },
-   "rotation": 90
-  }
- ]
+  },
+  "children": [
+    {
+      "type": "AnimationPlayerNode",
+      "name": "Sprite",
+      "uid": "mcf3xbl0",
+      "position": [0, 0],
+      "scale": [1, 1],
+      "rotation": 90,
+      "pivot": [0.5, 0.5],
+      "enabled": true,
+      "visible": true,
+      "layer": 2,
+      "fps": 8,
+      "animation": "idle",
+      "default_animation": "idle",
+      "animations": [
+        {"name": "idle", "loop": true, "flip_x": false, "flip_y": false, "fps": 1, "sheet": "textures/ships.png", "grid": [4, 6], "start": 0, "end": 0, "cells": [17]}
+      ],
+      "properties": {
+        "shininess": 0,
+        "reverse": false,
+        "autoplay": true
+      }
+    }
+  ]
 }

@@ -1,0 +1,8 @@
+{
+ "name": "odd_zz",
+ "root": {
+  "type": "Node",
+  "name": "root",
+  "mystery_zz": 1
+ }
+}

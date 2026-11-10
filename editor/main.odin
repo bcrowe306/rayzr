@@ -50,6 +50,8 @@ editor_main :: proc() -> int {
 	for i := 1; i + 1 < len(os.args); i += 1 do if os.args[i] == "--dump-shortcuts" do return ShortcutsDoc_Run(os.args[i + 1])
 	// --lua-setup <project>: write its Lua tooling files and exit (lua_project.odin).
 	for i := 1; i + 1 < len(os.args); i += 1 do if os.args[i] == "--lua-setup" do return LuaSetup_Run(os.args[i + 1])
+	// --fmt [--check] <file or folder>...: scene / component files as the editor saves them (canonical_fmt.odin, #293).
+	for i := 1; i < len(os.args); i += 1 do if os.args[i] == "--fmt" do return Fmt_Run(os.args[i + 1:])
 	Editor_MigrateLegacyConfig() // ~/.config/ore_editor -> rayzr_editor (editor_settings.odin)
 	CrashReports_Install() // crash reports (crash_reports.odin)
 	defer CrashReports_Shutdown()

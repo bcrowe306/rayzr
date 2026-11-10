@@ -1,55 +1,47 @@
 {
- "type": "Node",
- "name": "PlayerBullet",
- "tags": [
-  "player_bullet"
- ],
- "script": {
-  "path": "scripts/bullet.lua",
-  "properties": {
-   "speed": 260,
-   "dir_x": 1,
-   "radius": 3
-  }
- },
- "children": [
-  {
-   "type": "AnimationPlayerNode",
-   "name": "Sprite",
-   "position": [
-    0,
-    0
-   ],
-   "pivot": [
-    0.5,
-    0.5
-   ],
-   "layer": 3,
-   "z_index": 0,
-   "fps": 8,
-   "animation": "idle",
-   "default_animation": "idle",
-   "animations": [
-    {
-     "name": "idle",
-     "loop": true,
-     "fps": 1,
-     "sheet": "textures/tiles.png",
-     "grid": [
-      12,
-      10
-     ],
-     "cells": [
-      0
-     ],
-     "start": 0,
-     "end": 0
+  "format": 1,
+  "type": "Node",
+  "name": "PlayerBullet",
+  "uid": "j52mgcwp",
+  "position": [0, 0],
+  "scale": [1, 1],
+  "rotation": 0,
+  "enabled": true,
+  "visible": true,
+  "layer": 0,
+  "tags": ["player_bullet"],
+  "script": {
+    "path": "scripts/bullet.lua",
+    "properties": {
+      "dir_x": 1,
+      "dir_y": 0,
+      "radius": 3,
+      "speed": 260
     }
-   ],
-   "properties": {
-    "autoplay": true
-   },
-   "rotation": 90
-  }
- ]
+  },
+  "children": [
+    {
+      "type": "AnimationPlayerNode",
+      "name": "Sprite",
+      "uid": "ktckxn0g",
+      "position": [0, 0],
+      "scale": [1, 1],
+      "rotation": 90,
+      "pivot": [0.5, 0.5],
+      "enabled": true,
+      "visible": true,
+      "layer": 3,
+      "fps": 8,
+      "animation": "idle",
+      "default_animation": "idle",
+      "animations": [
+        {"name": "idle", "loop": true, "flip_x": false, "flip_y": false, "fps": 1, "sheet": "textures/tiles.png", "grid": [12, 10], "start": 0, "end": 0, "cells": [0]}
+      ],
+      "properties": {
+        "shininess": 0,
+        "reverse": false,
+        "autoplay": true
+      }
+    }
+  ]
 }

@@ -1,171 +1,238 @@
 {
- "name": "title",
- "background": [
-  40,
-  44,
-  64,
-  255
- ],
- "root": {
-  "type": "Node",
-  "name": "root",
-  "children": [
-   {
-    "type": "ScreenLayerNode",
-    "name": "Menu",
-    "position": [
-     0,
-     0
-    ],
-    "layer": 7,
-    "properties": {
-     "anchor": "Center"
-    },
-    "script": {
-     "path": "scripts/title.lua"
-    },
+  "format": 1,
+  "name": "title",
+  "draw_bounds": false,
+  "background": [40, 44, 64, 255],
+  "root": {
+    "type": "Node",
+    "name": "root",
+    "uid": "npu2j0lx",
+    "position": [0, 0],
+    "scale": [1, 1],
+    "rotation": 0,
+    "enabled": true,
+    "visible": true,
+    "layer": 0,
     "children": [
-     {
-      "type": "TextNode",
-      "name": "Title",
-      "position": [
-       0,
-       -140
-      ],
-      "pivot": [
-       0.5,
-       0.5
-      ],
-      "layer": 7,
-      "properties": {
-       "text": "Gem Clicker",
-       "fontSize": 40,
-       "align": "Center",
-       "color": "#ffd27aff"
+      {
+        "type": "ScreenLayerNode",
+        "name": "Menu",
+        "uid": "nq4geokf",
+        "position": [0, 0],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 7,
+        "properties": {
+          "anchor": "Center"
+        },
+        "script": {
+          "path": "scripts/title.lua"
+        },
+        "children": [
+          {
+            "type": "TextNode",
+            "name": "Title",
+            "uid": "qmst2g4u",
+            "position": [0, -140],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "text": "Gem Clicker",
+              "font": "",
+              "fontSize": 40,
+              "color": "#ffd27aff",
+              "align": "Center",
+              "maxWidth": 0,
+              "lineSpacing": 1.2,
+              "richText": true,
+              "localized": false,
+              "rendering": "Auto",
+              "path": "",
+              "pathOffset": 0,
+              "pathAlign": "Left",
+              "pathUpright": false,
+              "revealSpeed": 0
+            }
+          },
+          {
+            "type": "UIButtonNode",
+            "name": "Slot",
+            "uid": "nxukl4uu",
+            "position": [-110, -110],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "size": [220, 30],
+              "keyboardFocus": true,
+              "text": "Slot 1",
+              "fontSize": 16,
+              "icon": "None",
+              "iconSize": 0,
+              "normalColor": "#232731ff",
+              "hoverColor": "#323848ff",
+              "pressedColor": "#2563ebff",
+              "borderColor": "#4b5366ff",
+              "textColor": "#eef0f6ff",
+              "align": "Center"
+            }
+          },
+          {
+            "type": "UILabelNode",
+            "name": "Summary",
+            "uid": "ixpuvs6d",
+            "position": [-160, -74],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "size": [320, 24],
+              "keyboardFocus": true,
+              "text": "Slot 1: empty",
+              "fontSize": 16,
+              "textColor": "#eef0f6ff",
+              "align": "Center",
+              "drawBackground": false,
+              "backgroundColor": "#1e2026c8"
+            }
+          },
+          {
+            "type": "UIButtonNode",
+            "name": "Continue",
+            "uid": "n5230lyc",
+            "position": [-110, -40],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "size": [220, 30],
+              "keyboardFocus": true,
+              "text": "Continue",
+              "fontSize": 16,
+              "icon": "None",
+              "iconSize": 0,
+              "normalColor": "#232731ff",
+              "hoverColor": "#323848ff",
+              "pressedColor": "#2563ebff",
+              "borderColor": "#4b5366ff",
+              "textColor": "#eef0f6ff",
+              "align": "Center"
+            }
+          },
+          {
+            "type": "UIButtonNode",
+            "name": "NewGame",
+            "uid": "e9lv29zf",
+            "position": [-110, -4],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "size": [220, 30],
+              "keyboardFocus": true,
+              "text": "New Game",
+              "fontSize": 16,
+              "icon": "None",
+              "iconSize": 0,
+              "normalColor": "#232731ff",
+              "hoverColor": "#323848ff",
+              "pressedColor": "#2563ebff",
+              "borderColor": "#4b5366ff",
+              "textColor": "#eef0f6ff",
+              "align": "Center"
+            }
+          },
+          {
+            "type": "UIButtonNode",
+            "name": "Delete",
+            "uid": "0uovx18t",
+            "position": [-110, 32],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "size": [220, 30],
+              "keyboardFocus": true,
+              "text": "Delete",
+              "fontSize": 16,
+              "icon": "None",
+              "iconSize": 0,
+              "normalColor": "#232731ff",
+              "hoverColor": "#323848ff",
+              "pressedColor": "#2563ebff",
+              "borderColor": "#4b5366ff",
+              "textColor": "#eef0f6ff",
+              "align": "Center"
+            }
+          },
+          {
+            "type": "UIButtonNode",
+            "name": "Settings",
+            "uid": "rq0te674",
+            "position": [-110, 68],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "size": [220, 30],
+              "keyboardFocus": true,
+              "text": "Settings",
+              "fontSize": 16,
+              "icon": "None",
+              "iconSize": 0,
+              "normalColor": "#232731ff",
+              "hoverColor": "#323848ff",
+              "pressedColor": "#2563ebff",
+              "borderColor": "#4b5366ff",
+              "textColor": "#eef0f6ff",
+              "align": "Center"
+            }
+          },
+          {
+            "type": "UIButtonNode",
+            "name": "Quit",
+            "uid": "8j0h0ozw",
+            "position": [-110, 104],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "size": [220, 30],
+              "keyboardFocus": true,
+              "text": "Quit",
+              "fontSize": 16,
+              "icon": "None",
+              "iconSize": 0,
+              "normalColor": "#232731ff",
+              "hoverColor": "#323848ff",
+              "pressedColor": "#2563ebff",
+              "borderColor": "#4b5366ff",
+              "textColor": "#eef0f6ff",
+              "align": "Center"
+            }
+          }
+        ]
       }
-     },
-     {
-      "type": "UIButtonNode",
-      "name": "Slot",
-      "position": [
-       -110,
-       -110
-      ],
-      "layer": 7,
-      "properties": {
-       "size": [
-        220,
-        30
-       ],
-       "text": "Slot 1",
-       "fontSize": 16
-      }
-     },
-     {
-      "type": "UILabelNode",
-      "name": "Summary",
-      "position": [
-       -160,
-       -74
-      ],
-      "layer": 7,
-      "properties": {
-       "size": [
-        320,
-        24
-       ],
-       "text": "Slot 1: empty",
-       "fontSize": 16,
-       "align": "Center"
-      }
-     },
-     {
-      "type": "UIButtonNode",
-      "name": "Continue",
-      "position": [
-       -110,
-       -40
-      ],
-      "layer": 7,
-      "properties": {
-       "size": [
-        220,
-        30
-       ],
-       "text": "Continue",
-       "fontSize": 16
-      }
-     },
-     {
-      "type": "UIButtonNode",
-      "name": "NewGame",
-      "position": [
-       -110,
-       -4
-      ],
-      "layer": 7,
-      "properties": {
-       "size": [
-        220,
-        30
-       ],
-       "text": "New Game",
-       "fontSize": 16
-      }
-     },
-     {
-      "type": "UIButtonNode",
-      "name": "Delete",
-      "position": [
-       -110,
-       32
-      ],
-      "layer": 7,
-      "properties": {
-       "size": [
-        220,
-        30
-       ],
-       "text": "Delete",
-       "fontSize": 16
-      }
-     },
-     {
-      "type": "UIButtonNode",
-      "name": "Settings",
-      "position": [
-       -110,
-       68
-      ],
-      "layer": 7,
-      "properties": {
-       "size": [
-        220,
-        30
-       ],
-       "text": "Settings",
-       "fontSize": 16
-      }
-     },
-     {
-      "type": "UIButtonNode",
-      "name": "Quit",
-      "position": [
-       -110,
-       104
-      ],
-      "layer": 7,
-      "properties": {
-       "size": [
-        220,
-        30
-       ],
-       "text": "Quit",
-       "fontSize": 16
-      }
-     }
     ]
-   }
-  ]
- }
+  }
 }

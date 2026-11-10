@@ -1,180 +1,354 @@
 {
- "name": "result",
- "background": [
-  143,
-  208,
-  242,
-  255
- ],
- "root": {
-  "type": "Node",
-  "name": "root",
-  "children": [
-   {
-    "type": "CameraNode",
-    "name": "Camera",
-    "position": [
-     640.0,
-     360.0
-    ],
-    "properties": {
-     "isCurrent": true
-    }
-   },
-   {
-    "type": "VectorShapeNode",
-    "name": "Backdrop",
-    "position": [
-     0,
-     0
-    ],
-    "pivot": [
-     0,
-     0
-    ],
-    "layer": 0,
-    "properties": {
-     "file": "art/backdrop.svg"
-    }
-   },
-   {
-    "type": "VectorShapeNode",
-    "name": "Backdrop2",
-    "position": [
-     1278,
-     0
-    ],
-    "pivot": [
-     0,
-     0
-    ],
-    "layer": 0,
-    "properties": {
-     "file": "art/backdrop.svg"
-    }
-   },
-   {
+  "format": 1,
+  "name": "result",
+  "draw_bounds": false,
+  "background": [143, 208, 242, 255],
+  "root": {
     "type": "Node",
-    "name": "Menu",
-    "layer": 7,
-    "script": {
-     "path": "scripts/menu.lua",
-     "properties": {
-      "kind": "result",
-      "item_width": 640,
-      "item_height": 56,
-      "selected": "#e5602aff"
-     }
-    },
+    "name": "root",
+    "uid": "g2th0vob",
+    "position": [0, 0],
+    "scale": [1, 1],
+    "rotation": 0,
+    "enabled": true,
+    "visible": true,
+    "layer": 0,
     "children": [
-     {
-      "type": "TextNode",
-      "name": "Heading",
-      "position": [
-       640.0,
-       184.0
-      ],
-      "pivot": [
-       0.5,
-       0.5
-      ],
-      "layer": 7,
-      "properties": {
-       "text": "",
-       "font": "fonts/kenney_pixel.ttf",
-       "fontSize": 96,
-       "align": "Center",
-       "color": "#24425cff"
-      }
-     },
-     {
-      "type": "TextNode",
-      "name": "Score",
-      "position": [
-       640.0,
-       312.0
-      ],
-      "pivot": [
-       0.5,
-       0.5
-      ],
-      "layer": 7,
-      "properties": {
-       "text": "",
-       "font": "fonts/kenney_pixel.ttf",
-       "fontSize": 48,
-       "align": "Center",
-       "color": "#24425cff"
-      }
-     },
-     {
-      "type": "TextNode",
-      "name": "Best",
-      "position": [
-       640.0,
-       376.0
-      ],
-      "pivot": [
-       0.5,
-       0.5
-      ],
-      "layer": 7,
-      "properties": {
-       "text": "",
-       "font": "fonts/kenney_pixel.ttf",
-       "fontSize": 48,
-       "align": "Center",
-       "color": "#24425cff"
-      }
-     },
-     {
-      "type": "TextNode",
-      "name": "Again",
-      "position": [
-       640.0,
-       496.0
-      ],
-      "pivot": [
-       0.5,
-       0.5
-      ],
-      "layer": 7,
-      "properties": {
-       "text": "Play again",
-       "font": "fonts/kenney_pixel.ttf",
-       "fontSize": 48,
-       "align": "Center",
-       "color": "#24425cff"
+      {
+        "type": "CameraNode",
+        "name": "Camera",
+        "uid": "rpdgf6cq",
+        "position": [640, 360],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
+        "properties": {
+          "isCurrent": true,
+          "followMode": "SingleTarget",
+          "dragType": "SmoothDamp",
+          "targetPosition": [0, 0],
+          "smoothDrag": true,
+          "smoothDragSpeed": [0.2, 0.2],
+          "springConstant": 15,
+          "dampingRatio": 1,
+          "predictionTime": [0.5, 0.5],
+          "maxDistance": [100000, 100000],
+          "offset": [0, 0],
+          "smoothOffset": true,
+          "smoothOffsetSpeed": 0.2,
+          "screenOffset": [640, 360],
+          "customScreenOffset": false,
+          "targetRotation": 0,
+          "allowRotation": true,
+          "smoothRotation": true,
+          "smoothRotationSpeed": 0.2,
+          "targetZoom": 1,
+          "smoothZoom": true,
+          "smoothZoomSpeed": 0.2,
+          "minZoom": 0.1,
+          "maxZoom": 10,
+          "autoZoom": true,
+          "zoomMargin": 0.1,
+          "hasLimits": false,
+          "smoothLimit": true,
+          "leftLimit": -1000000,
+          "rightLimit": 1000000,
+          "topLimit": -1000000,
+          "bottomLimit": 1000000,
+          "useHMargins": false,
+          "useVMargins": false,
+          "leftMargin": 0.25,
+          "rightMargin": 0.25,
+          "topMargin": 0.25,
+          "bottomMargin": 0.25,
+          "enableMouseFollow": false,
+          "mouseInfluence": [0.2, 0.2],
+          "shakePreset": "Custom",
+          "shakeTypes": ["Vertical", "Horizontal", "Random"],
+          "shakeSpeed": 15,
+          "shakeIntensity": 10,
+          "shakeTrauma": 1
+        }
       },
-      "tags": [
-       "item"
-      ]
-     },
-     {
-      "type": "TextNode",
-      "name": "Title",
-      "position": [
-       640.0,
-       560.0
-      ],
-      "pivot": [
-       0.5,
-       0.5
-      ],
-      "layer": 7,
-      "properties": {
-       "text": "Title screen",
-       "font": "fonts/kenney_pixel.ttf",
-       "fontSize": 48,
-       "align": "Center",
-       "color": "#24425cff"
+      {
+        "type": "VectorShapeNode",
+        "name": "Backdrop",
+        "uid": "kwz0fmmt",
+        "position": [0, 0],
+        "scale": [1, 1],
+        "rotation": 0,
+        "pivot": [0, 0],
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
+        "properties": {
+          "file": "art/backdrop.svg",
+          "group": "",
+          "frame": -1,
+          "preset": "Star",
+          "fillColor": "#ffc440ff",
+          "strokeColor": "#281808ff",
+          "strokeWidth": 4,
+          "tint": "#ffffffff",
+          "brightness": 0,
+          "colorAdd": "#00000000",
+          "trimStart": 0,
+          "trimEnd": 1,
+          "trimOffset": 0,
+          "trimEach": false,
+          "morphTo": "",
+          "morph": 0,
+          "lineScale": "Scale",
+          "shadowColor": "#00000000",
+          "shadowOffset": [6, 6],
+          "shadowBlur": 6,
+          "glowColor": "#00000000",
+          "glowSize": 8,
+          "glowStrength": 1.5,
+          "outlineColor": "#00000000",
+          "outlineWidth": 3,
+          "blur": 0,
+          "saturation": 1,
+          "contrast": 1,
+          "hue": 0,
+          "skinBones": "",
+          "skinSmooth": 24,
+          "warpTopLeft": [0, 0],
+          "warpTopRight": [0, 0],
+          "warpBottomLeft": [0, 0],
+          "warpBottomRight": [0, 0],
+          "collider": "None",
+          "colliderDetail": 1,
+          "colliderFriction": 0.6,
+          "colliderBounce": 0.1,
+          "colliderDensity": 1
+        }
       },
-      "tags": [
-       "item"
-      ]
-     }
+      {
+        "type": "VectorShapeNode",
+        "name": "Backdrop2",
+        "uid": "9anqnrjm",
+        "position": [1278, 0],
+        "scale": [1, 1],
+        "rotation": 0,
+        "pivot": [0, 0],
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
+        "properties": {
+          "file": "art/backdrop.svg",
+          "group": "",
+          "frame": -1,
+          "preset": "Star",
+          "fillColor": "#ffc440ff",
+          "strokeColor": "#281808ff",
+          "strokeWidth": 4,
+          "tint": "#ffffffff",
+          "brightness": 0,
+          "colorAdd": "#00000000",
+          "trimStart": 0,
+          "trimEnd": 1,
+          "trimOffset": 0,
+          "trimEach": false,
+          "morphTo": "",
+          "morph": 0,
+          "lineScale": "Scale",
+          "shadowColor": "#00000000",
+          "shadowOffset": [6, 6],
+          "shadowBlur": 6,
+          "glowColor": "#00000000",
+          "glowSize": 8,
+          "glowStrength": 1.5,
+          "outlineColor": "#00000000",
+          "outlineWidth": 3,
+          "blur": 0,
+          "saturation": 1,
+          "contrast": 1,
+          "hue": 0,
+          "skinBones": "",
+          "skinSmooth": 24,
+          "warpTopLeft": [0, 0],
+          "warpTopRight": [0, 0],
+          "warpBottomLeft": [0, 0],
+          "warpBottomRight": [0, 0],
+          "collider": "None",
+          "colliderDetail": 1,
+          "colliderFriction": 0.6,
+          "colliderBounce": 0.1,
+          "colliderDensity": 1
+        }
+      },
+      {
+        "type": "Node",
+        "name": "Menu",
+        "uid": "atu3h8qg",
+        "position": [0, 0],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 7,
+        "script": {
+          "path": "scripts/menu.lua",
+          "properties": {
+            "item_height": 56,
+            "item_width": 640,
+            "kind": "result",
+            "selected": "#e5602aff"
+          }
+        },
+        "children": [
+          {
+            "type": "TextNode",
+            "name": "Heading",
+            "uid": "1qgt5uva",
+            "position": [640, 184],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "text": "",
+              "font": "fonts/kenney_pixel.ttf",
+              "fontSize": 96,
+              "color": "#24425cff",
+              "align": "Center",
+              "maxWidth": 0,
+              "lineSpacing": 1.2,
+              "richText": true,
+              "localized": false,
+              "rendering": "Auto",
+              "path": "",
+              "pathOffset": 0,
+              "pathAlign": "Left",
+              "pathUpright": false,
+              "revealSpeed": 0
+            }
+          },
+          {
+            "type": "TextNode",
+            "name": "Score",
+            "uid": "q34jezs3",
+            "position": [640, 312],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "text": "",
+              "font": "fonts/kenney_pixel.ttf",
+              "fontSize": 48,
+              "color": "#24425cff",
+              "align": "Center",
+              "maxWidth": 0,
+              "lineSpacing": 1.2,
+              "richText": true,
+              "localized": false,
+              "rendering": "Auto",
+              "path": "",
+              "pathOffset": 0,
+              "pathAlign": "Left",
+              "pathUpright": false,
+              "revealSpeed": 0
+            }
+          },
+          {
+            "type": "TextNode",
+            "name": "Best",
+            "uid": "vqtddtpz",
+            "position": [640, 376],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "text": "",
+              "font": "fonts/kenney_pixel.ttf",
+              "fontSize": 48,
+              "color": "#24425cff",
+              "align": "Center",
+              "maxWidth": 0,
+              "lineSpacing": 1.2,
+              "richText": true,
+              "localized": false,
+              "rendering": "Auto",
+              "path": "",
+              "pathOffset": 0,
+              "pathAlign": "Left",
+              "pathUpright": false,
+              "revealSpeed": 0
+            }
+          },
+          {
+            "type": "TextNode",
+            "name": "Again",
+            "uid": "sgn86s0m",
+            "position": [640, 496],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "tags": ["item"],
+            "properties": {
+              "text": "Play again",
+              "font": "fonts/kenney_pixel.ttf",
+              "fontSize": 48,
+              "color": "#24425cff",
+              "align": "Center",
+              "maxWidth": 0,
+              "lineSpacing": 1.2,
+              "richText": true,
+              "localized": false,
+              "rendering": "Auto",
+              "path": "",
+              "pathOffset": 0,
+              "pathAlign": "Left",
+              "pathUpright": false,
+              "revealSpeed": 0
+            }
+          },
+          {
+            "type": "TextNode",
+            "name": "Title",
+            "uid": "5uyab7mc",
+            "position": [640, 560],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "tags": ["item"],
+            "properties": {
+              "text": "Title screen",
+              "font": "fonts/kenney_pixel.ttf",
+              "fontSize": 48,
+              "color": "#24425cff",
+              "align": "Center",
+              "maxWidth": 0,
+              "lineSpacing": 1.2,
+              "richText": true,
+              "localized": false,
+              "rendering": "Auto",
+              "path": "",
+              "pathOffset": 0,
+              "pathAlign": "Left",
+              "pathUpright": false,
+              "revealSpeed": 0
+            }
+          }
+        ]
+      }
     ]
-   }
-  ]
- }
+  }
 }

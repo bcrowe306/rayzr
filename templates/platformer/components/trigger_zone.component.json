@@ -1,15 +1,20 @@
 {
- "type": "AreaNode",
- "name": "TriggerZone",
- "uid": "trigr000",
- "shapes": [
-  {
-   "type": "Box",
-   "size": [
-    128,
-    128
-   ],
-   "isSensor": true
+  "format": 1,
+  "type": "AreaNode",
+  "name": "TriggerZone",
+  "uid": "trigr000",
+  "position": [0, 0],
+  "scale": [1, 1],
+  "rotation": 0,
+  "enabled": true,
+  "visible": true,
+  "layer": 0,
+  "shapes": [
+    {"type": "Box", "offset": [0, 0], "rotation": 0, "radius": 20, "size": [128, 128], "cornerRadius": 4, "point1": [-25, 0], "point2": [25, 0], "vertexCount": 4, "isLoop": false, "density": 1, "friction": 0.6, "restitution": 0.2, "rollingResistance": 0, "tangentSpeed": 0, "isSensor": true, "enableSensorEvents": true, "enableContactEvents": true, "enableHitEvents": false, "enablePreSolveEvents": false, "categoryLayers": ["Layer1"], "maskLayers": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8", "Layer9", "Layer10", "Layer11", "Layer12", "Layer13", "Layer14", "Layer15", "Layer16"], "groupIndex": 0}
+  ],
+  "properties": {
+    "monitoring": true,
+    "debugColor": "#a855f7ff",
+    "activeColor": "#ec4899ff"
   }
- ]
 }

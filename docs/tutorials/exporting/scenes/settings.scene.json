@@ -1,104 +1,136 @@
 {
- "name": "settings",
- "background": [
-  40,
-  44,
-  64,
-  255
- ],
- "root": {
-  "type": "Node",
-  "name": "root",
-  "children": [
-   {
-    "type": "ScreenLayerNode",
-    "name": "Menu",
-    "position": [
-     0,
-     0
-    ],
-    "layer": 7,
-    "properties": {
-     "anchor": "Center"
-    },
-    "script": {
-     "path": "scripts/settings.lua"
-    },
+  "format": 1,
+  "name": "settings",
+  "draw_bounds": false,
+  "background": [40, 44, 64, 255],
+  "root": {
+    "type": "Node",
+    "name": "root",
+    "uid": "bn5a9h5x",
+    "position": [0, 0],
+    "scale": [1, 1],
+    "rotation": 0,
+    "enabled": true,
+    "visible": true,
+    "layer": 0,
     "children": [
-     {
-      "type": "TextNode",
-      "name": "Title",
-      "position": [
-       0,
-       -100
-      ],
-      "pivot": [
-       0.5,
-       0.5
-      ],
-      "layer": 7,
-      "properties": {
-       "text": "Settings",
-       "fontSize": 32,
-       "align": "Center",
-       "color": "#ffd27aff"
+      {
+        "type": "ScreenLayerNode",
+        "name": "Menu",
+        "uid": "m4w96p8s",
+        "position": [0, 0],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 7,
+        "properties": {
+          "anchor": "Center"
+        },
+        "script": {
+          "path": "scripts/settings.lua"
+        },
+        "children": [
+          {
+            "type": "TextNode",
+            "name": "Title",
+            "uid": "zmv2mrvu",
+            "position": [0, -100],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "text": "Settings",
+              "font": "",
+              "fontSize": 32,
+              "color": "#ffd27aff",
+              "align": "Center",
+              "maxWidth": 0,
+              "lineSpacing": 1.2,
+              "richText": true,
+              "localized": false,
+              "rendering": "Auto",
+              "path": "",
+              "pathOffset": 0,
+              "pathAlign": "Left",
+              "pathUpright": false,
+              "revealSpeed": 0
+            }
+          },
+          {
+            "type": "UISliderNode",
+            "name": "Volume",
+            "uid": "f0fz5vx8",
+            "position": [-180, -50],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "size": [360, 28],
+              "keyboardFocus": true,
+              "label": "Volume",
+              "value": 0.8,
+              "minValue": 0,
+              "maxValue": 1,
+              "defaultValue": 0.8,
+              "fineScale": 0.1,
+              "isInteger": false,
+              "showResetButton": true,
+              "labelWidth": 110
+            }
+          },
+          {
+            "type": "UICheckboxNode",
+            "name": "Fullscreen",
+            "uid": "qf3bon4t",
+            "position": [-180, -6],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "size": [360, 28],
+              "keyboardFocus": true,
+              "label": "Fullscreen",
+              "checked": false,
+              "defaultChecked": false,
+              "accentColor": "#3b82f6ff",
+              "boxSize": 14
+            }
+          },
+          {
+            "type": "UIButtonNode",
+            "name": "Back",
+            "uid": "l4vepeif",
+            "position": [-110, 50],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "size": [220, 30],
+              "keyboardFocus": true,
+              "text": "Back",
+              "fontSize": 16,
+              "icon": "None",
+              "iconSize": 0,
+              "normalColor": "#232731ff",
+              "hoverColor": "#323848ff",
+              "pressedColor": "#2563ebff",
+              "borderColor": "#4b5366ff",
+              "textColor": "#eef0f6ff",
+              "align": "Center"
+            }
+          }
+        ]
       }
-     },
-     {
-      "type": "UISliderNode",
-      "name": "Volume",
-      "position": [
-       -180,
-       -50
-      ],
-      "layer": 7,
-      "properties": {
-       "size": [
-        360,
-        28
-       ],
-       "label": "Volume",
-       "minValue": 0,
-       "maxValue": 1,
-       "value": 0.8,
-       "defaultValue": 0.8
-      }
-     },
-     {
-      "type": "UICheckboxNode",
-      "name": "Fullscreen",
-      "position": [
-       -180,
-       -6
-      ],
-      "layer": 7,
-      "properties": {
-       "size": [
-        360,
-        28
-       ],
-       "label": "Fullscreen"
-      }
-     },
-     {
-      "type": "UIButtonNode",
-      "name": "Back",
-      "position": [
-       -110,
-       50
-      ],
-      "layer": 7,
-      "properties": {
-       "size": [
-        220,
-        30
-       ],
-       "text": "Back",
-       "fontSize": 16
-      }
-     }
     ]
-   }
-  ]
- }
+  }
 }

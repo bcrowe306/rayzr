@@ -1,50 +1,40 @@
 {
- "type": "Node",
- "name": "Explosion",
- "script": {
-  "path": "scripts/explosion.lua"
- },
- "children": [
-  {
-   "type": "AnimationPlayerNode",
-   "name": "Sprite",
-   "position": [
-    0,
-    0
-   ],
-   "pivot": [
-    0.5,
-    0.5
-   ],
-   "layer": 3,
-   "z_index": 0,
-   "fps": 8,
-   "animation": "boom",
-   "default_animation": "boom",
-   "animations": [
+  "format": 1,
+  "type": "Node",
+  "name": "Explosion",
+  "uid": "2e1leapr",
+  "position": [0, 0],
+  "scale": [1, 1],
+  "rotation": 0,
+  "enabled": true,
+  "visible": true,
+  "layer": 0,
+  "script": {
+    "path": "scripts/explosion.lua"
+  },
+  "children": [
     {
-     "name": "boom",
-     "loop": false,
-     "fps": 14,
-     "sheet": "textures/tiles.png",
-     "grid": [
-      12,
-      10
-     ],
-     "cells": [
-      4,
-      5,
-      6,
-      7,
-      8
-     ],
-     "start": 0,
-     "end": 4
+      "type": "AnimationPlayerNode",
+      "name": "Sprite",
+      "uid": "lm16knk3",
+      "position": [0, 0],
+      "scale": [1, 1],
+      "rotation": 0,
+      "pivot": [0.5, 0.5],
+      "enabled": true,
+      "visible": true,
+      "layer": 3,
+      "fps": 8,
+      "animation": "boom",
+      "default_animation": "boom",
+      "animations": [
+        {"name": "boom", "loop": false, "flip_x": false, "flip_y": false, "fps": 14, "sheet": "textures/tiles.png", "grid": [12, 10], "start": 0, "end": 4, "cells": [4, 5, 6, 7, 8]}
+      ],
+      "properties": {
+        "shininess": 0,
+        "reverse": false,
+        "autoplay": true
+      }
     }
-   ],
-   "properties": {
-    "autoplay": true
-   }
-  }
- ]
+  ]
 }

@@ -1,593 +1,714 @@
 {
- "name": "main",
- "background": [
-  92,
-  148,
-  196,
-  255
- ],
- "root": {
-  "type": "Node",
-  "name": "root",
-  "children": [
-   {
-    "type": "StaticBodyNode",
-    "name": "Ground",
-    "position": [
-     640,
-     680
-    ],
-    "shapes": [
-     {
-      "type": "Box",
-      "size": [
-       1280,
-       80
-      ]
-     }
-    ],
-    "children": [
-     {
-      "type": "NineSliceNode",
-      "name": "Sprite",
-      "properties": {
-       "texturePath": "textures/wall.png",
-       "size": [
-        1280,
-        80
-       ],
-       "marginsLT": [
-        12,
-        12
-       ],
-       "marginsRB": [
-        12,
-        12
-       ]
-      },
-      "pivot": [
-       0.5,
-       0.5
-      ]
-     }
-    ]
-   },
-   {
-    "type": "StaticBodyNode",
-    "name": "WallLeft",
-    "position": [
-     16,
-     320
-    ],
-    "shapes": [
-     {
-      "type": "Box",
-      "size": [
-       32,
-       640
-      ]
-     }
-    ],
-    "children": [
-     {
-      "type": "NineSliceNode",
-      "name": "Sprite",
-      "properties": {
-       "texturePath": "textures/wall.png",
-       "size": [
-        32,
-        640
-       ],
-       "marginsLT": [
-        12,
-        12
-       ],
-       "marginsRB": [
-        12,
-        12
-       ]
-      },
-      "pivot": [
-       0.5,
-       0.5
-      ]
-     }
-    ]
-   },
-   {
-    "type": "StaticBodyNode",
-    "name": "WallRight",
-    "position": [
-     1264,
-     320
-    ],
-    "shapes": [
-     {
-      "type": "Box",
-      "size": [
-       32,
-       640
-      ]
-     }
-    ],
-    "children": [
-     {
-      "type": "NineSliceNode",
-      "name": "Sprite",
-      "properties": {
-       "texturePath": "textures/wall.png",
-       "size": [
-        32,
-        640
-       ],
-       "marginsLT": [
-        12,
-        12
-       ],
-       "marginsRB": [
-        12,
-        12
-       ]
-      },
-      "pivot": [
-       0.5,
-       0.5
-      ]
-     }
-    ]
-   },
-   {
-    "type": "StaticBodyNode",
-    "name": "Ledge",
-    "position": [
-     960,
-     430
-    ],
-    "shapes": [
-     {
-      "type": "Box",
-      "size": [
-       256,
-       24
-      ]
-     }
-    ],
-    "children": [
-     {
-      "type": "NineSliceNode",
-      "name": "Sprite",
-      "properties": {
-       "texturePath": "textures/wall.png",
-       "size": [
-        256,
-        24
-       ],
-       "marginsLT": [
-        12,
-        12
-       ],
-       "marginsRB": [
-        12,
-        12
-       ]
-      },
-      "pivot": [
-       0.5,
-       0.5
-      ]
-     }
-    ],
-    "properties": {
-     "oneWay": true
-    }
-   },
-   {
-    "type": "KinematicBodyNode",
-    "name": "Lift",
-    "position": [
-     560,
-     520
-    ],
-    "shapes": [
-     {
-      "type": "Box",
-      "size": [
-       160,
-       24
-      ]
-     }
-    ],
-    "children": [
-     {
-      "type": "NineSliceNode",
-      "name": "Sprite",
-      "properties": {
-       "texturePath": "textures/wall.png",
-       "size": [
-        160,
-        24
-       ],
-       "marginsLT": [
-        12,
-        12
-       ],
-       "marginsRB": [
-        12,
-        12
-       ]
-      },
-      "pivot": [
-       0.5,
-       0.5
-      ]
-     }
-    ],
-    "script": {
-     "path": "scripts/lift.lua"
-    }
-   },
-   {
-    "type": "AreaNode",
-    "name": "FloatZone",
-    "position": [
-     1150,
-     330
-    ],
-    "shapes": [
-     {
-      "type": "Box",
-      "size": [
-       160,
-       560
-      ],
-      "maskLayers": [
-       "Layer2"
-      ]
-     }
-    ],
-    "script": {
-     "path": "scripts/float_zone.lua"
-    }
-   },
-   {
-    "type": "DynamicBodyNode",
-    "name": "Crate1",
-    "position": [
-     360,
-     300
-    ],
-    "tags": [
-     "crate"
-    ],
-    "shapes": [
-     {
-      "type": "Box",
-      "size": [
-       48,
-       48
-      ],
-      "restitution": 0.1,
-      "categoryLayers": [
-       "Layer3"
-      ]
-     }
-    ],
-    "script": {
-     "path": "scripts/crate.lua"
-    },
-    "children": [
-     {
-      "type": "TextureNode",
-      "name": "Sprite",
-      "scale": [
-       0.75,
-       0.75
-      ],
-      "texture": "textures/crate.png"
-     }
-    ]
-   },
-   {
-    "type": "DynamicBodyNode",
-    "name": "Crate2",
-    "position": [
-     380,
-     200
-    ],
-    "tags": [
-     "crate"
-    ],
-    "shapes": [
-     {
-      "type": "Box",
-      "size": [
-       48,
-       48
-      ],
-      "restitution": 0.1,
-      "categoryLayers": [
-       "Layer3"
-      ]
-     }
-    ],
-    "script": {
-     "path": "scripts/crate.lua"
-    },
-    "children": [
-     {
-      "type": "TextureNode",
-      "name": "Sprite",
-      "scale": [
-       0.75,
-       0.75
-      ],
-      "texture": "textures/crate.png"
-     }
-    ]
-   },
-   {
-    "type": "DynamicBodyNode",
-    "name": "BouncyCrate",
-    "position": [
-     760,
-     100
-    ],
-    "tags": [
-     "crate"
-    ],
-    "shapes": [
-     {
-      "type": "Box",
-      "size": [
-       48,
-       48
-      ],
-      "restitution": 0.7,
-      "categoryLayers": [
-       "Layer3"
-      ]
-     }
-    ],
-    "script": {
-     "path": "scripts/crate.lua"
-    },
-    "children": [
-     {
-      "type": "TextureNode",
-      "name": "Sprite",
-      "scale": [
-       0.75,
-       0.75
-      ],
-      "texture": "textures/crate.png"
-     }
-    ]
-   },
-   {
-    "type": "AreaNode",
-    "name": "Coin1",
-    "position": [
-     560,
-     380
-    ],
-    "tags": [
-     "coin"
-    ],
-    "shapes": [
-     {
-      "type": "Circle",
-      "radius": 18,
-      "maskLayers": [
-       "Layer2"
-      ]
-     }
-    ],
-    "script": {
-     "path": "scripts/coin.lua"
-    },
-    "children": [
-     {
-      "type": "TextureNode",
-      "name": "Sprite",
-      "scale": [
-       1.5,
-       1.5
-      ],
-      "texture": "textures/coin.png"
-     }
-    ]
-   },
-   {
-    "type": "AreaNode",
-    "name": "Coin2",
-    "position": [
-     960,
-     370
-    ],
-    "tags": [
-     "coin"
-    ],
-    "shapes": [
-     {
-      "type": "Circle",
-      "radius": 18,
-      "maskLayers": [
-       "Layer2"
-      ]
-     }
-    ],
-    "script": {
-     "path": "scripts/coin.lua"
-    },
-    "children": [
-     {
-      "type": "TextureNode",
-      "name": "Sprite",
-      "scale": [
-       1.5,
-       1.5
-      ],
-      "texture": "textures/coin.png"
-     }
-    ]
-   },
-   {
-    "type": "AreaNode",
-    "name": "Coin3",
-    "position": [
-     1150,
-     200
-    ],
-    "tags": [
-     "coin"
-    ],
-    "shapes": [
-     {
-      "type": "Circle",
-      "radius": 18,
-      "maskLayers": [
-       "Layer2"
-      ]
-     }
-    ],
-    "script": {
-     "path": "scripts/coin.lua"
-    },
-    "children": [
-     {
-      "type": "TextureNode",
-      "name": "Sprite",
-      "scale": [
-       1.5,
-       1.5
-      ],
-      "texture": "textures/coin.png"
-     }
-    ]
-   },
-   {
-    "type": "CharacterMoverNode",
-    "name": "Player",
-    "position": [
-     160,
-     600
-    ],
-    "tags": [
-     "player"
-    ],
-    "shapes": [
-     {
-      "type": "Capsule",
-      "radius": 20,
-      "size": [
-       40,
-       12
-      ],
-      "offset": [
-       0,
-       4
-      ]
-     }
-    ],
-    "properties": {
-     "controlMode": "Script",
-     "categoryLayers": [
-      "Layer2"
-     ],
-     "maskLayers": [
-      "Layer1",
-      "Layer3"
-     ]
-    },
-    "script": {
-     "path": "scripts/player.lua"
-    },
-    "children": [
-     {
-      "type": "TextureNode",
-      "name": "Sprite",
-      "texture": "textures/player.png"
-     },
-     {
-      "type": "RaycastNode",
-      "name": "GroundRay",
-      "position": [
-       0,
-       30
-      ],
-      "properties": {
-       "direction": [
-        0,
-        1
-       ],
-       "length": 600
-      }
-     }
-    ]
-   },
-   {
+  "format": 1,
+  "name": "main",
+  "draw_bounds": false,
+  "background": [92, 148, 196, 255],
+  "root": {
     "type": "Node",
-    "name": "HUD",
-    "script": {
-     "path": "scripts/hud.lua"
-    },
+    "name": "root",
+    "uid": "5wqult9m",
+    "position": [0, 0],
+    "scale": [1, 1],
+    "rotation": 0,
+    "enabled": true,
+    "visible": true,
+    "layer": 0,
     "children": [
-     {
-      "type": "TextNode",
-      "name": "Coins",
-      "position": [
-       48,
-       24
-      ],
-      "pivot": [
-       0,
-       0
-      ],
-      "properties": {
-       "text": "Coins: 0 / 3",
-       "fontSize": 36,
-       "align": "Left",
-       "color": "#ffffffff"
+      {
+        "type": "StaticBodyNode",
+        "name": "Ground",
+        "uid": "2jy9vc1d",
+        "position": [640, 680],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
+        "shapes": [
+          {"type": "Box", "offset": [0, 0], "rotation": 0, "radius": 20, "size": [1280, 80], "cornerRadius": 4, "point1": [-25, 0], "point2": [25, 0], "vertexCount": 4, "isLoop": false, "density": 1, "friction": 0.6, "restitution": 0.2, "rollingResistance": 0, "tangentSpeed": 0, "isSensor": false, "enableSensorEvents": true, "enableContactEvents": true, "enableHitEvents": false, "enablePreSolveEvents": false, "categoryLayers": ["Layer1"], "maskLayers": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8", "Layer9", "Layer10", "Layer11", "Layer12", "Layer13", "Layer14", "Layer15", "Layer16"], "groupIndex": 0}
+        ],
+        "properties": {
+          "debugColor": "#4ade80ff",
+          "oneWay": false
+        },
+        "children": [
+          {
+            "type": "NineSliceNode",
+            "name": "Sprite",
+            "uid": "xbkaawft",
+            "position": [0, 0],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 0,
+            "properties": {
+              "shininess": 0,
+              "texturePath": "textures/wall.png",
+              "size": [1280, 80],
+              "marginsLT": [12, 12],
+              "marginsRB": [12, 12],
+              "tint": "#ffffffff"
+            }
+          }
+        ]
+      },
+      {
+        "type": "StaticBodyNode",
+        "name": "WallLeft",
+        "uid": "073aeiy4",
+        "position": [16, 320],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
+        "shapes": [
+          {"type": "Box", "offset": [0, 0], "rotation": 0, "radius": 20, "size": [32, 640], "cornerRadius": 4, "point1": [-25, 0], "point2": [25, 0], "vertexCount": 4, "isLoop": false, "density": 1, "friction": 0.6, "restitution": 0.2, "rollingResistance": 0, "tangentSpeed": 0, "isSensor": false, "enableSensorEvents": true, "enableContactEvents": true, "enableHitEvents": false, "enablePreSolveEvents": false, "categoryLayers": ["Layer1"], "maskLayers": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8", "Layer9", "Layer10", "Layer11", "Layer12", "Layer13", "Layer14", "Layer15", "Layer16"], "groupIndex": 0}
+        ],
+        "properties": {
+          "debugColor": "#4ade80ff",
+          "oneWay": false
+        },
+        "children": [
+          {
+            "type": "NineSliceNode",
+            "name": "Sprite",
+            "uid": "y5igh6q8",
+            "position": [0, 0],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 0,
+            "properties": {
+              "shininess": 0,
+              "texturePath": "textures/wall.png",
+              "size": [32, 640],
+              "marginsLT": [12, 12],
+              "marginsRB": [12, 12],
+              "tint": "#ffffffff"
+            }
+          }
+        ]
+      },
+      {
+        "type": "StaticBodyNode",
+        "name": "WallRight",
+        "uid": "y0b1usai",
+        "position": [1264, 320],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
+        "shapes": [
+          {"type": "Box", "offset": [0, 0], "rotation": 0, "radius": 20, "size": [32, 640], "cornerRadius": 4, "point1": [-25, 0], "point2": [25, 0], "vertexCount": 4, "isLoop": false, "density": 1, "friction": 0.6, "restitution": 0.2, "rollingResistance": 0, "tangentSpeed": 0, "isSensor": false, "enableSensorEvents": true, "enableContactEvents": true, "enableHitEvents": false, "enablePreSolveEvents": false, "categoryLayers": ["Layer1"], "maskLayers": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8", "Layer9", "Layer10", "Layer11", "Layer12", "Layer13", "Layer14", "Layer15", "Layer16"], "groupIndex": 0}
+        ],
+        "properties": {
+          "debugColor": "#4ade80ff",
+          "oneWay": false
+        },
+        "children": [
+          {
+            "type": "NineSliceNode",
+            "name": "Sprite",
+            "uid": "nguymta7",
+            "position": [0, 0],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 0,
+            "properties": {
+              "shininess": 0,
+              "texturePath": "textures/wall.png",
+              "size": [32, 640],
+              "marginsLT": [12, 12],
+              "marginsRB": [12, 12],
+              "tint": "#ffffffff"
+            }
+          }
+        ]
+      },
+      {
+        "type": "StaticBodyNode",
+        "name": "Ledge",
+        "uid": "hnsalu8n",
+        "position": [960, 430],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
+        "shapes": [
+          {"type": "Box", "offset": [0, 0], "rotation": 0, "radius": 20, "size": [256, 24], "cornerRadius": 4, "point1": [-25, 0], "point2": [25, 0], "vertexCount": 4, "isLoop": false, "density": 1, "friction": 0.6, "restitution": 0.2, "rollingResistance": 0, "tangentSpeed": 0, "isSensor": false, "enableSensorEvents": true, "enableContactEvents": true, "enableHitEvents": false, "enablePreSolveEvents": false, "categoryLayers": ["Layer1"], "maskLayers": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8", "Layer9", "Layer10", "Layer11", "Layer12", "Layer13", "Layer14", "Layer15", "Layer16"], "groupIndex": 0}
+        ],
+        "properties": {
+          "debugColor": "#4ade80ff",
+          "oneWay": true
+        },
+        "children": [
+          {
+            "type": "NineSliceNode",
+            "name": "Sprite",
+            "uid": "6w75hcvi",
+            "position": [0, 0],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 0,
+            "properties": {
+              "shininess": 0,
+              "texturePath": "textures/wall.png",
+              "size": [256, 24],
+              "marginsLT": [12, 12],
+              "marginsRB": [12, 12],
+              "tint": "#ffffffff"
+            }
+          }
+        ]
+      },
+      {
+        "type": "KinematicBodyNode",
+        "name": "Lift",
+        "uid": "m3imza4c",
+        "position": [560, 520],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
+        "shapes": [
+          {"type": "Box", "offset": [0, 0], "rotation": 0, "radius": 20, "size": [160, 24], "cornerRadius": 4, "point1": [-25, 0], "point2": [25, 0], "vertexCount": 4, "isLoop": false, "density": 1, "friction": 0.6, "restitution": 0.2, "rollingResistance": 0, "tangentSpeed": 0, "isSensor": false, "enableSensorEvents": true, "enableContactEvents": true, "enableHitEvents": false, "enablePreSolveEvents": false, "categoryLayers": ["Layer1"], "maskLayers": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8", "Layer9", "Layer10", "Layer11", "Layer12", "Layer13", "Layer14", "Layer15", "Layer16"], "groupIndex": 0}
+        ],
+        "properties": {
+          "linearVelocity": [0, 0],
+          "angularVelocity": 0,
+          "oneWay": false,
+          "debugColor": "#38bdf8ff"
+        },
+        "script": {
+          "path": "scripts/lift.lua",
+          "properties": {
+            "period": 2,
+            "speed": 90
+          }
+        },
+        "children": [
+          {
+            "type": "NineSliceNode",
+            "name": "Sprite",
+            "uid": "tggaydcu",
+            "position": [0, 0],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 0,
+            "properties": {
+              "shininess": 0,
+              "texturePath": "textures/wall.png",
+              "size": [160, 24],
+              "marginsLT": [12, 12],
+              "marginsRB": [12, 12],
+              "tint": "#ffffffff"
+            }
+          }
+        ]
+      },
+      {
+        "type": "AreaNode",
+        "name": "FloatZone",
+        "uid": "k52u5949",
+        "position": [1150, 330],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
+        "shapes": [
+          {"type": "Box", "offset": [0, 0], "rotation": 0, "radius": 20, "size": [160, 560], "cornerRadius": 4, "point1": [-25, 0], "point2": [25, 0], "vertexCount": 4, "isLoop": false, "density": 1, "friction": 0.6, "restitution": 0.2, "rollingResistance": 0, "tangentSpeed": 0, "isSensor": false, "enableSensorEvents": true, "enableContactEvents": true, "enableHitEvents": false, "enablePreSolveEvents": false, "categoryLayers": ["Layer1"], "maskLayers": ["Layer2"], "groupIndex": 0}
+        ],
+        "properties": {
+          "monitoring": true,
+          "debugColor": "#a855f7ff",
+          "activeColor": "#ec4899ff"
+        },
+        "script": {
+          "path": "scripts/float_zone.lua",
+          "properties": {
+            "gravity_scale": 0.3
+          }
+        }
+      },
+      {
+        "type": "DynamicBodyNode",
+        "name": "Crate1",
+        "uid": "5fxvw3f1",
+        "position": [360, 300],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
+        "tags": ["crate"],
+        "shapes": [
+          {"type": "Box", "offset": [0, 0], "rotation": 0, "radius": 20, "size": [48, 48], "cornerRadius": 4, "point1": [-25, 0], "point2": [25, 0], "vertexCount": 4, "isLoop": false, "density": 1, "friction": 0.6, "restitution": 0.1, "rollingResistance": 0, "tangentSpeed": 0, "isSensor": false, "enableSensorEvents": true, "enableContactEvents": true, "enableHitEvents": false, "enablePreSolveEvents": false, "categoryLayers": ["Layer3"], "maskLayers": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8", "Layer9", "Layer10", "Layer11", "Layer12", "Layer13", "Layer14", "Layer15", "Layer16"], "groupIndex": 0}
+        ],
+        "properties": {
+          "linearVelocity": [0, 0],
+          "angularVelocity": 0,
+          "linearDamping": 0.05,
+          "angularDamping": 0.05,
+          "gravityScale": 1,
+          "sleepThreshold": 1.5,
+          "enableSleep": true,
+          "isAwake": true,
+          "fixedRotation": false,
+          "isBullet": false,
+          "allowFastRotation": false,
+          "debugColor": "#60a5faff"
+        },
+        "script": {
+          "path": "scripts/crate.lua"
+        },
+        "children": [
+          {
+            "type": "TextureNode",
+            "name": "Sprite",
+            "uid": "0bsyl86q",
+            "position": [0, 0],
+            "scale": [0.75, 0.75],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 0,
+            "texture": "textures/crate.png",
+            "properties": {
+              "shininess": 0,
+              "tint": "#ffffffff"
+            }
+          }
+        ]
+      },
+      {
+        "type": "DynamicBodyNode",
+        "name": "Crate2",
+        "uid": "izhsi8f8",
+        "position": [380, 200],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
+        "tags": ["crate"],
+        "shapes": [
+          {"type": "Box", "offset": [0, 0], "rotation": 0, "radius": 20, "size": [48, 48], "cornerRadius": 4, "point1": [-25, 0], "point2": [25, 0], "vertexCount": 4, "isLoop": false, "density": 1, "friction": 0.6, "restitution": 0.1, "rollingResistance": 0, "tangentSpeed": 0, "isSensor": false, "enableSensorEvents": true, "enableContactEvents": true, "enableHitEvents": false, "enablePreSolveEvents": false, "categoryLayers": ["Layer3"], "maskLayers": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8", "Layer9", "Layer10", "Layer11", "Layer12", "Layer13", "Layer14", "Layer15", "Layer16"], "groupIndex": 0}
+        ],
+        "properties": {
+          "linearVelocity": [0, 0],
+          "angularVelocity": 0,
+          "linearDamping": 0.05,
+          "angularDamping": 0.05,
+          "gravityScale": 1,
+          "sleepThreshold": 1.5,
+          "enableSleep": true,
+          "isAwake": true,
+          "fixedRotation": false,
+          "isBullet": false,
+          "allowFastRotation": false,
+          "debugColor": "#60a5faff"
+        },
+        "script": {
+          "path": "scripts/crate.lua"
+        },
+        "children": [
+          {
+            "type": "TextureNode",
+            "name": "Sprite",
+            "uid": "jb6a02qp",
+            "position": [0, 0],
+            "scale": [0.75, 0.75],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 0,
+            "texture": "textures/crate.png",
+            "properties": {
+              "shininess": 0,
+              "tint": "#ffffffff"
+            }
+          }
+        ]
+      },
+      {
+        "type": "DynamicBodyNode",
+        "name": "BouncyCrate",
+        "uid": "v0v33yk0",
+        "position": [760, 100],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
+        "tags": ["crate"],
+        "shapes": [
+          {"type": "Box", "offset": [0, 0], "rotation": 0, "radius": 20, "size": [48, 48], "cornerRadius": 4, "point1": [-25, 0], "point2": [25, 0], "vertexCount": 4, "isLoop": false, "density": 1, "friction": 0.6, "restitution": 0.7, "rollingResistance": 0, "tangentSpeed": 0, "isSensor": false, "enableSensorEvents": true, "enableContactEvents": true, "enableHitEvents": false, "enablePreSolveEvents": false, "categoryLayers": ["Layer3"], "maskLayers": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8", "Layer9", "Layer10", "Layer11", "Layer12", "Layer13", "Layer14", "Layer15", "Layer16"], "groupIndex": 0}
+        ],
+        "properties": {
+          "linearVelocity": [0, 0],
+          "angularVelocity": 0,
+          "linearDamping": 0.05,
+          "angularDamping": 0.05,
+          "gravityScale": 1,
+          "sleepThreshold": 1.5,
+          "enableSleep": true,
+          "isAwake": true,
+          "fixedRotation": false,
+          "isBullet": false,
+          "allowFastRotation": false,
+          "debugColor": "#60a5faff"
+        },
+        "script": {
+          "path": "scripts/crate.lua"
+        },
+        "children": [
+          {
+            "type": "TextureNode",
+            "name": "Sprite",
+            "uid": "avhbodn3",
+            "position": [0, 0],
+            "scale": [0.75, 0.75],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 0,
+            "texture": "textures/crate.png",
+            "properties": {
+              "shininess": 0,
+              "tint": "#ffffffff"
+            }
+          }
+        ]
+      },
+      {
+        "type": "AreaNode",
+        "name": "Coin1",
+        "uid": "yvgnjkqm",
+        "position": [560, 380],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
+        "tags": ["coin"],
+        "shapes": [
+          {"type": "Circle", "offset": [0, 0], "rotation": 0, "radius": 18, "size": [40, 40], "cornerRadius": 4, "point1": [-25, 0], "point2": [25, 0], "vertexCount": 4, "isLoop": false, "density": 1, "friction": 0.6, "restitution": 0.2, "rollingResistance": 0, "tangentSpeed": 0, "isSensor": false, "enableSensorEvents": true, "enableContactEvents": true, "enableHitEvents": false, "enablePreSolveEvents": false, "categoryLayers": ["Layer1"], "maskLayers": ["Layer2"], "groupIndex": 0}
+        ],
+        "properties": {
+          "monitoring": true,
+          "debugColor": "#a855f7ff",
+          "activeColor": "#ec4899ff"
+        },
+        "script": {
+          "path": "scripts/coin.lua"
+        },
+        "children": [
+          {
+            "type": "TextureNode",
+            "name": "Sprite",
+            "uid": "04ba8y3h",
+            "position": [0, 0],
+            "scale": [1.5, 1.5],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 0,
+            "texture": "textures/coin.png",
+            "properties": {
+              "shininess": 0,
+              "tint": "#ffffffff"
+            }
+          }
+        ]
+      },
+      {
+        "type": "AreaNode",
+        "name": "Coin2",
+        "uid": "k5qte18w",
+        "position": [960, 370],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
+        "tags": ["coin"],
+        "shapes": [
+          {"type": "Circle", "offset": [0, 0], "rotation": 0, "radius": 18, "size": [40, 40], "cornerRadius": 4, "point1": [-25, 0], "point2": [25, 0], "vertexCount": 4, "isLoop": false, "density": 1, "friction": 0.6, "restitution": 0.2, "rollingResistance": 0, "tangentSpeed": 0, "isSensor": false, "enableSensorEvents": true, "enableContactEvents": true, "enableHitEvents": false, "enablePreSolveEvents": false, "categoryLayers": ["Layer1"], "maskLayers": ["Layer2"], "groupIndex": 0}
+        ],
+        "properties": {
+          "monitoring": true,
+          "debugColor": "#a855f7ff",
+          "activeColor": "#ec4899ff"
+        },
+        "script": {
+          "path": "scripts/coin.lua"
+        },
+        "children": [
+          {
+            "type": "TextureNode",
+            "name": "Sprite",
+            "uid": "4oqu3u4l",
+            "position": [0, 0],
+            "scale": [1.5, 1.5],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 0,
+            "texture": "textures/coin.png",
+            "properties": {
+              "shininess": 0,
+              "tint": "#ffffffff"
+            }
+          }
+        ]
+      },
+      {
+        "type": "AreaNode",
+        "name": "Coin3",
+        "uid": "npasug4f",
+        "position": [1150, 200],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
+        "tags": ["coin"],
+        "shapes": [
+          {"type": "Circle", "offset": [0, 0], "rotation": 0, "radius": 18, "size": [40, 40], "cornerRadius": 4, "point1": [-25, 0], "point2": [25, 0], "vertexCount": 4, "isLoop": false, "density": 1, "friction": 0.6, "restitution": 0.2, "rollingResistance": 0, "tangentSpeed": 0, "isSensor": false, "enableSensorEvents": true, "enableContactEvents": true, "enableHitEvents": false, "enablePreSolveEvents": false, "categoryLayers": ["Layer1"], "maskLayers": ["Layer2"], "groupIndex": 0}
+        ],
+        "properties": {
+          "monitoring": true,
+          "debugColor": "#a855f7ff",
+          "activeColor": "#ec4899ff"
+        },
+        "script": {
+          "path": "scripts/coin.lua"
+        },
+        "children": [
+          {
+            "type": "TextureNode",
+            "name": "Sprite",
+            "uid": "jnrryh8j",
+            "position": [0, 0],
+            "scale": [1.5, 1.5],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 0,
+            "texture": "textures/coin.png",
+            "properties": {
+              "shininess": 0,
+              "tint": "#ffffffff"
+            }
+          }
+        ]
+      },
+      {
+        "type": "CharacterMoverNode",
+        "name": "Player",
+        "uid": "86mc457o",
+        "position": [160, 600],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
+        "tags": ["player"],
+        "shapes": [
+          {"type": "Capsule", "offset": [0, 4], "rotation": 0, "radius": 20, "size": [40, 12], "cornerRadius": 4, "point1": [-25, 0], "point2": [25, 0], "vertexCount": 4, "isLoop": false, "density": 1, "friction": 0.6, "restitution": 0.2, "rollingResistance": 0, "tangentSpeed": 0, "isSensor": false, "enableSensorEvents": true, "enableContactEvents": true, "enableHitEvents": false, "enablePreSolveEvents": false, "categoryLayers": ["Layer1"], "maskLayers": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8", "Layer9", "Layer10", "Layer11", "Layer12", "Layer13", "Layer14", "Layer15", "Layer16"], "groupIndex": 0}
+        ],
+        "properties": {
+          "radius": 14,
+          "height": 28,
+          "maxSpeed": 240,
+          "acceleration": 1200,
+          "jumpSpeed": 320,
+          "gravityScale": 1,
+          "pushLimit": 500,
+          "clipVelocity": true,
+          "enableKeyboardInput": true,
+          "playerIndex": 1,
+          "categoryLayers": ["Layer2"],
+          "maskLayers": ["Layer1", "Layer3"],
+          "debugColor": "#facc15ff",
+          "controlMode": "Script"
+        },
+        "script": {
+          "path": "scripts/player.lua",
+          "properties": {
+            "jump_speed": 560,
+            "speed": 260
+          }
+        },
+        "children": [
+          {
+            "type": "TextureNode",
+            "name": "Sprite",
+            "uid": "3vzb34cv",
+            "position": [0, 0],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 0,
+            "texture": "textures/player.png",
+            "properties": {
+              "shininess": 0,
+              "tint": "#ffffffff"
+            }
+          },
+          {
+            "type": "RaycastNode",
+            "name": "GroundRay",
+            "uid": "7861zu9l",
+            "position": [0, 30],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 0,
+            "properties": {
+              "monitoring": true,
+              "direction": [0, 1],
+              "length": 600,
+              "collideWithSensors": false,
+              "categoryLayers": ["Layer1"],
+              "maskLayers": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8", "Layer9", "Layer10", "Layer11", "Layer12", "Layer13", "Layer14", "Layer15", "Layer16"],
+              "excludeParent": true,
+              "rayColor": "#38bdf8ff",
+              "hitColor": "#f87171ff"
+            }
+          }
+        ]
+      },
+      {
+        "type": "Node",
+        "name": "HUD",
+        "uid": "029rkrlf",
+        "position": [0, 0],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
+        "script": {
+          "path": "scripts/hud.lua"
+        },
+        "children": [
+          {
+            "type": "TextNode",
+            "name": "Coins",
+            "uid": "lu65hodg",
+            "position": [48, 24],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0, 0],
+            "enabled": true,
+            "visible": true,
+            "layer": 3,
+            "properties": {
+              "text": "Coins: 0 / 3",
+              "font": "",
+              "fontSize": 36,
+              "color": "#ffffffff",
+              "align": "Left",
+              "maxWidth": 0,
+              "lineSpacing": 1.2,
+              "richText": true,
+              "localized": false,
+              "rendering": "Auto",
+              "path": "",
+              "pathOffset": 0,
+              "pathAlign": "Left",
+              "pathUpright": false,
+              "revealSpeed": 0
+            }
+          },
+          {
+            "type": "TextNode",
+            "name": "Height",
+            "uid": "yefn0cop",
+            "position": [48, 68],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0, 0],
+            "enabled": true,
+            "visible": true,
+            "layer": 3,
+            "properties": {
+              "text": "Above ground: 0 px",
+              "font": "",
+              "fontSize": 28,
+              "color": "#ffffffcc",
+              "align": "Left",
+              "maxWidth": 0,
+              "lineSpacing": 1.2,
+              "richText": true,
+              "localized": false,
+              "rendering": "Auto",
+              "path": "",
+              "pathOffset": 0,
+              "pathAlign": "Left",
+              "pathUpright": false,
+              "revealSpeed": 0
+            }
+          },
+          {
+            "type": "TextNode",
+            "name": "Help",
+            "uid": "02bdtnwg",
+            "position": [48, 104],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0, 0],
+            "enabled": true,
+            "visible": true,
+            "layer": 3,
+            "properties": {
+              "text": "A / D move, Space jumps, F3 shows the shapes",
+              "font": "",
+              "fontSize": 24,
+              "color": "#ffffff99",
+              "align": "Left",
+              "maxWidth": 0,
+              "lineSpacing": 1.2,
+              "richText": true,
+              "localized": false,
+              "rendering": "Auto",
+              "path": "",
+              "pathOffset": 0,
+              "pathAlign": "Left",
+              "pathUpright": false,
+              "revealSpeed": 0
+            }
+          }
+        ]
       }
-     },
-     {
-      "type": "TextNode",
-      "name": "Height",
-      "position": [
-       48,
-       68
-      ],
-      "pivot": [
-       0,
-       0
-      ],
-      "properties": {
-       "text": "Above ground: 0 px",
-       "fontSize": 28,
-       "align": "Left",
-       "color": "#ffffffcc"
-      }
-     },
-     {
-      "type": "TextNode",
-      "name": "Help",
-      "position": [
-       48,
-       104
-      ],
-      "pivot": [
-       0,
-       0
-      ],
-      "properties": {
-       "text": "A / D move, Space jumps, F3 shows the shapes",
-       "fontSize": 24,
-       "align": "Left",
-       "color": "#ffffff99"
-      }
-     }
     ]
-   }
-  ]
- }
+  }
 }
