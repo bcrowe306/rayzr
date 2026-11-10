@@ -84,7 +84,8 @@ While you scroll inside a block, its first lines stay pinned at the top
 - **Fold arrows** (when the mouse is over the gutter): fold a function,
   `if`, loop or table to one line; the **… N lines** chip unfolds it.
 - **Problems**: errors and warnings from the language server and from the
-  last Simulate or Play, also as squiggles under the code.
+  last Simulate or Play, also as squiggles under the code (see
+  [Problems](#problems)).
 - **Changes** since the last git commit: green (added), blue (changed), red
   (removed).
 - A **lightbulb** on a line with a quick fix (**Cmd+.**).
@@ -190,13 +191,52 @@ Opened on a symbol, a card on top shows the function's signature,
 description, example and parameters, and the section that covers it is
 shown below.
 
+## Problems
+
+The language server checks every script as you type: red for errors,
+yellow for warnings, blue for information, and a faint underline for hints
+(unused locals, code that never runs, a value that may be nil). Hints and
+information aren't counted in the status line. Hover a squiggle for the
+message and its check's name, e.g. `(undefined-field)`; **Cmd+.** offers
+the server's fixes, including turning that check off for the line or the
+file.
+
+**Fixed problems clear without saving.** A fix in another script (a method
+you added, a typo you corrected) clears the warnings it caused in this one
+about a second after you stop typing - the server checks the other scripts
+again after every change. So do changes to the project types (a new input
+action, node, scene or exported property). Problems from the last Simulate
+or Play are about the text that ran: they go when you edit that script, and
+come back on the next run if they're still there.
+
+**How strict it is** is a project setting, **Project Settings > General >
+Scripting > Lua Checks**, written into the project's `.luarc.json` (so VS
+Code checks the same way):
+
+| Preset | What it reports |
+|---|---|
+| **Relaxed** (default) | lua-language-server's checks, but a value that may be nil (`need-check-nil`: `get_parent()`, `find_node()`, `get_script()`...) is a hint, not a warning, and trailing spaces and lowercase globals (a test file's `test_*` functions) aren't reported. |
+| **Standard** | lua-language-server's defaults, without the trailing-space hints. |
+| **Strict** | lua-language-server's defaults, with unused and redefined locals and lowercase globals as warnings. |
+
+Style checks (`codestyle-check`, `spell-check`, `name-style-check`) are off
+in all three. For one line or file, a comment does it:
+`---@diagnostic disable-next-line: need-check-nil`, or
+`---@diagnostic disable: lowercase-global` at the top. A value the editor
+can't type - a node from `get_children()`, a name built at run time - is a
+plain `Node`; tell the server what it is with `---@cast node UIButtonNode`
+(or `---@type` on a local), and give an exported node property its type with
+`---@field map TileMapNode` on the script's class.
+
 ## Files the editor writes for Lua
 
 **Lua tooling files.** The editor writes the engine API definitions to
 `<project>/.rayzr/definitions/` (refreshed when the editor's copy changes)
 and a `.luarc.json` pointing at them. So `lua-language-server` knows every
 engine type, in the Code tab and in VS Code or any LuaLS editor opening the
-project folder. A `.luarc.json` you wrote yourself is left alone. Hidden
+project folder. It has the project's [Lua Checks](#problems) preset. A
+`.luarc.json` you wrote yourself (one that doesn't point at
+`.rayzr/definitions`) is left alone. Hidden
 files and folders (`.rayzr/`, `.luarc.json`) are never packaged into games.
 The language server comes with the editor; Settings > Code Editor can
 point at another one.
@@ -207,9 +247,12 @@ point at another one.
 `SceneName`, `NodeName`, `NodeTag`, `ScenePath` / `TexturePath` /
 `AudioPath` / `ComponentPath` / `LevelPath` / `ScriptPath`, animation,
 state machine, save and locale names, LDtk entity / level / layer / enum
-names, and a class per script with its exported properties (so
-`self.speed` is a number). It is rewritten half a second after saves,
-imports, renames and settings changes.
+names (`LdtkEntityName`, `LdtkLevelName`, `LdtkLayerName`, `LdtkEnumName`),
+a class per script with its exported properties (so `self.speed` is a
+number; a `---@field` the script declares itself wins), and
+`Scene.create("TextureNode")` / `Scene.find_nodes_of_type` returning that
+type's class. It is rewritten half a second after saves, imports, renames
+and settings changes, and the language server takes the new version at once.
 
 ## Walkthrough
 

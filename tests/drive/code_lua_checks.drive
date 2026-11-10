@@ -1,0 +1,27 @@
+# Project Settings > General > Scripting > Lua Checks (#403): Relaxed (the
+# default) reports a possible nil (get_parent() may be nil) as a hint, not a
+# warning; switched to Standard it is a warning straight away, from the
+# project's .luarc.json - no restart, nothing saved in the script.
+wait 5
+exec cp tests/drive/fixtures/drive_checks_zz.lua $PROJECT/scripts/drive_checks_zz.lua
+wait-until item:asset:scripts/drive_checks_zz.lua == visible timeout=300
+dblclick @asset:scripts/drive_checks_zz.lua
+wait-until code.lsp == ready timeout=600
+wait-until code.diagnostic-messages contains 6: Need check nil timeout=600
+expect code.warnings == 0
+expect file:.luarc.json contains "need-check-nil": "Hint"
+key ctrl+comma
+expect project-settings-open == true
+click @settings.tab:project
+click @settings.page:General
+click @section:Scripting
+wait 1
+click @settings.lua-checks
+click @pick:Standard
+screenshot lua_checks
+click @settings.save
+wait 1
+expect file:project.json contains "lua_checks": "standard"
+expect file:.luarc.json !contains need-check-nil
+wait-until code.warnings == 1 timeout=600
+screenshot warning

@@ -214,6 +214,12 @@ jobs:
         if: matrix.smoke
         run: python3 scripts/docs/check_docs.py --editor bin/editor
 
+      - name: Lua language server (no warnings in the templates, tutorials and demo project)
+        if: matrix.smoke
+        run: |
+          scripts/ci/fetch_luals.sh
+          scripts/luals_check.sh
+
       - name: Templates (generated from scripts/templates, and their games play)
         if: matrix.smoke
         run: |

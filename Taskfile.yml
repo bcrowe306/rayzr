@@ -71,6 +71,11 @@ tasks:
             - mkdir -p bin
             - odin build editor -out:bin/editor
             - bin/editor --dump-docs docs/generated/nodes.json
+    luals:check:
+        desc: lua-language-server finds no warnings in the templates, tutorials and demo project (CI runs it; needs bin/editor)
+        cmds:
+            - scripts/ci/fetch_luals.sh
+            - scripts/luals_check.sh
     docs:check:
         desc: Check the docs are complete and in step with the code (CI runs it)
         cmds:

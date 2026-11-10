@@ -1,6 +1,7 @@
 # Runtime problems in the Code tab: Simulate a script whose ready() calls
 # get_node on a missing path (a warning) and indexes nil (an error); both
-# show as diagnostics on their lines; saving the script clears them.
+# show as diagnostics on their lines; editing the script clears them (#403:
+# their lines were the old text's).
 wait 5
 click @hier:PatrolDroneAlpha
 click @insp.script-attach
@@ -29,6 +30,11 @@ expect log contains get_node: no node at "NoSuchNodeZq"
 screenshot squiggles
 click @menu:Game
 click @menu:Game/Simulate in Editor
-key ctrl+s
-wait 3
+wait 2
+expect runtime-diags >= 2
+key end
+type --
+wait 2
 expect runtime-diags == 0
+expect code.diagnostic-messages !contains Runtime
+key ctrl+z
