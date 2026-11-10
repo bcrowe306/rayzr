@@ -1,0 +1,6 @@
+{
+ "name": "Retitle",
+ "version": "1.0.0",
+ "game": ">=1.0.0",
+ "description": "Replaces data/config.json (an asset override)."
+}

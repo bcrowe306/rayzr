@@ -67,24 +67,44 @@ AssetManager_ResolveDiskPath :: proc(am: ^AssetManager, relPath: string, allocat
 }
 
 AssetManager_ReadFileBytes :: proc(am: ^AssetManager, relPath: string, allocator := context.allocator) -> ([]byte, bool) {
+	data, _, ok := AssetManager_ReadFileBytesFrom(am, relPath, allocator)
+	return data, ok
+}
+
+// AssetManager_ReadFileBytesFrom also says which mod the file came from
+// (its index in mods.list; -1: the game's own): mods' files go over the
+// package and the project folder (mods.odin).
+AssetManager_ReadFileBytesFrom :: proc(am: ^AssetManager, relPath: string, allocator := context.allocator) -> (bytes: []byte, modIndex: int, found: bool) {
+	modIndex = -1
+	// 0. A mod's file
+	if modPath, idx, modded := Mods_OverridePath(relPath); modded {
+		if data, err := os.read_entire_file(modPath, allocator); err == nil do return data, idx, true
+	}
+
 	// 1. Try mounted package
 	if am.package_ != nil {
 		data, ok := RayzrPackage_ReadFile(am.package_, relPath, allocator)
-		if ok do return data, true
+		if ok do return data, -1, true
 	}
 
 	// 2. Try disk relative to projectDir or cwd
 	resolved := AssetManager_ResolveDiskPath(am, relPath, context.temp_allocator)
 	data, err := os.read_entire_file(resolved, allocator)
-	if err == nil do return data, true
+	if err == nil do return data, -1, true
 
 	// 3. Fallback to direct relative path
 	if resolved != relPath {
 		dataDirect, errDirect := os.read_entire_file(relPath, allocator)
-		if errDirect == nil do return dataDirect, true
+		if errDirect == nil do return dataDirect, -1, true
 	}
 
-	return nil, false
+	return nil, -1, false
+}
+
+// AssetManager_ReadFileStringFrom: AssetManager_ReadFileBytesFrom as text.
+AssetManager_ReadFileStringFrom :: proc(am: ^AssetManager, relPath: string, allocator := context.allocator) -> (text: string, modIndex: int, found: bool) {
+	bytes, idx, ok := AssetManager_ReadFileBytesFrom(am, relPath, allocator)
+	return string(bytes), idx, ok
 }
 
 AssetManager_ReadFileString :: proc(am: ^AssetManager, relPath: string, allocator := context.allocator) -> (string, bool) {

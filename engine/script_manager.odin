@@ -114,6 +114,7 @@ ScriptManager_Destroy :: proc(sm: ^ScriptManager = nil) {
 	delete(mgr.modules)
 
 	if mgr.L != nil {
+		Mods_ForgetState(mgr.L)
 		lua.close(mgr.L)
 		mgr.L = nil
 	}
@@ -143,13 +144,14 @@ ScriptManager_LoadModule :: proc(path: string, sm: ^ScriptManager = nil) -> (^Sc
 	// Project scripts resolve through the asset manager first (project
 	// directory or mounted .rayzr package), then the VFS / working directory.
 	code, ok := "", false
+	modIndex := -1 // (a mod's file: it runs in that mod's sandbox - mods.odin)
 	if mgr.game != nil {
 		am := &mgr.game.assetManager
 		rel := normPath
 		if dir := strings.trim_suffix(am.projectDir, "/"); dir != "" && strings.has_prefix(rel, dir) && len(rel) > len(dir) && rel[len(dir)] == '/' {
 			rel = rel[len(dir) + 1:]
 		}
-		code, ok = AssetManager_ReadFileString(am, rel)
+		code, modIndex, ok = AssetManager_ReadFileStringFrom(am, rel)
 	}
 	if !ok do code, ok = ScriptVFS_Load(normPath)
 	if !ok {
@@ -160,9 +162,11 @@ ScriptManager_LoadModule :: proc(path: string, sm: ^ScriptManager = nil) -> (^Sc
 
 	L := mgr.L
 	chunkNameC := strings.clone_to_cstring(strings.concatenate({"@", normPath}, context.temp_allocator), context.temp_allocator)
+	if modIndex >= 0 do chunkNameC = Mods_ChunkName(modIndex, normPath)
 	codeC := raw_data(transmute([]u8)code)
 
-	loadStatus := lua.L_loadbuffer(L, cast([^]u8)codeC, c.size_t(len(code)), chunkNameC)
+	loadStatus := lua.L_loadbuffer(L, cast([^]u8)codeC, c.size_t(len(code)), chunkNameC, "t" if modIndex >= 0 else nil)
+	if loadStatus == .OK && modIndex >= 0 do Mods_SetChunkEnv(L, modIndex)
 	if loadStatus != .OK {
 		errStr := lua.tostring(L, -1)
 		Script_Problem(.Error, "[ScriptManager] Syntax error compiling '%s': %s", normPath, errStr)

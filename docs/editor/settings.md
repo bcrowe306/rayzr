@@ -223,6 +223,7 @@ the [Mixer tab](tab-mixer.md).
 | **Runners** | Whether each platform's prebuilt game runner is *ready*, *missing*, or (this computer's platform) *built on export*. Hover for where runners live. |
 | **Compress Package** | Compresses `game.rayzr`. |
 | **Include UI Font** | Ships the UI font with the game. |
+| **Mods** | What players' mods may do in the exported game: **Off** (the default), **Assets only (files)** - a mod's files replace the game's and add new ones - or **Assets + scripts (sandboxed Lua)**. Desktop exports only. See [Modding](../../engine/docs/modding.md). |
 | **macOS Bundle ID** | With a macOS export: the app's bundle identifier. |
 | **Signing Identity** | With a macOS export: the codesign identity. Empty is ad-hoc (runs on this Mac); a Developer ID is needed to distribute and notarize. |
 | **Notary Profile** | With a macOS export and a Developer ID: the keychain profile (`xcrun notarytool store-credentials`); the app is then notarized and stapled after export. |
