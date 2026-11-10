@@ -4,7 +4,7 @@
 # installed editor: a project from a template, Play, export to every target
 # and the exports run (scripts/ci/install_check.sh: a PASS / FAIL / SKIP
 # line per step, a summary per package in the run's summary page).
-#   macOS     .dmg       macos-14, macos-15 (arm64: the release has no Intel editor)
+#   macOS     .dmg       macos-15, macos-26 (arm64: the release has no Intel editor; macos-14 runners are retired)
 #   Windows   .zip       windows-2022, windows-2025 (Mesa's llvmpipe as the GPU driver)
 #   Ubuntu    .deb, .AppImage, .tar.gz   ubuntu-22.04, ubuntu-24.04
 #   Debian 12 .deb, .AppImage, .tar.gz   container (pinned digest) on Xvfb
@@ -63,7 +63,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-14, macos-15]
+        os: [macos-15, macos-26]
     steps:
       # (The checkout gives the check its scripts and drives - no submodules,
       # no compiler: the editor under test is the installed one.)

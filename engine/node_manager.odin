@@ -184,6 +184,13 @@ remove_tree :: proc(manager: ^NodeManager, node: ^Node) {
 
 
 
+// pending_index: where a node waits in the addition queue (-1: it doesn't).
+@(private = "file")
+pending_index :: proc(manager: ^NodeManager, node: ^Node) -> int {
+	for n, i in manager.addition do if n == node do return i
+	return -1
+}
+
 ProcessNodeQueues :: proc(manager: ^NodeManager, gameContext: ^GameContext) {
 	// Remove. The parents' child lists lose their removed children in one
 	// pass each (removing them one by one is quadratic for big scenes).
@@ -244,8 +251,15 @@ ProcessNodeQueues :: proc(manager: ^NodeManager, gameContext: ^GameContext) {
 			Node_Terminate(node)
 			manager.nodes[index] = nil
 			queue.push_back(&manager.free, index)
+		} else if k := pending_index(manager, removingNode); k >= 0 {
+			// Created this frame and destroyed before it was added (e.g. a
+			// spawned coin destroyed in the same callback): it never enters
+			// the tree - before, it was added anyway, cut off from its
+			// parent but still running (its area still collected).
+			ordered_remove(&manager.addition, k)
+			Node_Terminate(removingNode)
 		} else {
-			removingNode.removing = false // not in the list (yet): it stays
+			removingNode.removing = false // in neither list: it stays
 		}
 	}
 	clear(&manager.removal)
