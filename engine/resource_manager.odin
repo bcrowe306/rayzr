@@ -127,6 +127,9 @@ ResourceManager_Terminate :: proc(rm: ^ResourceManager) {
 // resource_bytes reads a resource that isn't on disk from the mounted .rayzr
 // package (exported games ship their assets inside it).
 resource_bytes :: proc(rm: ^ResourceManager, filePath: string) -> ([]byte, bool) {
+	if modPath, modded := Mods_ResourceDiskPath(rm.projectDir, filePath); modded {
+		if data, err := os.read_entire_file(modPath, context.allocator); err == nil do return data, true
+	}
 	if rm.package_ == nil do return nil, false
 	rel := filePath
 	if dir := rm.projectDir; dir != "" && len(rel) > len(dir) && rel[:len(dir)] == dir && rel[len(dir)] == '/' {
@@ -158,8 +161,10 @@ texture_load :: proc(rm: ^ResourceManager, filePath: string, own: bool) -> (text
 			return tex, true
 		}
 	}
+	// A mod's image (mods.odin): its own texture, never the atlas's.
+	diskPath, modded := Mods_ResourceDiskPath(rm.projectDir, filePath)
 	// In the package's atlas: the page and the image's rectangle in it.
-	if e, inAtlas := Atlas_Lookup(rm, filePath); inAtlas && !own {
+	if e, inAtlas := Atlas_Lookup(rm, filePath); inAtlas && !own && !modded {
 		tex := new(Texture)
 		tex.filePath = strings.clone(filePath)
 		tex.fileName = filepath.base(tex.filePath)
@@ -187,8 +192,8 @@ texture_load :: proc(rm: ^ResourceManager, filePath: string, own: bool) -> (text
 		if !ok do return nil, false
 		if rl.IsWindowReady() do texture2d = rl.LoadTextureFromImage(img)
 		rl.UnloadImage(img)
-	} else if os.is_file(filePath) {
-		if rl.IsWindowReady() do texture2d = rl.LoadTexture(fmt.ctprint(filePath))
+	} else if os.is_file(diskPath) {
+		if rl.IsWindowReady() do texture2d = rl.LoadTexture(fmt.ctprint(diskPath))
 	} else if bytes, found := resource_bytes(rm, filePath); found {
 		defer delete(bytes)
 		if rl.IsWindowReady() {
@@ -294,8 +299,9 @@ ResourceManager_LoadAudioSound :: proc(rm: ^ResourceManager, filePath: string) -
 	// Decoded once to the mixer's format (48 kHz stereo floats); no audio
 	// device needed (tests mix them too).
 	wave: rl.Wave
-	if os.is_file(filePath) {
-		wave = rl.LoadWave(fmt.ctprint(filePath))
+	diskPath, _ := Mods_ResourceDiskPath(rm.projectDir, filePath) // (a mod's sound: mods.odin)
+	if os.is_file(diskPath) {
+		wave = rl.LoadWave(fmt.ctprint(diskPath))
 	} else if bytes, found := resource_bytes(rm, filePath); found {
 		defer delete(bytes)
 		wave = rl.LoadWaveFromMemory(file_ext_cstring(filePath), raw_data(bytes), i32(len(bytes)))
@@ -372,8 +378,9 @@ ResourceManager_LoadAudioMusic :: proc(rm: ^ResourceManager, filePath: string) -
 	}
 	music: rl.Music
 	streamData: []byte
-	if os.is_file(filePath) {
-		if rl.IsAudioDeviceReady() do music = rl.LoadMusicStream(fmt.ctprint(filePath))
+	diskPath, _ := Mods_ResourceDiskPath(rm.projectDir, filePath) // (a mod's music: mods.odin)
+	if os.is_file(diskPath) {
+		if rl.IsAudioDeviceReady() do music = rl.LoadMusicStream(fmt.ctprint(diskPath))
 	} else if bytes, found := resource_bytes(rm, filePath); found {
 		// Streams read their data lazily: keep the bytes alive with the music.
 		streamData = bytes

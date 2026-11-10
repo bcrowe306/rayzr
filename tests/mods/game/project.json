@@ -1,0 +1,26 @@
+{
+ "name": "Mod Test",
+ "version": "1.0.0",
+ "initial_scene": "scenes/main.scene.json",
+ "window": {
+  "title": "Mod Test",
+  "width": 640,
+  "height": 360,
+  "virtual_width": 640,
+  "virtual_height": 360
+ },
+ "physics": {
+  "gravity": [
+   0,
+   0
+  ],
+  "debug_draw": false
+ },
+ "scenes": [
+  "scenes/main.scene.json"
+ ],
+ "export": {
+  "executable": "ModTest",
+  "mods": "scripts"
+ }
+}

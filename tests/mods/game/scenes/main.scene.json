@@ -1,0 +1,57 @@
+{
+ "name": "main",
+ "background": [
+  24,
+  28,
+  38,
+  255
+ ],
+ "root": {
+  "type": "Node",
+  "name": "root",
+  "children": [
+   {
+    "type": "TextNode",
+    "name": "Title",
+    "position": [
+     10,
+     10
+    ],
+    "properties": {
+     "text": "",
+     "fontSize": 24
+    },
+    "script": {
+     "path": "scripts/title.lua"
+    }
+   },
+   {
+    "type": "TextNode",
+    "name": "Status",
+    "position": [
+     10,
+     50
+    ],
+    "properties": {
+     "text": "waiting",
+     "fontSize": 16
+    }
+   },
+   {
+    "type": "TextNode",
+    "name": "Counter",
+    "position": [
+     10,
+     80
+    ],
+    "properties": {
+     "text": "",
+     "fontSize": 16
+    },
+    "script": {
+     "path": "scripts/counter.lua"
+    }
+   }
+  ]
+ }
+}

@@ -72,6 +72,7 @@ rayzr_android_suspend :: proc "c" (on: c.int) {
 
 main :: proc() {
 	context.logger = {procedure = android_logger, lowest_level = .Info}
+	e.Mods_Supported = false // (players can't reach an app's folders: no mods on Android)
 	dir := string(rayzr_android_internal_path())
 	game, _ := filepath.join({dir, "game.rayzr"}, context.allocator)
 	font, _ := filepath.join({dir, "OpenSans-Regular.ttf"}, context.allocator)

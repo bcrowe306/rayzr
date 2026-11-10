@@ -31,6 +31,11 @@ Each runs on a fresh copy of the template (--user-data in it), with fixed
 dump (and screenshot) is of frame N, however small (#362: runners before it
 ran at least 25 with a capture). Linux CI runs it under xvfb-run.
 
+Exported games (#286, mods): "export": true packs the copy (game.rayzr)
+next to a copy of the runner and plays that, as a player would; "mods":
+"tests/mods/mods" is copied to mods/ beside it, "user_mods": a folder
+copied to <user data>/mods. Desktop only.
+
 Render tests: "golden": {"image": "tests/vector/expected/x.png",
 "max_pixels": 0.01, "threshold": 48} screenshots the last frame and fails
 when more than max_pixels (a fraction) of its pixels differ from the image
@@ -139,7 +144,8 @@ class Desktop:
     def run_all(self, tid, proj, userdata, runs):
         out = []
         for r in runs:
-            cmd = [self.runner, proj, "--hidden", "--user-data", userdata, "--frames", str(r["frames"]),
+            exe = r.get("exe")  # (an exported game: the runner finds game.rayzr next to it)
+            cmd = ([exe] if exe else [self.runner, proj]) + ["--hidden", "--user-data", userdata, "--frames", str(r["frames"]),
                    "--input-script", r["input_path"], "--dump-scene", r["dump"], "--scene", r["scene"]] + r["args"]
             if r.get("shot"):
                 cmd += ["--screenshot", r["shot"]]
@@ -177,7 +183,7 @@ def pack(proj, out):
 
 class Web:
     """The web runner in headless Chrome (scripts/web/run_test.mjs)."""
-    skips = ("golden", "env", "quits", "audio_clock")  # (Engine.quit does nothing on the web: a page can't close itself; headless Chrome's frames don't keep pace with its audio clock)
+    skips = ("golden", "env", "quits", "audio_clock", "export")  # (Engine.quit does nothing on the web: a page can't close itself; headless Chrome's frames don't keep pace with its audio clock)
     notes = ()
 
     def __init__(self):
@@ -419,6 +425,19 @@ def run_test(backend, tid, test, tmp, perf=None):
             os.makedirs(os.path.dirname(shot), exist_ok=True)
     runs[-1]["shot"] = shot
     runs[-1]["perf"] = perf
+    if test.get("export"):
+        # An exported game: the runner and game.rayzr side by side, mods/ next to them.
+        export = os.path.join(tmp, "export")
+        os.makedirs(export)
+        pack(proj, os.path.join(export, "game.rayzr"))
+        exe = os.path.join(export, os.path.basename(backend.runner))
+        shutil.copy2(backend.runner, exe)
+        if test.get("mods"):
+            shutil.copytree(os.path.join(ROOT, test["mods"]), os.path.join(export, "mods"))
+        for r in runs:
+            r["exe"] = exe
+    if test.get("user_mods"):
+        shutil.copytree(os.path.join(ROOT, test["user_mods"]), os.path.join(userdata, "mods"))
     results = backend.run_all(tid, proj, userdata, runs)
     missing = {"code": -1, "tail": "not run", "errors": []}
     for i, run in enumerate(before):

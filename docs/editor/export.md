@@ -41,6 +41,7 @@ in short:
 | **Targets** | Without presets: the platforms to export, one export each. |
 | **Runners** | Which platforms' game runners are *ready*, *missing*, or (this computer's) *built on export*. |
 | **Compress Package**, **Include UI Font** | Compress `game.rayzr`; ship the font the UI widgets draw with. |
+| **Mods** | Let players mod the exported game: **Off** (default), **Assets only** (their files replace or add to the game's) or **Assets + scripts** (their Lua runs too, sandboxed). Desktop only; see [Modding](../../engine/docs/modding.md). |
 | macOS: **Bundle ID**, **Signing Identity**, **Notary Profile** | Shown with a macOS export (below). |
 | Android: **Android Package**, **Version Code**, **Keystore**, **Key Alias** | Shown with an Android export ([Android export](../../engine/docs/android_export.md)). |
 
@@ -140,5 +141,10 @@ Export a Windows build and a smaller demo build:
   window's icon and every platform's app icon.
 - Plugins can react to an export (their `after_export` event): see
   [Plugins](plugins.md).
+- With **Mods** on, players put mods in a `mods/` folder beside the
+  exported game (beside the `.app` on macOS) or in the game's user-data
+  folder; `--no-mods` plays without them. Try your own mods with
+  `--mods <folder>`. Editor Play never loads mods. See
+  [Modding](../../engine/docs/modding.md).
 - Related: [Exporting your game](../tutorials/exporting.md),
   [Settings](settings.md), [Playtesting](playtesting.md).
