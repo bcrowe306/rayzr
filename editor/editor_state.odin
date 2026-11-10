@@ -50,6 +50,7 @@ BottomTab :: enum {
 	Tests,      // the project's tests: run, results, failures (tests_panel.odin)
 	BehaviorTree, // a Behavior Tree node's tree (behavior_tree_editor.odin)
 	Goap,         // a GOAP node's goals, actions, keys and sensors (goap_editor.odin)
+	Git,          // the project's git repository: changes, commit, branches, history (git_panel.odin, #293)
 }
 
 ViewportTab :: enum {

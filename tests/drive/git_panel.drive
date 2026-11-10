@@ -1,0 +1,60 @@
+# #293: the Git tab on the project's repository - a scene's change shown by
+# node (both versions with uids), staged, committed with a message; the file's history; a new branch.
+wait 5
+key escape
+# The base commit, the scene saved by the editor first (its nodes get uids:
+# a scene from before uids shows as text).
+click @node:PlayerShip
+key right
+key left
+key cmd+s
+wait 2
+exec git init -q -b main $PROJECT
+exec git -C $PROJECT config user.email drive@rayzr.invalid
+exec git -C $PROJECT config user.name Drive
+exec git -C $PROJECT add -A
+exec git -C $PROJECT commit -qm base
+click @bottom:git
+wait 3
+# (a taller bottom panel: the splitter above its tabs, dragged up)
+drag 640,592 640,300
+wait 1
+expect git.repo == true
+expect git.files == 0
+expect git.branch == main
+# Move the ship and save: the scene's diff is by node.
+click @node:PlayerShip
+key right
+key right
+key cmd+s
+wait 2
+click @git.refresh
+wait 2
+expect git.files == 1
+click @git.file:scenes/main.scene.json
+wait 1
+expect git.diff-nodes == 1
+screenshot scene_diff
+# Stage, a message, commit.
+click @git.stage:scenes/main.scene.json
+wait 1
+expect git.staged == 1
+click @git.message-box
+type Move the ship
+click @git.commit
+wait 2
+expect git.files == 0
+expect git.message contains Committed: Move the ship
+# The file's history: base and this commit.
+click @git.view:history
+wait 1
+expect git.history == 2
+screenshot history
+# A new branch.
+click @git.view:changes
+click @git.branch
+click @git.newbranch
+type feature-zz
+click @git.createbranch
+wait 2
+expect git.branch == feature-zz

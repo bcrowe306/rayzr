@@ -106,6 +106,13 @@ window (also **Tools > Merge Conflicts...**):
 A scene that's open in a tab isn't reloaded: close it without saving, then
 open it again to see the merge.
 
+## The Git tab
+
+The bottom panel's [Git tab](tab-git.md) shows the project's changes, a
+scene's by node (which nodes and fields changed since the last commit),
+stages and commits them, switches and creates branches, fetches, pulls and
+pushes, and lists a file's history.
+
 ## Tips
 
 - Format a project once before you start sharing it, and commit that change
@@ -118,5 +125,6 @@ open it again to see the merge.
 
 ## Related
 
+- [Git tab](tab-git.md)
 - [Toolbar and menus](toolbar-menus.md) (the Tools menu)
 - [Components](../../engine/docs/components.md) (overrides refer to nodes by uid)
