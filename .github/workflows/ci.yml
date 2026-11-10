@@ -40,6 +40,10 @@ jobs:
           release: ${{ env.ODIN_RELEASE }}
           token: ${{ secrets.GITHUB_TOKEN }}
       - uses: mymindstorm/setup-emsdk@v14
+        # (Pinned: Emscripten 7.0.0's libc++ no longer pulls in <iterator>,
+        # which Clipper2 2.0.1 needs - scripts/build_clipper.sh.)
+        with:
+          version: 6.0.13
       - run: scripts/build_web_runner.sh
       - run: test -s bin/runners/web/index.wasm && test -s bin/runners/web/index.js
       # The templates played in the web runner (#329): headless Chrome (the
