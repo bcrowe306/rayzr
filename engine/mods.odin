@@ -381,7 +381,7 @@ Mods_OverridePath :: proc(rel: string, allocator := context.temp_allocator) -> (
 	if !safe || p == "project.json" do return "", -1, false
 	if mods.mode != .Scripts && (strings.has_suffix(p, ".lua") || strings.has_suffix(p, ".luac")) do return "", -1, false
 	#reverse for i in mods.active {
-		full, _ := filepath.join({mods.list[i].dir, p}, allocator)
+		full := strings.concatenate({strings.trim_suffix(Mods_Slashes(mods.list[i].dir), "/"), "/", p}, allocator)
 		if os.is_file(full) do return full, i, true
 	}
 	return "", -1, false
@@ -391,8 +391,8 @@ Mods_OverridePath :: proc(rel: string, allocator := context.temp_allocator) -> (
 // (project-relative, or under projectDir) - a mod's when one overrides it.
 Mods_ResourceDiskPath :: proc(projectDir, filePath: string) -> (path: string, modded: bool) {
 	if len(mods.active) == 0 do return filePath, false
-	rel := filePath
-	if dir := strings.trim_suffix(projectDir, "/"); dir != "" && len(rel) > len(dir) && rel[:len(dir)] == dir && rel[len(dir)] == '/' {
+	rel := Mods_Slashes(filePath)
+	if dir := strings.trim_suffix(Mods_Slashes(projectDir), "/"); dir != "" && len(rel) > len(dir) && rel[:len(dir)] == dir && rel[len(dir)] == '/' {
 		rel = rel[len(dir) + 1:]
 	}
 	if p, _, ok := Mods_OverridePath(rel); ok do return p, true
@@ -405,27 +405,42 @@ Mods_ResourceDiskPath :: proc(projectDir, filePath: string) -> (path: string, mo
 // executable's folder; a macOS .app: the folder holding it; a .rayzr
 // elsewhere: its folder too), `extra` (--mods), then <user data>/mods.
 Mods_Folders :: proc(exePath, projectPath, extra, userData: string, allocator := context.temp_allocator) -> []string {
+	// (Paths with / on every platform - Windows takes them - so they compare.)
 	out := make([dynamic]string, allocator)
 	add :: proc(out: ^[dynamic]string, dir: string, allocator: runtime.Allocator) {
 		if dir == "" do return
-		p, _ := filepath.join({dir, "mods"}, allocator)
+		p := strings.concatenate({strings.trim_suffix(dir, "/"), "/mods"}, allocator)
 		for o in out do if o == p do return
 		append(out, p)
 	}
 	if exePath != "" {
-		exeDir := filepath.dir(exePath, context.temp_allocator)
-		if strings.has_suffix(exeDir, "Contents/MacOS") {
-			exeDir = filepath.dir(filepath.dir(filepath.dir(exeDir, context.temp_allocator), context.temp_allocator), context.temp_allocator)
-		}
+		exeDir := mods_dir_of(Mods_Slashes(exePath))
+		if strings.has_suffix(exeDir, "Contents/MacOS") do exeDir = mods_dir_of(mods_dir_of(mods_dir_of(exeDir)))
 		add(&out, exeDir, allocator)
 	}
 	if Is_PackagePath(projectPath) && !strings.contains(projectPath, APPENDED_PACKAGE_SUFFIX) {
-		d := filepath.dir(projectPath, context.temp_allocator)
+		d := mods_dir_of(Mods_Slashes(projectPath))
 		if !strings.has_suffix(d, "Contents/Resources") do add(&out, d, allocator)
 	}
-	if extra != "" && !slice.contains(out[:], extra) do append(&out, strings.clone(extra, allocator))
-	add(&out, userData, allocator)
+	if x := strings.trim_suffix(Mods_Slashes(extra), "/"); x != "" && !slice.contains(out[:], x) do append(&out, strings.clone(x, allocator))
+	add(&out, Mods_Slashes(userData), allocator)
 	return out[:]
+}
+
+// Mods_Slashes: a path with / for \ (temp-allocated).
+Mods_Slashes :: proc(path: string) -> string {
+	p, _ := strings.replace_all(path, "\\", "/", context.temp_allocator)
+	return p
+}
+
+// mods_dir_of: a /-path's folder ("." for a bare name).
+@(private = "file")
+mods_dir_of :: proc(path: string) -> string {
+	p := strings.trim_suffix(path, "/")
+	i := strings.last_index_byte(p, '/')
+	if i < 0 do return "."
+	if i == 0 do return "/"
+	return p[:i]
 }
 
 // Mods_Setup (the runner, before the project loads): finds the mods the
