@@ -47,6 +47,7 @@ Code_Doc :: struct {
 	// LSP: last buffer version sent (didOpen/didChange).
 	lspOpen:       bool,
 	sentVersion:   int,
+	runtimeVersion: int, // the version its runtime problems were checked against (code_runtime_follow_edits)
 	// Tokenizer state at the start of each line, valid for statesVersion.
 	lineStates:    [dynamic]int,
 	statesVersion: int,
@@ -122,6 +123,8 @@ Code_Editor :: struct {
 	lspState:      Code_LSP_State,
 	lspMessage:    string,
 	lspReadyAt:    time.Tick,
+	libraryUri:     string, // the generated types file, kept open in the server (Code_LspPushLibraryFile)
+	libraryVersion: int,
 	completion:    Code_Completion,
 	sigOpen:       bool,
 	sigWaiting:    bool,
@@ -235,6 +238,7 @@ Editor_OpenScript :: proc(state: ^EditorState, path: string, line := -1, col := 
 		doc.lang = syn.language_for_path(abs)
 		doc.isLua = doc.lang.name == "lua"
 		doc.savedVersion = doc.buffer.version
+		doc.runtimeVersion = doc.buffer.version
 		doc.diskTime = code_file_mtime(abs)
 		code_git_load(doc) // the committed version, for the git gutter
 		// Keep the file's indentation style (Settings decide for new files).
@@ -678,6 +682,7 @@ Code_Render :: proc(state: ^EditorState) {
 	Code_PeekUpdate(state)
 	code_commands_update(state)
 	code_check_disk(state)
+	code_runtime_follow_edits() // (code_runtime_diag.odin)
 	if len(cm.docs) == 0 {
 		cm.focused = false
 		cm.windowFocused = false
@@ -1442,6 +1447,17 @@ code_squiggle :: proc(dl: ^imgui.DrawList, x0, x1, y: f32, color: u32, faint: bo
 	}
 }
 
+// code_severity_icon: errors, warnings, information and hints (style and
+// unused-code notes) each their own mark.
+code_severity_icon :: proc(sev: int) -> string {
+	switch sev {
+	case 2: return ICON_FA_TRIANGLE_EXCLAMATION
+	case 3: return ICON_FA_CIRCLE_INFO
+	case 4: return ICON_FA_LIGHTBULB
+	}
+	return ICON_FA_CIRCLE_XMARK
+}
+
 code_severity_color :: proc(sev: int) -> u32 {
 	switch sev {
 	case 2: return col_u32(UI_WARNING)
@@ -1868,7 +1884,10 @@ code_hover :: proc(doc: ^Code_Doc, hovered: bool, mouse: [2]f32) {
 	// box under (or over) the word, inside the Code area.
 	blocks := make([dynamic]Overlay_Block, context.temp_allocator)
 	for d in msgs {
-		append(&blocks, Overlay_Block{fmt.tprintf("%s  %s", ICON_FA_CIRCLE_XMARK if d.severity <= 1 else ICON_FA_TRIANGLE_EXCLAMATION, d.message), false, imgui.ColorConvertU32ToFloat4(code_severity_color(d.severity))})
+		// The check's code ("undefined-field") too: what a ---@diagnostic
+		// comment or Project Settings > Lua Checks would name (#403).
+		msg := fmt.tprintf("%s  (%s)", d.message, d.code) if d.code != "" else d.message
+		append(&blocks, Overlay_Block{fmt.tprintf("%s  %s", code_severity_icon(d.severity), msg), false, imgui.ColorConvertU32ToFloat4(code_severity_color(d.severity))})
 	}
 	if hover != "" do markdown_blocks(hover, &blocks)
 	ws := code_word_start(b, p)
@@ -2158,6 +2177,10 @@ Code_DriveQuery :: proc(q: string) -> (string, bool) {
 		if doc == nil do return "0", true
 		errs, _ := code_diagnostic_counts(doc)
 		return fmt.tprint(errs), true
+	case "code.warnings":
+		if doc == nil do return "0", true
+		_, warns := code_diagnostic_counts(doc)
+		return fmt.tprint(warns), true
 	case "code.diagnostics":
 		if doc == nil do return "0", true
 		return fmt.tprint(len(code_diagnostics(doc))), true

@@ -15,7 +15,7 @@ the scene runs in the viewport while you edit, so each change shows at once.
 - **Colour over a particle's life**: the gradient editor and its alpha
   plot are only here.
 - **Size, alpha and speed curves** over a particle's life.
-- **Picking a particle texture or sprite sheet**, with its grid shown.
+- **Picking a particle texture, sprite sheet, atlas regions or Aseprite tag**, with its frames shown.
 - To fire bursts at the right moment of an animation, add an **Emit
   Particles** track in the [Animation tab](tab-animation.md). To fire them
   from a script, see the [Particle Emitter](../nodes/ParticleEmitterNode.md)
@@ -35,7 +35,7 @@ node...*.
 |---|---|
 | **Pause / Play** | Pause or resume the preview of **every** emitter in the viewport. |
 | **Restart** (circular arrow) | Kill this emitter's particles and start it again. |
-| **Preset** | A starting look: **Fire**, **Smoke**, **Sparks**, **Rain**, **Snow**, **Explosion** or **Magic**. It replaces the emitter's look and motion settings (its texture stays) and restarts it; one Cmd+Z (Ctrl+Z) puts the old settings back. |
+| **Preset** | A starting look: **Fire**, **Smoke**, **Sparks**, **Rain**, **Snow**, **Explosion** or **Magic**. It replaces the emitter's look and motion settings (its texture stays) and restarts it; one Cmd+Z (Ctrl+Z) puts the old settings back. *With a sprite sheet*: **Leaves**, **Debris**, **Smoke Puff** and **Sparkle** also set the texture to `textures/particles/kenney_particles.png` - Kenney's CC0 particle and foliage art, added to the project (with its licence) the first time - and pick their frames from it. |
 | Status line | Particles alive now (*GPU* in GPU mode), particles per cycle, lifetime. |
 
 ### Sub-tabs
@@ -86,12 +86,25 @@ editor appears (time 0-1 left to right, value up). **Drag** a point,
 
 | Control | What it does |
 |---|---|
-| **Texture** | Pick a picture from `textures/`. Picking one switches **Shape** to Texture. The reset button clears it. |
-| **Sheet Columns** / **Sheet Rows** | The texture as a sprite sheet grid. |
-| **Frame Mode**, **Frame Speed** | How particles pick and play the sheet's frames. |
-| **Blend Mode** | How particles mix with what is behind (Additive for fire and glow). |
+| **Texture** | Pick a picture from `textures/`, or an Aseprite file (`.aseprite` / `.ase`) from anywhere in the project. Picking one switches **Shape** to Texture (an Aseprite file: **Frame Source** to Aseprite). The reset button clears it. |
+| **Frame Source** | Where the frames come from: **Grid** (the texture cut into **Sheet Columns** x **Sheet Rows**), **Slices** (the texture's slicing preset, saved with the [Sprite Slicer](sprite-slicer.md)'s **Save Preset**), **Regions** (rectangles of the texture: an atlas's sprites, or cells picked in the Sprite Slicer) or **Aseprite** (an Aseprite file's tag). |
+| **Sheet Columns** / **Sheet Rows** | (Grid) The texture as a sprite sheet grid. |
+| **Frame First** / **Frame Count** | (Grid, Slices) Use only some cells: **Frame Count** cells from **Frame First** (cells count across, then down; Count 0 = to the end). |
+| Region list | (Regions) Each rectangle's x, y, width and height in pixels; the **x** removes one, **Add Region** adds one (up to 64). No regions: the whole texture. |
+| **Tag** | (Aseprite) The tag whose frames play, in its direction (forward, reverse, ping-pong); *(every frame)* plays them all. Up to 64 frames. |
+| **Frame File Timing** | (Aseprite) Each frame lasts as long as in the file; off: **Frame Speed** (or even shares of the life). |
+| **Pick Frames in Sprite Slicer** | Opens the [Sprite Slicer](sprite-slicer.md) on the texture: pick cells there and press **Use N Cells for &lt;emitter&gt;** (they become Regions, in the order picked), or pick none and press **Use All Cells** (the grid is saved as the texture's slicing preset and Frame Source becomes Slices). |
+| **Frame Mode**, **Frame Speed** | How particles pick and play the frames: **Over Lifetime** (once, birth to death), **Speed** (Frame Speed frames a second) or **Random** (one frame per particle, kept all its life: leaves, debris). |
+| **Frame Loop** | (Speed) Start over after the last frame; off: stay on it. |
+| **Frame Random Start** | Each particle starts on a random frame, so they don't animate in step. |
+| **Blend Mode** | How particles mix with what is behind (Additive for fire and glow, Multiply to darken). |
 | **Align To Velocity** | Turn each particle to face where it moves. |
-| Preview | The texture, with the sheet's grid drawn over it. |
+| **Texture Pivot** | The point of the picture (0 to 1 across and down; 0.5, 0.5 is its centre) placed on the particle and turned around: 0.5, 1 for a leaf hanging from its stem. |
+| **Random Flip X** / **Random Flip Y** | About half the particles are mirrored, for variety. |
+| Preview | The texture (an Aseprite file: all its frames), with each frame used outlined, and how many frames there are. |
+
+Every one of these works in GPU mode too. Colour over life (the **Color**
+tab) tints textured particles: white keeps the picture's own colours.
 
 If a texture is set but **Shape** is not Texture, the tab says the texture
 is shown only when Shape is Texture.

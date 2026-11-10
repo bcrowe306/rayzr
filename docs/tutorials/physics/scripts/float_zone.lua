@@ -11,6 +11,7 @@ FloatZone.properties = {
 ---@param body Node?
 function FloatZone:on_body_entered(body)
     if body and body:has_tag("player") then
+        ---@cast body CharacterMoverNode
         body:character_set_gravity_scale(self.gravity_scale)
         print("Floating")
     end
@@ -19,6 +20,7 @@ end
 ---@param body Node?
 function FloatZone:on_body_exited(body)
     if body and body:has_tag("player") then
+        ---@cast body CharacterMoverNode
         body:character_set_gravity_scale(1)
         print("Landed back in normal gravity")
     end

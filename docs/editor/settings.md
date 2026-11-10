@@ -139,6 +139,12 @@ See [scene flow](../../engine/docs/scene_flow.md).
 | **Gravity** | x, y in pixels per second squared. **Zero-G** sets (0, 0); **Earth (0, 980)** sets (0, 980). |
 | **Show Colliders** | The running game draws collision shapes, joints and areas (on by default). The editor's viewport shows them either way. The same switch is in the toolbar and **Game > Show Colliders in Game**. |
 
+**Scripting** (closed at first):
+
+| Option | What it does |
+|---|---|
+| **Lua Checks** | How strictly the Code tab's language server checks the scripts: **Relaxed** (the default: possible nils are hints, no whitespace or lowercase-global reports), **Standard** (lua-language-server's defaults) or **Strict** (also unused and redefined locals as warnings). Written into the project's `.luarc.json`, so VS Code matches; see [Code tab > Problems](code.md#problems). |
+
 **Developer Console** (closed at first): the in-game console that opens with
 ` - commands, Lua, a perf overlay, debug drawing, pause and step (see
 [Console](../lua/Console.md)).

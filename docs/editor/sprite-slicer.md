@@ -17,6 +17,7 @@ from each picked cell, and remember a sheet's grid in its import settings.
 - **Single cells as sprites**: icons or props cut from a sheet, each its
   own Atlas Sprite.
 - **Saving a sheet's grid** so the slicer opens it right next time.
+- **Particle frames**: the cells a Particle Emitter's particles show.
 - For editing the animations afterwards (range, fps, tracks), use the
   [Animation tab](tab-animation.md).
 
@@ -26,6 +27,8 @@ from each picked cell, and remember a sheet's grid in its import settings.
 - Right-click an image in [Assets](assets.md#right-click-an-asset) >
   **Slice Sprite Sheet...**: opens on that image.
 - An Animation Player's Inspector: **Slice a Sprite Sheet...**.
+- A Particle Emitter's [Particles tab](tab-particles.md#texture) > Texture:
+  **Pick Frames in Sprite Slicer**.
 - The [Animation tab](tab-animation.md): the **▾** next to **+** >
   **Slice a Sprite Sheet...**.
 
@@ -51,6 +54,7 @@ preset if it has one.
 | **Loop** | Animations added from now on loop. |
 | **Add Animation** | Makes an animation of the picked cells, in the order picked, then clears the pick and the name. Does nothing with no cells picked. |
 | **One Animation per Row** | One animation per row of the grid (`row1`, `row2`...), every cell of the row. |
+| **Use N Cells for &lt;emitter&gt;** / **Use All Cells for &lt;emitter&gt;** | (A Particle Emitter selected) The picked cells, in the order picked, become the emitter's frames (**Frame Source** Regions, up to 64), with this image as its texture. None picked: every cell - the grid is saved as the image's slicing preset and Frame Source becomes Slices. One undo step. The emitter's **Texture** tab has **Pick Frames in Sprite Slicer** to open the slicer on its texture. |
 | **Create Atlas Sprite** / **Create Atlas Sprites (N)** | (Cells picked) An Atlas Sprite node in the scene for each picked cell, named after the image (`<image>_cell<N>` when there are several). One undo step. |
 | Animation list | The animations made so far: name, frame count, *loop*. The **x** removes one. |
 | **FPS** | (Animations made) The frame rate, 1 to 60, set on the player. |

@@ -98,6 +98,11 @@ then equal rows stacked). Without any rule the legacy settings apply: the
 kept for older scenes); the first edit in the Collision page turns them into
 rules.
 
+Colliders and trigger areas are on the node's `categoryLayers` /
+`maskLayers` (Layer1, all by default) unless the value's rule has its own
+(`customLayers`; saved as `"layers"` / `"mask"` arrays of layer names, absent
+on rules using the default - #405). Tests: `engine/ldtk_collision_layers_test.odin`.
+
 ---
 
 ## 4. Entities become nodes

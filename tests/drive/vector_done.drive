@@ -1,6 +1,10 @@
 # #391: Done on the Vector toolbar after drawing a shape leaves Edit Art
 # (the editor crashed: the rest of that frame still read the node being
-# edited, already let go of).
+# edited, already let go of). #400: every other way out after each tool -
+# the Inspector's Done Drawing, a pen path in progress, the node and select
+# tools, an imported SVG.
+exec mkdir -p $PROJECT/vectors
+exec cp tests/vector/svg/figma_export.svg $PROJECT/vectors/card_zz.svg
 wait 5
 key escape
 click @hier.add
@@ -25,3 +29,73 @@ expect vd.active == true
 click @vd.done
 wait 1
 expect vd.active == false
+
+# The Inspector's Done Drawing after drawing a shape.
+click @insp.vec.draw
+expect vd.active == true
+click @vd.tool:ellipse
+drag @node:VectorShape+-60,-60 @node:VectorShape+60,40
+expect vd.shapes == 2
+click @insp.vec.draw
+wait 1
+expect vd.active == false
+
+# Done with a pen path in progress (one point).
+click @insp.vec.draw
+click @vd.tool:pen
+click @node:VectorShape+-80,120
+click @vd.done
+wait 1
+expect vd.active == false
+
+# Done with a pen path in progress (two points).
+click @insp.vec.draw
+click @vd.tool:pen
+click @node:VectorShape+-80,120
+click @node:VectorShape+-20,130
+click @vd.done
+wait 1
+expect vd.active == false
+
+# Done after the node tool moved an anchor.
+click @insp.vec.draw
+click @vd.tool:node
+click @node:VectorShape+0,-10
+drag @vd.anchor:0 @vd.anchor:0+-30,0
+click @vd.done
+wait 1
+expect vd.active == false
+
+# Done after the select tool moved the shape.
+click @insp.vec.draw
+click @vd.tool:select
+drag @node:VectorShape+0,-10 @node:VectorShape+30,-10
+click @vd.done
+wait 1
+expect vd.active == false
+screenshot drawn_done
+
+# An imported SVG: Edit Art, the select tool moves a shape, Done.
+wait-until item:asset:vectors/card_zz.svg == visible timeout=600
+drag @asset:vectors/card_zz.svg @world:400,250 12
+wait 2
+expect selected == card_zz
+click @insp.vec.draw
+wait 1
+screenshot imported_editing
+expect vd.active == true
+click @vd.tool:select
+drag @node:card_zz+0,0 @node:card_zz+20,0
+click @vd.done
+wait 1
+expect vd.active == false
+expect selected == card_zz
+
+# Again on the imported SVG: the node tool, then the Inspector's Done Drawing.
+click @insp.vec.draw
+click @vd.tool:node
+click @node:card_zz+0,0
+click @insp.vec.draw
+wait 1
+expect vd.active == false
+screenshot imported_done

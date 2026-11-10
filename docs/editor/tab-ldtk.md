@@ -131,7 +131,13 @@ a table of its values:
 | **Collision** | **None**, **Solid**, **One-way** (solid from above, passable from below) or **Trigger** (an area with `body_entered` / `body_exited`; its tooltip gives the area's name). |
 | **Friction** | 0-2, for Solid and One-way. |
 | **Bounce** | 0-1, for Solid and One-way. |
+| **Layers** | The collision layers its colliders are on. **Level default** (ticked: the row shows `Default: ...`) uses the level's; ticking a layer gives the value its own. |
+| **Mask** | The collision layers its colliders collide with: the level's default, or its own (shared with **Layers**). |
 
+- **Default layers** and **Mask** (above the tables): the level's
+  collision layers and mask, used by every value on **Level default** (the
+  same as the Inspector's **Category Layers** / **Mask Layers**). Layer
+  names come from Project Settings > General > Collision Layers.
 - **Show colliders while simulating** draws the built colliders when you
   Simulate.
 - A warning shows when the node's **Enable Physics** is off in the

@@ -18,6 +18,16 @@ import rl "vendor:raylib"
 // Data-Driven Project & Scene Format (.rayzr / JSON)
 // ============================================================================
 
+// Lua_Checks: the diagnostics preset of the project's scripts (editor/
+// lua_project.odin has what each turns on).
+Lua_Checks :: enum u8 {
+	Relaxed,  // the default: no style checks, nil checks as hints
+	Standard, // lua-language-server's defaults, minus whitespace
+	Strict,   // lua-language-server's defaults, and more
+}
+
+LUA_CHECKS_NAMES := [Lua_Checks]string{.Relaxed = "relaxed", .Standard = "standard", .Strict = "strict"}
+
 ProjectConfig :: struct {
 	name:          string,
 	version:       string,
@@ -65,6 +75,9 @@ ProjectConfig :: struct {
 	touchAsMouse:  bool, // a finger is the left mouse button (default on; "input": {"touch_as_mouse"})
 	consoleInRelease: bool,   // the developer console in release exports too ("debug": {"console_in_release"}; dev_console.odin)
 	consoleKey:       string, // its key ("debug": {"console_key"}; "" = the backquote)
+	// How strictly the editor's Lua language server checks the scripts
+	// ("scripting": {"lua_checks"}; the editor writes it into .luarc.json, #403).
+	luaChecks:        Lua_Checks,
 	// Export
 	export:        Export_Settings,
 	// Per-texture filtering / wrap / mipmaps (asset_paths.odin)
@@ -394,6 +407,10 @@ Project_ParseConfig :: proc(jsonBytes: []u8, allocator := context.allocator) -> 
 	if accObj, ok := json_get_obj(rootObj, "accessibility"); ok {
 		if text, merr := json.marshal(accObj, {}, context.temp_allocator); merr == nil && len(accObj) > 0 do cfg.accessibility = strings.clone(string(text), allocator)
 	}
+	if scriptingObj, ok := json_get_obj(rootObj, "scripting"); ok {
+		name := json_get_string(scriptingObj, "lua_checks", "")
+		for n, k in LUA_CHECKS_NAMES do if n == name do cfg.luaChecks = k
+	}
 	if debugObj, ok := json_get_obj(rootObj, "debug"); ok {
 		cfg.consoleInRelease = json_get_bool(debugObj, "console_in_release", false)
 		if k := json_get_string(debugObj, "console_key", ""); k != "" do cfg.consoleKey = strings.clone(k, allocator)
@@ -539,6 +556,7 @@ Project_SerializeToJSON :: proc(cfg: ^ProjectConfig, allocator := context.alloca
 		if cfg.consoleKey != "" {strings.write_string(&sb, ", \"console_key\": "); jstr(&sb, cfg.consoleKey)}
 		strings.write_string(&sb, "},\n")
 	}
+	if cfg.luaChecks != .Relaxed do fmt.sbprintf(&sb, "  \"scripting\": {{\"lua_checks\": \"%s\"}},\n", LUA_CHECKS_NAMES[cfg.luaChecks])
 	fmt.sbprintf(&sb, "  \"audio\": {{\"master_volume\": %.2f, \"music_volume\": %.2f, \"sfx_volume\": %.2f", cfg.masterVolume, cfg.musicVolume, cfg.sfxVolume)
 	if cfg.mixerBuses != "" do fmt.sbprintf(&sb, ", \"buses\": %s", cfg.mixerBuses)
 	strings.write_string(&sb, "},\n")

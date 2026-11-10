@@ -11,7 +11,8 @@ import lsp "../odin_editor/lsp"
 // Script_Problem) and from the game's output (Play) - "scripts/x.lua:12:
 // message" - become diagnostics on that line in the Code tab, next to the
 // language server's (red errors, yellow warnings, the message on hover).
-// Cleared when the game / simulation starts again or the file is saved.
+// Cleared when the game / simulation starts again, and a script's when it
+// is edited (they are about lines of the old text, #403) or saved.
 // ============================================================================
 
 Runtime_Diag :: struct {
@@ -93,4 +94,14 @@ code_runtime_diagnostics :: proc(doc: ^Code_Doc) -> []lsp.Diagnostic {
 		})
 	}
 	return out[:]
+}
+
+// code_runtime_follow_edits: an edited script's runtime problems go - their
+// lines were the old text's (until the next run reports them again).
+code_runtime_follow_edits :: proc() {
+	for doc in GlobalCode.docs {
+		if doc.runtimeVersion == doc.buffer.version do continue
+		doc.runtimeVersion = doc.buffer.version
+		if len(runtimeDiags) > 0 do CodeRuntime_Clear(doc.rel)
+	}
 }

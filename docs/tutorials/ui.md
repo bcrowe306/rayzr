@@ -290,7 +290,7 @@ function PauseMenu:show(open)
     -- Disabled, the menu neither draws nor takes clicks.
     self.menu:set_enabled(open)
     -- Opened, Resume has the focus: Enter resumes, Down and Enter quit.
-    if open then self.menu:get_node("Resume"):ui_focus() end
+    if open then self.node:get_node("Menu/Resume"):ui_focus() end
 end
 
 return PauseMenu

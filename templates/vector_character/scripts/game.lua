@@ -53,27 +53,6 @@ function Game:set_volume(v)
     self:apply_settings()
 end
 
--- The title's line under the name: the best score (the fewest moves a level).
-function Game:best_text()
-    if Game.LOWER_IS_BETTER then
-        local parts = {}
-        for i = 1, #Game.LEVELS do
-            parts[#parts + 1] = i .. ": " .. (self.progress.level_best["level" .. i] or "-")
-        end
-        return "Fewest moves  " .. table.concat(parts, "   ")
-    end
-    return string.format("Best %d", self.progress.best)
-end
-
--- The result screen's line: the run's score.
----@param r table Game.result
-function Game:result_text(r)
-    if Game.LOWER_IS_BETTER then
-        return r.won and string.format("%d moves in all", r.score) or ("Out of moves on " .. Game.LEVEL_WORD:lower() .. " " .. r.level)
-    end
-    return string.format("%s %d", Game.SCORE_NAME, r.score)
-end
-
 -- Writes save.json now.
 function Game:flush()
     Save.flush()
@@ -164,7 +143,8 @@ function Game:finish(won)
     self:go("scenes/result.scene.json")
 end
 
--- Pip's Walk's lines (make_templates.py adds them to game.lua): times.
+-- Pip's Walk's lines (make_templates.py puts them in game.lua, in place
+-- of the common ones): times.
 
 -- The title's line under the name: each stage's best time.
 function Game:best_text()
@@ -175,6 +155,9 @@ function Game:best_text()
     end
     return "Best times  " .. table.concat(parts, "   ")
 end
+
+---@class GameGlobal
+---@field lose_reason? string What ended the run (stage.lua sets it)
 
 -- The result screen's line: a won game's time, or what ended it (stage.lua
 -- sets Game.lose_reason).

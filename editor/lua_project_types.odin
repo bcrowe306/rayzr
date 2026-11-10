@@ -36,7 +36,7 @@ import lsp "../odin_editor/lsp"
 //   emit complete them; scripts get optional on_<event> methods for them
 //   and for their node type's own events). Each node class's connect takes
 //   its own events (engine_api.lua, checked by test_lua_node_events_definitions)
-//   LdtkEntity, LdtkLevel, LdtkLayer, LdtkEnumName, LdtkEnum_<Name>
+//   LdtkEntityName, LdtkLevelName, LdtkLayerName, LdtkEnumName, LdtkEnum_<Name>
 //   one class per script with its exported properties, so `self.speed` is
 //   typed (merged with the script's own ---@class)
 //
@@ -345,9 +345,11 @@ Lua_ProjectTypesText :: proc(state: ^EditorState) -> string {
 		}
 		e.Ldtk_DestroyProject(proj)
 	}
-	alias(&sb, "LdtkEntity", "LDtk entity identifiers", sorted_unique(&entities))
-	alias(&sb, "LdtkLevel", "LDtk level identifiers", sorted_unique(&levels))
-	alias(&sb, "LdtkLayer", "LDtk layer identifiers", sorted_unique(&layers))
+	// (<X>Name: LdtkEntity, LdtkLevel and LdtkLayer are the engine's
+	// classes of those objects, #403.)
+	alias(&sb, "LdtkEntityName", "LDtk entity identifiers", sorted_unique(&entities))
+	alias(&sb, "LdtkLevelName", "LDtk level identifiers", sorted_unique(&levels))
+	alias(&sb, "LdtkLayerName", "LDtk layer identifiers", sorted_unique(&layers))
 	names := sorted_unique(&enumNames)
 	alias(&sb, "LdtkEnumName", "LDtk enums", names)
 	for n in names {
@@ -459,6 +461,10 @@ Lua_ProjectTypesText :: proc(state: ^EditorState) -> string {
 		}
 		if !ok || mod == nil do continue
 		for p in mod.properties {
+			// The script types it itself (---@field speed integer, a node
+			// property ---@field map TileMapNode): its own type stands - two
+			// declarations would be a union of both (#403).
+			if script_declares_field(string(data), p.name) do continue
 			t := lua_type_of(p)
 			// A resource of a known class: typed as that class.
 			if e.Script_IsResourceProp(p) && p.resourceClass != "" {
@@ -481,6 +487,20 @@ Lua_ProjectTypesText :: proc(state: ^EditorState) -> string {
 	return strings.to_string(sb)
 }
 
+// script_declares_field: the script's own annotations have ---@field <name>.
+script_declares_field :: proc(text, name: string) -> bool {
+	for line in strings.split_lines(text, context.temp_allocator) {
+		l := strings.trim_space(line)
+		if !strings.has_prefix(l, "---@field ") do continue
+		rest := strings.trim_left_space(l[len("---@field "):])
+		for scope in ([]string{"public ", "private ", "protected ", "package "}) do rest = strings.trim_left_space(strings.trim_prefix(rest, scope))
+		if !strings.has_prefix(rest, name) do continue
+		after := rest[len(name):]
+		if after == "" || after[0] == ' ' || after[0] == '?' || after[0] == '\t' do return true
+	}
+	return false
+}
+
 // Lua_WriteProjectTypes writes project_types.lua (when it changed) and tells
 // the language server.
 Lua_WriteProjectTypes :: proc(state: ^EditorState) {
@@ -494,15 +514,7 @@ Lua_WriteProjectTypes :: proc(state: ^EditorState) {
 	if old, err := os.read_entire_file(path, context.temp_allocator); err == nil && string(old) == text do return
 	_ = os.make_directory_all(filepath.dir(path, context.temp_allocator))
 	if os.write_entire_file(path, transmute([]u8)text) != nil do return
-	// Tell lua-language-server the library file changed.
-	cm := &GlobalCode
-	if cm.lspState == .Ready || cm.lspState == .Starting {
-		File_Event :: struct {uri: string, type: int}
-		Params :: struct {changes: []File_Event}
-		events := []File_Event{{uri = lsp.file_uri(path, context.temp_allocator), type = 2}}
-		msg := lsp.encode_notification("workspace/didChangeWatchedFiles", Params{changes = events}, context.temp_allocator)
-		lsp.client_send_raw(&cm.client, msg)
-	}
+	Code_LspPushLibraryFile(path, text) // the language server takes the new text (code_editor_lsp.odin)
 }
 
 // typed_lookups: overloads returning each named node's type (names whose
@@ -715,9 +727,11 @@ component_overloads :: proc(sb: ^strings.Builder, state: ^EditorState, comps: []
 				}
 			}
 		}
-		fmt.sbprintf(sb, "---@overload fun(component: %q, parent?: Node, x?: number|Vec2, y?: number): %s\n", rel, t)
+		fmt.sbprintf(sb, "---@overload fun(component: %q, parent?: Node, x?: number|Vec2|table<string, any>, y?: number|table<string, any>, properties?: table<string, any>): %s\n", rel, t)
 	}
-	strings.write_string(sb, "---@param component ComponentPath|string\n---@param parent? Node\n---@param x? number|Vec2\n---@param y? number\n---@return Node?\nfunction SceneModule.instantiate(component, parent, x, y) end\n")
+	// (The same parameters as engine_api.lua's: a call with the properties
+	// table was "redundant-parameter", #403.)
+	strings.write_string(sb, "---@param component ComponentPath|string\n---@param parent? Node\n---@param x? number|Vec2|table<string, any>\n---@param y? number|table<string, any>\n---@param properties? table<string, any>\n---@return Node?\nfunction SceneModule.instantiate(component, parent, x, y, properties) end\n")
 }
 
 // node_class_name: the refined class of a node name that has a script.
@@ -767,14 +781,14 @@ custom_node_class :: proc(name: string) -> string {return fmt.tprintf("%sNode", 
 
 // custom_node_types: the custom node types' classes (#156) - built on their
 // base type (or parent type), get_script() returning their script's class -
-// and Scene.create / Scene.find_nodes_of_type returning them by name.
+// and Scene.create / Scene.find_nodes_of_type returning them, and the
+// built-in types (#403: Scene.create("TextureNode") is a TextureNode), by name.
 @(private = "file")
 custom_node_types :: proc(sb: ^strings.Builder, state: ^EditorState, types: ^Node_Types_Seen, classOf: map[string]string) {
 	ctx := &state.game.gameContext
 	all := e.CustomNodes_All(ctx)
-	if len(all) == 0 do return
 	names := make([dynamic]string, context.temp_allocator)
-	strings.write_string(sb, "\n-- Custom node types (nodes/*.node.json): <Name>Node classes.\n")
+	if len(all) > 0 do strings.write_string(sb, "\n-- Custom node types (nodes/*.node.json): <Name>Node classes.\n")
 	for t in all {
 		cls := custom_node_class(t.name)
 		parent := t.base
@@ -791,9 +805,18 @@ custom_node_types :: proc(sb: ^strings.Builder, state: ^EditorState, types: ^Nod
 		append(&names, strings.clone(t.name, context.temp_allocator))
 	}
 	alias(sb, "CustomNodeType", "The project's custom node types (Scene.create, node:is)", sorted_unique(&names))
-	strings.write_string(sb, "\n---@class SceneModule\nlocal SceneModule = {}\n")
-	for n in names do fmt.sbprintf(sb, "---@overload fun(typeName: %q, parent?: Node, x?: number|Vec2, y?: number): %s\n", n, custom_node_class(n))
-	strings.write_string(sb, "---@param typeName CustomNodeType|string\n---@param parent? Node\n---@param x? number|Vec2\n---@param y? number\n---@return Node?\nfunction SceneModule.create(typeName, parent, x, y) end\n")
-	for n in names do fmt.sbprintf(sb, "---@overload fun(typeName: %q): %s[]\n", n, custom_node_class(n))
-	strings.write_string(sb, "---@param typeName CustomNodeType|string\n---@return Node[]\nfunction SceneModule.find_nodes_of_type(typeName) end\n")
+	// type name -> class: the custom types, then the built-in ones that have
+	// a class in engine_api.lua.
+	byName := make([dynamic][2]string, context.temp_allocator)
+	for n in names do append(&byName, [2]string{n, custom_node_class(n)})
+	for info in e.NODE_TYPES {
+		if info.name == "Node" || !strings.contains(ENGINE_API_LUA, fmt.tprintf("---@class %s ", info.name)) do continue
+		append(&byName, [2]string{info.name, info.name})
+	}
+	// (Its own local: the components' block may have declared SceneModule.)
+	strings.write_string(sb, "\n-- Scene.create / Scene.find_nodes_of_type by type name: that type's class.\n---@class SceneModule\nlocal SceneModuleByType = {}\n")
+	for p in byName do fmt.sbprintf(sb, "---@overload fun(typeName: %q, parent?: Node, x?: number|Vec2, y?: number): %s\n", p[0], p[1])
+	strings.write_string(sb, "---@param typeName CustomNodeType|string\n---@param parent? Node\n---@param x? number|Vec2\n---@param y? number\n---@return Node?\nfunction SceneModuleByType.create(typeName, parent, x, y) end\n")
+	for p in byName do fmt.sbprintf(sb, "---@overload fun(typeName: %q): %s[]\n", p[0], p[1])
+	strings.write_string(sb, "---@param typeName CustomNodeType|string\n---@return Node[]\nfunction SceneModuleByType.find_nodes_of_type(typeName) end\n")
 }

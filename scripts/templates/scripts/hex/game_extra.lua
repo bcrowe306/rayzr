@@ -1,4 +1,5 @@
--- Hex Island's lines (make_templates.py adds them to game.lua): steps.
+-- Hex Island's lines (make_templates.py puts them in game.lua, in place
+-- of the common ones): steps.
 
 -- The title's line under the name: each island's fewest steps.
 function Game:best_text()

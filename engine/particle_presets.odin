@@ -9,7 +9,17 @@ import rl "vendor:raylib"
 // look and motion (everything else back to a common base first, so presets
 // don't pile up); its texture, when it has one, stays. The Particles tab's
 // Preset menu and Lua's particle_apply_preset use it.
+//
+// Sheet presets (#401: Leaves, Debris, Smoke Puff, Sparkle) also set the
+// texture: cells of PARTICLE_SHEET (Kenney's CC0 Particle Pack and Foliage
+// Sprites, assets/kenney/particles/particles.png - 8 x 3 cells of 64 px),
+// which the editor copies into the project when one is applied.
 // ============================================================================
+
+// Where the sheet presets' texture goes in a project.
+PARTICLE_SHEET :: "textures/particles/kenney_particles.png"
+PARTICLE_SHEET_CELL :: 64
+PARTICLE_SHEET_COLUMNS :: 8
 
 ParticlePreset :: enum {
 	Fire,
@@ -19,6 +29,19 @@ ParticlePreset :: enum {
 	Snow,
 	Explosion,
 	Magic,
+	// Sheet presets (#401).
+	Leaves,
+	Debris,
+	SmokePuff,
+	Sparkle,
+}
+
+// ParticlePreset_UsesSheet: the preset's particles are PARTICLE_SHEET's cells.
+ParticlePreset_UsesSheet :: proc(p: ParticlePreset) -> bool {
+	#partial switch p {
+	case .Leaves, .Debris, .SmokePuff, .Sparkle: return true
+	}
+	return false
 }
 
 ParticlePreset_Name :: proc(p: ParticlePreset) -> string {
@@ -30,13 +53,36 @@ ParticlePreset_Name :: proc(p: ParticlePreset) -> string {
 	case .Snow:      return "Snow"
 	case .Explosion: return "Explosion"
 	case .Magic:     return "Magic"
+	case .Leaves:    return "Leaves"
+	case .Debris:    return "Debris"
+	case .SmokePuff: return "Smoke Puff"
+	case .Sparkle:   return "Sparkle"
 	}
 	return ""
 }
 
 ParticlePreset_Parse :: proc(name: string) -> (ParticlePreset, bool) {
-	for p in ParticlePreset do if strings.equal_fold(ParticlePreset_Name(p), name) do return p, true
+	// (Spaces and underscores don't count: "smoke_puff", "SmokePuff".)
+	squash :: proc(s: string) -> string {
+		out, _ := strings.remove_all(s, " ", context.temp_allocator)
+		out, _ = strings.remove_all(out, "_", context.temp_allocator)
+		return out
+	}
+	for p in ParticlePreset do if strings.equal_fold(squash(ParticlePreset_Name(p)), squash(name)) do return p, true
 	return .Fire, false
+}
+
+// sheet_cells: the emitter's frames are PARTICLE_SHEET cells first..last
+// (Frame Source Regions).
+@(private = "file")
+sheet_cells :: proc(e: ^ParticleEmitter, first, last: int) {
+	e.shape, e.frameSource = .Texture, .Regions
+	e.regions.count = 0
+	for k in first ..= last {
+		c := f32(PARTICLE_SHEET_CELL)
+		e.regions.rects[e.regions.count] = {f32(k % PARTICLE_SHEET_COLUMNS) * c, f32(k / PARTICLE_SHEET_COLUMNS) * c, c, c}
+		e.regions.count += 1
+	}
 }
 
 @(private = "file")
@@ -82,6 +128,8 @@ preset_base :: proc(e: ^ParticleEmitter) {
 	e.sizeCurve.count, e.alphaCurve.count, e.speedCurve.count = 0, 0, 0
 	e.localSpace = true
 	e.trailLength, e.trailSegment, e.trailWidth = 0, 6, 1
+	e.frameLoop, e.frameRandomStart = true, false
+	e.texturePivot, e.randomFlipX, e.randomFlipY = {0.5, 0.5}, false, false
 }
 
 // ParticleEmitter_ApplyPreset gives the emitter a preset's look and restarts it.
@@ -164,6 +212,74 @@ ParticleEmitter_ApplyPreset :: proc(e: ^ParticleEmitter, preset: ParticlePreset)
 		e.gravityDirection, e.gravityVelocity = {0, -1}, 20
 		e.blendMode = .Additive
 		set_ramp(e, {0, {180, 120, 255, 0}}, {0.2, {200, 160, 255, 255}}, {0.7, {120, 220, 255, 200}}, {1, {80, 120, 255, 0}})
+	case .Leaves:
+		// Autumn leaves, a random one each, tumbling down and drifting
+		// across a wide line (put the emitter above the view).
+		sheet_cells(e, 0, 7)
+		e.frameMode = .Random
+		e.amount, e.lifetime = 25, 6
+		e.size, e.sizeVariance, e.sizeSpread = {16, 16}, 1, 6
+		e.angle, e.angleSpread = 90, 25
+		e.velocity, e.velocitySpread = 35, 15
+		e.gravityVelocity, e.wind = 10, {25, 0}
+		e.rotationSpread, e.rotationVariance = 180, 1
+		e.torqueSpread, e.torqueVariance = 120, 1
+		e.emissionShape, e.spread = .Line, {320, 0}
+		e.randomFlipX = true
+		e.localSpace = false
+		set_ramp(e, {0, {210, 200, 80, 0}}, {0.08, {230, 160, 50, 255}}, {0.85, {190, 80, 40, 255}}, {1, {140, 60, 30, 0}})
+		e.colorVariance = 0.25
+	case .Debris:
+		// One burst of rubble thrown up, spinning, falling back.
+		sheet_cells(e, 12, 15)
+		e.frameMode = .Random
+		e.amount, e.lifetime, e.lifetimeVariance = 24, 1.2, 0.3
+		e.burst, e.continuous = 1, false
+		e.size, e.sizeVariance, e.sizeSpread = {12, 12}, 1, 6
+		e.angle, e.angleSpread = -90, 60
+		e.velocity, e.velocitySpread = 260, 100
+		e.gravityVelocity = 700
+		e.rotationSpread, e.rotationVariance = 180, 1
+		e.torqueSpread, e.torqueVariance = 600, 1
+		e.randomFlipX, e.randomFlipY = true, true
+		e.localSpace = false
+		set_ramp(e, {0, {150, 120, 90, 255}}, {0.8, {120, 95, 70, 255}}, {1, {100, 80, 60, 0}})
+	case .SmokePuff:
+		// Puffs that open into rings as they rise and fade (the sheet's
+		// four frames over each one's life).
+		sheet_cells(e, 8, 11)
+		e.frameMode = .OverLifetime
+		e.amount, e.lifetime = 10, 1.6
+		e.size, e.sizeVariance = {32, 32}, 0.3
+		e.angleSpread, e.velocity, e.velocitySpread = 25, 35, 15
+		e.gravityDirection, e.gravityVelocity = {0, -1}, 10
+		e.damping = 0.6
+		e.rotationSpread, e.rotationVariance = 180, 1
+		e.randomFlipX, e.randomFlipY = true, true
+		e.localSpace = false
+		set_ramp(e, {0, {200, 200, 200, 0}}, {0.15, {190, 190, 190, 220}}, {1, {160, 160, 160, 0}})
+		set_curve(&e.sizeCurve, {0, 0.6}, {1, 1.6})
+	case .Sparkle:
+		// Twinkling stars around a disc, each its own frame of the twinkle.
+		sheet_cells(e, 16, 21)
+		e.frameMode, e.frameSpeed, e.frameRandomStart = .Speed, 10, true
+		e.amount, e.lifetime = 30, 1.2
+		e.size, e.sizeVariance = {18, 18}, 0.5
+		e.angleSpread, e.velocity = 180, 10
+		e.emissionShape, e.emissionRadius = .Circle, 32
+		e.randomFlipX = true
+		e.blendMode = .Additive
+		set_ramp(e, {0, {255, 230, 150, 0}}, {0.2, {255, 245, 200, 255}}, {0.8, {255, 220, 120, 230}}, {1, {255, 200, 80, 0}})
+		set_curve(&e.sizeCurve, {0, 0}, {0.3, 1}, {1, 0.2})
 	}
 	ParticleEmitter_Restart(e)
+}
+
+// ParticleEmitterNode_ApplyPreset: a preset on the node's emitter; a sheet
+// preset also sets the texture to PARTICLE_SHEET (#401; the editor copies
+// it into the project first).
+ParticleEmitterNode_ApplyPreset :: proc(pen: ^ParticleEmitterNode, preset: ParticlePreset) {
+	if pen == nil do return
+	if ParticlePreset_UsesSheet(preset) && pen.texturePath != PARTICLE_SHEET do ParticleEmitterNode_SetTexture(pen, PARTICLE_SHEET)
+	ParticleEmitter_ApplyPreset(&pen.emitter, preset)
 }

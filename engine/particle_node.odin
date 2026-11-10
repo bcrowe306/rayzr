@@ -15,6 +15,10 @@ ParticleEmitterNode :: struct {
 	// becomes a child sprite).
 	texturePath: string,
 	texture:     ^Texture,
+	// An Aseprite texture (#401): its file (Frame Source Aseprite: the tag's
+	// frames from its sheet) and the tag ("" = every frame).
+	ase:         ^Ase_Resource,
+	frameTag:    string `gui:"true"`,
 	// Sub-emitter (#130): another Particle Emitter (a path from this node,
 	// e.g. "Sparks" for a child) that emits subEmitterAmount particles where
 	// each of this one's particles dies, hits a body, or both. Give it
@@ -58,13 +62,45 @@ ParticleEmitterNode_SubEmitter :: proc(pen: ^ParticleEmitterNode) -> ^ParticleEm
 ParticleEmitterNode_SetTexture :: proc(pen: ^ParticleEmitterNode, path: string) {
 	rm := Node_ResourceManager(pen)
 	if pen.texture != nil && rm != nil do ResourceManager_ReleaseTexture(rm, pen.texture)
-	pen.texture, pen.emitter.texture = nil, nil
+	if pen.ase != nil do ResourceManager_ReleaseAseprite(pen.ase)
+	pen.texture, pen.emitter.texture, pen.ase = nil, nil, nil
 	pen.texturePath = strings.clone(path, pen.allocator)
 	if path == "" || rm == nil || !rl.IsWindowReady() do return
-	if tex, ok := rm.loadTexture(rm, Project_ResolveAssetPath(pen.gameContext, path)); ok && tex != nil {
+	full := Project_ResolveAssetPath(pen.gameContext, path)
+	if tex, ok := rm.loadTexture(rm, full); ok && tex != nil {
 		pen.texture = tex
 		pen.emitter.texture = &tex.texture
 	}
+	if Ase_IsPath(path) do pen.ase = ResourceManager_LoadAseprite(rm, full)
+}
+
+// ParticleEmitterNode_ResolveFrames works out the emitter's frames for this
+// draw (#401): its texture's atlas region (exported games), slicing preset,
+// or Aseprite tag - whose sheet the particles are then drawn from.
+ParticleEmitterNode_ResolveFrames :: proc(pen: ^ParticleEmitterNode) {
+	em := &pen.emitter
+	fi: Particle_Frame_Input
+	if pen.texture != nil {
+		em.texture = &pen.texture.texture
+		fi.texSize = {f32(pen.texture.texture.width), f32(pen.texture.texture.height)}
+		fi.region = pen.texture.region
+	}
+	switch em.frameSource {
+	case .Grid, .Regions:
+	case .Slices:
+		if pen.texture != nil do fi.slice = Asset_ImportGet(Node_ResourceManager(pen), pen.texture.filePath).slice
+	case .Aseprite:
+		if pen.ase != nil && pen.ase.doc != nil {
+			fi.ase, fi.tag, fi.region = pen.ase.doc, pen.frameTag, {}
+			fi.aseCols = Ase_SheetColumns(len(pen.ase.doc.frames))
+			if sheet := Ase_ResourceSheet(pen.ase, "", ""); sheet != nil {
+				em.texture = &sheet.texture
+				fi.texSize = {f32(sheet.texture.width), f32(sheet.texture.height)}
+			}
+		}
+	}
+	ParticleEmitter_ResolveFrames(em, fi)
+	em.frames.ownerSet = true
 }
 
 ParticleEmitterNode_Init :: proc(pen: ^ParticleEmitterNode) {
@@ -167,6 +203,8 @@ ParticleEmitterNode_Destroy :: proc(node: ^Node, gameContext: ^GameContext) {
 		if rm := Node_ResourceManager(pen); rm != nil do ResourceManager_ReleaseTexture(rm, pen.texture)
 		pen.texture, pen.emitter.texture = nil, nil
 	}
+	if pen.ase != nil do ResourceManager_ReleaseAseprite(pen.ase)
+	pen.ase = nil
 }
 
 ParticleEmitterNode_Render :: proc(node: ^Node, gameContext: ^GameContext, deltaTime: f32) {
@@ -175,5 +213,6 @@ ParticleEmitterNode_Render :: proc(node: ^Node, gameContext: ^GameContext, delta
 	if !pen.renderable do return
 
 	pen.emitter.position, pen.emitter.originRotation, pen.emitter.originScale = pen.globalPosition, pen.globalRotation, pen.globalScale
+	ParticleEmitterNode_ResolveFrames(pen)
 	ParticleEmitter_Render(&pen.emitter, deltaTime)
 }

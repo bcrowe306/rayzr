@@ -44,9 +44,12 @@ the emitter makes new ones to replace them.
      start and end colour.
    - **Curves**: size, alpha and speed over the particle's life.
    - **Texture**: a picture for the particles (picking one switches Shape
-     to Texture), a sprite sheet's **Sheet Columns** / **Sheet Rows** and
-     **Frame Mode**, the **Blend Mode** (Additive for fire and glow) and
-     **Align To Velocity**.
+     to Texture), where its frames come from (**Frame Source**: a grid, the
+     texture's slicing preset, regions of an atlas, an Aseprite tag), how
+     they play (**Frame Mode**, **Frame Loop**, **Frame Random Start**), the
+     **Blend Mode** (Additive for fire and glow), **Align To Velocity**,
+     **Texture Pivot** and **Random Flip X / Y**. See
+     [Textures and frames](#textures-and-frames).
    - **Trails**: a ribbon behind each particle (**Trail Length** points,
      one every **Trail Segment** pixels, **Trail Width** at the particle).
    - **Collision**: particles hitting physics bodies.
@@ -54,8 +57,11 @@ the emitter makes new ones to replace them.
    emitter; the arrow restarts this one. **Preset** gives the emitter a
    starting look - **Fire**, **Smoke**, **Sparks**, **Rain**, **Snow**,
    **Explosion** or **Magic** - replacing its look and motion settings (its
-   texture stays; one Undo puts the old settings back), ready to tweak. The
-   line next to them shows how many particles are alive.
+   texture stays; one Undo puts the old settings back), ready to tweak.
+   **Leaves**, **Debris**, **Smoke Puff** and **Sparkle** also give it a
+   sprite sheet (`textures/particles/kenney_particles.png`, Kenney's CC0
+   art, added to the project the first time) and frames from it. The line
+   next to them shows how many particles are alive.
 4. Put the emitter where the effect belongs: a child of a torch, the
    player's feet, a ship's engine.
 
@@ -99,6 +105,49 @@ the emitter makes new ones to replace them.
   **Emitting** off (only these bursts) and **Local Space** off (its
   particles stay where they were born). CPU particles only: Gpu ones don't
   report their deaths or hits.
+
+## Textures and frames
+
+With **Shape** Texture each particle shows a picture - or one frame of
+one. **Frame Source** says where the frames are:
+
+- **Grid**: the texture cut into **Sheet Columns** x **Sheet Rows** equal
+  cells (1 x 1: the whole picture).
+- **Slices**: the texture's slicing preset - columns and rows or a cell
+  size, margin and spacing - saved in the
+  [Sprite Slicer](../editor/sprite-slicer.md) with **Save Preset**.
+- **Regions**: any rectangles of the texture (x, y, width, height in
+  pixels), up to 64: the sprites of an atlas, or cells picked in the Sprite
+  Slicer (**Pick Frames in Sprite Slicer** on the Texture tab, then **Use N
+  Cells**).
+- **Aseprite**: an `.aseprite` / `.ase` texture's frames - every frame or
+  one **Tag**'s, in its direction (forward, reverse, ping-pong; the tag's
+  repeat count is not used), up to 64. **Frame File Timing** keeps each
+  frame's duration from the file.
+
+With Grid or Slices, **Frame First** and **Frame Count** use only some of
+the cells (Count 0: to the end).
+
+Which frame a particle shows (**Frame Mode**):
+
+- **Over Lifetime**: the frames once, from birth to death (an Aseprite
+  file's timing: each frame its share of the life).
+- **Speed**: **Frame Speed** frames a second (or the file's timing).
+  **Frame Loop** on starts over after the last frame; off stays on it.
+- **Random**: each particle picks one frame and keeps it - leaves, debris,
+  sparkles of different shapes.
+
+**Frame Random Start** starts each particle on a random frame, so they
+don't all animate in step. **Texture Pivot** is the point of the picture
+(0 to 1 across and down) placed on the particle and turned around (0.5,
+0.5 is its centre; 0.5, 1 its bottom middle). **Random Flip X / Y** mirror
+about half the particles. The colour over life tints the picture (white
+keeps its colours); **Blend Mode** Additive suits glows and fire, Multiply
+darkens.
+
+All of this works in CPU and GPU mode. In an exported game whose textures
+are packed into an atlas (the texture's import setting **Atlas**), the
+particles still show only their own picture's frames.
 
 ## Signals
 

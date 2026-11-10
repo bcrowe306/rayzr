@@ -4,6 +4,8 @@ import "core:c"
 import "core:encoding/json"
 import "core:fmt"
 import "core:math"
+import "core:os"
+import "core:path/filepath"
 import "core:strings"
 import "core:time"
 import rl "vendor:raylib"
@@ -54,25 +56,59 @@ pp := Particle_Panel{dragStop = -1, dragAlpha = -1}
 
 particleTabRequest := false // select the Particles tab next frame
 
+// The sheet presets' texture and its licence (Kenney, CC0; #401), written
+// into the project the first time one is applied.
+PARTICLE_SHEET_PNG :: #load("../assets/kenney/particles/particles.png")
+PARTICLE_SHEET_LICENSE :: #load("../assets/kenney/particles/License.txt")
+
+// ParticleSheet_Ensure puts the particle sheet at e.PARTICLE_SHEET in the
+// project (with its licence and a slicing preset) unless it is there.
+ParticleSheet_Ensure :: proc(state: ^EditorState) -> bool {
+	full, _ := filepath.join({state.projectPath, e.PARTICLE_SHEET}, context.temp_allocator)
+	if os.is_file(full) do return true
+	dir := filepath.dir(full, context.temp_allocator)
+	_ = os.make_directory_all(dir)
+	if os.write_entire_file(full, PARTICLE_SHEET_PNG) != nil {
+		Editor_Log(state, .Error, "Could not write %s", e.PARTICLE_SHEET)
+		return false
+	}
+	lic, _ := filepath.join({dir, "kenney_particles_License.txt"}, context.temp_allocator)
+	_ = os.write_entire_file(lic, PARTICLE_SHEET_LICENSE)
+	imp := Editor_AssetImport(state, full)
+	imp.slice = {grid = {e.PARTICLE_SHEET_COLUMNS, 3}}
+	preview_save_import(state, full, e.PARTICLE_SHEET, imp)
+	Editor_InvalidateProjectFiles()
+	Editor_Log(state, .Info, "Added %s (Kenney, CC0) for the particle sheet presets", e.PARTICLE_SHEET)
+	return true
+}
+
 // particle_preset_menu: a starting look (fire, smoke, ...) for the emitter;
-// it replaces the look and motion settings, so it's one undo step.
+// it replaces the look and motion settings, so it's one undo step. Sheet
+// presets (#401) also set the texture to the particle sheet.
 @(private = "file")
-particle_preset_menu :: proc(state: ^EditorState, em: ^e.ParticleEmitter) {
+particle_preset_menu :: proc(state: ^EditorState, pen: ^e.ParticleEmitterNode) {
 	imgui.SetNextItemWidth(110)
 	if imgui.BeginCombo("##particles.preset", ICON_FA_WAND_MAGIC_SPARKLES + " Preset", {.HeightLarge}) {
 		for p in e.ParticlePreset {
 			name := e.ParticlePreset_Name(p)
+			if p == .Leaves {
+				imgui.SeparatorText("With a sprite sheet")
+			}
 			if imgui.Selectable(fmt.ctprintf("%s", name)) {
 				Editor_RecordUndo(state, fmt.tprintf("Apply %s preset", name))
-				e.ParticleEmitter_ApplyPreset(em, p)
+				if !e.ParticlePreset_UsesSheet(p) || ParticleSheet_Ensure(state) {
+					pen.gameContext = &state.game.gameContext
+					e.ParticleEmitterNode_ApplyPreset(pen, p)
+				}
 				particlePreview = true
 			}
 			Drive_Item(fmt.tprintf("pick:%s", name))
+			if e.ParticlePreset_UsesSheet(p) do UI_Tooltip("Sets the texture to " + e.PARTICLE_SHEET + " (Kenney's CC0 particle and foliage art, added to the project if it isn't there)")
 		}
 		imgui.EndCombo()
 	}
 	Drive_Item("particles.preset")
-	UI_Tooltip("Give the emitter a starting look: fire, smoke, sparks, rain, snow, an explosion or magic. Its look and motion settings are replaced; its texture stays")
+	UI_Tooltip("Give the emitter a starting look: fire, smoke, sparks, rain, snow, an explosion or magic - or leaves, debris, a smoke puff or a sparkle from a sprite sheet. Its look and motion settings are replaced; its texture stays (sheet presets set it)")
 }
 
 ParticlePanel_Render :: proc(state: ^EditorState) {
@@ -96,7 +132,7 @@ ParticlePanel_Render :: proc(state: ^EditorState) {
 		e.ParticleEmitter_Start(em)
 	}
 	imgui.SameLine(0, 2)
-	particle_preset_menu(state, em)
+	particle_preset_menu(state, pen)
 	imgui.SameLine(0, UI_SPACE)
 	imgui.AlignTextToFramePadding()
 	UI_DimText(fmt.tprintf("%d particles alive%s · %d per cycle · %.1fs lifetime", em.aliveCount, " (GPU)" if em.gpu else "", em.amount, em.lifetime))
@@ -389,35 +425,143 @@ particle_color :: proc(state: ^EditorState, pen: ^e.ParticleEmitterNode) {
 	_ = c.int(0)
 }
 
-// particle_texture: the Texture tab (#126) - the texture (shape Texture),
-// its sprite sheet and frames, the blend mode, align to velocity.
+// particle_texture: the Texture tab (#126, #401) - the texture (shape
+// Texture), where its frames come from (a grid, the slicing preset, regions
+// picked in the Sprite Slicer, an Aseprite tag), how they play, and the
+// look (blend, align, pivot, flips).
 @(private = "file")
 particle_texture :: proc(state: ^EditorState, pen: ^e.ParticleEmitterNode) {
-	if !UI_BeginProps("##ptexprops") do return
-	ParticleTexture_Row(state, pen, "particles.texture")
-	if pen.emitter.shape != .Texture && pen.texturePath != "" {
-		UI_PropLabel("")
-		UI_DimText("Shown when Shape is Texture (Emission tab)")
-	}
-	for name in ([]string{"emitter.sheetColumns", "emitter.sheetRows", "emitter.frameMode", "emitter.frameSpeed", "emitter.blendMode", "emitter.alignToVelocity"}) {
+	em := &pen.emitter
+	prop :: proc(state: ^EditorState, pen: ^e.ParticleEmitterNode, name: string) {
 		p, ok := e.Node_FindProperty(pen, name)
-		if !ok do continue
+		if !ok do return
 		UI_PropLabel(pretty_name(name))
 		property_widget(state, pen, p, false)
 	}
+	if !UI_BeginProps("##ptexprops") do return
+	ParticleTexture_Row(state, pen, "particles.texture")
+	if em.shape != .Texture && pen.texturePath != "" {
+		UI_PropLabel("")
+		UI_DimText("Shown when Shape is Texture (Emission tab)")
+	}
+	prop(state, pen, "emitter.frameSource")
+	switch em.frameSource {
+	case .Grid:
+		for name in ([]string{"emitter.sheetColumns", "emitter.sheetRows", "emitter.frameFirst", "emitter.frameCount"}) do prop(state, pen, name)
+	case .Slices:
+		UI_PropLabel("")
+		if pen.texture != nil && e.Asset_ImportGet(&state.game.resourceManager, pen.texture.filePath).slice.grid == {} {
+			UI_DimText("No slicing preset: Sprite Slicer > Save Preset")
+		} else {
+			UI_DimText("The texture's slicing preset")
+		}
+		for name in ([]string{"emitter.frameFirst", "emitter.frameCount"}) do prop(state, pen, name)
+	case .Regions:
+		particle_regions(state, pen)
+	case .Aseprite:
+		UI_PropLabel("Tag")
+		imgui.SetNextItemWidth(field_width())
+		doc := pen.ase.doc if pen.ase != nil else nil
+		if doc == nil {
+			UI_DimText("Pick an .aseprite texture")
+		} else if imgui.BeginCombo("##particles.tag", fmt.ctprintf("%s", pen.frameTag if pen.frameTag != "" else "(every frame)")) {
+			pick :: proc(state: ^EditorState, pen: ^e.ParticleEmitterNode, tag: string, label: string) {
+				if imgui.Selectable(fmt.ctprintf("%s", label), pen.frameTag == tag) {
+					Editor_RecordUndo(state, "Set particle tag")
+					pen.frameTag = strings.clone(tag, pen.allocator)
+				}
+				Drive_Item(fmt.tprintf("pick:%s", label))
+			}
+			pick(state, pen, "", "(every frame)")
+			for t in doc.tags do pick(state, pen, t.name, t.name)
+			imgui.EndCombo()
+		}
+		Drive_Item("particles.tag")
+		UI_Tooltip("The Aseprite tag whose frames play, in its direction (forward, reverse, ping-pong); up to 64 frames")
+		prop(state, pen, "emitter.frameFileTiming")
+	}
+	if pen.texturePath != "" && !e.Ase_IsPath(pen.texturePath) {
+		UI_PropLabel("")
+		if UI_Button(fmt.tprintf("%s  Pick Frames in Sprite Slicer", ICON_FA_TABLE_CELLS), "particles.slicer") do Slicer_Open(state, pen.texturePath)
+		UI_Tooltip("Open the Sprite Sheet Slicer on this texture: pick cells (or none for all of them) and press Use for Particles")
+	}
+	for name in ([]string{"emitter.frameMode", "emitter.frameSpeed", "emitter.frameLoop", "emitter.frameRandomStart", "emitter.blendMode", "emitter.alignToVelocity", "emitter.texturePivot", "emitter.randomFlipX", "emitter.randomFlipY"}) do prop(state, pen, name)
 	UI_EndProps()
-	if pen.texture != nil {
-		// The texture with its sheet's grid.
-		tex := &pen.texture.texture
-		w := min(imgui.GetContentRegionAvail().x, 200)
+
+	// The texture (an Aseprite file: its sheet) with its frames outlined.
+	e.ParticleEmitterNode_ResolveFrames(pen)
+	if tex := em.texture; tex != nil && tex.id != 0 {
+		fr := &em.frames
+		w := min(imgui.GetContentRegionAvail().x, 240)
 		h := w * f32(tex.height) / max(f32(tex.width), 1)
 		p0 := imgui.GetCursorScreenPos()
 		imgui.Image(transmute(imgui.TextureID)tex, {w, h})
+		Drive_Item("particles.texture-preview")
 		dl := imgui.GetWindowDrawList()
-		cols, rows := max(pen.emitter.sheetColumns, 1), max(pen.emitter.sheetRows, 1)
-		for c in 1 ..< cols do imgui.DrawList_AddLine(dl, {p0.x + w * f32(c) / f32(cols), p0.y}, {p0.x + w * f32(c) / f32(cols), p0.y + h}, col_u32(UI_ACCENT))
-		for r in 1 ..< rows do imgui.DrawList_AddLine(dl, {p0.x, p0.y + h * f32(r) / f32(rows)}, {p0.x + w, p0.y + h * f32(r) / f32(rows)}, col_u32(UI_ACCENT))
+		sx, sy := w / max(f32(tex.width), 1), h / max(f32(tex.height), 1)
+		for i in 0 ..< min(fr.count, 512) {
+			r := e.Particle_FrameRect(fr, i) if fr.count > 1 || fr.list else rl.Rectangle{fr.origin.x, fr.origin.y, fr.cell.x, fr.cell.y}
+			imgui.DrawList_AddRect(dl, {p0.x + r.x * sx, p0.y + r.y * sy}, {p0.x + (r.x + r.width) * sx, p0.y + (r.y + r.height) * sy}, col_u32(UI_ACCENT))
+		}
+		UI_DimText(fmt.tprintf("%d frame%s", max(fr.count, 1), "" if fr.count <= 1 else "s"))
 	}
+}
+
+// particle_regions: Frame Source Regions - the texture's rectangles (x, y,
+// w, h px), each a frame; picked in the Sprite Slicer or typed.
+@(private = "file")
+particle_regions :: proc(state: ^EditorState, pen: ^e.ParticleEmitterNode) {
+	rg := &pen.emitter.regions
+	@(static) dragging: int = -1
+	remove := -1
+	for i in 0 ..< rg.count {
+		UI_PropLabel(fmt.tprintf("Region %d", i + 1))
+		r := rg.rects[i]
+		v := [4]f32{r.x, r.y, r.width, r.height}
+		imgui.SetNextItemWidth(field_width() - 28)
+		if imgui.DragFloat4(fmt.ctprintf("##particles.region%d", i), &v, 0.5, 0, 16384, "%.0f") {
+			if dragging != i do Editor_RecordUndo(state, "Edit particle region")
+			dragging = i
+			rg.rects[i] = {v[0], v[1], max(v[2], 1), max(v[3], 1)}
+		}
+		Drive_Item(fmt.tprintf("particles.region%d", i))
+		imgui.SameLine(0, 2)
+		if UI_IconButton(ICON_FA_XMARK, fmt.tprintf("particles.region%d.remove", i), "Remove this region", size = 22) do remove = i
+	}
+	if !imgui.IsMouseDown(.Left) do dragging = -1
+	if remove >= 0 {
+		Editor_RecordUndo(state, "Remove particle region")
+		for k in remove ..< rg.count - 1 do rg.rects[k] = rg.rects[k + 1]
+		rg.count -= 1
+	}
+	UI_PropLabel("")
+	if rg.count == 0 do UI_DimText("No regions: the whole texture")
+	if rg.count < e.MAX_PARTICLE_FRAMES && UI_Button(fmt.tprintf("%s  Add Region", ICON_FA_PLUS), "particles.region-add") {
+		Editor_RecordUndo(state, "Add particle region")
+		last := rg.rects[rg.count - 1] if rg.count > 0 else rl.Rectangle{0, 0, 16, 16}
+		rg.rects[rg.count] = last
+		rg.count += 1
+	}
+}
+
+// ParticleEmitter_UseCells: the Sprite Slicer's result for an emitter
+// (#401) - its texture, and the picked cells' rectangles as its regions
+// (none picked: every cell, by the texture's slicing preset).
+ParticleEmitter_UseCells :: proc(state: ^EditorState, pen: ^e.ParticleEmitterNode, texRel: string, cells: []rl.Rectangle) {
+	Editor_RecordUndo(state, "Use sheet cells for particles")
+	if pen.texturePath != texRel {
+		pen.gameContext = &state.game.gameContext
+		e.ParticleEmitterNode_SetTexture(pen, texRel)
+	}
+	pen.emitter.shape = .Texture
+	em := &pen.emitter
+	if len(cells) == 0 {
+		em.frameSource, em.frameFirst, em.frameCount = .Slices, 0, 0
+		return
+	}
+	em.frameSource = .Regions
+	em.regions.count = min(len(cells), e.MAX_PARTICLE_FRAMES)
+	for i in 0 ..< em.regions.count do em.regions.rects[i] = cells[i]
 }
 
 // ParticleTexture_Row: a props-table row picking a particle emitter's
@@ -426,11 +570,16 @@ particle_texture :: proc(state: ^EditorState, pen: ^e.ParticleEmitterNode) {
 ParticleTexture_Row :: proc(state: ^EditorState, pen: ^e.ParticleEmitterNode, id: string) {
 	UI_PropLabel("Texture")
 	imgui.SetNextItemWidth(field_width())
-	if path, ok := asset_picker(id, pen.texturePath, Editor_ListProjectFiles(state, "textures", TEXTURE_EXTS)); ok {
+	files := make([dynamic]string, context.temp_allocator)
+	append(&files, ..Editor_ListProjectFiles(state, "textures", TEXTURE_EXTS))
+	append(&files, ..Editor_ListProjectFiles(state, "", {".aseprite", ".ase"})) // (#401: a tag's frames)
+	if path, ok := asset_picker(id, pen.texturePath, files[:]); ok {
 		Editor_RecordUndo(state, "Set particle texture")
 		pen.gameContext = &state.game.gameContext
 		e.ParticleEmitterNode_SetTexture(pen, path)
 		if pen.emitter.shape != .Texture do pen.emitter.shape = .Texture // (what a texture is for)
+		if e.Ase_IsPath(path) do pen.emitter.frameSource = .Aseprite
+		else if pen.emitter.frameSource == .Aseprite do pen.emitter.frameSource = .Grid
 	}
 	if field_reset(id, pen.texturePath != "") {
 		Editor_RecordUndo(state, "Clear particle texture")
