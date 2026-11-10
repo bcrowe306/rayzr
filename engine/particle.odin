@@ -120,9 +120,58 @@ ParticleBlend :: enum {
 
 // Which frame of a sprite sheet a particle shows (#126).
 ParticleFrameMode :: enum {
-	OverLifetime, // the sheet once, from birth to death
-	Speed,        // frameSpeed frames per second, looping
+	OverLifetime, // the frames once, from birth to death
+	Speed,        // frameSpeed frames per second (or the file's timing), looping or once
 	Random,       // one frame per particle, picked at birth
+}
+
+// Where a textured particle's frames come from (#401).
+ParticleFrameSource :: enum {
+	Grid,     // the texture cut into sheetColumns x sheetRows
+	Slices,   // the texture's slicing preset (its import settings: Sprite Slicer's Save Preset)
+	Regions,  // rectangles of the texture (an atlas's sprites; the Sprite Slicer's picked cells)
+	Aseprite, // an Aseprite texture's tag (frameTag; "" = every frame): its direction and timing
+}
+
+// The most frames a frame list holds (Regions, Aseprite; GPU uniforms, #401).
+MAX_PARTICLE_FRAMES :: 64
+
+// Regions of the texture (Frame Source: Regions), in its pixels; saved as
+// "particle_regions" (scene_serialization.odin).
+Particle_Regions :: struct {
+	rects: [MAX_PARTICLE_FRAMES]rl.Rectangle,
+	count: int,
+}
+
+// Particle_Frames: the frames as drawn (#401), worked out from the frame
+// source before each draw (ParticleEmitter_ResolveFrames): a grid of cells
+// (`first` + i, `cols` across from `origin` every `step`, `cell` big) or a
+// list of rectangles - in the GPU texture's pixels (an atlased texture's
+// region offset in) - and, timed, each frame's end (seconds, cumulative).
+Particle_Frames :: struct {
+	count:   int, // 0 / 1: the whole texture
+	list:    bool,
+	origin:  [2]f32,
+	step:    [2]f32,
+	cell:    [2]f32,
+	cols:    int,
+	first:   int,
+	rects:   [MAX_PARTICLE_FRAMES]rl.Rectangle,
+	timed:   bool,
+	ends:    [MAX_PARTICLE_FRAMES]f32,
+	texSize: [2]f32, // the GPU texture's size (uv = px / texSize)
+	ownerSet: bool,  // (runtime) the owner resolved them for this draw (slices, regions, Aseprite)
+}
+
+// What ParticleEmitter_ResolveFrames reads besides the emitter (the node:
+// its texture's atlas region, slicing preset and Aseprite file).
+Particle_Frame_Input :: struct {
+	texSize: [2]f32,        // the GPU texture
+	region:  rl.Rectangle,  // an atlased texture's rectangle in it (0 = all of it)
+	slice:   Asset_Slice,   // Slices
+	ase:     ^Ase_Document, // Aseprite
+	aseCols: int,           //   its sheet's frames per row
+	tag:     string,        //   "" = every frame
 }
 
 // Where particles are born (#127). Rectangle is the spread box (half sizes
@@ -187,6 +236,27 @@ ParticleCurve_FromJSON :: proc(c: ^ParticleCurve, arr: json.Array) {
 		c.count += 1
 	}
 	slice.sort_by(c.points[:c.count], proc(a, b: [2]f32) -> bool {return a.x < b.x})
+}
+
+// ParticleRegions_FromJSON reads [[x, y, w, h], ...] (at most
+// MAX_PARTICLE_FRAMES; empty rectangles skipped).
+ParticleRegions_FromJSON :: proc(rg: ^Particle_Regions, arr: json.Array) {
+	rg.count = 0
+	for v in arr {
+		r, ok := v.(json.Array)
+		if !ok || len(r) < 4 || rg.count >= MAX_PARTICLE_FRAMES do continue
+		num :: proc(v: json.Value) -> f32 {
+			#partial switch x in v {
+			case json.Integer: return f32(x)
+			case json.Float:   return f32(x)
+			}
+			return 0
+		}
+		rect := rl.Rectangle{num(r[0]), num(r[1]), num(r[2]), num(r[3])}
+		if rect.width <= 0 || rect.height <= 0 do continue
+		rg.rects[rg.count] = rect
+		rg.count += 1
+	}
 }
 
 // What a particle does when it hits the physics world (#123).
@@ -262,6 +332,22 @@ ParticleEmitter :: struct {
 	frameMode: ParticleFrameMode `gui:"true"`,
 	frameSpeed: f32 `gui:"true" min:"0" max:"60"`,
 	alignToVelocity: bool `gui:"true"`,
+	// Frames (#401): where they come from, which of them (Grid / Slices:
+	// frameCount from frameFirst, 0 = to the end), looping or once (Speed),
+	// a random start frame per particle, the Aseprite file's frame
+	// durations; the image's pivot (0..1: the point on the particle's
+	// position it turns around) and random flips per particle.
+	frameSource: ParticleFrameSource `gui:"true"`,
+	frameFirst: int `gui:"true" min:"0" max:"4096"`,
+	frameCount: int `gui:"true" min:"0" max:"4096"`,
+	frameLoop: bool `gui:"true"`,
+	frameRandomStart: bool `gui:"true"`,
+	frameFileTiming: bool `gui:"true"`,
+	texturePivot: [2]f32 `gui:"true" min:"0" max:"1"`,
+	randomFlipX: bool `gui:"true"`,
+	randomFlipY: bool `gui:"true"`,
+	regions: Particle_Regions,
+	frames: Particle_Frames, // (runtime)
 	// Trails (#130; CPU particles): trailLength points (0 = off), one each
 	// trailSegment pixels; trailWidth is the ribbon's width at the particle
 	// (1 = the particle's size). `trails` parallels `particles` (only
@@ -406,6 +492,9 @@ ParticleEmitter_Init :: proc(emitter: ^ParticleEmitter) {
 	emitter.sheetColumns = 1
 	emitter.sheetRows = 1
 	emitter.frameSpeed = 12
+	emitter.frameLoop = true
+	emitter.frameFileTiming = true
+	emitter.texturePivot = {0.5, 0.5}
 	emitter.emissionRadius = 32
 	emitter.trailSegment = 6
 	emitter.trailWidth = 1
@@ -1141,7 +1230,7 @@ batch_close :: proc(b: ^Particle_Batch) {
 // batch_quad: a w x h quad centred on c, turned by rotDeg, the texture's
 // uv rectangle (u0, v0) - (u1, v1) on it.
 @(private = "file")
-batch_quad :: proc(b: ^Particle_Batch, c: [2]f32, w, h, rotDeg: f32, col: rl.Color, uv := [4]f32{0, 0, 1, 1}) {
+batch_quad :: proc(b: ^Particle_Batch, c: [2]f32, w, h, rotDeg: f32, col: rl.Color, uv := [4]f32{0, 0, 1, 1}, pivot := [2]f32{0.5, 0.5}) {
 	hw, hh := w * 0.5, h * 0.5
 	ax, ay := [2]f32{hw, 0}, [2]f32{0, hh}
 	if rotDeg != 0 {
@@ -1149,6 +1238,8 @@ batch_quad :: proc(b: ^Particle_Batch, c: [2]f32, w, h, rotDeg: f32, col: rl.Col
 		cs, sn := math.cos(r), math.sin(r)
 		ax, ay = {hw * cs, hw * sn}, {-hh * sn, hh * cs}
 	}
+	c := c
+	if pivot != {0.5, 0.5} do c += ax * (1 - 2 * pivot.x) + ay * (1 - 2 * pivot.y) // (the pivot on c)
 	tl, bl, br, tr := c - ax - ay, c - ax + ay, c + ax + ay, c + ax - ay
 	rlgl.Color4ub(col.r, col.g, col.b, col.a)
 	rlgl.TexCoord2f(uv[0], uv[1]); rlgl.Vertex2f(tl.x, tl.y)
@@ -1216,19 +1307,132 @@ Particle_Quad :: struct {
 	rotation: f32,
 	color:    rl.Color,
 	texture:  Particle_Quad_Texture,
-	uv:       [4]f32, // u0, v0, u1, v1 (a sprite sheet's frame)
+	uv:       [4]f32, // u0, v0, u1, v1 (a sprite sheet's frame; flipped: swapped)
+	pivot:    [2]f32, // the point of the quad (0..1) on `center` (Texture Pivot, #401)
 }
 
-// particle_frame: the sheet frame a particle shows now (0-based).
-Particle_Frame :: proc(emitter: ^ParticleEmitter, p: Particle) -> int {
-	n := max(emitter.sheetColumns, 1) * max(emitter.sheetRows, 1)
-	if n <= 1 do return 0
-	switch emitter.frameMode {
-	case .OverLifetime: return min(int(p.agePercent * f32(n)), n - 1)
-	case .Speed:        return int(p.age * max(emitter.frameSpeed, 0)) %% n
-	case .Random:       return int(p.frameSeed %% u32(n))
+// --- frames (#401) ---------------------------------------------------------------------
+
+// ParticleEmitter_ResolveFrames works out the frames to draw from the frame
+// source (the node calls it before each draw with its texture's details;
+// an emitter on its own: the grid over its texture).
+ParticleEmitter_ResolveFrames :: proc(emitter: ^ParticleEmitter, input: Particle_Frame_Input) {
+	f := &emitter.frames
+	f.count, f.list, f.timed, f.first, f.cols = 1, false, false, 0, 1
+	f.texSize = input.texSize
+	if f.texSize == {} && emitter.texture != nil do f.texSize = {f32(emitter.texture.width), f32(emitter.texture.height)}
+	off := [2]f32{input.region.x, input.region.y}
+	size := [2]f32{input.region.width, input.region.height} if input.region.width > 0 else f.texSize
+	f.origin, f.step, f.cell = off, size, size
+	// A range of a grid's `total` cells.
+	ranged :: proc(emitter: ^ParticleEmitter, total: int) -> (first, count: int) {
+		first = clamp(emitter.frameFirst, 0, max(total - 1, 0))
+		count = total - first
+		if emitter.frameCount > 0 do count = min(count, emitter.frameCount)
+		return first, max(count, 1)
 	}
-	return 0
+	switch emitter.frameSource {
+	case .Grid:
+		cols, rows := max(emitter.sheetColumns, 1), max(emitter.sheetRows, 1)
+		f.cell = size / {f32(cols), f32(rows)}
+		f.step, f.cols = f.cell, cols
+		f.first, f.count = ranged(emitter, cols * rows)
+	case .Slices:
+		s := input.slice
+		if s.cellSize.x > 0 && s.cellSize.y > 0 {
+			fit := SpriteSheet_FitGrid(size, s.margin, s.spacing, s.cellSize)
+			f.cell = {f32(s.cellSize.x), f32(s.cellSize.y)}
+			f.cols = max(fit.x, 1)
+			f.first, f.count = ranged(emitter, max(fit.x * fit.y, 1))
+		} else if s.grid.x > 0 && s.grid.y > 0 {
+			r := SpriteSheet_CellRect(size, s.grid, s.margin, s.spacing, 0)
+			f.cell = {r.width, r.height}
+			f.cols = s.grid.x
+			f.first, f.count = ranged(emitter, s.grid.x * s.grid.y)
+		} else {
+			return // (no preset: the whole texture)
+		}
+		f.origin = off + {f32(s.margin.x), f32(s.margin.y)}
+		f.step = f.cell + {f32(s.spacing.x), f32(s.spacing.y)}
+	case .Regions:
+		if emitter.regions.count == 0 do return
+		f.list, f.count = true, emitter.regions.count
+		for i in 0 ..< f.count {
+			r := emitter.regions.rects[i]
+			f.rects[i] = {r.x + off.x, r.y + off.y, r.width, r.height}
+		}
+	case .Aseprite:
+		doc := input.ase
+		if doc == nil || len(doc.frames) == 0 do return
+		// The tag's frames in its direction (ping-pong: there and back,
+		// the ends once), as a list of the sheet's cells.
+		from, to, dir := 0, len(doc.frames) - 1, Ase_Direction.Forward
+		if input.tag != "" {
+			if t := Ase_FindTag(doc, input.tag); t != nil do from, to, dir = clamp(t.from, 0, len(doc.frames) - 1), clamp(t.to, 0, len(doc.frames) - 1), t.direction
+		}
+		seq: [MAX_PARTICLE_FRAMES]int
+		n := 0
+		add :: proc(seq: ^[MAX_PARTICLE_FRAMES]int, n: ^int, k: int) {
+			if n^ < MAX_PARTICLE_FRAMES {seq[n^] = k; n^ += 1}
+		}
+		fwd, rev := dir == .Forward || dir == .Ping_Pong, dir == .Reverse || dir == .Ping_Pong_Reverse
+		if fwd do for k in from ..= to do add(&seq, &n, k)
+		if rev do for k := to; k >= from; k -= 1 do add(&seq, &n, k)
+		if dir == .Ping_Pong do for k := to - 1; k > from; k -= 1 do add(&seq, &n, k)
+		if dir == .Ping_Pong_Reverse do for k in from + 1 ..< to do add(&seq, &n, k)
+		cols := max(input.aseCols, 1)
+		w, h := f32(doc.width), f32(doc.height)
+		f.list, f.count = true, max(n, 1)
+		end: f32 = 0
+		for i in 0 ..< n {
+			k := seq[i]
+			f.rects[i] = {f32(k % cols) * w, f32(k / cols) * h, w, h}
+			end += f32(max(doc.frames[k].duration, 1)) / 1000
+			f.ends[i] = end
+		}
+		f.timed = emitter.frameFileTiming && n > 1
+	}
+}
+
+// Particle_Seed16: a particle's random number as the GPU has it (16 bits:
+// the frame, the start frame and the flips come from it).
+Particle_Seed16 :: #force_inline proc(p: Particle) -> int {return int(p.frameSeed % 65536)}
+
+// Particle_Frame: the frame a particle shows now (0-based, of the resolved
+// frames; the GPU shader's frameIndex is the same).
+Particle_Frame :: proc(emitter: ^ParticleEmitter, p: Particle) -> int {
+	fr := &emitter.frames
+	n := fr.count
+	if n <= 1 do return 0
+	seed := Particle_Seed16(p)
+	if emitter.frameMode == .Random do return seed % n
+	start := (seed >> 10) % n if emitter.frameRandomStart else 0
+	wraps := emitter.frameMode == .OverLifetime || emitter.frameLoop
+	if fr.timed {
+		total := fr.ends[n - 1]
+		t := p.agePercent * total if emitter.frameMode == .OverLifetime else p.age
+		if start > 0 do t += fr.ends[start - 1]
+		t = math.mod(t, total) if wraps else min(t, total * 0.99999)
+		for i in 0 ..< n do if t < fr.ends[i] do return i
+		return n - 1
+	}
+	f := min(int(p.agePercent * f32(n)), n - 1) if emitter.frameMode == .OverLifetime else int(p.age * max(emitter.frameSpeed, 0))
+	f += start
+	return f % n if wraps else min(f, n - 1)
+}
+
+// Particle_FrameRect: frame i's rectangle (the GPU texture's pixels).
+Particle_FrameRect :: proc(fr: ^Particle_Frames, i: int) -> rl.Rectangle {
+	if fr.list do return fr.rects[clamp(i, 0, MAX_PARTICLE_FRAMES - 1)]
+	cell := fr.first + i
+	cols := max(fr.cols, 1)
+	return {fr.origin.x + f32(cell % cols) * fr.step.x, fr.origin.y + f32(cell / cols) * fr.step.y, fr.cell.x, fr.cell.y}
+}
+
+// Particle_Flips: a particle's random flips (Random Flip X / Y; seed bits 8, 9).
+Particle_Flips :: proc(emitter: ^ParticleEmitter, p: Particle) -> (x, y: bool) {
+	seed := Particle_Seed16(p)
+	return emitter.randomFlipX && (seed >> 8) & 1 == 1, emitter.randomFlipY && (seed >> 9) & 1 == 1
 }
 
 // Particle_QuadOf: how a live particle is drawn (local particles through
@@ -1244,7 +1448,7 @@ Particle_QuadOf :: proc(emitter: ^ParticleEmitter, particle: Particle) -> Partic
 		p.size *= {abs(sc.x), abs(sc.y)}
 		p.rotation += emitter.originRotation
 	}
-	q := Particle_Quad{center = p.position, rotation = p.rotation, color = p.color, uv = {0, 0, 1, 1}}
+	q := Particle_Quad{center = p.position, rotation = p.rotation, color = p.color, uv = {0, 0, 1, 1}, pivot = {0.5, 0.5}}
 	switch p.shape {
 	case .Circle:
 		d := 2 * p.size[0] * p.scale[0]
@@ -1260,12 +1464,17 @@ Particle_QuadOf :: proc(emitter: ^ParticleEmitter, particle: Particle) -> Partic
 	case .Texture:
 		q.size = {p.size[0] * p.scale[0], p.size[1] * p.scale[1]}
 		q.texture = .Texture if emitter.texture != nil && emitter.texture.id != 0 else .None
-		cols, rows := max(emitter.sheetColumns, 1), max(emitter.sheetRows, 1)
-		if cols * rows > 1 {
-			f := Particle_Frame(emitter, p)
-			c, r := f32(f %% cols), f32(f / cols)
-			q.uv = {c / f32(cols), r / f32(rows), (c + 1) / f32(cols), (r + 1) / f32(rows)}
+		// The frame's part of the texture (#401: any frame source; an
+		// atlased texture's region), flipped, and the pivot.
+		fr := &emitter.frames
+		if fr.texSize.x > 0 && fr.texSize.y > 0 && (fr.count > 1 || fr.list || fr.cell != fr.texSize || fr.origin != {}) {
+			r := Particle_FrameRect(fr, Particle_Frame(emitter, p))
+			q.uv = {r.x / fr.texSize.x, r.y / fr.texSize.y, (r.x + r.width) / fr.texSize.x, (r.y + r.height) / fr.texSize.y}
 		}
+		q.pivot = emitter.texturePivot
+		fx, fy := Particle_Flips(emitter, p)
+		if fx do q.uv[0], q.uv[2], q.pivot.x = q.uv[2], q.uv[0], 1 - q.pivot.x
+		if fy do q.uv[1], q.uv[3], q.pivot.y = q.uv[3], q.uv[1], 1 - q.pivot.y
 	case .Custom:
 		q.texture = .None
 	}
@@ -1273,6 +1482,9 @@ Particle_QuadOf :: proc(emitter: ^ParticleEmitter, particle: Particle) -> Partic
 }
 
 ParticleEmitter_Render :: proc(emitter: ^ParticleEmitter, deltaTime: f32 = 0) {
+	// The frames (#401): the owner's for this draw, else the grid.
+	if !emitter.frames.ownerSet do ParticleEmitter_ResolveFrames(emitter, {})
+	emitter.frames.ownerSet = false
 	if emitter.gpu {
 		ParticleGPU_Render(emitter)
 		return
@@ -1315,6 +1527,6 @@ ParticleEmitter_Render :: proc(emitter: ^ParticleEmitter, deltaTime: f32 = 0) {
 			}
 			continue
 		}
-		batch_quad(&b, q.center, q.size.x, q.size.y, q.rotation, q.color, q.uv)
+		batch_quad(&b, q.center, q.size.x, q.size.y, q.rotation, q.color, q.uv, q.pivot)
 	}
 }

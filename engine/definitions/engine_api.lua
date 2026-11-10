@@ -2322,6 +2322,8 @@ function GoapNode:set_property(path, value, y) end
 ---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
 ---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
 ---@field visible boolean 
+---@field frame_tag string Frame Source Aseprite: the tag whose frames play ("" = every frame), in its direction (...
+---@field frameTag string Same as frame_tag (the Inspector's name)
 ---@field sub_emitter string Sub-emitter: another Particle Emitter, as a path from this node (e.g. a child's name), ...
 ---@field subEmitter string Same as sub_emitter (the Inspector's name)
 ---@field sub_emitter_on "Death"|"Hit"|"Both" When the sub-emitter bursts: a particle's Death (its lifetime ended), a Hit on a body (...
@@ -2383,11 +2385,20 @@ function GoapNode:set_property(path, value, y) end
 ---| "emitter.continuous" # boolean - Keep emitting (else one cycle, then stop).
 ---| "emitter.local_space" # boolean - Particles move, turn and scale with the node (an exhaust, an aura); off: they stay in t...
 ---| "emitter.blend_mode" # "Alpha"|"Additive"|"Multiply"|"Premultiplied" - How particles mix with what's behind: Alpha (normal), Additive (fire, glow, sparks), Mu...
----| "emitter.sheet_columns" # integer - The texture as a sprite sheet: frames across (1: the whole texture).
----| "emitter.sheet_rows" # integer - The texture as a sprite sheet: frames down.
----| "emitter.frame_mode" # "OverLifetime"|"Speed"|"Random" - Which sheet frame a particle shows: Over Lifetime (the sheet once), Speed (Frame Speed ...
----| "emitter.frame_speed" # number - Frames per second (Frame Mode: Speed).
+---| "emitter.sheet_columns" # integer - Frame Source Grid: the texture as a sprite sheet, frames across (1: the whole texture).
+---| "emitter.sheet_rows" # integer - Frame Source Grid: the texture as a sprite sheet, frames down.
+---| "emitter.frame_mode" # "OverLifetime"|"Speed"|"Random" - Which frame a particle shows: Over Lifetime (the frames once, birth to death), Speed (F...
+---| "emitter.frame_speed" # number - Frames per second (Frame Mode: Speed; not with an Aseprite file's own timing).
 ---| "emitter.align_to_velocity" # boolean - Particles face where they move (rain, sparks, arrows); Rotation adds to it.
+---| "emitter.frame_source" # "Grid"|"Slices"|"Regions"|"Aseprite" - Where the frames come from: Grid (Sheet Columns x Rows), Slices (the texture's slicing ...
+---| "emitter.frame_first" # integer - Grid / Slices: the first cell used (0 = the top-left; cells count across, then down).
+---| "emitter.frame_count" # integer - Grid / Slices: how many cells from First Frame (0 = to the end).
+---| "emitter.frame_loop" # boolean - Frame Mode Speed: start over after the last frame (off: stay on it). Over Lifetime play...
+---| "emitter.frame_random_start" # boolean - Each particle starts on a random frame (Over Lifetime and Speed), so they don't all ani...
+---| "emitter.frame_file_timing" # boolean - Frame Source Aseprite: each frame lasts as long as in the file (Speed), or its share of...
+---| "emitter.texture_pivot" # Vec2 - Shape Texture: the point of the image (0..1; 0.5, 0.5 = its centre) placed on the parti...
+---| "emitter.random_flip_x" # boolean - Shape Texture: about half the particles are mirrored left to right (variety).
+---| "emitter.random_flip_y" # boolean - Shape Texture: about half the particles are mirrored top to bottom (variety).
 ---| "emitter.trail_length" # integer - Trail: how many points of each particle's recent path are drawn as a ribbon behind it (...
 ---| "emitter.trail_segment" # number - Trail: pixels a particle moves between two trail points (smaller: smoother, shorter).
 ---| "emitter.trail_width" # number - Trail: the ribbon's width at the particle, a fraction of the particle's size (it thins ...
@@ -2402,13 +2413,14 @@ function GoapNode:set_property(path, value, y) end
 ---| "emitter.prewarm" # boolean - Start as if it had already run a whole lifetime (smoke already there when the scene sta...
 ---| "emitter.seed" # integer - The same pattern every start (a fixed seed); 0 = different each time.
 ---| "emitter.auto_visibility" # boolean - Off-screen test from where the particles are (on), or from Visibility Rect (off: cheape...
+---| "frame_tag" # string - Frame Source Aseprite: the tag whose frames play ("" = every frame), in its direction (...
 ---| "sub_emitter" # string - Sub-emitter: another Particle Emitter, as a path from this node (e.g. a child's name), ...
 ---| "sub_emitter_on" # "Death"|"Hit"|"Both" - When the sub-emitter bursts: a particle's Death (its lifetime ended), a Hit on a body (...
 ---| "sub_emitter_amount" # integer - Particles the sub-emitter emits each time.
 
 ---Reads an Inspector property by its path (vectors and colours as tables); "script.<name>" reads a field of the node's script.
 ---
----Example: `local value = self.node:get_property("sub_emitter")`
+---Example: `local value = self.node:get_property("frame_tag")`
 ---@param path ParticleEmitterNodeProperty|string The property's path in snake_case ("position", "z_index", "emitter.amount"; the Inspector's camelCase names work too) or "script.<field>"
 ---@return any value Its value: a number, boolean, string or enum name; vectors and colours as tables (nil when there's no such property)
 ---@overload fun(self: ParticleEmitterNode, path: "position"): Vec2
@@ -2469,6 +2481,15 @@ function GoapNode:set_property(path, value, y) end
 ---@overload fun(self: ParticleEmitterNode, path: "emitter.frame_mode"): "OverLifetime"|"Speed"|"Random"
 ---@overload fun(self: ParticleEmitterNode, path: "emitter.frame_speed"): number
 ---@overload fun(self: ParticleEmitterNode, path: "emitter.align_to_velocity"): boolean
+---@overload fun(self: ParticleEmitterNode, path: "emitter.frame_source"): "Grid"|"Slices"|"Regions"|"Aseprite"
+---@overload fun(self: ParticleEmitterNode, path: "emitter.frame_first"): integer
+---@overload fun(self: ParticleEmitterNode, path: "emitter.frame_count"): integer
+---@overload fun(self: ParticleEmitterNode, path: "emitter.frame_loop"): boolean
+---@overload fun(self: ParticleEmitterNode, path: "emitter.frame_random_start"): boolean
+---@overload fun(self: ParticleEmitterNode, path: "emitter.frame_file_timing"): boolean
+---@overload fun(self: ParticleEmitterNode, path: "emitter.texture_pivot"): Vec2
+---@overload fun(self: ParticleEmitterNode, path: "emitter.random_flip_x"): boolean
+---@overload fun(self: ParticleEmitterNode, path: "emitter.random_flip_y"): boolean
 ---@overload fun(self: ParticleEmitterNode, path: "emitter.trail_length"): integer
 ---@overload fun(self: ParticleEmitterNode, path: "emitter.trail_segment"): number
 ---@overload fun(self: ParticleEmitterNode, path: "emitter.trail_width"): number
@@ -2483,6 +2504,7 @@ function GoapNode:set_property(path, value, y) end
 ---@overload fun(self: ParticleEmitterNode, path: "emitter.prewarm"): boolean
 ---@overload fun(self: ParticleEmitterNode, path: "emitter.seed"): integer
 ---@overload fun(self: ParticleEmitterNode, path: "emitter.auto_visibility"): boolean
+---@overload fun(self: ParticleEmitterNode, path: "frame_tag"): string
 ---@overload fun(self: ParticleEmitterNode, path: "sub_emitter"): string
 ---@overload fun(self: ParticleEmitterNode, path: "sub_emitter_on"): "Death"|"Hit"|"Both"
 ---@overload fun(self: ParticleEmitterNode, path: "sub_emitter_amount"): integer
@@ -2490,7 +2512,7 @@ function ParticleEmitterNode:get_property(path) end
 
 ---Sets an Inspector property by its path: vectors as {x, y} or x, y; colours as {r, g, b[, a]} 0..1 or "#rrggbb[aa]"; enums by name; "script.<name>" a field of the node's script.
 ---
----Example: `self.node:set_property("sub_emitter", "text")`
+---Example: `self.node:set_property("frame_tag", "text")`
 ---@param path ParticleEmitterNodeProperty|string The property's path in snake_case (the Inspector's camelCase names work too), or "script.<field>"
 ---@param value any The new value: a number, boolean, string or enum name; a vector as {x, y} (or x here and y next); a colour as {r, g, b[, a]} 0..1 or "#rrggbb[aa]"
 ---@param y? number A vector's y when value is its x
@@ -2552,6 +2574,15 @@ function ParticleEmitterNode:get_property(path) end
 ---@overload fun(self: ParticleEmitterNode, path: "emitter.frame_mode", value: "OverLifetime"|"Speed"|"Random")
 ---@overload fun(self: ParticleEmitterNode, path: "emitter.frame_speed", value: number)
 ---@overload fun(self: ParticleEmitterNode, path: "emitter.align_to_velocity", value: boolean)
+---@overload fun(self: ParticleEmitterNode, path: "emitter.frame_source", value: "Grid"|"Slices"|"Regions"|"Aseprite")
+---@overload fun(self: ParticleEmitterNode, path: "emitter.frame_first", value: integer)
+---@overload fun(self: ParticleEmitterNode, path: "emitter.frame_count", value: integer)
+---@overload fun(self: ParticleEmitterNode, path: "emitter.frame_loop", value: boolean)
+---@overload fun(self: ParticleEmitterNode, path: "emitter.frame_random_start", value: boolean)
+---@overload fun(self: ParticleEmitterNode, path: "emitter.frame_file_timing", value: boolean)
+---@overload fun(self: ParticleEmitterNode, path: "emitter.texture_pivot", x: number|Vec2|number[], y?: number)
+---@overload fun(self: ParticleEmitterNode, path: "emitter.random_flip_x", value: boolean)
+---@overload fun(self: ParticleEmitterNode, path: "emitter.random_flip_y", value: boolean)
 ---@overload fun(self: ParticleEmitterNode, path: "emitter.trail_length", value: integer)
 ---@overload fun(self: ParticleEmitterNode, path: "emitter.trail_segment", value: number)
 ---@overload fun(self: ParticleEmitterNode, path: "emitter.trail_width", value: number)
@@ -2566,6 +2597,7 @@ function ParticleEmitterNode:get_property(path) end
 ---@overload fun(self: ParticleEmitterNode, path: "emitter.prewarm", value: boolean)
 ---@overload fun(self: ParticleEmitterNode, path: "emitter.seed", value: integer)
 ---@overload fun(self: ParticleEmitterNode, path: "emitter.auto_visibility", value: boolean)
+---@overload fun(self: ParticleEmitterNode, path: "frame_tag", value: string)
 ---@overload fun(self: ParticleEmitterNode, path: "sub_emitter", value: string)
 ---@overload fun(self: ParticleEmitterNode, path: "sub_emitter_on", value: "Death"|"Hit"|"Both")
 ---@overload fun(self: ParticleEmitterNode, path: "sub_emitter_amount", value: integer)
@@ -11838,7 +11870,7 @@ function ParticleEmitterNode:particle_emit(count) end
 ---Example: `self.node:get_node("Fireworks"):particle_restart()`
 function ParticleEmitterNode:particle_restart() end
 
----Gives the emitter a preset look and restarts it: its look and motion settings are replaced (its texture, collision layers and GPU mode stay). Names, any case: `"fire"`, `"smoke"`, `"sparks"`, `"rain"`, `"snow"`, `"explosion"`, `"magic"`.
+---Gives the emitter a preset look and restarts it: its look and motion settings are replaced (its texture, collision layers and GPU mode stay). Names, any case: `"fire"`, `"smoke"`, `"sparks"`, `"rain"`, `"snow"`, `"explosion"`, `"magic"`; sheet presets, which also set the texture to `textures/particles/kenney_particles.png` (the editor adds it to the project when one is applied there): `"leaves"`, `"debris"`, `"smoke puff"` (or `"smoke_puff"`), `"sparkle"`.
 ---
 ---Example: `self.node:get_node("Torch"):particle_apply_preset("fire")`
 ---@param name string The preset's name

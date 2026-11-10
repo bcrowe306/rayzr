@@ -1290,7 +1290,8 @@ lua_node_particle_restart :: proc "c" (L: ^lua.State) -> c.int {
 }
 
 // particle_apply_preset(name) -> boolean: a preset look (fire, smoke, sparks,
-// rain, snow, explosion, magic); false for an unknown name.
+// rain, snow, explosion, magic; with the particle sheet: leaves, debris,
+// smoke puff, sparkle); false for an unknown name.
 @(private="file")
 lua_node_particle_apply_preset :: proc "c" (L: ^lua.State) -> c.int {
 	context = Script_Context(L)
@@ -1300,7 +1301,7 @@ lua_node_particle_apply_preset :: proc "c" (L: ^lua.State) -> c.int {
 		lua.pushboolean(L, false)
 		return 1
 	}
-	ParticleEmitter_ApplyPreset(&(cast(^ParticleEmitterNode)node).emitter, preset)
+	ParticleEmitterNode_ApplyPreset(cast(^ParticleEmitterNode)node, preset) // (sheet presets: their texture too, #401)
 	lua.pushboolean(L, true)
 	return 1
 }

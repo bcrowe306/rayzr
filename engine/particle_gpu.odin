@@ -18,7 +18,7 @@ import rlgl "vendor:raylib/rlgl"
 //              out by radialVelocity t (applied to the path - near the CPU mode's)
 //   size       Scale Start -> End, or the size curve
 //   colour     the ramp (or Color -> Color End) + jitter, x the alpha curve
-//   frame      the sprite-sheet frame (over life / speed / random)
+//   frame      the frame (over life / speed / random; a grid, a list, timed: #401)
 //
 // F is gravity + wind (in the particles' space) + the particle's own
 // acceleration. Desktop GL 3.3 and WebGL2 (Shader_Port); no compute
@@ -237,9 +237,27 @@ uniform vec2 u_alphaCurve[8];
 uniform int u_shape;         // 0 circle, 1 ellipse, 2 rectangle, 3 pixel, 4 line, 5 texture
 uniform int u_align;
 uniform float u_rotOffset;
-uniform vec2 u_sheet;        // columns, rows
 uniform int u_frameMode;     // 0 over life, 1 speed, 2 random
 uniform float u_frameSpeed;
+// The frames (#401; Particle_Frames): a grid of cells or a list of
+// rectangles (px), each frame's end when timed; uv = px / u_texSize.
+uniform int u_fCount;
+uniform int u_fList;
+uniform vec2 u_fOrigin;
+uniform vec2 u_fStep;
+uniform vec2 u_fCell;
+uniform int u_fCols;
+uniform int u_fFirst;
+uniform vec4 u_fRects[64];
+uniform int u_fTimed;
+uniform vec4 u_fEnds[16];    // 64 ends, 4 a vector
+uniform int u_fLoop;
+uniform int u_fRandStart;
+uniform int u_fWhole;        // the whole texture (uv 0..1)
+uniform vec2 u_texSize;
+uniform vec2 u_pivot;
+uniform int u_flipX;
+uniform int u_flipY;
 out vec2 v_uv;
 out vec4 v_col;
 
@@ -273,6 +291,30 @@ vec4 ramp(float t) {
 		}
 	}
 	return u_rampCol[u_rampCount - 1];
+}
+
+float frameEnd(int i) {return u_fEnds[i / 4][i % 4];}
+// The frame a particle shows (Particle_Frame on the CPU).
+int frameIndex(float t, float life, int seed) {
+	int n = u_fCount;
+	if (n <= 1) return 0;
+	if (u_frameMode == 2) return seed % n;
+	int start = u_fRandStart == 1 ? (seed >> 10) % n : 0;
+	bool wraps = u_frameMode == 0 || u_fLoop == 1;
+	if (u_fTimed == 1) {
+		float total = frameEnd(n - 1);
+		float tt = u_frameMode == 0 ? life * total : t;
+		if (start > 0) tt += frameEnd(start - 1);
+		tt = wraps ? mod(tt, total) : min(tt, total * 0.99999);
+		for (int i = 0; i < 64; i++) {
+			if (i >= n) break;
+			if (tt < frameEnd(i)) return i;
+		}
+		return n - 1;
+	}
+	int f = u_frameMode == 0 ? min(int(floor(life * float(n))), n - 1) : int(floor(t * u_frameSpeed));
+	f += start;
+	return wraps ? f % n : min(f, n - 1);
 }
 
 void main() {
@@ -326,14 +368,29 @@ void main() {
 	else if (u_shape == 4) { q = vec2(size.x * scl.x, max(scl.y, 0.01)); }
 	else { q = size * scl; }
 	vec2 uv = a_corner + 0.5;
-	if (u_shape == 5 && u_sheet.x * u_sheet.y > 1.0) {
-		float n = u_sheet.x * u_sheet.y;
-		float f = u_frameMode == 0 ? min(floor(life * n), n - 1.0) : (u_frameMode == 1 ? mod(floor(t * u_frameSpeed), n) : mod(a_jit.w, n));
-		vec2 cell = vec2(mod(f, u_sheet.x), floor(f / u_sheet.x));
-		uv = (cell + uv) / u_sheet;
+	vec2 pv = vec2(0.5);
+	if (u_shape == 5) {
+		// The frame (#401), flipped per particle, and the pivot.
+		int seed = int(a_jit.w);
+		bool fx = u_flipX == 1 && ((seed >> 8) & 1) == 1;
+		bool fy = u_flipY == 1 && ((seed >> 9) & 1) == 1;
+		pv = vec2(fx ? 1.0 - u_pivot.x : u_pivot.x, fy ? 1.0 - u_pivot.y : u_pivot.y);
+		vec2 fuv = vec2(fx ? 1.0 - uv.x : uv.x, fy ? 1.0 - uv.y : uv.y);
+		if (u_fWhole == 1) {
+			uv = fuv;
+		} else {
+			int f = frameIndex(t, life, seed);
+			vec4 rc;
+			if (u_fList == 1) rc = u_fRects[f];
+			else {
+				int cell = u_fFirst + f;
+				rc = vec4(u_fOrigin + vec2(float(cell % u_fCols), float(cell / u_fCols)) * u_fStep, u_fCell);
+			}
+			uv = (rc.xy + fuv * rc.zw) / u_texSize;
+		}
 	}
 	v_uv = uv;
-	gl_Position = u_mvp * vec4(center + rot(a_corner * q, r), 0.0, 1.0);
+	gl_Position = u_mvp * vec4(center + rot((a_corner + 0.5 - pv) * q, r), 0.0, 1.0);
 }
 `
 
@@ -489,9 +546,27 @@ ParticleGPU_Render :: proc(emitter: ^ParticleEmitter) {
 	set_i("u_shape", shape)
 	set_i("u_align", 1 if emitter.alignToVelocity else 0)
 	set_f("u_rotOffset", emitter.rotation)
-	set_v2("u_sheet", {f32(max(emitter.sheetColumns, 1)), f32(max(emitter.sheetRows, 1))})
 	set_i("u_frameMode", i32(emitter.frameMode))
 	set_f("u_frameSpeed", emitter.frameSpeed)
+	fr := &emitter.frames
+	set_i("u_fCount", i32(fr.count))
+	set_i("u_fList", 1 if fr.list else 0)
+	set_v2("u_fOrigin", fr.origin)
+	set_v2("u_fStep", fr.step)
+	set_v2("u_fCell", fr.cell)
+	set_i("u_fCols", i32(max(fr.cols, 1)))
+	set_i("u_fFirst", i32(fr.first))
+	if fr.list do rl.SetShaderValueV(gpuShader.shader, gpu_loc("u_fRects"), &fr.rects, .VEC4, MAX_PARTICLE_FRAMES)
+	set_i("u_fTimed", 1 if fr.timed else 0)
+	if fr.timed do rl.SetShaderValueV(gpuShader.shader, gpu_loc("u_fEnds"), &fr.ends, .VEC4, MAX_PARTICLE_FRAMES / 4)
+	set_i("u_fLoop", 1 if emitter.frameLoop else 0)
+	set_i("u_fRandStart", 1 if emitter.frameRandomStart else 0)
+	whole := fr.texSize.x <= 0 || fr.texSize.y <= 0 || !(fr.count > 1 || fr.list || fr.cell != fr.texSize || fr.origin != {})
+	set_i("u_fWhole", 1 if whole else 0)
+	set_v2("u_texSize", fr.texSize)
+	set_v2("u_pivot", emitter.texturePivot)
+	set_i("u_flipX", 1 if emitter.randomFlipX else 0)
+	set_i("u_flipY", 1 if emitter.randomFlipY else 0)
 	rlgl.ActiveTextureSlot(0)
 	rlgl.EnableTexture(tex)
 	set_i("texture0", 0)
