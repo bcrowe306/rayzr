@@ -516,3 +516,113 @@ merge_move_node :: proc(v: json.Value, uid, parent: string) -> json.Value {
 	}
 	return out
 }
+
+// --- diff (the Git panel shows a scene's changes by node) ---------------------
+
+Scene_Change_Kind :: enum {Added, Removed, Changed, Moved}
+
+Scene_Field_Change :: struct {
+	field:         string, // "properties/text"
+	before, after: string, // compact JSON ("" = not there)
+}
+
+Scene_Change :: struct {
+	kind:   Scene_Change_Kind,
+	uid:    string,
+	name:   string,
+	fields: [dynamic]Scene_Field_Change, // Changed (a move with changes: Moved + fields)
+}
+
+// Scene_Diff: what changed from one version of a scene / component file to
+// another, node by node (by uid; the scene's own fields as "(scene)").
+// ok = false: a node without a uid in either.
+Scene_Diff :: proc(before, after: []u8) -> (changes: [dynamic]Scene_Change, ok: bool) {
+	changes = make([dynamic]Scene_Change, context.temp_allocator)
+	parse :: proc(data: []u8) -> (json.Object, bool) {
+		if len(data) == 0 do return make(json.Object, 1, context.temp_allocator), true // (a new / deleted file)
+		v, err := json.parse(data, allocator = context.temp_allocator)
+		if err != .None do return nil, false
+		o, isObj := v.(json.Object)
+		return o, isObj
+	}
+	fa, aok := parse(before)
+	fb, bok := parse(after)
+	if !aok || !bok do return changes, false
+	isScene := "root" in fa || "root" in fb
+	na := make(map[string]Merge_Node, allocator = context.temp_allocator)
+	nb := make(map[string]Merge_Node, allocator = context.temp_allocator)
+	if len(fa) > 0 {
+		if _, fok := merge_flatten(fa["root"] if isScene else json.Value(fa), "", &na, true); !fok do return changes, false
+	}
+	if len(fb) > 0 {
+		if _, fok := merge_flatten(fb["root"] if isScene else json.Value(fb), "", &nb, true); !fok do return changes, false
+	}
+	fields :: proc(a, b: json.Object, path: string, out: ^[dynamic]Scene_Field_Change) {
+		keys := make(map[string]bool, allocator = context.temp_allocator)
+		for k in a do keys[k] = true
+		for k in b do keys[k] = true
+		sorted := make([dynamic]string, context.temp_allocator)
+		for k in keys do if k != FORMAT_KEY do append(&sorted, k)
+		slice.sort(sorted[:])
+		for k in sorted {
+			va, ah := a[k]
+			vb, bh := b[k]
+			if merge_same(va, ah, vb, bh) do continue
+			p := k if path == "" else fmt.tprintf("%s/%s", path, k)
+			ao, aIs := va.(json.Object)
+			bo, bIs := vb.(json.Object)
+			if ah && bh && aIs && bIs {
+				fields(ao, bo, p, out)
+				continue
+			}
+			append(out, Scene_Field_Change{field = p, before = merge_compact(va, ah), after = merge_compact(vb, bh)})
+		}
+	}
+	name :: proc(n: Merge_Node) -> string {
+		s, _ := n.obj["name"].(json.String)
+		return string(s)
+	}
+	// The scene's own fields.
+	if isScene {
+		strip :: proc(f: json.Object) -> json.Object {
+			c := make(json.Object, len(f), context.temp_allocator)
+			for k, v in f do if k != "root" do c[k] = v
+			return c
+		}
+		top := Scene_Change{kind = .Changed, name = "(scene)", fields = make([dynamic]Scene_Field_Change, context.temp_allocator)}
+		fields(strip(fa), strip(fb), "", &top.fields)
+		if len(top.fields) > 0 do append(&changes, top)
+	}
+	// The nodes, in the after file's order (removed ones after).
+	order := make([dynamic]string, context.temp_allocator)
+	walk :: proc(u: string, nodes: map[string]Merge_Node, out: ^[dynamic]string) {
+		append(out, u)
+		for c in nodes[u].children do walk(c, nodes, out)
+	}
+	if ROOT_UID in nb do walk(ROOT_UID, nb, &order)
+	else do for u, n in nb do if n.parent == "" do walk(u, nb, &order)
+	for u in na do if u not_in nb do append(&order, u)
+	for u in order {
+		a, inA := na[u]
+		b, inB := nb[u]
+		c := Scene_Change{uid = u, fields = make([dynamic]Scene_Field_Change, context.temp_allocator)}
+		switch {
+		case !inA:
+			c.kind, c.name = .Added, name(b)
+		case !inB:
+			c.kind, c.name = .Removed, name(a)
+		case:
+			c.name = name(b)
+			fields(a.obj, b.obj, "", &c.fields)
+			if a.parent != b.parent {
+				c.kind = .Moved
+				pa, pb := na[a.parent], nb[b.parent]
+				append(&c.fields, Scene_Field_Change{field = "parent", before = name(pa), after = name(pb)})
+			} else if len(c.fields) > 0 {
+				c.kind = .Changed
+			} else do continue
+		}
+		append(&changes, c)
+	}
+	return changes, true
+}

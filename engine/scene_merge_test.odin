@@ -143,3 +143,28 @@ test_scene_merge_needs_uids :: proc(t: ^testing.T) {
 	testing.expect(t, !ok, "not mergeable by uid")
 	testing.expect(t, strings.contains(why, "uid"), "says why")
 }
+
+@(test)
+test_scene_diff_by_node :: proc(t: ^testing.T) {
+	// Title's text changed, Inner moved out of Box, Spare removed, New added.
+	after := `{"name": "m2", "root": {"type": "Node", "name": "root", "uid": "r", "children": [
+ {"type": "TextNode", "name": "Title", "uid": "t", "position": [0, 0], "properties": {"text": "bye", "fontSize": 20}},
+ {"type": "Node", "name": "Box", "uid": "b"},
+ {"type": "Node", "name": "Inner", "uid": "i"},
+ {"type": "Node", "name": "New", "uid": "n"}]}}`
+	changes, ok := Scene_Diff(transmute([]u8)string(MERGE_BASE), transmute([]u8)after)
+	testing.expect(t, ok, "diffed")
+	got := make(map[string]Scene_Change, allocator = context.temp_allocator)
+	for c in changes do got[c.name] = c
+	testing.expect_value(t, len(changes), 5) // (scene), Title, Inner, New, Spare
+	testing.expect_value(t, got["(scene)"].fields[0].field, "name")
+	testing.expect_value(t, got["Title"].kind, Scene_Change_Kind.Changed)
+	testing.expect_value(t, got["Title"].fields[0].field, "properties/text")
+	testing.expect_value(t, got["Title"].fields[0].after, `"bye"`)
+	testing.expect_value(t, got["Inner"].kind, Scene_Change_Kind.Moved)
+	testing.expect_value(t, got["New"].kind, Scene_Change_Kind.Added)
+	testing.expect_value(t, got["Spare"].kind, Scene_Change_Kind.Removed)
+	// A new file: everything added.
+	added, aok := Scene_Diff(nil, transmute([]u8)after)
+	testing.expectf(t, aok && len(added) >= 5, "a new file: %v %d", aok, len(added))
+}
