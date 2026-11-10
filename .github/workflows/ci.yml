@@ -169,6 +169,9 @@ jobs:
         run: |
           odin test engine -define:ODIN_TEST_THREADS=1 -define:ODIN_TEST_FAIL_ON_BAD_MEMORY=true $(scripts/odin_flags.sh)
           odin test ui -define:ODIN_TEST_THREADS=1 $(scripts/odin_flags.sh)
+          # The editor's auto-updater on each platform (#291: manifest, checksum, unpacking, the swap and its rollback).
+          odin test editor -define:ODIN_TEST_THREADS=1 -define:ODIN_TEST_FAIL_ON_BAD_MEMORY=true $(scripts/odin_flags.sh) \
+            -define:ODIN_TEST_NAMES=editor.test_update_pick_entry_291,editor.test_update_pick_file_291,editor.test_update_detect_install_291,editor.test_update_verify_file_291,editor.test_update_swap_291,editor.test_update_apply_previous_291,editor.test_update_stage_291,editor.test_update_stage_dmg_291
 
       # The templates' scripted play-throughs (#329) - Linux plays them below
       # (Templates, under Xvfb). Windows has no GPU driver: Mesa's llvmpipe

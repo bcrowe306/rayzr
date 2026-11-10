@@ -54,7 +54,14 @@ The workflow builds (`build-packages.yml`, shared with the install checks):
 
 The version (the tag without `v`) is built into the editor and the runners
 (`RAYZR_RELEASE`: the editor's title and `--version`, `project.json`'s
-`engine_version`, the update check). A dry run without publishing: Actions >
+`engine_version`, the update check).
+
+The editor's auto-updater (`editor/update_install.odin`, [docs/editor/updates.md](docs/editor/updates.md))
+reads `manifest.json` below and relies on this layout: the `.dmg` holds one
+`.app`, the Windows `.zip` and Linux `.tar.gz` one top-level
+`rayzr-editor-<platform>/` folder with `rayzr-editor[.exe]` inside, and every
+file has its `sha256` in the manifest. Changing a package's layout or name
+means changing the updater too (an older editor must still update to it). A dry run without publishing: Actions >
 Release > Run workflow (a version, no tag), or push to `release-dryrun`.
 
 ## The website (rayzr.app)

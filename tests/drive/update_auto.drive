@@ -1,0 +1,50 @@
+# Auto-updater (#291: update_check.odin, update_install.odin): a newer
+# version in a local fake manifest is downloaded in the background, checked
+# against its SHA-256 and unpacked beside a fake install; the status bar
+# then offers Restart to update, which asks about unsaved work first.
+# Installing (what quitting does) swaps the install and keeps the old one;
+# Help > Roll Back swaps them back.
+wait 3
+expect item:status.update == missing
+update-fake 9.9.9
+wait-until update.state == ready timeout=600
+expect update.version == 9.9.9
+expect update.file == rayzr-editor-9.9.9-linux.tar.gz
+expect update.error ==
+expect item:status.update == visible
+expect log contains Rayzr Editor 9.9.9 is ready
+screenshot ready
+
+# Unsaved work: Restart to update asks first; Cancel keeps the editor (and the update).
+click @hier:Asteroid_Alpha
+key right
+expect modified-count == 1
+click @status.update
+wait 2
+expect quit-prompt == true
+screenshot quit_prompt
+click @quit.cancel
+wait 2
+expect quit-prompt == false
+expect update.restart == false
+expect update.state == ready
+
+# Installing: the new one in place, the old one kept beside it.
+update-install
+expect update.installed == new
+expect update.previous == old
+expect update.rollback-version == 1.0.0
+expect update.state == installed
+wait 2
+screenshot installed
+click @menu:Help
+wait 1
+expect item:menu:Help/Roll Back to 1.0.0 == visible
+screenshot help_rollback
+key escape
+wait 1
+
+# Roll Back: the old one back (the newer one kept: Roll Back again goes forward).
+update-rollback
+expect update.installed == old
+expect update.previous == new

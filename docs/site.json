@@ -45,6 +45,7 @@
         { "file": "docs/editor/level.md", "slug": "editor/level-tab" },
         { "file": "docs/editor/level-generator.md", "slug": "editor/level-generator" },
         { "file": "docs/editor/settings.md", "slug": "editor/settings" },
+        { "file": "docs/editor/updates.md", "slug": "editor/updates" },
         { "file": "docs/editor/playtesting.md", "slug": "editor/playtesting" },
         { "file": "docs/editor/export.md", "slug": "editor/export" },
         { "file": "docs/editor/team.md", "slug": "editor/team" },

@@ -55,7 +55,8 @@ The dialog is modal, so **F1** can't open this page while it's open: the
 | **Show Grid** | Draws the grid in the viewport (also **View > Show Grid**, Shift+G). |
 | **Autosave** | Saves modified scenes and scripts every 1-30 minutes; **Off** at 0 (and never while simulating). |
 | **Ask Before Quitting** | Asks about unsaved scenes and scripts when you quit. |
-| **Check for Updates** | At startup, looks for a newer Rayzr Editor release and shows it in the status bar. |
+| **Check for Updates** | At startup, looks for a newer Rayzr Editor and shows it in the status bar ([Updates](updates.md)). |
+| **Download Updates Automatically** | Downloads a newer version in the background, then the status bar shows **Restart to update**. Off: its **Download** button starts it. |
 | **Bottom Panel Follows Selection** | Selecting an AnimationPlayer, particle emitter, LDtk level, Tile Map, State Machine, Behavior Tree or GOAP node shows its tab in the bottom panel; selecting something else goes back to the tab you had. |
 | **Aseprite** | The Aseprite program **Edit in Aseprite** opens. Empty: found where Aseprite installs (Steam too). |
 

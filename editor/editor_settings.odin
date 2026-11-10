@@ -36,6 +36,7 @@ Editor_Settings :: struct {
 	confirmQuit:      bool,
 	showWelcome:      bool, // the Welcome window at startup
 	checkUpdates:     bool, // look for a newer release at startup (update_check.odin)
+	autoDownloadUpdates: bool, // download it in the background, then "Restart to update" (#291)
 	showTabBars:      bool, // View > Show Tab Bars: every docked window keeps its tab
 	autoBottomPanel:  bool, // the bottom panel shows the selected node's tool tab
 	hiddenBottomTabs: bit_set[BottomTab], // View > Bottom Panel: tabs left out (#194)
@@ -92,6 +93,7 @@ DEFAULT_EDITOR_SETTINGS :: Editor_Settings{
 	confirmQuit     = true,
 	showWelcome     = true,
 	checkUpdates    = true,
+	autoDownloadUpdates = true,
 	autoBottomPanel = true,
 	previewAutoplay = true,
 	previewLoop = true,
@@ -349,6 +351,7 @@ settings_from_ini :: proc(text: string) {
 	s.confirmQuit = b(m, "general", "confirm_quit", s.confirmQuit)
 	s.showWelcome = b(m, "general", "show_welcome", s.showWelcome)
 	s.checkUpdates = b(m, "general", "check_updates", s.checkUpdates)
+	s.autoDownloadUpdates = b(m, "general", "auto_download_updates", s.autoDownloadUpdates)
 	s.showTabBars = b(m, "general", "show_tab_bars", s.showTabBars)
 	s.autoBottomPanel = b(m, "general", "auto_bottom_panel", s.autoBottomPanel)
 	if _, has := m["window"]; has {
@@ -502,6 +505,7 @@ Editor_SaveSettings :: proc() -> bool {
 	strings.write_string(&sb, "; Rayzr editor settings (Settings in the editor writes this file)\n\n[general]\n")
 	fmt.sbprintf(&sb, "ui_scale = %.2f\nautosave_minutes = %d\ngrid_size = %.0f\n", s.uiScale, s.autosaveMinutes, s.gridSize)
 	fmt.sbprintf(&sb, "snap_to_grid = %t\nshow_grid = %t\nconfirm_quit = %t\nshow_welcome = %t\ncheck_updates = %t\n", s.snapToGrid, s.showGrid, s.confirmQuit, s.showWelcome, s.checkUpdates)
+	fmt.sbprintf(&sb, "auto_download_updates = %t\n", s.autoDownloadUpdates)
 	fmt.sbprintf(&sb, "show_tab_bars = %t\nauto_bottom_panel = %t\n", s.showTabBars, s.autoBottomPanel)
 	{
 		names := make([dynamic]string, context.temp_allocator)

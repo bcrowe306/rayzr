@@ -52,6 +52,8 @@ editor_main :: proc() -> int {
 	for i := 1; i + 1 < len(os.args); i += 1 do if os.args[i] == "--lua-setup" do return LuaSetup_Run(os.args[i + 1])
 	// --fmt [--check] <file or folder>...: scene / component files as the editor saves them (canonical_fmt.odin, #293).
 	for i := 1; i < len(os.args); i += 1 do if os.args[i] == "--fmt" do return Fmt_Run(os.args[i + 1:])
+	// --apply-update ...: the Windows updater helper (a copy of the exe; update_install.odin).
+	if len(os.args) > 1 && os.args[1] == "--apply-update" do return Update_HelperMain(os.args[2:])
 	Editor_MigrateLegacyConfig() // ~/.config/ore_editor -> rayzr_editor (editor_settings.odin)
 	CrashReports_Install() // crash reports (crash_reports.odin)
 	defer CrashReports_Shutdown()
@@ -330,6 +332,7 @@ editor_main :: proc() -> int {
 	}
 	WindowState_Save() // (before a relaunch: the new editor opens the same way)
 	Editor_LaunchPendingProject(&GlobalEditor)
+	Update_OnExit(&GlobalEditor) // a downloaded update installs (and Restart to update starts it)
 	return TestDrive_ExitCode(&GlobalDrive) if driving else 0
 }
 

@@ -509,6 +509,15 @@ drive_exec :: proc(d: ^TestDrive, state: ^EditorState, line: string) -> bool {
 		// crash-rescan: read the crash folder again (reports a drive put there; crash_reports.odin).
 		CrashReports_Rescan()
 		return true
+	case "update-fake":
+		// update-fake <version>: a fake install, package and manifest; checks it (update_install.odin).
+		if err := Update_DriveFake(state, rest); err != "" do drive_fail(d, err)
+		return true
+	case "update-install", "update-rollback":
+		// What quitting does with a downloaded update (or Roll Back), without quitting.
+		if err := Update_DriveInstall(state, cmd == "update-rollback"); err != "" do drive_fail(d, err)
+		else do drive_pass(d, cmd)
+		return true
 	case "bench":
 		// bench <frames> [label]: time that many uncapped frames (frame_timing.odin).
 		if d.step == 0 {
@@ -839,6 +848,7 @@ Drive_Query :: proc(state: ^EditorState, q: string) -> (string, bool) {
 	if strings.has_prefix(q, "imgpreview.") do return ImagePreview_DriveQuery(q)
 	if strings.has_prefix(q, "plugin:") do return Plugins_DriveQuery(q)
 	if strings.has_prefix(q, "crash-") do return CrashReports_DriveQuery(q)
+	if strings.has_prefix(q, "update.") do return Update_DriveQuery(q)
 	if strings.has_prefix(q, "aseprite-") do return Aseprite_DriveQuery(q)
 	if strings.has_prefix(q, "panel-open:") do return "true" if PluginPanels_IsOpen(q[len("panel-open:"):]) else "false", true
 	if strings.has_prefix(q, "import.") do return AssetImport_DriveQuery(q)
