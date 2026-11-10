@@ -40,7 +40,8 @@ show one level, or every level of a world at once.
      Component...** makes a component and a script with a property per
      field.
    - **Collision**: None, Solid, One-way or Trigger for each IntGrid value,
-     with friction and bounce.
+     with friction, bounce, and its collision layers and mask (the level's
+     default, or its own).
    - **Links**: what EntityRef fields do (connect a signal to a method, or
      parent one entity to the other).
    - **Level Fields**, **Enums**, **World** (a map of the levels).
@@ -62,11 +63,22 @@ show one level, or every level of a world at once.
   / `body_exited`. Neighbouring cells with the same rule merge into a few
   large boxes. Solid and one-way colliders cast [Light](LightNode.md)
   shadows.
+- **Collision layers**: the colliders (and trigger areas) are on the node's
+  **Category Layers** and collide with its **Mask Layers** - the default,
+  set in the Inspector or at the top of the LDtk tab's Collision page. An
+  IntGrid value can have its own instead (the page's **Layers** and **Mask**
+  columns), so walls, one-way platforms and water can each be on a layer
+  of their own: a swimming enemy's mask names the water's layer, a ghost's
+  mask leaves the walls' out. Layer names come from **Project Settings >
+  General > Collision Layers**; see [the physics tutorial](../tutorials/physics.md)
+  for how layers and masks pair up. Scenes saved before this keep their
+  old behaviour (Layer 1, colliding with everything).
 - **Entities**: each one is spawned as a child of the level node at its
   position, named after its identifier. Its LDtk fields set the script
   properties of the same name; all fields stay readable with
   `ldtk_field(name)` on the spawned node.
-- **Properties** (the Node tab's section): **Enable Physics** (build colliders), **Spawn Entities**,
+- **Properties** (the Node tab's section): **Enable Physics** (build colliders), **Category Layers** /
+  **Mask Layers** (the colliders' default collision layers and mask), **Spawn Entities**,
   **Parallax** (use the LDtk layers' parallax), **Draw Background**,
   **Draw Entity Tiles** (draw entities' LDtk tiles), **Tint Color**, **Draw
   Debug Colliders**, **Draw Debug Entities**, and **Match Custom Nodes**

@@ -96,7 +96,10 @@ collide with everything. In Crate Yard:
 | Coins and the float zone (Trigger Areas) | - | Player |
 
 So the coins notice the player and nothing else: a crate tumbling through
-a coin doesn't collect it. Scripts can change layers too:
+a coin doesn't collect it. Tile Maps and LDtk levels have **Category
+Layers** / **Mask Layers** too, for their generated colliders; an LDtk
+level can also give each IntGrid value its own (water on a layer of its
+own, say) in the LDtk tab's Collision page. Scripts can change layers too:
 `self.node:set_collision_layer("Props")`,
 `self.node:set_collision_mask("World", "Player")`.
 
