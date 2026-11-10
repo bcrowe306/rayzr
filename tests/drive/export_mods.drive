@@ -1,0 +1,26 @@
+# Players' mods (#286): Project Settings > Export > Mods set to "Assets +
+# scripts" is saved in project.json; the exported macOS app then finds a mod
+# in mods/ beside the .app and runs its Lua sandboxed (the mod writes to its
+# own save folder in the user-data folder the run is given).
+# drive: serial (touches bin/runners or other shared files; runs after the parallel drives)
+exec scripts/build_runners.sh --if-missing
+wait 5
+click @toolbar.settings
+click @settings.page:Export
+expect item:settings.mods == visible
+click @settings.export-name
+key ctrl+a
+type ModGame
+click @settings.mods
+click @pick:mods-scripts
+screenshot export_mods_setting
+click @settings.export-now
+wait 10
+expect log contains Standalone game ready
+expect file:project.json contains "mods": "scripts"
+exec test -s $PROJECT_standalone/macos/ModGame.app/Contents/Resources/game.rayzr
+exec mkdir -p $PROJECT_standalone/macos/mods
+exec cp -R tests/mods/drive_mod $PROJECT_standalone/macos/mods/drive_mod
+exec $PROJECT_standalone/macos/ModGame.app/Contents/MacOS/ModGame --frames 20 --hidden --user-data $SHOTS/mod_user --dump-scene $SHOTS/mod_scene.json
+expect abs-file:$SHOTS/mod_scene.json contains "PlayerShip"
+expect abs-file:$SHOTS/mod_user/mod_data/drive_mod/ran.txt contains ran drive_mod sandboxed
