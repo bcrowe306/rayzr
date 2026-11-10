@@ -189,3 +189,52 @@ inspector_material :: proc(state: ^EditorState, node: ^e.Node) {
 		UI_Tooltip("Saving the shader reloads it in the viewport")
 	}
 }
+
+// inspector_pixels: the Pixels section (#409) - a drawn node's Texture
+// Filter and Snap to Pixels (Inherit: the textures' import filter / the
+// project's Pixel Snap) and, for text and UI, where it draws when the game
+// is scaled up (Native: crisp at the window's resolution; Pixel: in the
+// game's pixels). Pixel_Filter / Pixel_Snap / Pixel_Text in the engine.
+inspector_pixels :: proc(state: ^EditorState, node: ^e.Node) {
+	if node.render == nil do return
+	textual := node.isUI || node.typeId == e.TextNode
+	changed := node.pixelFilter != .Inherit || node.pixelSnap != .Inherit || node.pixelText != .Default
+	if !UI_SectionHeader("Pixels", changed) do return
+	if !UI_BeginProps("##pixels") do return
+	defer UI_EndProps()
+
+	mfField := node_field(node, &node.pixelFilter, "pixelFilter", .Enum, e.Pixel_Filter)
+	prop_row_label(state, node, "Texture Filter", mfField)
+	mf := multi_begin(state, node, mfField)
+	imgui.SetNextItemWidth(field_width())
+	if v, ok := UI_Combo("insp.pixel-filter", int(node.pixelFilter), {"Inherit", "Sharp", "Smooth"}, mf.mixed[0]); ok {
+		Editor_RecordUndo(state, "Texture filter")
+		node.pixelFilter = e.Pixel_Filter(v)
+	}
+	UI_Tooltip("How its textures are sampled when drawn scaled or between pixels. Inherit: each texture's import setting (Assets); Sharp: nearest-neighbour (pixel art); Smooth: bilinear")
+	multi_end(&mf)
+
+	msField := node_field(node, &node.pixelSnap, "pixelSnap", .Enum, e.Pixel_Snap)
+	prop_row_label(state, node, "Snap to Pixels", msField)
+	ms := multi_begin(state, node, msField)
+	imgui.SetNextItemWidth(field_width())
+	if v, ok := UI_Combo("insp.pixel-snap", int(node.pixelSnap), {"Inherit", "On", "Off"}, ms.mixed[0]); ok {
+		Editor_RecordUndo(state, "Snap to pixels")
+		node.pixelSnap = e.Pixel_Snap(v)
+	}
+	UI_Tooltip("Draw it on whole game pixels (no shimmer, no uneven pixels while it moves). Inherit: the project's Pixel Snap (Project Settings > Video)")
+	multi_end(&ms)
+
+	if !textual do return
+	mtField := node_field(node, &node.pixelText, "pixelText", .Enum, e.Pixel_Text)
+	prop_row_label(state, node, "Text Pixels", mtField)
+	mt := multi_begin(state, node, mtField)
+	imgui.SetNextItemWidth(field_width())
+	def := "UI: Native" if node.isUI else "Text: Pixel"
+	if v, ok := UI_Combo("insp.pixel-text", int(node.pixelText), {fmt.tprintf("Default (%s)", def), "Native", "Pixel"}, mt.mixed[0]); ok {
+		Editor_RecordUndo(state, "Text pixels")
+		node.pixelText = e.Pixel_Text(v)
+	}
+	UI_Tooltip("When the game's low resolution is scaled up to the window. Native: drawn crisp at the window's resolution, over the game (in its order among Native nodes). Pixel: drawn in the game's pixels, scaled with them (pixel fonts)")
+	multi_end(&mt)
+}

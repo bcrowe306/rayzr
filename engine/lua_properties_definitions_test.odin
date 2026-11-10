@@ -22,7 +22,7 @@ test_lua_node_properties_definitions :: proc(t: ^testing.T) {
 		n := Node_CreateByTypeName(scene, info.name)
 		if n == nil do continue
 		props := make([dynamic]Node_Property, context.temp_allocator)
-		for name in ([]string{"position", "scale", "rotation", "origin", "layer", "zIndex", "ySort", "ySortOffset", "pauseMode", "paused", "enabled", "visible"}) {
+		for name in ([]string{"position", "scale", "rotation", "origin", "layer", "zIndex", "ySort", "ySortOffset", "pauseMode", "paused", "enabled", "visible", "pixelFilter", "pixelSnap", "pixelText"}) {
 			if p, ok := Node_BaseProperty(n, name); ok do append(&props, p)
 		}
 		own := Node_CollectProperties(n)

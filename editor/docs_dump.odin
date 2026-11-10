@@ -36,7 +36,7 @@ DocsDump_Run :: proc(path: string) -> int {
 	e.Json_Key(&w, "common", &first)
 	base := e.Node_CreateByTypeName(scene, "TextureNode") // (has an origin)
 	common := make([dynamic]e.Node_Property, context.temp_allocator)
-	for name in ([]string{"position", "rotation", "scale", "origin", "layer", "zIndex", "ySort", "ySortOffset", "pauseMode", "paused", "enabled"}) {
+	for name in ([]string{"position", "rotation", "scale", "origin", "layer", "zIndex", "ySort", "ySortOffset", "pauseMode", "paused", "enabled", "pixelFilter", "pixelSnap", "pixelText"}) {
 		if p, ok := e.Node_BaseProperty(base, name); ok do append(&common, p)
 	}
 	docs_write_props(&w, common[:])

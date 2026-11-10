@@ -1102,6 +1102,7 @@ particle_circle_texture :: proc() -> u32 {
 	}
 	particleCircleTex = rl.LoadTextureFromImage(img)
 	rl.SetTextureFilter(particleCircleTex, .BILINEAR)
+	Pixel_RecordFilter(particleCircleTex.id, .BILINEAR)
 	return particleCircleTex.id
 }
 
@@ -1124,6 +1125,7 @@ Particle_Batch :: struct {
 batch_use :: proc(b: ^Particle_Batch, tex: u32) {
 	if b.open && b.tex == tex && b.n < PARTICLE_CHUNK do return
 	batch_close(b)
+	Pixel_UseTexture({id = tex}) // (the emitter node's Texture Filter, #409)
 	rlgl.CheckRenderBatchLimit(4 * PARTICLE_CHUNK)
 	rlgl.SetTexture(tex)
 	rlgl.Begin(rlgl.QUADS)
@@ -1297,10 +1299,12 @@ ParticleEmitter_Render :: proc(emitter: ^ParticleEmitter, deltaTime: f32 = 0) {
 			if emitter.particles[i].alive && emitter.trails[i].count > 0 do particle_trail_draw(emitter, &b, white, emitter.particles[i], &emitter.trails[i])
 		}
 	}
+	snap := Pixel_Snaps() // (on whole pixels with the emitter's / project's snap, #409)
 	for i in 0..<len(emitter.particles) {
 		if !emitter.particles[i].alive do continue
 		p := &emitter.particles[i]
 		q := Particle_QuadOf(emitter, p^)
+		if snap && q.rotation == 0 do q.center = Pixel_SnapPoint(q.center - q.size * 0.5) + q.size * 0.5
 		switch q.texture {
 		case .White:   batch_use(&b, white)
 		case .Circle:  batch_use(&b, circle)

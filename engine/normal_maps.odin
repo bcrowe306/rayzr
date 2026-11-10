@@ -307,8 +307,16 @@ lit_rm :: proc() -> ^ResourceManager {
 
 // Lit_Draw: rl.DrawTexturePro, or in the normal pass the image's lit
 // texture (or flat) with its rotation, flips and shininess encoded.
+// Pixel art (#409): on whole pixels with the node's / project's snap, and
+// with the node's Texture Filter.
 Lit_Draw :: proc(tex: rl.Texture2D, src, dst: rl.Rectangle, origin: [2]f32, rotation: f32, tint: rl.Color) {
+	dst := dst
+	if rotation == 0 && Pixel_Snaps() {
+		tl := Pixel_SnapTexture({dst.x, dst.y} - origin) + origin
+		dst.x, dst.y = tl.x, tl.y
+	}
 	if !renderNormalPass {
+		Pixel_UseTexture(tex)
 		rl.DrawTexturePro(tex, src, dst, origin, rotation, tint)
 		return
 	}
@@ -319,7 +327,13 @@ Lit_Draw :: proc(tex: rl.Texture2D, src, dst: rl.Rectangle, origin: [2]f32, rota
 
 // Lit_DrawNPatch: rl.DrawTextureNPatch through the normal pass.
 Lit_DrawNPatch :: proc(tex: rl.Texture2D, info: rl.NPatchInfo, dst: rl.Rectangle, origin: [2]f32, rotation: f32, tint: rl.Color) {
+	dst := dst
+	if rotation == 0 && Pixel_Snaps() {
+		tl := Pixel_SnapTexture({dst.x, dst.y} - origin) + origin
+		dst.x, dst.y = tl.x, tl.y
+	}
 	if !renderNormalPass {
+		Pixel_UseTexture(tex)
 		rl.DrawTextureNPatch(tex, info, dst, origin, rotation, tint)
 		return
 	}

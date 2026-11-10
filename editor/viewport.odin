@@ -162,6 +162,9 @@ Viewport_UpdateAndRender :: proc(state: ^EditorState) {
 // Render Raylib offscreen framebuffer
 Viewport_RenderOffscreen :: proc(state: ^EditorState) {
 	if state.renderTexture.id == 0 do return
+	// Pixel snap on the game's pixels, not the zoomed viewport's (#409).
+	e.Pixel_SetWorldSnap(true)
+	defer e.Pixel_SetWorldSnap(false)
 
 	cam := rl.Camera2D{
 		offset   = {state.viewportSize.x * 0.5, state.viewportSize.y * 0.5},

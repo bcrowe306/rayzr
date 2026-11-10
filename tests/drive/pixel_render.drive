@@ -1,0 +1,40 @@
+# Pixel art per node (#409): the Inspector's Pixels section - a sprite's
+# Texture Filter and Snap to Pixels (no Text Pixels row), a Text node's
+# Text Pixels too (Default = Pixel for world text) - saved with the scene
+# only when set.
+wait 5
+key escape
+key ctrl+a
+type texture sprite
+click @addnode:Texture Sprite
+click @addnode.create
+wait 2
+click @section:Pixels
+expect item:insp.pixel-filter == visible
+expect item:insp.pixel-snap == visible
+expect item:insp.pixel-text == missing
+click @insp.pixel-filter
+click @pick:Smooth
+screenshot sprite_pixels
+key ctrl+a
+type text
+click @addnode:Text
+click @addnode.create
+wait 2
+expect node:Text.type == TextNode
+expect item:insp.pixel-text == visible
+click @insp.pixel-snap
+click @pick:Off
+click @insp.pixel-text
+click @pick:Native
+screenshot text_pixels
+key ctrl+s
+wait 3
+expect file:scenes/main.scene.json contains "texture_filter": "smooth"
+expect file:scenes/main.scene.json contains "pixel_snap": "off"
+expect file:scenes/main.scene.json contains "text_pixels": "native"
+# Undo puts Text Pixels back to its default (the key isn't written then).
+key ctrl+z
+key ctrl+s
+wait 3
+expect file:scenes/main.scene.json !contains "text_pixels"

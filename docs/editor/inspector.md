@@ -129,6 +129,16 @@ settings).
 **Runtime State** (closed by default) shows values the node works out
 while running. They are read-only and not saved.
 
+### Pixels
+
+On every drawn node (closed unless something is set): how it looks in a
+pixel-art game. **Texture Filter** (Inherit: each texture's import setting;
+Sharp: nearest-neighbour; Smooth: bilinear) and **Snap to Pixels**
+(Inherit: the project's Pixel Snap; On; Off). Text and UI nodes add **Text
+Pixels**: **Native** draws crisp at the window's resolution over the scaled
+game (UI's default), **Pixel** in the game's own pixels (Text's default).
+See the [pixel-perfect guide](../../engine/docs/pixel_perfect.md#per-node-settings).
+
 ### Tags, Material, Script, Signals
 
 - **Tags**: type a tag and press Enter, or pick one used in the scene from

@@ -900,12 +900,18 @@ project_video :: proc(state: ^EditorState) {
 	if imgui.SliderInt("##fps", &fps, 30, 240) do d.targetFPS = int(fps)
 	Drive_Item("settings.fps")
 	check("settings.fullscreen", "Fullscreen", &d.fullscreen, "Cover the whole screen at its own resolution (the game is scaled to it). Scripts: Engine.set_fullscreen(true)")
-	check("settings.sharp-scaling", "Sharp Pixels", &d.sharpScaling, "Scale the game to the window nearest-neighbour - crisp pixel art; off: smooth")
-	check("settings.integer-scaling", "Integer Scaling", &d.integerScaling, "Scale by a whole number (2x, 3x...) with bars around: every game pixel the same size on screen")
-	check("settings.pixel-snap", "Pixel Snap", &d.pixelSnap, "The camera and sprites sit on whole game pixels: no shimmering or uneven pixels")
+	// Pixel art (pixel_perfect.odin; nodes override the filter and snap in
+	// the Inspector's Pixels section, #409).
+	imgui.SeparatorText("Pixel Art")
+	UI_PropLabel("Scaling")
+	if idx, changed := UI_Combo("settings.scaling", 0 if d.integerScaling else 1, []string{"Integer (whole multiples)", "Fit (fill the window)"}); changed do d.integerScaling = idx == 0
+	UI_Tooltip("Integer: the game is scaled by a whole number (2x, 3x...) with bars around - every game pixel exactly the same size. Fit: scaled to fill the window; with Sharp Pixels through a sharp-bilinear filter - pixels stay crisp and all the same size (only their edges blend), no uneven columns")
+	check("settings.sharp-scaling", "Sharp Pixels", &d.sharpScaling, "Scale the game to the window without blurring its pixels - crisp pixel art (nearest-neighbour at whole scales, sharp-bilinear at others); off: smooth. Text and UI set to Native draw at the window's resolution either way")
+	check("settings.pixel-snap", "Pixel Snap", &d.pixelSnap, "The camera, sprites, tiles, particles and text sit on whole game pixels: no shimmering or uneven pixels. A node's Pixels > Snap to Pixels overrides it")
 	if !d.pixelSnap do imgui.BeginDisabled()
-	check("settings.smooth-camera", "Smooth Camera", &d.smoothCamera, "With Pixel Snap: keep the camera's sub-pixel motion when scaling up (slow pans glide instead of stepping a game pixel at a time); UI layers stay put")
+	check("settings.smooth-camera", "Smooth Camera", &d.smoothCamera, "With Pixel Snap: keep the camera's sub-pixel motion when scaling up (pans glide instead of stepping a game pixel at a time); the node the camera follows stays still, the world stepping with it while the camera is locked on")
 	if !d.pixelSnap do imgui.EndDisabled()
+	imgui.Separator()
 	check("settings.vsync", "VSync", &d.vsync)
 	check("settings.resizable", "Resizable Window", &d.resizable)
 	check("settings.msaa", "Anti-aliasing (MSAA 4x)", &d.msaa)

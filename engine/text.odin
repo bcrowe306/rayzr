@@ -402,6 +402,9 @@ Text_DrawGlyphs :: proc(f: ^Text_Font, glyphs: []Text_Glyph, origin: [2]f32, rot
 	}
 	if f.sdf && sdfShader.ok do rl.BeginShaderMode(sdfShader.shader)
 	defer if f.sdf && sdfShader.ok do rl.EndShaderMode()
+	// Bitmap glyphs on whole pixels with pixel snap (a fractional advance
+	// sampled the font between its texels: soft text, #409).
+	snapGlyphs := rotation == 0 && Pixel_Snaps()
 	for g, i in glyphs[:n] {
 		if g.r == ' ' || (drawn != nil && drawn[i]) do continue
 		p := g.pos
@@ -411,6 +414,7 @@ Text_DrawGlyphs :: proc(f: ^Text_Font, glyphs: []Text_Glyph, origin: [2]f32, rot
 			p += {math.sin(seed) * g.size * 0.06, math.cos(seed * 1.3) * g.size * 0.06}
 		}
 		world := origin + rotate_vec(p * scale, rotation)
+		if snapGlyphs do world = Pixel_SnapPoint(world)
 		col := g.color
 		if tint != rl.WHITE {
 			col = {u8(u32(col.r) * u32(tint.r) / 255), u8(u32(col.g) * u32(tint.g) / 255), u8(u32(col.b) * u32(tint.b) / 255), u8(u32(col.a) * u32(tint.a) / 255)}
@@ -643,6 +647,7 @@ TextNode_Render :: proc(node: ^Node, ctx: ^GameContext, dt: f32) {
 	scale := t.globalScale.x if t.globalScale.x != 0 else 1
 	origin := t.globalPosition
 	origin -= rotate_vec(size * t.pivot * scale, t.globalRotation) // the origin (node_origin.odin)
+	if t.globalRotation == 0 && Pixel_Snaps() do origin = Pixel_SnapPoint(origin) // (pixel snap, #409)
 	reveal := -1
 	if t.revealSpeed > 0 && !t.revealDone do reveal = int(t.revealed)
 	gc := ctx if ctx != nil else t.gameContext
