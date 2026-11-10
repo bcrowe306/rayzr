@@ -14,16 +14,10 @@
     "type": "Node",
     "name": "Rig",
     "position": [
-     160,
+     160.25,
      90
     ],
-    "pixel_snap": "off",
-    "script": {
-     "path": "scripts/pan_zz.lua",
-     "properties": {
-      "speed": 7
-     }
-    }
+    "pixel_snap": "off"
    },
    {
     "type": "CameraNode",

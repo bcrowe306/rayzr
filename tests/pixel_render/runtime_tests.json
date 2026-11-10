@@ -8,7 +8,7 @@
   "golden": {"image": "tests/pixel_render/expected/scroll.png", "max_pixels": 0.01, "threshold": 40}
  },
  {
-  "name": "pixel render (#409): a free pan (the camera follows an unsnapped rig) - the world shifted by the camera's sub-pixel offset, a Native world text node moving with it",
+  "name": "pixel render (#409): the camera between game pixels (it follows an unsnapped rig at x 160.25) - the world shifted by the camera's sub-pixel offset (one screen pixel at 4x: the same on every GPU), a Native world text node moved with it",
   "project": "tests/pixel_render/project",
   "scene": "scenes/pan.scene.json",
   "frames": 45,

@@ -284,6 +284,7 @@ jobs:
           name: ci-${{ matrix.platform }}
           path: |
             ${{ runner.temp }}/runner.png
+            build/golden_failures
             /tmp/rayzr_package_test.*/shots
             /tmp/rayzr_package_test.*/editor.log
           if-no-files-found: ignore
