@@ -149,8 +149,7 @@ Ase_ResourceSheet :: proc(r: ^Ase_Resource, hide, show: string) -> ^Ase_Sheet {
 	if !rl.IsWindowReady() do return nil
 	doc := r.doc
 	n := max(len(doc.frames), 1)
-	cols := 1
-	for cols * cols < n do cols += 1
+	cols := Ase_SheetColumns(n)
 	rows := (n + cols - 1) / cols
 	atlas := rl.GenImageColor(i32(cols * doc.width), i32(rows * doc.height), {0, 0, 0, 0})
 	defer rl.UnloadImage(atlas)
@@ -177,6 +176,13 @@ Ase_ResourceSheet :: proc(r: ^Ase_Resource, hide, show: string) -> ^Ase_Sheet {
 	sheet.cols = cols
 	sheet.version = r.version
 	return sheet
+}
+
+// Ase_SheetColumns: frames per row in a sheet of n frames (about square).
+Ase_SheetColumns :: proc(n: int) -> int {
+	cols := 1
+	for cols * cols < n do cols += 1
+	return cols
 }
 
 // Ase_SheetRect: a frame's cell in a sheet.

@@ -330,6 +330,26 @@ Slicer_Render :: proc(state: ^EditorState) {
 				delete(slicer.anims[remove].cells)
 				ordered_remove(&slicer.anims, remove)
 			}
+			// A selected Particle Emitter (#401): the picked cells (none: all)
+			// become its frames.
+			if sel := state.selectedNode; sel != nil && sel.typeId == e.ParticleEmitterNode {
+				n := len(slicer.selection)
+				label := fmt.tprintf("%s  Use %d Cell%s for %s", ICON_FA_WAND_MAGIC_SPARKLES, n, "" if n == 1 else "s", sel.name) if n > 0 else fmt.tprintf("%s  Use All Cells for %s", ICON_FA_WAND_MAGIC_SPARKLES, sel.name)
+				if UI_Button(label, "slicer.particles", {-1, 0}) {
+					rects := make([dynamic]rl.Rectangle, context.temp_allocator)
+					for cell in slicer.selection do append(&rects, cell_rect(cell))
+					if n == 0 {
+						// (All cells: the grid saved as the sheet's preset - Frame Source Slices.)
+						full, _ := filepath.join({state.projectPath, slicer.texRel}, context.temp_allocator)
+						imp := Editor_AssetImport(state, full)
+						imp.slice = {grid = {int(slicer.grid.x), int(slicer.grid.y)}, margin = {int(slicer.margin.x), int(slicer.margin.y)}, spacing = {int(slicer.spacing.x), int(slicer.spacing.y)}, cellSize = cell_size_px()}
+						preview_save_import(state, full, slicer.texRel, imp)
+					}
+					ParticleEmitter_UseCells(state, cast(^e.ParticleEmitterNode)sel, slicer.texRel, rects[:])
+					Editor_Log(state, .Info, "%s: %d frame(s) from %s", sel.name, n if n > 0 else cell_count(), slicer.texRel)
+				}
+				UI_Tooltip("The picked cells, in the order picked, become the emitter's frames (Frame Source Regions, up to 64); none picked: every cell (the grid is saved as the sheet's slicing preset - Frame Source Slices)")
+			}
 			if len(slicer.anims) > 0 {
 				imgui.SetNextItemWidth(90)
 				imgui.DragFloat("FPS##slicer", &slicer.fps, 0.2, 1, 60, "%.0f")

@@ -1,0 +1,88 @@
+# #401: particle frames from a sprite sheet / atlas / Aseprite tag. The
+# Leaves sheet preset copies Kenney's CC0 particle sheet into the project
+# (with a slicing preset) and picks a random leaf per particle; Sparkle
+# animates star frames, also in GPU mode; cells picked in the Sprite
+# Slicer become the emitter's regions; Slices uses the sheet's preset;
+# an Aseprite texture plays a tag. Saved with the scene.
+exec mkdir -p $PROJECT/sprites
+exec cp tests/aseprite/fixtures/animation.aseprite $PROJECT/sprites/particles_zz.aseprite
+wait 5
+click @menu:View
+click @menu:View/Workspaces
+click @menu:Workspaces/Animation
+wait 3
+# (A new scene: the particles on an empty background.)
+click @asset.new-scene
+click @hier.add
+type particle emitter
+click @addnode.create
+expect node:ParticleEmitter.type == ParticleEmitterNode
+click @bottom:particles
+key f
+click @particles.preset
+click @pick:Leaves
+wait 60
+expect node:ParticleEmitter.prop.emitter.shape == Texture
+expect node:ParticleEmitter.prop.emitter.frameSource == Regions
+expect node:ParticleEmitter.prop.emitter.frameMode == Random
+expect node:ParticleEmitter.prop.emitter.randomFlipX == true
+expect node:ParticleEmitter.particles >= 1
+expect file:textures/particles/kenney_particles.png.import.json contains "grid": [8, 3]
+click @particles.tab:texture
+wait 2
+screenshot leaves
+# Sparkle: star frames at a speed, a random start each; then on the GPU.
+click @particles.preset
+click @pick:Sparkle
+wait 40
+expect node:ParticleEmitter.prop.emitter.frameMode == Speed
+expect node:ParticleEmitter.prop.emitter.frameRandomStart == true
+screenshot sparkle
+click @particles.preset
+click @pick:Smoke Puff
+wait 40
+screenshot smoke_puff
+click @particles.tab:emission
+click @insp.prop:emitter.gpu
+expect node:ParticleEmitter.prop.emitter.gpu == true
+wait 40
+expect node:ParticleEmitter.particles >= 1
+screenshot smoke_puff_gpu
+click @insp.prop:emitter.gpu
+expect node:ParticleEmitter.prop.emitter.gpu == false
+# The Sprite Slicer: three cells, in the order picked, become the regions.
+click @particles.tab:texture
+click @particles.slicer
+wait 3
+click @slicer.cell:12
+click @slicer.cell:14
+click @slicer.cell:13
+expect slicer-selection == 12,14,13
+screenshot slicer_cells
+click @slicer.particles
+expect node:ParticleEmitter.prop.emitter.frameSource == Regions
+click 1004,126
+click @toolbar.save
+expect file:scenes/new_scene.scene.json contains "particle_regions": [[256, 64, 64, 64], [384, 64, 64, 64], [320, 64, 64, 64]]
+# Slices: every cell of the sheet's preset; Random Flip Y (on from Smoke Puff) off.
+click @insp.prop:emitter.frameSource
+click @pick:Slices
+expect node:ParticleEmitter.prop.emitter.frameSource == Slices
+click @insp.prop:emitter.randomFlipY
+expect node:ParticleEmitter.prop.emitter.randomFlipY == false
+wait 30
+screenshot slices
+# An Aseprite texture: its "walk" tag.
+click @particles.texture
+click @pick:sprites/particles_zz.aseprite
+expect node:ParticleEmitter.prop.emitter.frameSource == Aseprite
+click @particles.tag
+click @pick:walk
+expect node:ParticleEmitter.prop.frameTag == walk
+wait 40
+expect node:ParticleEmitter.particles >= 1
+screenshot aseprite_tag
+click @toolbar.save
+expect file:scenes/new_scene.scene.json contains "particle_texture": "sprites/particles_zz.aseprite"
+expect file:scenes/new_scene.scene.json contains "frameTag": "walk"
+expect file:scenes/new_scene.scene.json contains "emitter.frameSource": "Aseprite"
