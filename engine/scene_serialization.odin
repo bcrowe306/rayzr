@@ -105,13 +105,16 @@ write_bool :: proc(w: ^Json_Writer, b: bool) {
 
 // asset_rel makes a resolved disk path relative to the project directory so
 // saved scenes stay portable (and work from a .rayzr package).
-@(private = "file")
 asset_rel :: proc(node: ^Node, path: string) -> string {
 	p := strings.trim_prefix(path, "./")
 	if node != nil && node.gameContext != nil && node.gameContext.game != nil {
-		dir := strings.trim_suffix(node.gameContext.game.assetManager.projectDir, "/")
-		if dir != "" && strings.has_prefix(p, dir) && len(p) > len(dir) && p[len(dir)] == '/' {
-			return p[len(dir) + 1:]
+		// (Compared with / on every platform: a Windows path resolved from
+		// the project has \ - it was saved absolute, #293.)
+		dir, _ := strings.replace_all(node.gameContext.game.assetManager.projectDir, "\\", "/", context.temp_allocator)
+		dir = strings.trim_suffix(dir, "/")
+		pn, _ := strings.replace_all(p, "\\", "/", context.temp_allocator)
+		if dir != "" && strings.has_prefix(pn, dir) && len(pn) > len(dir) && pn[len(dir)] == '/' {
+			return pn[len(dir) + 1:]
 		}
 	}
 	return p
