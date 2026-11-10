@@ -295,6 +295,19 @@ hover, diagnostics (squiggles, gutter, status line), go to definition (F12
 (SCRIPTING.md > Completion of project names). F1 opens the Scripting
 Reference at the symbol.
 
+Diagnostics stay current (#403): the generated `project_types.lua` is kept
+open in the server and each rewrite sent as a didChange
+(`Code_LspPushLibraryFile` - lua-language-server 3.x ignores
+`workspace/didChangeWatchedFiles`, and its own watcher can skip a rewritten
+file as "already loaded"), and `diagnostics.workspaceEvent` is `OnChange`,
+so a change to any script or to the types re-checks the others a second
+later. Runtime problems clear when their script is edited. The diagnostics
+presets (Project Settings > Lua Checks) are `LUA_CHECKS_SETTINGS` in
+`lua_project.odin`, written to `.luarc.json` and sent as the server's
+settings. `scripts/luals_check.sh` (CI) runs `lua-language-server --check`
+over the templates, tutorials and demo project after `editor --lua-setup`
+and fails on any warning.
+
 **Rename** (F2): type the new name; the **Rename Preview** lists every
 change by file - each line before (red) and after (green) - and nothing
 changes until **Apply** (Enter); Cancel (Esc) drops them. Applied changes

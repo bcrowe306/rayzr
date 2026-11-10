@@ -1,0 +1,55 @@
+# Code tab diagnostics clear once fixed (#403): an undefined global in the
+# open script goes away when the line is corrected, and a call to another
+# script's function that doesn't exist yet (a typo there) clears when that
+# other script is fixed and saved - without touching this one; an input
+# action the project lacks clears once the code action adds it (the
+# generated types change).
+wait 5
+exec cp tests/drive/fixtures/drive_diag_a_zz.lua $PROJECT/scripts/drive_diag_a_zz.lua
+exec cp tests/drive/fixtures/drive_diag_b_zz.lua $PROJECT/scripts/drive_diag_b_zz.lua
+wait-until item:asset:scripts/drive_diag_a_zz.lua == visible timeout=300
+dblclick @asset:scripts/drive_diag_a_zz.lua
+wait-until code.lsp == ready timeout=600
+wait-until code.diagnostic-messages contains DriveDiagMissingZz timeout=600
+wait-until code.diagnostic-messages contains helper_zz timeout=600
+wait-until code.diagnostic-messages contains drive_diag_jump_zz timeout=600
+screenshot warnings
+# Fix the global: the warning goes, the other one stays.
+key ctrl+g
+type 4
+key enter
+key end
+key shift+home
+type self.count = 1
+wait-until code.diagnostic-messages !contains DriveDiagMissingZz timeout=600
+expect code.diagnostic-messages contains helper_zz
+# Fix the other script's typo and save it.
+dblclick @asset:scripts/drive_diag_b_zz.lua
+wait-until code.file == scripts/drive_diag_b_zz.lua timeout=300
+key ctrl+g
+type 4
+key enter
+key end
+key shift+home
+type function DriveDiagBZz:helper_zz()
+key ctrl+s
+wait 1
+click @code.tab:scripts/drive_diag_a_zz.lua
+wait-until code.file == scripts/drive_diag_a_zz.lua timeout=300
+wait-until code.diagnostic-messages !contains helper_zz timeout=600
+expect code.diagnostic-messages contains drive_diag_jump_zz
+# The input action: added by the code action, the warning clears.
+key ctrl+g
+type 8
+key enter
+key end
+key left
+key left
+key left
+wait 2
+key cmd+period
+wait-until item:code.action:0 == visible timeout=300
+click @code.action:0
+wait-until file:project.json contains "drive_diag_jump_zz" timeout=300
+wait-until code.diagnostics == 0 timeout=600
+screenshot cleared

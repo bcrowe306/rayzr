@@ -53,27 +53,6 @@ function Game:set_volume(v)
     self:apply_settings()
 end
 
--- The title's line under the name: the best score (the fewest moves a level).
-function Game:best_text()
-    if Game.LOWER_IS_BETTER then
-        local parts = {}
-        for i = 1, #Game.LEVELS do
-            parts[#parts + 1] = i .. ": " .. (self.progress.level_best["level" .. i] or "-")
-        end
-        return "Fewest moves  " .. table.concat(parts, "   ")
-    end
-    return string.format("Best %d", self.progress.best)
-end
-
--- The result screen's line: the run's score.
----@param r table Game.result
-function Game:result_text(r)
-    if Game.LOWER_IS_BETTER then
-        return r.won and string.format("%d moves in all", r.score) or ("Out of moves on " .. Game.LEVEL_WORD:lower() .. " " .. r.level)
-    end
-    return string.format("%s %d", Game.SCORE_NAME, r.score)
-end
-
 -- Writes save.json now.
 function Game:flush()
     Save.flush()
@@ -164,7 +143,8 @@ function Game:finish(won)
     self:go("scenes/result.scene.json")
 end
 
--- Hex Island's lines (make_templates.py adds them to game.lua): steps.
+-- Hex Island's lines (make_templates.py puts them in game.lua, in place
+-- of the common ones): steps.
 
 -- The title's line under the name: each island's fewest steps.
 function Game:best_text()

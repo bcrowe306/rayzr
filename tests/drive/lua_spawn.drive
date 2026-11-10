@@ -1,7 +1,7 @@
 # Spawning: Scene.instantiate is typed per component (its root's type)
 # and destroy completes on nodes.
 wait 5
-wait-until file:.rayzr/definitions/project_types.lua contains fun(component: "components/AsteroidLarge.component.json", parent?: Node, x?: number|Vec2, y?: number): DynamicBodyNode timeout=600
+wait-until file:.rayzr/definitions/project_types.lua contains fun(component: "components/AsteroidLarge.component.json", parent?: Node, x?: number|Vec2|table<string, any>, y?: number|table<string, any>, properties?: table<string, any>): DynamicBodyNode timeout=600
 dblclick @asset:scripts/player_ship.lua
 wait-until code.lsp == ready timeout=600
 key ctrl+g
