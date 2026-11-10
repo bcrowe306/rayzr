@@ -90,6 +90,10 @@ jobs:
           release: ${{ env.ODIN_RELEASE }}
           token: ${{ secrets.GITHUB_TOKEN }}
       - uses: mymindstorm/setup-emsdk@6ab9eb1bda2574c4ddb79809fc9247783eaf9021 # v14
+        # (Pinned: Emscripten 7.0.0's libc++ no longer pulls in <iterator>,
+        # which Clipper2 2.0.1 needs - scripts/build_clipper.sh.)
+        with:
+          version: 6.0.13
       - run: scripts/build_web_runner.sh -define:RAYZR_RELEASE=${{ inputs.version }}
       - run: tar -C bin/runners -czf runners-web.tar.gz web
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
