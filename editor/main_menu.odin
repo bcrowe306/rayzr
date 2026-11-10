@@ -233,6 +233,10 @@ MainMenu_Render :: proc(state: ^EditorState) -> f32 {
 		menu_action(state, "help.shortcuts")
 		menu_action(state, "palette.commands")
 		if menu_item("Check for Updates") do UpdateCheck_Start(manual = true)
+		if prev, ok := Update_PreviousVersion(state); ok {
+			if menu_item(fmt.ctprintf("Roll Back to %s", prev)) do Update_RequestRollback(state)
+			UI_Tooltip("Restart into the version the last update replaced (kept beside the install)")
+		}
 		imgui.Separator()
 		menu_action(state, "help.report_bug")
 		menu_action(state, "help.crash_folder")

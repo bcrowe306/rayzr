@@ -186,7 +186,8 @@ commands to any menu.
 | **Level Editor Reference / Shortcuts** | | The Level tab's help. |
 | **Keyboard Shortcuts** | Cmd+Shift+K | Every shortcut, from the same table ([Keyboard Shortcuts](keyboard-shortcuts.md)). |
 | **Command Palette** | Cmd+Shift+P | The [command palette](command-palette.md). |
-| **Check for Updates** | | |
+| **Check for Updates** | | Looks for a newer editor now ([Updates](updates.md)). |
+| **Roll Back to <version>** | | After an update: restarts into the version it replaced. |
 | **Report a Bug...** | | Opens a bug report. |
 | **Open Crash Reports Folder** | | |
 | **About** | | The editor version (in the console). |

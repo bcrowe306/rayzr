@@ -27,7 +27,7 @@ expect log contains Standalone game ready
 expect log !contains building it once
 key escape
 
-# Check for updates (RAYZR_UPDATE_URL: tests/package/release.json, v99.0.0).
+# Check for updates (RAYZR_UPDATE_URL: tests/package/manifest.json, v99.0.0, no packages: only linked).
 wait-until item:status.update == visible timeout=600
 expect log contains Rayzr Editor 99.0.0 is available
 

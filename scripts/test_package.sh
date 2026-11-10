@@ -52,8 +52,9 @@ python3 -I - "$tmp/project/project.json" "$native" <<-'EOF'
 EOF
 if command -v caffeinate > /dev/null; then caffeinate -u -t 900 & trap 'kill $! 2> /dev/null' EXIT; fi
 cd /tmp # (not the checkout: the editor must find everything in its own package)
-# (The update check reads a fixture release, not GitHub.)
-env -u RAYZR_GAME_BIN -u RAYZR_EDITOR_RESOURCES RAYZR_UPDATE_URL="file://$repo/tests/package/release.json" perl -e 'alarm 600; exec @ARGV' "$editor" \
+# (The update check reads a fixture manifest with no packages, not downloads.rayzr.app:
+# nothing is downloaded, the packaged editor is never replaced.)
+env -u RAYZR_GAME_BIN -u RAYZR_EDITOR_RESOURCES RAYZR_UPDATE_URL="file://$repo/tests/package/manifest.json" perl -e 'alarm 600; exec @ARGV' "$editor" \
 	--project "$tmp/project" --drive "$repo/tests/package/installed.drive" --shots "$tmp/shots" \
 	--user-data "$tmp/userdata" --hidden > "$tmp/editor.log" 2>&1
 status=$?

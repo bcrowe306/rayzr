@@ -1,0 +1,5 @@
+{"schema": 1, "latest": "99.0.0", "base_url": "https://downloads.rayzr.app",
+ "stable": [{"version": "99.0.0", "tag": "v99.0.0", "channel": "stable", "prerelease": false,
+   "notes_url": "https://github.com/bcrowe306/rayzr/releases/tag/v99.0.0", "files": []}],
+ "dev": {"version": "99.0.0-dev.1", "tag": "v99.0.0-dev.1", "channel": "dev", "prerelease": true,
+   "notes_url": "https://github.com/bcrowe306/rayzr/releases/tag/v99.0.0-dev.1", "files": []}}

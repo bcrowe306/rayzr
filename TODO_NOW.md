@@ -216,7 +216,7 @@ Editor that runs anywhere:
 - [x] D.6 The editor ships the runners for every platform (`runners/{macos,windows,linux,web}`), so any editor exports every desktop target and the web
 - [x] D.7 One version string (from the git tag) in the editor, the runner and each `.rayzr`; the runner warns about a project from a newer version
 - [x] D.8 Third-party license notices bundled (raylib, Lua, Box2D, Dear ImGui, LuaLS, cmark, Open Sans, Font Awesome)
-- [x] D.9 Check for updates against GitHub Releases (Help > Check for Updates, at startup unless turned off; status bar link; later: an auto-updater)
+- [x] D.9 Check for updates against GitHub Releases (Help > Check for Updates, at startup unless turned off; status bar link; the auto-updater: #291, docs/editor/updates.md)
 
 CI/CD (GitHub Actions):
 - [x] C.1 CI on pushes / pull requests: build the editor, the runner and the Play binary, engine + ui unit tests, on macOS (arm64), Windows (x64) and Linux (x64)
