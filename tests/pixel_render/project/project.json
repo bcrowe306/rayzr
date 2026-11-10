@@ -1,0 +1,28 @@
+{
+ "name": "Pixel render",
+ "initial_scene": "scenes/scroll.scene.json",
+ "window": {
+  "title": "t",
+  "width": 1280,
+  "height": 720,
+  "virtual_width": 320,
+  "virtual_height": 180
+ },
+ "video": {
+  "sharp_scaling": true,
+  "integer_scaling": true,
+  "pixel_snap": true,
+  "smooth_camera": true
+ },
+ "physics": {
+  "gravity": [
+   0,
+   0
+  ],
+  "debug_draw": false
+ },
+ "scenes": [
+  "scenes/scroll.scene.json",
+  "scenes/pan.scene.json"
+ ]
+}

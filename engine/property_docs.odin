@@ -94,6 +94,9 @@ PROPERTY_DOCS := [?]Property_Doc_Entry {
 	{"Node.pauseMode", "Inherit the parent's pausing, Pausable (stops when paused) or Always (keeps running, e.g. pause menus)."},
 	{"Node.paused", "Pauses this node and its children (except Always ones) while the game runs."},
 	{"Node.enabled", "Disabled nodes (and their children) neither update nor draw."},
+	{"Node.pixelFilter", "How its textures are sampled when drawn scaled or between pixels: Inherit (each texture's import setting), Sharp (nearest-neighbour) or Smooth (bilinear)."},
+	{"Node.pixelSnap", "Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off."},
+	{"Node.pixelText", "Text and UI when the game is scaled up: Native (crisp at the window's resolution, over the game) or Pixel (in the game's pixels); Default: UI Native, Text Pixel."},
 	{"AnimationPlayerNode.fps", "Frames per second of the animations that don't set their own (the Animation tab's FPS box)."},
 	{"AnimationPlayerNode.defaultAnimation", "The animation selected when the scene loads (it plays with Autoplay); empty = the one saved as current."},
 

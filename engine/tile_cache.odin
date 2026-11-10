@@ -156,6 +156,13 @@ TileCache_Draw :: proc(key: Tile_Chunk_Key, version: u64, src: rl.Rectangle, dst
 	if !has || ch.version != version || ch.used != tileCache.frame do return false
 	o := clamp(opacity * f32(tint.a) / 255, 0, 1)
 	col := rl.Color{u8(f32(tint.r) * o), u8(f32(tint.g) * o), u8(f32(tint.b) * o), u8(255 * o)}
+	// Pixel art (#409): the chunk on whole pixels, with the map's Texture Filter.
+	dst := dst
+	if rotation == 0 && Pixel_Snaps() {
+		tl := Pixel_SnapPoint({dst.x, dst.y})
+		dst.x, dst.y = tl.x, tl.y
+	}
+	Pixel_UseTexture(ch.rt.texture)
 	// Render textures are stored upside down.
 	h := f32(ch.rt.texture.height)
 	rl.DrawTexturePro(ch.rt.texture, {src.x, h - src.y - src.height, src.width, -src.height}, dst, {0, 0}, rotation, col)

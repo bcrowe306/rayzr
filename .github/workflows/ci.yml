@@ -251,6 +251,8 @@ jobs:
           xvfb-run -a python3 scripts/templates/test_templates.py --runner bin/runners/linux/runner --suite tests/console/runtime_tests.json
           # Viewports (#279): a minimap, an in-world screen through a Sprite, split-screen.
           xvfb-run -a python3 scripts/templates/test_templates.py --runner bin/runners/linux/runner --suite tests/viewport/runtime_tests.json
+          # Pixel-art rendering (#409): smooth camera with a still followed sprite, Native text, sharp-bilinear Fit.
+          xvfb-run -a python3 scripts/templates/test_templates.py --runner bin/runners/linux/runner --suite tests/pixel_render/runtime_tests.json
           # Normal-mapped lighting (#274): a point light, the sun, sun shadows.
           xvfb-run -a python3 scripts/templates/test_templates.py --runner bin/runners/linux/runner --suite tests/normal_maps/runtime_tests.json
           # Crisp text (#270): MSDF for scaled and rotated text, text along a path.
@@ -284,6 +286,7 @@ jobs:
           name: ci-${{ matrix.platform }}
           path: |
             ${{ runner.temp }}/runner.png
+            build/golden_failures
             /tmp/rayzr_package_test.*/shots
             /tmp/rayzr_package_test.*/editor.log
           if-no-files-found: ignore

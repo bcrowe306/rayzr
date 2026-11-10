@@ -114,6 +114,7 @@ Texture_ApplyImport :: proc(tex: ^rl.Texture2D, imp: Texture_Import) {
 	case .Bilinear: rl.SetTextureFilter(tex^, .BILINEAR)
 	case .Trilinear: rl.SetTextureFilter(tex^, .TRILINEAR)
 	}
+	Pixel_RecordFilter(tex.id, .POINT if imp.filter == .Point else .BILINEAR if imp.filter == .Bilinear else .TRILINEAR) // (a node's Texture Filter puts it back: pixel_perfect.odin)
 	rl.SetTextureWrap(tex^, .CLAMP if imp.wrap == .Clamp else .REPEAT)
 }
 

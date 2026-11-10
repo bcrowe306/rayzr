@@ -196,10 +196,10 @@ An action takes up to 4 bindings. Guides: [gamepads](../../engine/docs/gamepads.
 | **Screen Fill** | For a window whose shape differs: **Keep (bars)** shows exactly the virtual resolution with black bars; **Expand (no bars)** keeps the scale and shows more of the world on the longer side (UI on a Screen Layer stays at the screen's edges). |
 | **Target FPS** | 30 to 240. |
 | **Fullscreen** | Covers the whole screen at its own resolution. Scripts: `Engine.set_fullscreen(true)`. |
-| **Sharp Pixels** | Scales the game nearest-neighbour: crisp pixel art (off: smooth). |
-| **Integer Scaling** | Scales by a whole number (2x, 3x...) with bars around: every game pixel the same size. |
-| **Pixel Snap** | The camera and sprites sit on whole game pixels: no shimmering. |
-| **Smooth Camera** | With Pixel Snap: keeps the camera's sub-pixel motion when scaling up, so slow pans glide; UI layers stay put. |
+| **Scaling** (Pixel Art) | **Integer (whole multiples)**: scaled by a whole number (2x, 3x...) with bars around - every game pixel the same size. **Fit (fill the window)**: fills the window; with Sharp Pixels through a sharp-bilinear filter, so pixels stay crisp and even. |
+| **Sharp Pixels** | Scales the game without blurring its pixels: crisp pixel art (off: smooth). Text and UI set to Native draw at the window's resolution either way. |
+| **Pixel Snap** | The camera, sprites, tiles, particles and text sit on whole game pixels: no shimmering. A node's Inspector > **Pixels** > Snap to Pixels overrides it. |
+| **Smooth Camera** | With Pixel Snap: keeps the camera's sub-pixel motion when scaling up, so pans glide; the node the camera follows stays still; UI layers stay put. |
 | **VSync** | Waits for the display's refresh. |
 | **Resizable Window** | The player can resize the window. |
 | **Anti-aliasing (MSAA 4x)** | Smooths the edges of shapes. |
@@ -319,8 +319,8 @@ action.
 3. Under **Physics**, press **Earth (0, 980)**.
 4. Open **Collision Layers** and name layer 1 `World`, layer 2 `Player`.
 5. Go to **Video**. Set **Virtual Resolution** to 320 x 180 and **Window
-   Size** to 1280 x 720. Tick **Sharp Pixels**, **Integer Scaling** and
-   **Pixel Snap**.
+   Size** to 1280 x 720. Under **Pixel Art** set **Scaling** to Integer
+   and tick **Sharp Pixels** and **Pixel Snap**.
 6. Go to **Input**. Type `jump` in the box under the list and press Enter.
    Press **Press a Key** and then Space. Press **Add Binding**, set its
    device to **Gamepad Button** and pick the bottom face button.

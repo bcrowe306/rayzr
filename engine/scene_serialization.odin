@@ -25,7 +25,9 @@ import rl "vendor:raylib"
 //   "type", "name", "uid" (stable id, unique in the file: given on load / save,
 //   kept through renames and moves - #328), "position", "scale", "rotation",
 //   "pivot" (the origin, nodes that draw a rectangle), "enabled", "visible", "layer"
-//   optional: "pause_mode", "paused", "tags", "editor_locked", "editor_hidden" (editor only)
+//   optional: "pause_mode", "paused", "tags", "editor_locked", "editor_hidden" (editor only),
+//   "texture_filter" ("sharp" / "smooth"), "pixel_snap" ("on" / "off"), "text_pixels"
+//   ("native" / "pixel") - pixel art overrides, absent = inherit (pixel_perfect.odin, #409)
 //   a component's root: "exposed": [{"uid", "property", "label"}] (component_exposed.odin)
 //   "properties": { <reflected gui:"true" fields> }        (see node_properties.odin)
 //   resources by type: "texture"/"origin" (TextureNode), "frames"/"fps"/"loop"/"origin"
@@ -177,6 +179,9 @@ write_node :: proc(w: ^Json_Writer, node: ^Node, manager: ^NodeManager) {
 	if node.ySort {Json_Key(w, "y_sort", &first); write_bool(w, true)}
 	if node.ySortOffset != 0 {Json_Key(w, "y_sort_offset", &first); Json_Float(w, node.ySortOffset)}
 	if node.pauseMode != .Inherit {Json_Key(w, "pause_mode", &first); Json_String(w, Pause_ModeName(node.pauseMode))}
+	if node.pixelFilter != .Inherit {Json_Key(w, "texture_filter", &first); Json_String(w, Pixel_FilterName(node.pixelFilter))}
+	if node.pixelSnap != .Inherit {Json_Key(w, "pixel_snap", &first); Json_String(w, Pixel_SnapName(node.pixelSnap))}
+	if node.pixelText != .Default {Json_Key(w, "text_pixels", &first); Json_String(w, Pixel_TextName(node.pixelText))}
 	if node.paused {Json_Key(w, "paused", &first); write_bool(w, true)}
 	if node.editorLocked {Json_Key(w, "editor_locked", &first); write_bool(w, true)}
 	if node.editorHidden {Json_Key(w, "editor_hidden", &first); write_bool(w, true)}
@@ -1048,6 +1053,9 @@ read_node :: proc(scene: ^Scene, obj: json.Object, parent: ^Node, ctx: ^GameCont
 	node.ySort = sj_bool(obj, "y_sort", false)
 	node.ySortOffset = sj_float(obj, "y_sort_offset", 0)
 	node.pauseMode = Pause_ModeParse(sj_string(obj, "pause_mode", ""))
+	node.pixelFilter = Pixel_FilterParse(sj_string(obj, "texture_filter", ""))
+	node.pixelSnap = Pixel_SnapParse(sj_string(obj, "pixel_snap", ""))
+	node.pixelText = Pixel_TextParse(sj_string(obj, "text_pixels", ""))
 	node.paused = sj_bool(obj, "paused", false)
 	node.editorLocked = sj_bool(obj, "editor_locked", false)
 	node.editorHidden = sj_bool(obj, "editor_hidden", false)
@@ -1845,6 +1853,9 @@ read_component_instance :: proc(scene: ^Scene, compPath: string, inst: json.Obje
 	node.ySortOffset = sj_float(inst, "y_sort_offset", node.ySortOffset)
 	// (The component's own pause mode and tags unless the instance sets them.)
 	if "pause_mode" in inst do node.pauseMode = Pause_ModeParse(sj_string(inst, "pause_mode", ""))
+	if "texture_filter" in inst do node.pixelFilter = Pixel_FilterParse(sj_string(inst, "texture_filter", ""))
+	if "pixel_snap" in inst do node.pixelSnap = Pixel_SnapParse(sj_string(inst, "pixel_snap", ""))
+	if "text_pixels" in inst do node.pixelText = Pixel_TextParse(sj_string(inst, "text_pixels", ""))
 	node.paused = sj_bool(inst, "paused", node.paused)
 	node.editorLocked = sj_bool(inst, "editor_locked", false)
 	node.editorHidden = sj_bool(inst, "editor_hidden", false)

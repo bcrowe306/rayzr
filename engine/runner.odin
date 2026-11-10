@@ -635,6 +635,8 @@ Runner_Frame :: proc(rs: ^Runner_State) -> bool {
 
 		frameStart := time.tick_now()
 		Prof_Begin("frame")
+		// Native text / UI: kept while the frame draws, drawn on the window after (#409).
+		Pixel_NativeBegin(target, dest, vw, vh, Scene_TransitionActive(game))
 		Render_SetFrameTarget(target)
 		rl.BeginTextureMode(target^)
 		// Smooth camera: the world gets its own texture; the frame holds the
@@ -673,13 +675,15 @@ Runner_Frame :: proc(rs: ^Runner_State) -> bool {
 			if renderPixel.usedWorld {
 				world := renderPixel.world.texture
 				if effects := Scene_PostEffects(game.sceneManager.currentScene); len(effects) > 0 do world = Post_Process(effects, world, &game.gameContext)
-				Pixel_DrawWorld(world, dest, vw, vh)
+				Pixel_DrawWorld(world, dest, vw, vh, video.sharpScaling && !filtered)
 			}
 			// (Premultiplied: scene.odin draws the layers over the world so.)
 			rl.BeginBlendMode(.ALPHA_PREMULTIPLY)
 			exact := Runner_CopyIsExact(dest, target.texture)
 			if exact do rl.SetTextureFilter(target.texture, .POINT)
+			sharp := !exact && video.sharpScaling && !filtered && !Pixel_IsWholeScale(dest, vw, vh) && Pixel_SharpBegin(target.texture, vw, vh, dest)
 			rl.DrawTexturePro(target.texture, {0, 0, f32(target.texture.width), -f32(target.texture.height)}, dest, {0, 0}, 0, rl.WHITE)
+			if sharp do Pixel_SharpEnd(target.texture)
 			rl.EndBlendMode()
 			if exact {
 				rlgl.DrawRenderBatchActive()
@@ -697,13 +701,25 @@ Runner_Frame :: proc(rs: ^Runner_State) -> bool {
 			// its filter.)
 			exact := frame.id == target.texture.id && Runner_CopyIsExact(dest, frame)
 			if exact do rl.SetTextureFilter(frame, .POINT)
+			// Sharp Pixels at a fractional scale (Fit): sharp-bilinear - every
+			// game pixel the same size, no uneven columns (#409).
+			sharp := false
+			if !exact && video.sharpScaling && !filtered && !Pixel_IsWholeScale(dest, vw, vh) {
+				if opaqueInCopy do Render_OpaqueCopyEnd()
+				sharp = Pixel_SharpBegin(frame, vw, vh, dest, opaque = opaqueInCopy)
+				if !sharp && opaqueInCopy do Render_OpaqueCopyBegin()
+			}
 			rl.DrawTexturePro(frame, {0, 0, f32(frame.width), -f32(frame.height)}, dest, {0, 0}, 0, rl.WHITE)
-			if opaqueInCopy do Render_OpaqueCopyEnd()
+			if sharp {
+				Pixel_SharpEnd(frame)
+				if frame.id != target.texture.id do rl.SetTextureFilter(frame, .BILINEAR) // (an effect's output keeps its own)
+			} else if opaqueInCopy do Render_OpaqueCopyEnd()
 			rlgl.DrawRenderBatchActive()
 			rlgl.EnableColorBlend()
 			if exact do rl.SetTextureFilter(frame, .POINT if video.sharpScaling else .BILINEAR)
 		}
 		if filtered do Colorblind_End()
+		Pixel_DrawNative(&game.gameContext, dest, vw, vh) // (Native text / UI, at the window's resolution)
 		if opts.uncapped && opts.benchFrames <= 0 && opts.perfReport == "" do runner_draw_frame_time(rs)
 		Console_DrawScreen(game) // (the developer console and its overlays)
 		Prof_Begin("present")

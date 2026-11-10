@@ -11,7 +11,10 @@
     {"name": "ySortOffset", "kind": "number", "owner": "Node", "default": 0, "doc": "Added to this node's Y when its parent Y-sorts: move the sorting line to the feet (e.g. half the sprite's height)."},
     {"name": "pauseMode", "kind": "enum", "owner": "Node", "default": "Inherit", "values": ["Inherit", "Pausable", "Always"], "doc": "Inherit the parent's pausing, Pausable (stops when paused) or Always (keeps running, e.g. pause menus)."},
     {"name": "paused", "kind": "boolean", "owner": "Node", "default": false, "doc": "Pauses this node and its children (except Always ones) while the game runs."},
-    {"name": "enabled", "kind": "boolean", "owner": "Node", "default": true, "doc": "Disabled nodes (and their children) neither update nor draw."}
+    {"name": "enabled", "kind": "boolean", "owner": "Node", "default": true, "doc": "Disabled nodes (and their children) neither update nor draw."},
+    {"name": "pixelFilter", "kind": "enum", "owner": "Node", "default": "Inherit", "values": ["Inherit", "Sharp", "Smooth"], "doc": "How its textures are sampled when drawn scaled or between pixels: Inherit (each texture's import setting), Sharp (nearest-neighbour) or Smooth (bilinear)."},
+    {"name": "pixelSnap", "kind": "enum", "owner": "Node", "default": "Inherit", "values": ["Inherit", "On", "Off"], "doc": "Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off."},
+    {"name": "pixelText", "kind": "enum", "owner": "Node", "default": "Default", "values": ["Default", "Native", "Pixel"], "doc": "Text and UI when the game is scaled up: Native (crisp at the window's resolution, over the game) or Pixel (in the game's pixels); Default: UI Native, Text Pixel."}
   ],
   "nodes": [
     {

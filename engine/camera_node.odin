@@ -1294,7 +1294,12 @@ CameraNode_GetCamera2D :: proc(camera: ^CameraNode, viewportWidth: f32 = 1280, v
 		rotation = camRot,
 		zoom     = camZoom,
 	}
-	Pixel_SnapCamera(&cam) // pixel snap / the smooth camera's margin (pixel_perfect.odin)
+	// (The node it follows stays still on screen with the smooth camera: #409.)
+	follow: Maybe([2]f32)
+	if t := camera.target; camera.followMode == .SingleTarget && t != nil && Node_IsAlive(t) && (t.pixelSnap == .On || (t.pixelSnap == .Inherit && renderPixel.snap)) {
+		follow = t.globalPosition
+	}
+	Pixel_SnapCamera(&cam, follow) // pixel snap / the smooth camera's margin (pixel_perfect.odin)
 	return cam
 }
 
