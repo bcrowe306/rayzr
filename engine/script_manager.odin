@@ -483,8 +483,13 @@ ScriptInstance_CallUpdate :: proc(inst: ^ScriptInstance, deltaTime: f32, sm: ^Sc
 	lua.pop(L, 1) // pop errHandler
 }
 
+// Script_CallbacksMuted: scripts' on_destroy isn't called (a scene loaded
+// only to be written again - canonical_files.odin: the game's code mustn't
+// run).
+Script_CallbacksMuted: bool
+
 ScriptInstance_CallDestroy :: proc(inst: ^ScriptInstance, sm: ^ScriptManager = nil) {
-	if inst == nil do return
+	if inst == nil || Script_CallbacksMuted do return
 	mgr := sm
 	if mgr == nil && inst.scriptManager != nil do mgr = inst.scriptManager
 	if mgr == nil do mgr = &scriptManager

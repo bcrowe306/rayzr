@@ -1,601 +1,1474 @@
 {
- "name": "title",
- "background": [
-  143,
-  208,
-  242,
-  255
- ],
- "root": {
-  "type": "Node",
-  "name": "root",
-  "children": [
-   {
-    "type": "CameraNode",
-    "name": "Camera",
-    "position": [
-     640.0,
-     360.0
-    ],
-    "properties": {
-     "isCurrent": true
-    }
-   },
-   {
-    "type": "VectorShapeNode",
-    "name": "Backdrop",
-    "position": [
-     0,
-     0
-    ],
-    "pivot": [
-     0,
-     0
-    ],
+  "format": 1,
+  "name": "title",
+  "draw_bounds": false,
+  "background": [143, 208, 242, 255],
+  "root": {
+    "type": "Node",
+    "name": "root",
+    "uid": "9axgwp1n",
+    "position": [0, 0],
+    "scale": [1, 1],
+    "rotation": 0,
+    "enabled": true,
+    "visible": true,
     "layer": 0,
-    "properties": {
-     "file": "art/backdrop.svg"
-    }
-   },
-   {
-    "type": "VectorShapeNode",
-    "name": "Backdrop2",
-    "position": [
-     1278,
-     0
-    ],
-    "pivot": [
-     0,
-     0
-    ],
-    "layer": 0,
-    "properties": {
-     "file": "art/backdrop.svg"
-    }
-   },
-   {
-    "type": "Node",
-    "name": "Pip",
-    "position": [
-     230,
-     640
-    ],
-    "scale": [
-     0.75,
-     0.75
-    ],
-    "layer": 2,
     "children": [
-     {
-      "type": "SkeletonNode",
-      "name": "Rig",
-      "properties": {
-       "file": "rigs/pip.json",
-       "animation": "idle",
-       "loop": true,
-       "autoplay": true,
-       "mixTime": 0.2
+      {
+        "type": "CameraNode",
+        "name": "Camera",
+        "uid": "6ifloit6",
+        "position": [640, 360],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
+        "properties": {
+          "isCurrent": true,
+          "followMode": "SingleTarget",
+          "dragType": "SmoothDamp",
+          "targetPosition": [0, 0],
+          "smoothDrag": true,
+          "smoothDragSpeed": [0.2, 0.2],
+          "springConstant": 15,
+          "dampingRatio": 1,
+          "predictionTime": [0.5, 0.5],
+          "maxDistance": [100000, 100000],
+          "offset": [0, 0],
+          "smoothOffset": true,
+          "smoothOffsetSpeed": 0.2,
+          "screenOffset": [640, 360],
+          "customScreenOffset": false,
+          "targetRotation": 0,
+          "allowRotation": true,
+          "smoothRotation": true,
+          "smoothRotationSpeed": 0.2,
+          "targetZoom": 1,
+          "smoothZoom": true,
+          "smoothZoomSpeed": 0.2,
+          "minZoom": 0.1,
+          "maxZoom": 10,
+          "autoZoom": true,
+          "zoomMargin": 0.1,
+          "hasLimits": false,
+          "smoothLimit": true,
+          "leftLimit": -1000000,
+          "rightLimit": 1000000,
+          "topLimit": -1000000,
+          "bottomLimit": 1000000,
+          "useHMargins": false,
+          "useVMargins": false,
+          "leftMargin": 0.25,
+          "rightMargin": 0.25,
+          "topMargin": 0.25,
+          "bottomMargin": 0.25,
+          "enableMouseFollow": false,
+          "mouseInfluence": [0.2, 0.2],
+          "shakePreset": "Custom",
+          "shakeTypes": ["Vertical", "Horizontal", "Random"],
+          "shakeSpeed": 15,
+          "shakeIntensity": 10,
+          "shakeTrauma": 1
+        }
       },
-      "children": [
-       {
+      {
         "type": "VectorShapeNode",
-        "name": "ArmBack",
-        "position": [
-         0.0,
-         -153.5
-        ],
+        "name": "Backdrop",
+        "uid": "5z78v1nc",
+        "position": [0, 0],
+        "scale": [1, 1],
+        "rotation": 0,
+        "pivot": [0, 0],
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
         "properties": {
-         "file": "art/pip.svg",
-         "group": "arm_back",
-         "skinBones": "arm_back_upper, arm_back_lower",
-         "skinSmooth": 14
+          "file": "art/backdrop.svg",
+          "group": "",
+          "frame": -1,
+          "preset": "Star",
+          "fillColor": "#ffc440ff",
+          "strokeColor": "#281808ff",
+          "strokeWidth": 4,
+          "tint": "#ffffffff",
+          "brightness": 0,
+          "colorAdd": "#00000000",
+          "trimStart": 0,
+          "trimEnd": 1,
+          "trimOffset": 0,
+          "trimEach": false,
+          "morphTo": "",
+          "morph": 0,
+          "lineScale": "Scale",
+          "shadowColor": "#00000000",
+          "shadowOffset": [6, 6],
+          "shadowBlur": 6,
+          "glowColor": "#00000000",
+          "glowSize": 8,
+          "glowStrength": 1.5,
+          "outlineColor": "#00000000",
+          "outlineWidth": 3,
+          "blur": 0,
+          "saturation": 1,
+          "contrast": 1,
+          "hue": 0,
+          "skinBones": "",
+          "skinSmooth": 24,
+          "warpTopLeft": [0, 0],
+          "warpTopRight": [0, 0],
+          "warpBottomLeft": [0, 0],
+          "warpBottomRight": [0, 0],
+          "collider": "None",
+          "colliderDetail": 1,
+          "colliderFriction": 0.6,
+          "colliderBounce": 0.1,
+          "colliderDensity": 1
         }
-       },
-       {
+      },
+      {
         "type": "VectorShapeNode",
-        "name": "LegBack",
-        "position": [
-         0.0,
-         -70.0
-        ],
+        "name": "Backdrop2",
+        "uid": "glkimwpj",
+        "position": [1278, 0],
+        "scale": [1, 1],
+        "rotation": 0,
+        "pivot": [0, 0],
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
         "properties": {
-         "file": "art/pip.svg",
-         "group": "leg_back",
-         "skinBones": "leg_back_upper, leg_back_lower",
-         "skinSmooth": 12
+          "file": "art/backdrop.svg",
+          "group": "",
+          "frame": -1,
+          "preset": "Star",
+          "fillColor": "#ffc440ff",
+          "strokeColor": "#281808ff",
+          "strokeWidth": 4,
+          "tint": "#ffffffff",
+          "brightness": 0,
+          "colorAdd": "#00000000",
+          "trimStart": 0,
+          "trimEnd": 1,
+          "trimOffset": 0,
+          "trimEach": false,
+          "morphTo": "",
+          "morph": 0,
+          "lineScale": "Scale",
+          "shadowColor": "#00000000",
+          "shadowOffset": [6, 6],
+          "shadowBlur": 6,
+          "glowColor": "#00000000",
+          "glowSize": 8,
+          "glowStrength": 1.5,
+          "outlineColor": "#00000000",
+          "outlineWidth": 3,
+          "blur": 0,
+          "saturation": 1,
+          "contrast": 1,
+          "hue": 0,
+          "skinBones": "",
+          "skinSmooth": 24,
+          "warpTopLeft": [0, 0],
+          "warpTopRight": [0, 0],
+          "warpBottomLeft": [0, 0],
+          "warpBottomRight": [0, 0],
+          "collider": "None",
+          "colliderDetail": 1,
+          "colliderFriction": 0.6,
+          "colliderBounce": 0.1,
+          "colliderDensity": 1
         }
-       },
-       {
-        "type": "VectorShapeNode",
-        "name": "LegFront",
-        "position": [
-         14.0,
-         -70.0
-        ],
-        "properties": {
-         "file": "art/pip.svg",
-         "group": "leg_front",
-         "skinBones": "leg_front_upper, leg_front_lower",
-         "skinSmooth": 12
-        }
-       },
-       {
-        "type": "VectorShapeNode",
-        "name": "Body",
-        "position": [
-         0.0,
-         -173.0
-        ],
-        "properties": {
-         "file": "art/pip.svg",
-         "group": "body",
-         "skinBones": "torso",
-         "skinSmooth": 0
-        }
-       },
-       {
-        "type": "VectorShapeNode",
-        "name": "Head",
-        "position": [
-         7.0,
-         -290.0
-        ],
-        "properties": {
-         "file": "art/pip.svg",
-         "group": "head",
-         "skinBones": "head",
-         "skinSmooth": 0
-        }
-       },
-       {
-        "type": "VectorShapeNode",
-        "name": "Eyes",
-        "position": [
-         37.5,
-         -292.0
-        ],
-        "properties": {
-         "file": "art/pip.svg",
-         "group": "eyes",
-         "skinBones": "head",
-         "skinSmooth": 0,
-         "frame": 0
-        }
-       },
-       {
-        "type": "VectorShapeNode",
-        "name": "Mouth",
-        "position": [
-         42.0,
-         -250.0
-        ],
-        "properties": {
-         "file": "art/pip.svg",
-         "group": "mouth",
-         "skinBones": "head",
-         "skinSmooth": 0,
-         "frame": 0
-        }
-       },
-       {
-        "type": "VectorShapeNode",
-        "name": "ArmFront",
-        "position": [
-         0.0,
-         -153.5
-        ],
-        "properties": {
-         "file": "art/pip.svg",
-         "group": "arm_front",
-         "skinBones": "arm_front_upper, arm_front_lower",
-         "skinSmooth": 14
-        }
-       }
-      ]
-     },
-     {
-      "type": "LipSyncNode",
-      "name": "LipSync",
-      "properties": {
-       "mouth": "../Rig/Mouth",
-       "sound": "audio/pip_mumble.wav"
+      },
+      {
+        "type": "Node",
+        "name": "Pip",
+        "uid": "neyxmgfg",
+        "position": [230, 640],
+        "scale": [0.75, 0.75],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 2,
+        "children": [
+          {
+            "type": "SkeletonNode",
+            "name": "Rig",
+            "uid": "cdu7888s",
+            "position": [0, 0],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 0,
+            "properties": {
+              "file": "rigs/pip.json",
+              "atlas": "",
+              "armature": "",
+              "animation": "idle",
+              "skin": "",
+              "loop": true,
+              "autoplay": true,
+              "speed": 1,
+              "mixTime": 0.2,
+              "tint": "#ffffffff",
+              "showBones": false
+            },
+            "children": [
+              {
+                "type": "VectorShapeNode",
+                "name": "ArmBack",
+                "uid": "7k8ufuen",
+                "position": [0, -153.5],
+                "scale": [1, 1],
+                "rotation": 0,
+                "pivot": [0.5, 0.5],
+                "enabled": true,
+                "visible": true,
+                "layer": 0,
+                "properties": {
+                  "file": "art/pip.svg",
+                  "group": "arm_back",
+                  "frame": -1,
+                  "preset": "Star",
+                  "fillColor": "#ffc440ff",
+                  "strokeColor": "#281808ff",
+                  "strokeWidth": 4,
+                  "tint": "#ffffffff",
+                  "brightness": 0,
+                  "colorAdd": "#00000000",
+                  "trimStart": 0,
+                  "trimEnd": 1,
+                  "trimOffset": 0,
+                  "trimEach": false,
+                  "morphTo": "",
+                  "morph": 0,
+                  "lineScale": "Scale",
+                  "shadowColor": "#00000000",
+                  "shadowOffset": [6, 6],
+                  "shadowBlur": 6,
+                  "glowColor": "#00000000",
+                  "glowSize": 8,
+                  "glowStrength": 1.5,
+                  "outlineColor": "#00000000",
+                  "outlineWidth": 3,
+                  "blur": 0,
+                  "saturation": 1,
+                  "contrast": 1,
+                  "hue": 0,
+                  "skinBones": "arm_back_upper, arm_back_lower",
+                  "skinSmooth": 14,
+                  "warpTopLeft": [0, 0],
+                  "warpTopRight": [0, 0],
+                  "warpBottomLeft": [0, 0],
+                  "warpBottomRight": [0, 0],
+                  "collider": "None",
+                  "colliderDetail": 1,
+                  "colliderFriction": 0.6,
+                  "colliderBounce": 0.1,
+                  "colliderDensity": 1
+                }
+              },
+              {
+                "type": "VectorShapeNode",
+                "name": "LegBack",
+                "uid": "4a2p8tp9",
+                "position": [0, -70],
+                "scale": [1, 1],
+                "rotation": 0,
+                "pivot": [0.5, 0.5],
+                "enabled": true,
+                "visible": true,
+                "layer": 0,
+                "properties": {
+                  "file": "art/pip.svg",
+                  "group": "leg_back",
+                  "frame": -1,
+                  "preset": "Star",
+                  "fillColor": "#ffc440ff",
+                  "strokeColor": "#281808ff",
+                  "strokeWidth": 4,
+                  "tint": "#ffffffff",
+                  "brightness": 0,
+                  "colorAdd": "#00000000",
+                  "trimStart": 0,
+                  "trimEnd": 1,
+                  "trimOffset": 0,
+                  "trimEach": false,
+                  "morphTo": "",
+                  "morph": 0,
+                  "lineScale": "Scale",
+                  "shadowColor": "#00000000",
+                  "shadowOffset": [6, 6],
+                  "shadowBlur": 6,
+                  "glowColor": "#00000000",
+                  "glowSize": 8,
+                  "glowStrength": 1.5,
+                  "outlineColor": "#00000000",
+                  "outlineWidth": 3,
+                  "blur": 0,
+                  "saturation": 1,
+                  "contrast": 1,
+                  "hue": 0,
+                  "skinBones": "leg_back_upper, leg_back_lower",
+                  "skinSmooth": 12,
+                  "warpTopLeft": [0, 0],
+                  "warpTopRight": [0, 0],
+                  "warpBottomLeft": [0, 0],
+                  "warpBottomRight": [0, 0],
+                  "collider": "None",
+                  "colliderDetail": 1,
+                  "colliderFriction": 0.6,
+                  "colliderBounce": 0.1,
+                  "colliderDensity": 1
+                }
+              },
+              {
+                "type": "VectorShapeNode",
+                "name": "LegFront",
+                "uid": "djv98vky",
+                "position": [14, -70],
+                "scale": [1, 1],
+                "rotation": 0,
+                "pivot": [0.5, 0.5],
+                "enabled": true,
+                "visible": true,
+                "layer": 0,
+                "properties": {
+                  "file": "art/pip.svg",
+                  "group": "leg_front",
+                  "frame": -1,
+                  "preset": "Star",
+                  "fillColor": "#ffc440ff",
+                  "strokeColor": "#281808ff",
+                  "strokeWidth": 4,
+                  "tint": "#ffffffff",
+                  "brightness": 0,
+                  "colorAdd": "#00000000",
+                  "trimStart": 0,
+                  "trimEnd": 1,
+                  "trimOffset": 0,
+                  "trimEach": false,
+                  "morphTo": "",
+                  "morph": 0,
+                  "lineScale": "Scale",
+                  "shadowColor": "#00000000",
+                  "shadowOffset": [6, 6],
+                  "shadowBlur": 6,
+                  "glowColor": "#00000000",
+                  "glowSize": 8,
+                  "glowStrength": 1.5,
+                  "outlineColor": "#00000000",
+                  "outlineWidth": 3,
+                  "blur": 0,
+                  "saturation": 1,
+                  "contrast": 1,
+                  "hue": 0,
+                  "skinBones": "leg_front_upper, leg_front_lower",
+                  "skinSmooth": 12,
+                  "warpTopLeft": [0, 0],
+                  "warpTopRight": [0, 0],
+                  "warpBottomLeft": [0, 0],
+                  "warpBottomRight": [0, 0],
+                  "collider": "None",
+                  "colliderDetail": 1,
+                  "colliderFriction": 0.6,
+                  "colliderBounce": 0.1,
+                  "colliderDensity": 1
+                }
+              },
+              {
+                "type": "VectorShapeNode",
+                "name": "Body",
+                "uid": "2xizg0ir",
+                "position": [0, -173],
+                "scale": [1, 1],
+                "rotation": 0,
+                "pivot": [0.5, 0.5],
+                "enabled": true,
+                "visible": true,
+                "layer": 0,
+                "properties": {
+                  "file": "art/pip.svg",
+                  "group": "body",
+                  "frame": -1,
+                  "preset": "Star",
+                  "fillColor": "#ffc440ff",
+                  "strokeColor": "#281808ff",
+                  "strokeWidth": 4,
+                  "tint": "#ffffffff",
+                  "brightness": 0,
+                  "colorAdd": "#00000000",
+                  "trimStart": 0,
+                  "trimEnd": 1,
+                  "trimOffset": 0,
+                  "trimEach": false,
+                  "morphTo": "",
+                  "morph": 0,
+                  "lineScale": "Scale",
+                  "shadowColor": "#00000000",
+                  "shadowOffset": [6, 6],
+                  "shadowBlur": 6,
+                  "glowColor": "#00000000",
+                  "glowSize": 8,
+                  "glowStrength": 1.5,
+                  "outlineColor": "#00000000",
+                  "outlineWidth": 3,
+                  "blur": 0,
+                  "saturation": 1,
+                  "contrast": 1,
+                  "hue": 0,
+                  "skinBones": "torso",
+                  "skinSmooth": 0,
+                  "warpTopLeft": [0, 0],
+                  "warpTopRight": [0, 0],
+                  "warpBottomLeft": [0, 0],
+                  "warpBottomRight": [0, 0],
+                  "collider": "None",
+                  "colliderDetail": 1,
+                  "colliderFriction": 0.6,
+                  "colliderBounce": 0.1,
+                  "colliderDensity": 1
+                }
+              },
+              {
+                "type": "VectorShapeNode",
+                "name": "Head",
+                "uid": "z24h5n34",
+                "position": [7, -290],
+                "scale": [1, 1],
+                "rotation": 0,
+                "pivot": [0.5, 0.5],
+                "enabled": true,
+                "visible": true,
+                "layer": 0,
+                "properties": {
+                  "file": "art/pip.svg",
+                  "group": "head",
+                  "frame": -1,
+                  "preset": "Star",
+                  "fillColor": "#ffc440ff",
+                  "strokeColor": "#281808ff",
+                  "strokeWidth": 4,
+                  "tint": "#ffffffff",
+                  "brightness": 0,
+                  "colorAdd": "#00000000",
+                  "trimStart": 0,
+                  "trimEnd": 1,
+                  "trimOffset": 0,
+                  "trimEach": false,
+                  "morphTo": "",
+                  "morph": 0,
+                  "lineScale": "Scale",
+                  "shadowColor": "#00000000",
+                  "shadowOffset": [6, 6],
+                  "shadowBlur": 6,
+                  "glowColor": "#00000000",
+                  "glowSize": 8,
+                  "glowStrength": 1.5,
+                  "outlineColor": "#00000000",
+                  "outlineWidth": 3,
+                  "blur": 0,
+                  "saturation": 1,
+                  "contrast": 1,
+                  "hue": 0,
+                  "skinBones": "head",
+                  "skinSmooth": 0,
+                  "warpTopLeft": [0, 0],
+                  "warpTopRight": [0, 0],
+                  "warpBottomLeft": [0, 0],
+                  "warpBottomRight": [0, 0],
+                  "collider": "None",
+                  "colliderDetail": 1,
+                  "colliderFriction": 0.6,
+                  "colliderBounce": 0.1,
+                  "colliderDensity": 1
+                }
+              },
+              {
+                "type": "VectorShapeNode",
+                "name": "Eyes",
+                "uid": "wsxbyleq",
+                "position": [37.5, -292],
+                "scale": [1, 1],
+                "rotation": 0,
+                "pivot": [0.5, 0.5],
+                "enabled": true,
+                "visible": true,
+                "layer": 0,
+                "properties": {
+                  "file": "art/pip.svg",
+                  "group": "eyes",
+                  "frame": 0,
+                  "preset": "Star",
+                  "fillColor": "#ffc440ff",
+                  "strokeColor": "#281808ff",
+                  "strokeWidth": 4,
+                  "tint": "#ffffffff",
+                  "brightness": 0,
+                  "colorAdd": "#00000000",
+                  "trimStart": 0,
+                  "trimEnd": 1,
+                  "trimOffset": 0,
+                  "trimEach": false,
+                  "morphTo": "",
+                  "morph": 0,
+                  "lineScale": "Scale",
+                  "shadowColor": "#00000000",
+                  "shadowOffset": [6, 6],
+                  "shadowBlur": 6,
+                  "glowColor": "#00000000",
+                  "glowSize": 8,
+                  "glowStrength": 1.5,
+                  "outlineColor": "#00000000",
+                  "outlineWidth": 3,
+                  "blur": 0,
+                  "saturation": 1,
+                  "contrast": 1,
+                  "hue": 0,
+                  "skinBones": "head",
+                  "skinSmooth": 0,
+                  "warpTopLeft": [0, 0],
+                  "warpTopRight": [0, 0],
+                  "warpBottomLeft": [0, 0],
+                  "warpBottomRight": [0, 0],
+                  "collider": "None",
+                  "colliderDetail": 1,
+                  "colliderFriction": 0.6,
+                  "colliderBounce": 0.1,
+                  "colliderDensity": 1
+                }
+              },
+              {
+                "type": "VectorShapeNode",
+                "name": "Mouth",
+                "uid": "hndrd8b0",
+                "position": [42, -250],
+                "scale": [1, 1],
+                "rotation": 0,
+                "pivot": [0.5, 0.5],
+                "enabled": true,
+                "visible": true,
+                "layer": 0,
+                "properties": {
+                  "file": "art/pip.svg",
+                  "group": "mouth",
+                  "frame": 0,
+                  "preset": "Star",
+                  "fillColor": "#ffc440ff",
+                  "strokeColor": "#281808ff",
+                  "strokeWidth": 4,
+                  "tint": "#ffffffff",
+                  "brightness": 0,
+                  "colorAdd": "#00000000",
+                  "trimStart": 0,
+                  "trimEnd": 1,
+                  "trimOffset": 0,
+                  "trimEach": false,
+                  "morphTo": "",
+                  "morph": 0,
+                  "lineScale": "Scale",
+                  "shadowColor": "#00000000",
+                  "shadowOffset": [6, 6],
+                  "shadowBlur": 6,
+                  "glowColor": "#00000000",
+                  "glowSize": 8,
+                  "glowStrength": 1.5,
+                  "outlineColor": "#00000000",
+                  "outlineWidth": 3,
+                  "blur": 0,
+                  "saturation": 1,
+                  "contrast": 1,
+                  "hue": 0,
+                  "skinBones": "head",
+                  "skinSmooth": 0,
+                  "warpTopLeft": [0, 0],
+                  "warpTopRight": [0, 0],
+                  "warpBottomLeft": [0, 0],
+                  "warpBottomRight": [0, 0],
+                  "collider": "None",
+                  "colliderDetail": 1,
+                  "colliderFriction": 0.6,
+                  "colliderBounce": 0.1,
+                  "colliderDensity": 1
+                }
+              },
+              {
+                "type": "VectorShapeNode",
+                "name": "ArmFront",
+                "uid": "i6l47phu",
+                "position": [0, -153.5],
+                "scale": [1, 1],
+                "rotation": 0,
+                "pivot": [0.5, 0.5],
+                "enabled": true,
+                "visible": true,
+                "layer": 0,
+                "properties": {
+                  "file": "art/pip.svg",
+                  "group": "arm_front",
+                  "frame": -1,
+                  "preset": "Star",
+                  "fillColor": "#ffc440ff",
+                  "strokeColor": "#281808ff",
+                  "strokeWidth": 4,
+                  "tint": "#ffffffff",
+                  "brightness": 0,
+                  "colorAdd": "#00000000",
+                  "trimStart": 0,
+                  "trimEnd": 1,
+                  "trimOffset": 0,
+                  "trimEach": false,
+                  "morphTo": "",
+                  "morph": 0,
+                  "lineScale": "Scale",
+                  "shadowColor": "#00000000",
+                  "shadowOffset": [6, 6],
+                  "shadowBlur": 6,
+                  "glowColor": "#00000000",
+                  "glowSize": 8,
+                  "glowStrength": 1.5,
+                  "outlineColor": "#00000000",
+                  "outlineWidth": 3,
+                  "blur": 0,
+                  "saturation": 1,
+                  "contrast": 1,
+                  "hue": 0,
+                  "skinBones": "arm_front_upper, arm_front_lower",
+                  "skinSmooth": 14,
+                  "warpTopLeft": [0, 0],
+                  "warpTopRight": [0, 0],
+                  "warpBottomLeft": [0, 0],
+                  "warpBottomRight": [0, 0],
+                  "collider": "None",
+                  "colliderDetail": 1,
+                  "colliderFriction": 0.6,
+                  "colliderBounce": 0.1,
+                  "colliderDensity": 1
+                }
+              }
+            ]
+          },
+          {
+            "type": "LipSyncNode",
+            "name": "LipSync",
+            "uid": "rcw1ame3",
+            "position": [0, 0],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 0,
+            "properties": {
+              "mouth": "../Rig/Mouth",
+              "sound": "audio/pip_mumble.wav",
+              "cues": "",
+              "mapping": "",
+              "autoplay": false
+            }
+          }
+        ]
+      },
+      {
+        "type": "Node",
+        "name": "Pep",
+        "uid": "y0b8ebin",
+        "position": [1050, 640],
+        "scale": [0.62, 0.62],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 1,
+        "children": [
+          {
+            "type": "SkeletonNode",
+            "name": "PepRig",
+            "uid": "9fdk35xs",
+            "position": [0, 0],
+            "scale": [-1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 0,
+            "properties": {
+              "file": "rigs/pip.json",
+              "atlas": "",
+              "armature": "",
+              "animation": "idle",
+              "skin": "",
+              "loop": true,
+              "autoplay": true,
+              "speed": 1,
+              "mixTime": 0.2,
+              "tint": "#ffffffff",
+              "showBones": false
+            },
+            "children": [
+              {
+                "type": "VectorShapeNode",
+                "name": "PepArmBack",
+                "uid": "i2pxa47z",
+                "position": [0, -153.5],
+                "scale": [1, 1],
+                "rotation": 0,
+                "pivot": [0.5, 0.5],
+                "enabled": true,
+                "visible": true,
+                "layer": 0,
+                "properties": {
+                  "file": "art/pip.svg",
+                  "group": "arm_back",
+                  "frame": -1,
+                  "preset": "Star",
+                  "fillColor": "#ffc440ff",
+                  "strokeColor": "#281808ff",
+                  "strokeWidth": 4,
+                  "tint": "#dcecffff",
+                  "brightness": 0,
+                  "colorAdd": "#00000000",
+                  "trimStart": 0,
+                  "trimEnd": 1,
+                  "trimOffset": 0,
+                  "trimEach": false,
+                  "morphTo": "",
+                  "morph": 0,
+                  "lineScale": "Scale",
+                  "shadowColor": "#00000000",
+                  "shadowOffset": [6, 6],
+                  "shadowBlur": 6,
+                  "glowColor": "#00000000",
+                  "glowSize": 8,
+                  "glowStrength": 1.5,
+                  "outlineColor": "#00000000",
+                  "outlineWidth": 3,
+                  "blur": 0,
+                  "saturation": 1,
+                  "contrast": 1,
+                  "hue": 0,
+                  "skinBones": "arm_back_upper, arm_back_lower",
+                  "skinSmooth": 14,
+                  "warpTopLeft": [0, 0],
+                  "warpTopRight": [0, 0],
+                  "warpBottomLeft": [0, 0],
+                  "warpBottomRight": [0, 0],
+                  "collider": "None",
+                  "colliderDetail": 1,
+                  "colliderFriction": 0.6,
+                  "colliderBounce": 0.1,
+                  "colliderDensity": 1
+                }
+              },
+              {
+                "type": "VectorShapeNode",
+                "name": "PepLegBack",
+                "uid": "to182z96",
+                "position": [0, -70],
+                "scale": [1, 1],
+                "rotation": 0,
+                "pivot": [0.5, 0.5],
+                "enabled": true,
+                "visible": true,
+                "layer": 0,
+                "properties": {
+                  "file": "art/pip.svg",
+                  "group": "leg_back",
+                  "frame": -1,
+                  "preset": "Star",
+                  "fillColor": "#ffc440ff",
+                  "strokeColor": "#281808ff",
+                  "strokeWidth": 4,
+                  "tint": "#dcecffff",
+                  "brightness": 0,
+                  "colorAdd": "#00000000",
+                  "trimStart": 0,
+                  "trimEnd": 1,
+                  "trimOffset": 0,
+                  "trimEach": false,
+                  "morphTo": "",
+                  "morph": 0,
+                  "lineScale": "Scale",
+                  "shadowColor": "#00000000",
+                  "shadowOffset": [6, 6],
+                  "shadowBlur": 6,
+                  "glowColor": "#00000000",
+                  "glowSize": 8,
+                  "glowStrength": 1.5,
+                  "outlineColor": "#00000000",
+                  "outlineWidth": 3,
+                  "blur": 0,
+                  "saturation": 1,
+                  "contrast": 1,
+                  "hue": 0,
+                  "skinBones": "leg_back_upper, leg_back_lower",
+                  "skinSmooth": 12,
+                  "warpTopLeft": [0, 0],
+                  "warpTopRight": [0, 0],
+                  "warpBottomLeft": [0, 0],
+                  "warpBottomRight": [0, 0],
+                  "collider": "None",
+                  "colliderDetail": 1,
+                  "colliderFriction": 0.6,
+                  "colliderBounce": 0.1,
+                  "colliderDensity": 1
+                }
+              },
+              {
+                "type": "VectorShapeNode",
+                "name": "PepLegFront",
+                "uid": "kz5g7omx",
+                "position": [14, -70],
+                "scale": [1, 1],
+                "rotation": 0,
+                "pivot": [0.5, 0.5],
+                "enabled": true,
+                "visible": true,
+                "layer": 0,
+                "properties": {
+                  "file": "art/pip.svg",
+                  "group": "leg_front",
+                  "frame": -1,
+                  "preset": "Star",
+                  "fillColor": "#ffc440ff",
+                  "strokeColor": "#281808ff",
+                  "strokeWidth": 4,
+                  "tint": "#dcecffff",
+                  "brightness": 0,
+                  "colorAdd": "#00000000",
+                  "trimStart": 0,
+                  "trimEnd": 1,
+                  "trimOffset": 0,
+                  "trimEach": false,
+                  "morphTo": "",
+                  "morph": 0,
+                  "lineScale": "Scale",
+                  "shadowColor": "#00000000",
+                  "shadowOffset": [6, 6],
+                  "shadowBlur": 6,
+                  "glowColor": "#00000000",
+                  "glowSize": 8,
+                  "glowStrength": 1.5,
+                  "outlineColor": "#00000000",
+                  "outlineWidth": 3,
+                  "blur": 0,
+                  "saturation": 1,
+                  "contrast": 1,
+                  "hue": 0,
+                  "skinBones": "leg_front_upper, leg_front_lower",
+                  "skinSmooth": 12,
+                  "warpTopLeft": [0, 0],
+                  "warpTopRight": [0, 0],
+                  "warpBottomLeft": [0, 0],
+                  "warpBottomRight": [0, 0],
+                  "collider": "None",
+                  "colliderDetail": 1,
+                  "colliderFriction": 0.6,
+                  "colliderBounce": 0.1,
+                  "colliderDensity": 1
+                }
+              },
+              {
+                "type": "VectorShapeNode",
+                "name": "PepBody",
+                "uid": "b4sxtd2a",
+                "position": [0, -173],
+                "scale": [1, 1],
+                "rotation": 0,
+                "pivot": [0.5, 0.5],
+                "enabled": true,
+                "visible": true,
+                "layer": 0,
+                "properties": {
+                  "file": "art/pip.svg",
+                  "group": "body",
+                  "frame": -1,
+                  "preset": "Star",
+                  "fillColor": "#ffc440ff",
+                  "strokeColor": "#281808ff",
+                  "strokeWidth": 4,
+                  "tint": "#dcecffff",
+                  "brightness": 0,
+                  "colorAdd": "#00000000",
+                  "trimStart": 0,
+                  "trimEnd": 1,
+                  "trimOffset": 0,
+                  "trimEach": false,
+                  "morphTo": "",
+                  "morph": 0,
+                  "lineScale": "Scale",
+                  "shadowColor": "#00000000",
+                  "shadowOffset": [6, 6],
+                  "shadowBlur": 6,
+                  "glowColor": "#00000000",
+                  "glowSize": 8,
+                  "glowStrength": 1.5,
+                  "outlineColor": "#00000000",
+                  "outlineWidth": 3,
+                  "blur": 0,
+                  "saturation": 1,
+                  "contrast": 1,
+                  "hue": 0,
+                  "skinBones": "torso",
+                  "skinSmooth": 0,
+                  "warpTopLeft": [0, 0],
+                  "warpTopRight": [0, 0],
+                  "warpBottomLeft": [0, 0],
+                  "warpBottomRight": [0, 0],
+                  "collider": "None",
+                  "colliderDetail": 1,
+                  "colliderFriction": 0.6,
+                  "colliderBounce": 0.1,
+                  "colliderDensity": 1
+                }
+              },
+              {
+                "type": "VectorShapeNode",
+                "name": "PepHead",
+                "uid": "ey6g5rgx",
+                "position": [7, -290],
+                "scale": [1, 1],
+                "rotation": 0,
+                "pivot": [0.5, 0.5],
+                "enabled": true,
+                "visible": true,
+                "layer": 0,
+                "properties": {
+                  "file": "art/pip.svg",
+                  "group": "head",
+                  "frame": -1,
+                  "preset": "Star",
+                  "fillColor": "#ffc440ff",
+                  "strokeColor": "#281808ff",
+                  "strokeWidth": 4,
+                  "tint": "#dcecffff",
+                  "brightness": 0,
+                  "colorAdd": "#00000000",
+                  "trimStart": 0,
+                  "trimEnd": 1,
+                  "trimOffset": 0,
+                  "trimEach": false,
+                  "morphTo": "",
+                  "morph": 0,
+                  "lineScale": "Scale",
+                  "shadowColor": "#00000000",
+                  "shadowOffset": [6, 6],
+                  "shadowBlur": 6,
+                  "glowColor": "#00000000",
+                  "glowSize": 8,
+                  "glowStrength": 1.5,
+                  "outlineColor": "#00000000",
+                  "outlineWidth": 3,
+                  "blur": 0,
+                  "saturation": 1,
+                  "contrast": 1,
+                  "hue": 0,
+                  "skinBones": "head",
+                  "skinSmooth": 0,
+                  "warpTopLeft": [0, 0],
+                  "warpTopRight": [0, 0],
+                  "warpBottomLeft": [0, 0],
+                  "warpBottomRight": [0, 0],
+                  "collider": "None",
+                  "colliderDetail": 1,
+                  "colliderFriction": 0.6,
+                  "colliderBounce": 0.1,
+                  "colliderDensity": 1
+                }
+              },
+              {
+                "type": "VectorShapeNode",
+                "name": "PepEyes",
+                "uid": "huxiq0v9",
+                "position": [37.5, -292],
+                "scale": [1, 1],
+                "rotation": 0,
+                "pivot": [0.5, 0.5],
+                "enabled": true,
+                "visible": true,
+                "layer": 0,
+                "properties": {
+                  "file": "art/pip.svg",
+                  "group": "eyes",
+                  "frame": 0,
+                  "preset": "Star",
+                  "fillColor": "#ffc440ff",
+                  "strokeColor": "#281808ff",
+                  "strokeWidth": 4,
+                  "tint": "#dcecffff",
+                  "brightness": 0,
+                  "colorAdd": "#00000000",
+                  "trimStart": 0,
+                  "trimEnd": 1,
+                  "trimOffset": 0,
+                  "trimEach": false,
+                  "morphTo": "",
+                  "morph": 0,
+                  "lineScale": "Scale",
+                  "shadowColor": "#00000000",
+                  "shadowOffset": [6, 6],
+                  "shadowBlur": 6,
+                  "glowColor": "#00000000",
+                  "glowSize": 8,
+                  "glowStrength": 1.5,
+                  "outlineColor": "#00000000",
+                  "outlineWidth": 3,
+                  "blur": 0,
+                  "saturation": 1,
+                  "contrast": 1,
+                  "hue": 0,
+                  "skinBones": "head",
+                  "skinSmooth": 0,
+                  "warpTopLeft": [0, 0],
+                  "warpTopRight": [0, 0],
+                  "warpBottomLeft": [0, 0],
+                  "warpBottomRight": [0, 0],
+                  "collider": "None",
+                  "colliderDetail": 1,
+                  "colliderFriction": 0.6,
+                  "colliderBounce": 0.1,
+                  "colliderDensity": 1
+                }
+              },
+              {
+                "type": "VectorShapeNode",
+                "name": "PepMouth",
+                "uid": "sgathvxg",
+                "position": [42, -250],
+                "scale": [1, 1],
+                "rotation": 0,
+                "pivot": [0.5, 0.5],
+                "enabled": true,
+                "visible": true,
+                "layer": 0,
+                "properties": {
+                  "file": "art/pip.svg",
+                  "group": "mouth",
+                  "frame": 0,
+                  "preset": "Star",
+                  "fillColor": "#ffc440ff",
+                  "strokeColor": "#281808ff",
+                  "strokeWidth": 4,
+                  "tint": "#dcecffff",
+                  "brightness": 0,
+                  "colorAdd": "#00000000",
+                  "trimStart": 0,
+                  "trimEnd": 1,
+                  "trimOffset": 0,
+                  "trimEach": false,
+                  "morphTo": "",
+                  "morph": 0,
+                  "lineScale": "Scale",
+                  "shadowColor": "#00000000",
+                  "shadowOffset": [6, 6],
+                  "shadowBlur": 6,
+                  "glowColor": "#00000000",
+                  "glowSize": 8,
+                  "glowStrength": 1.5,
+                  "outlineColor": "#00000000",
+                  "outlineWidth": 3,
+                  "blur": 0,
+                  "saturation": 1,
+                  "contrast": 1,
+                  "hue": 0,
+                  "skinBones": "head",
+                  "skinSmooth": 0,
+                  "warpTopLeft": [0, 0],
+                  "warpTopRight": [0, 0],
+                  "warpBottomLeft": [0, 0],
+                  "warpBottomRight": [0, 0],
+                  "collider": "None",
+                  "colliderDetail": 1,
+                  "colliderFriction": 0.6,
+                  "colliderBounce": 0.1,
+                  "colliderDensity": 1
+                }
+              },
+              {
+                "type": "VectorShapeNode",
+                "name": "PepArmFront",
+                "uid": "jlwa4ldt",
+                "position": [0, -153.5],
+                "scale": [1, 1],
+                "rotation": 0,
+                "pivot": [0.5, 0.5],
+                "enabled": true,
+                "visible": true,
+                "layer": 0,
+                "properties": {
+                  "file": "art/pip.svg",
+                  "group": "arm_front",
+                  "frame": -1,
+                  "preset": "Star",
+                  "fillColor": "#ffc440ff",
+                  "strokeColor": "#281808ff",
+                  "strokeWidth": 4,
+                  "tint": "#dcecffff",
+                  "brightness": 0,
+                  "colorAdd": "#00000000",
+                  "trimStart": 0,
+                  "trimEnd": 1,
+                  "trimOffset": 0,
+                  "trimEach": false,
+                  "morphTo": "",
+                  "morph": 0,
+                  "lineScale": "Scale",
+                  "shadowColor": "#00000000",
+                  "shadowOffset": [6, 6],
+                  "shadowBlur": 6,
+                  "glowColor": "#00000000",
+                  "glowSize": 8,
+                  "glowStrength": 1.5,
+                  "outlineColor": "#00000000",
+                  "outlineWidth": 3,
+                  "blur": 0,
+                  "saturation": 1,
+                  "contrast": 1,
+                  "hue": 0,
+                  "skinBones": "arm_front_upper, arm_front_lower",
+                  "skinSmooth": 14,
+                  "warpTopLeft": [0, 0],
+                  "warpTopRight": [0, 0],
+                  "warpBottomLeft": [0, 0],
+                  "warpBottomRight": [0, 0],
+                  "collider": "None",
+                  "colliderDetail": 1,
+                  "colliderFriction": 0.6,
+                  "colliderBounce": 0.1,
+                  "colliderDensity": 1
+                }
+              }
+            ]
+          },
+          {
+            "type": "LipSyncNode",
+            "name": "PepLipSync",
+            "uid": "ys0acaul",
+            "position": [0, 0],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 0,
+            "properties": {
+              "mouth": "../PepRig/PepMouth",
+              "sound": "audio/pep_mumble.wav",
+              "cues": "",
+              "mapping": "",
+              "autoplay": false
+            }
+          }
+        ]
+      },
+      {
+        "type": "Node",
+        "name": "Menu",
+        "uid": "9nni56lu",
+        "position": [0, 0],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 7,
+        "script": {
+          "path": "scripts/menu.lua",
+          "properties": {
+            "item_height": 56,
+            "item_width": 640,
+            "kind": "title",
+            "selected": "#e5602aff"
+          }
+        },
+        "children": [
+          {
+            "type": "TextNode",
+            "name": "Title",
+            "uid": "iqj6hj4u",
+            "position": [640, 144],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "text": "Pip's Walk",
+              "font": "fonts/kenney_pixel.ttf",
+              "fontSize": 96,
+              "color": "#24425cff",
+              "align": "Center",
+              "maxWidth": 0,
+              "lineSpacing": 1.2,
+              "richText": true,
+              "localized": false,
+              "rendering": "Auto",
+              "path": "",
+              "pathOffset": 0,
+              "pathAlign": "Left",
+              "pathUpright": false,
+              "revealSpeed": 0
+            }
+          },
+          {
+            "type": "TextNode",
+            "name": "Best",
+            "uid": "tcwg8e71",
+            "position": [640, 248],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "text": "",
+              "font": "fonts/kenney_pixel.ttf",
+              "fontSize": 48,
+              "color": "#24425cff",
+              "align": "Center",
+              "maxWidth": 0,
+              "lineSpacing": 1.2,
+              "richText": true,
+              "localized": false,
+              "rendering": "Auto",
+              "path": "",
+              "pathOffset": 0,
+              "pathAlign": "Left",
+              "pathUpright": false,
+              "revealSpeed": 0
+            }
+          },
+          {
+            "type": "TextNode",
+            "name": "Play",
+            "uid": "kn0pd3ks",
+            "position": [640, 352],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "tags": ["item"],
+            "properties": {
+              "text": "Play",
+              "font": "fonts/kenney_pixel.ttf",
+              "fontSize": 48,
+              "color": "#24425cff",
+              "align": "Center",
+              "maxWidth": 0,
+              "lineSpacing": 1.2,
+              "richText": true,
+              "localized": false,
+              "rendering": "Auto",
+              "path": "",
+              "pathOffset": 0,
+              "pathAlign": "Left",
+              "pathUpright": false,
+              "revealSpeed": 0
+            }
+          },
+          {
+            "type": "TextNode",
+            "name": "Level",
+            "uid": "bsm60tz4",
+            "position": [640, 416],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "tags": ["item"],
+            "properties": {
+              "text": "Stage",
+              "font": "fonts/kenney_pixel.ttf",
+              "fontSize": 48,
+              "color": "#24425cff",
+              "align": "Center",
+              "maxWidth": 0,
+              "lineSpacing": 1.2,
+              "richText": true,
+              "localized": false,
+              "rendering": "Auto",
+              "path": "",
+              "pathOffset": 0,
+              "pathAlign": "Left",
+              "pathUpright": false,
+              "revealSpeed": 0
+            }
+          },
+          {
+            "type": "TextNode",
+            "name": "Settings",
+            "uid": "em1pb6es",
+            "position": [640, 480],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "tags": ["item"],
+            "properties": {
+              "text": "Settings",
+              "font": "fonts/kenney_pixel.ttf",
+              "fontSize": 48,
+              "color": "#24425cff",
+              "align": "Center",
+              "maxWidth": 0,
+              "lineSpacing": 1.2,
+              "richText": true,
+              "localized": false,
+              "rendering": "Auto",
+              "path": "",
+              "pathOffset": 0,
+              "pathAlign": "Left",
+              "pathUpright": false,
+              "revealSpeed": 0
+            }
+          },
+          {
+            "type": "TextNode",
+            "name": "Quit",
+            "uid": "hisrwfs4",
+            "position": [640, 544],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "tags": ["item"],
+            "properties": {
+              "text": "Quit",
+              "font": "fonts/kenney_pixel.ttf",
+              "fontSize": 48,
+              "color": "#24425cff",
+              "align": "Center",
+              "maxWidth": 0,
+              "lineSpacing": 1.2,
+              "richText": true,
+              "localized": false,
+              "rendering": "Auto",
+              "path": "",
+              "pathOffset": 0,
+              "pathAlign": "Left",
+              "pathUpright": false,
+              "revealSpeed": 0
+            }
+          }
+        ]
+      },
+      {
+        "type": "Node",
+        "name": "SettingsMenu",
+        "uid": "o8aalsg4",
+        "position": [0, 0],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": false,
+        "layer": 7,
+        "script": {
+          "path": "scripts/menu.lua",
+          "properties": {
+            "item_height": 56,
+            "item_width": 640,
+            "kind": "settings",
+            "selected": "#e5602aff"
+          }
+        },
+        "children": [
+          {
+            "type": "TextNode",
+            "name": "Heading",
+            "uid": "blc6oao5",
+            "position": [640, 200],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "text": "Settings",
+              "font": "fonts/kenney_pixel.ttf",
+              "fontSize": 96,
+              "color": "#24425cff",
+              "align": "Center",
+              "maxWidth": 0,
+              "lineSpacing": 1.2,
+              "richText": true,
+              "localized": false,
+              "rendering": "Auto",
+              "path": "",
+              "pathOffset": 0,
+              "pathAlign": "Left",
+              "pathUpright": false,
+              "revealSpeed": 0
+            }
+          },
+          {
+            "type": "TextNode",
+            "name": "Volume",
+            "uid": "gxie828a",
+            "position": [640, 384],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "tags": ["item"],
+            "properties": {
+              "text": "Volume",
+              "font": "fonts/kenney_pixel.ttf",
+              "fontSize": 48,
+              "color": "#24425cff",
+              "align": "Center",
+              "maxWidth": 0,
+              "lineSpacing": 1.2,
+              "richText": true,
+              "localized": false,
+              "rendering": "Auto",
+              "path": "",
+              "pathOffset": 0,
+              "pathAlign": "Left",
+              "pathUpright": false,
+              "revealSpeed": 0
+            }
+          },
+          {
+            "type": "TextNode",
+            "name": "Back",
+            "uid": "hgqr1je4",
+            "position": [640, 448],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "tags": ["item"],
+            "properties": {
+              "text": "Back",
+              "font": "fonts/kenney_pixel.ttf",
+              "fontSize": 48,
+              "color": "#24425cff",
+              "align": "Center",
+              "maxWidth": 0,
+              "lineSpacing": 1.2,
+              "richText": true,
+              "localized": false,
+              "rendering": "Auto",
+              "path": "",
+              "pathOffset": 0,
+              "pathAlign": "Left",
+              "pathUpright": false,
+              "revealSpeed": 0
+            }
+          }
+        ]
       }
-     }
     ]
-   },
-   {
-    "type": "Node",
-    "name": "Pep",
-    "position": [
-     1050,
-     640
-    ],
-    "scale": [
-     0.62,
-     0.62
-    ],
-    "layer": 1,
-    "children": [
-     {
-      "type": "SkeletonNode",
-      "name": "PepRig",
-      "scale": [
-       -1,
-       1
-      ],
-      "properties": {
-       "file": "rigs/pip.json",
-       "animation": "idle",
-       "loop": true,
-       "autoplay": true,
-       "mixTime": 0.2
-      },
-      "children": [
-       {
-        "type": "VectorShapeNode",
-        "name": "PepArmBack",
-        "position": [
-         0.0,
-         -153.5
-        ],
-        "properties": {
-         "file": "art/pip.svg",
-         "group": "arm_back",
-         "skinBones": "arm_back_upper, arm_back_lower",
-         "skinSmooth": 14,
-         "tint": "#dcecffff"
-        }
-       },
-       {
-        "type": "VectorShapeNode",
-        "name": "PepLegBack",
-        "position": [
-         0.0,
-         -70.0
-        ],
-        "properties": {
-         "file": "art/pip.svg",
-         "group": "leg_back",
-         "skinBones": "leg_back_upper, leg_back_lower",
-         "skinSmooth": 12,
-         "tint": "#dcecffff"
-        }
-       },
-       {
-        "type": "VectorShapeNode",
-        "name": "PepLegFront",
-        "position": [
-         14.0,
-         -70.0
-        ],
-        "properties": {
-         "file": "art/pip.svg",
-         "group": "leg_front",
-         "skinBones": "leg_front_upper, leg_front_lower",
-         "skinSmooth": 12,
-         "tint": "#dcecffff"
-        }
-       },
-       {
-        "type": "VectorShapeNode",
-        "name": "PepBody",
-        "position": [
-         0.0,
-         -173.0
-        ],
-        "properties": {
-         "file": "art/pip.svg",
-         "group": "body",
-         "skinBones": "torso",
-         "skinSmooth": 0,
-         "tint": "#dcecffff"
-        }
-       },
-       {
-        "type": "VectorShapeNode",
-        "name": "PepHead",
-        "position": [
-         7.0,
-         -290.0
-        ],
-        "properties": {
-         "file": "art/pip.svg",
-         "group": "head",
-         "skinBones": "head",
-         "skinSmooth": 0,
-         "tint": "#dcecffff"
-        }
-       },
-       {
-        "type": "VectorShapeNode",
-        "name": "PepEyes",
-        "position": [
-         37.5,
-         -292.0
-        ],
-        "properties": {
-         "file": "art/pip.svg",
-         "group": "eyes",
-         "skinBones": "head",
-         "skinSmooth": 0,
-         "frame": 0,
-         "tint": "#dcecffff"
-        }
-       },
-       {
-        "type": "VectorShapeNode",
-        "name": "PepMouth",
-        "position": [
-         42.0,
-         -250.0
-        ],
-        "properties": {
-         "file": "art/pip.svg",
-         "group": "mouth",
-         "skinBones": "head",
-         "skinSmooth": 0,
-         "frame": 0,
-         "tint": "#dcecffff"
-        }
-       },
-       {
-        "type": "VectorShapeNode",
-        "name": "PepArmFront",
-        "position": [
-         0.0,
-         -153.5
-        ],
-        "properties": {
-         "file": "art/pip.svg",
-         "group": "arm_front",
-         "skinBones": "arm_front_upper, arm_front_lower",
-         "skinSmooth": 14,
-         "tint": "#dcecffff"
-        }
-       }
-      ]
-     },
-     {
-      "type": "LipSyncNode",
-      "name": "PepLipSync",
-      "properties": {
-       "mouth": "../PepRig/PepMouth",
-       "sound": "audio/pep_mumble.wav"
-      }
-     }
-    ]
-   },
-   {
-    "type": "Node",
-    "name": "Menu",
-    "layer": 7,
-    "script": {
-     "path": "scripts/menu.lua",
-     "properties": {
-      "kind": "title",
-      "item_width": 640,
-      "item_height": 56,
-      "selected": "#e5602aff"
-     }
-    },
-    "children": [
-     {
-      "type": "TextNode",
-      "name": "Title",
-      "position": [
-       640.0,
-       144.0
-      ],
-      "pivot": [
-       0.5,
-       0.5
-      ],
-      "layer": 7,
-      "properties": {
-       "text": "Pip's Walk",
-       "font": "fonts/kenney_pixel.ttf",
-       "fontSize": 96,
-       "align": "Center",
-       "color": "#24425cff"
-      }
-     },
-     {
-      "type": "TextNode",
-      "name": "Best",
-      "position": [
-       640.0,
-       248.0
-      ],
-      "pivot": [
-       0.5,
-       0.5
-      ],
-      "layer": 7,
-      "properties": {
-       "text": "",
-       "font": "fonts/kenney_pixel.ttf",
-       "fontSize": 48,
-       "align": "Center",
-       "color": "#24425cff"
-      }
-     },
-     {
-      "type": "TextNode",
-      "name": "Play",
-      "position": [
-       640.0,
-       352.0
-      ],
-      "pivot": [
-       0.5,
-       0.5
-      ],
-      "layer": 7,
-      "properties": {
-       "text": "Play",
-       "font": "fonts/kenney_pixel.ttf",
-       "fontSize": 48,
-       "align": "Center",
-       "color": "#24425cff"
-      },
-      "tags": [
-       "item"
-      ]
-     },
-     {
-      "type": "TextNode",
-      "name": "Level",
-      "position": [
-       640.0,
-       416.0
-      ],
-      "pivot": [
-       0.5,
-       0.5
-      ],
-      "layer": 7,
-      "properties": {
-       "text": "Stage",
-       "font": "fonts/kenney_pixel.ttf",
-       "fontSize": 48,
-       "align": "Center",
-       "color": "#24425cff"
-      },
-      "tags": [
-       "item"
-      ]
-     },
-     {
-      "type": "TextNode",
-      "name": "Settings",
-      "position": [
-       640.0,
-       480.0
-      ],
-      "pivot": [
-       0.5,
-       0.5
-      ],
-      "layer": 7,
-      "properties": {
-       "text": "Settings",
-       "font": "fonts/kenney_pixel.ttf",
-       "fontSize": 48,
-       "align": "Center",
-       "color": "#24425cff"
-      },
-      "tags": [
-       "item"
-      ]
-     },
-     {
-      "type": "TextNode",
-      "name": "Quit",
-      "position": [
-       640.0,
-       544.0
-      ],
-      "pivot": [
-       0.5,
-       0.5
-      ],
-      "layer": 7,
-      "properties": {
-       "text": "Quit",
-       "font": "fonts/kenney_pixel.ttf",
-       "fontSize": 48,
-       "align": "Center",
-       "color": "#24425cff"
-      },
-      "tags": [
-       "item"
-      ]
-     }
-    ]
-   },
-   {
-    "type": "Node",
-    "name": "SettingsMenu",
-    "layer": 7,
-    "script": {
-     "path": "scripts/menu.lua",
-     "properties": {
-      "kind": "settings",
-      "item_width": 640,
-      "item_height": 56,
-      "selected": "#e5602aff"
-     }
-    },
-    "children": [
-     {
-      "type": "TextNode",
-      "name": "Heading",
-      "position": [
-       640.0,
-       200.0
-      ],
-      "pivot": [
-       0.5,
-       0.5
-      ],
-      "layer": 7,
-      "properties": {
-       "text": "Settings",
-       "font": "fonts/kenney_pixel.ttf",
-       "fontSize": 96,
-       "align": "Center",
-       "color": "#24425cff"
-      }
-     },
-     {
-      "type": "TextNode",
-      "name": "Volume",
-      "position": [
-       640.0,
-       384.0
-      ],
-      "pivot": [
-       0.5,
-       0.5
-      ],
-      "layer": 7,
-      "properties": {
-       "text": "Volume",
-       "font": "fonts/kenney_pixel.ttf",
-       "fontSize": 48,
-       "align": "Center",
-       "color": "#24425cff"
-      },
-      "tags": [
-       "item"
-      ]
-     },
-     {
-      "type": "TextNode",
-      "name": "Back",
-      "position": [
-       640.0,
-       448.0
-      ],
-      "pivot": [
-       0.5,
-       0.5
-      ],
-      "layer": 7,
-      "properties": {
-       "text": "Back",
-       "font": "fonts/kenney_pixel.ttf",
-       "fontSize": 48,
-       "align": "Center",
-       "color": "#24425cff"
-      },
-      "tags": [
-       "item"
-      ]
-     }
-    ],
-    "visible": false
-   }
-  ]
- }
+  }
 }

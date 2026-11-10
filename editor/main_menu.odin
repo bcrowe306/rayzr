@@ -194,6 +194,7 @@ MainMenu_Render :: proc(state: ^EditorState) -> f32 {
 		imgui.Separator()
 		menu_action(state, "tool.sprite_slicer")
 		menu_action(state, "tool.new_plugin")
+		menu_action(state, "tool.format_scenes")
 		PluginAPI_MenuItems(state, "Tools") // plugin commands placed here (plugin_api.odin)
 		imgui.EndMenu()
 	}

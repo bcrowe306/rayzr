@@ -154,6 +154,7 @@ commands to any menu.
 | **Select / Move / Rotate / Scale / Pan** | Q / W / E / R / T | The transform tools. |
 | **Sprite Sheet Slicer...** | | Cut a sprite sheet into frames. |
 | **New Plugin...** | | Start an editor plugin ([Plugins](plugins.md)). |
+| **Format Scene Files** | | Rewrite the project's scene and component files as the editor saves them, for small diffs ([Working in a team](team.md)). |
 
 ### Game menu
 

@@ -1,148 +1,187 @@
 {
- "name": "main",
- "background": [
-  40,
-  44,
-  64,
-  255
- ],
- "root": {
-  "type": "Node",
-  "name": "root",
-  "children": [
-   {
-    "type": "TextureNode",
-    "name": "Gem",
-    "position": [
-     320,
-     190
-    ],
-    "scale": [
-     2,
-     2
-    ],
-    "texture": "textures/gem.png"
-   },
-   {
-    "type": "ScreenLayerNode",
-    "name": "HUD",
-    "position": [
-     0,
-     0
-    ],
-    "layer": 7,
-    "properties": {
-     "anchor": "TopLeft"
-    },
-    "script": {
-     "path": "scripts/clicker.lua"
-    },
+  "format": 1,
+  "name": "main",
+  "draw_bounds": false,
+  "background": [40, 44, 64, 255],
+  "root": {
+    "type": "Node",
+    "name": "root",
+    "uid": "dxiceiqo",
+    "position": [0, 0],
+    "scale": [1, 1],
+    "rotation": 0,
+    "enabled": true,
+    "visible": true,
+    "layer": 0,
     "children": [
-     {
-      "type": "UILabelNode",
-      "name": "Gems",
-      "position": [
-       16,
-       12
-      ],
-      "layer": 7,
-      "properties": {
-       "size": [
-        220,
-        26
-       ],
-       "text": "Gems: 0",
-       "fontSize": 20,
-       "drawBackground": true
-      }
-     },
-     {
-      "type": "UILabelNode",
-      "name": "Level",
-      "position": [
-       16,
-       44
-      ],
-      "layer": 7,
-      "properties": {
-       "size": [
-        220,
-        22
-       ],
-       "text": "Pick level 1",
-       "fontSize": 16,
-       "drawBackground": true
-      }
-     },
-     {
-      "type": "UIButtonNode",
-      "name": "Upgrade",
-      "position": [
-       16,
-       72
-      ],
-      "layer": 7,
-      "properties": {
-       "size": [
-        220,
-        30
-       ],
-       "text": "Upgrade: 10 gems",
-       "fontSize": 16,
-       "keyboardFocus": false
-      }
-     },
-     {
-      "type": "UILabelNode",
-      "name": "Status",
-      "position": [
-       16,
-       326
-      ],
-      "layer": 7,
-      "properties": {
-       "size": [
-        360,
-        22
-       ],
-       "text": "",
-       "fontSize": 16
-      }
-     },
-     {
-      "type": "ScreenLayerNode",
-      "name": "TopRight",
-      "position": [
-       -116,
-       12
-      ],
-      "layer": 7,
-      "properties": {
-       "anchor": "TopRight"
+      {
+        "type": "TextureNode",
+        "name": "Gem",
+        "uid": "gj98thhh",
+        "position": [320, 190],
+        "scale": [2, 2],
+        "rotation": 0,
+        "pivot": [0.5, 0.5],
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
+        "texture": "textures/gem.png",
+        "properties": {
+          "shininess": 0,
+          "tint": "#ffffffff"
+        }
       },
-      "children": [
-       {
-        "type": "UIButtonNode",
-        "name": "Menu",
-        "position": [
-         0,
-         0
-        ],
+      {
+        "type": "ScreenLayerNode",
+        "name": "HUD",
+        "uid": "xn5orqr7",
+        "position": [0, 0],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
         "layer": 7,
         "properties": {
-         "size": [
-          100,
-          30
-         ],
-         "text": "Menu",
-         "fontSize": 16,
-         "keyboardFocus": false
-        }
-       }
-      ]
-     }
+          "anchor": "TopLeft"
+        },
+        "script": {
+          "path": "scripts/clicker.lua",
+          "properties": {
+            "autosave_every": 10
+          }
+        },
+        "children": [
+          {
+            "type": "UILabelNode",
+            "name": "Gems",
+            "uid": "8992ngo2",
+            "position": [16, 12],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "size": [220, 26],
+              "keyboardFocus": true,
+              "text": "Gems: 0",
+              "fontSize": 20,
+              "textColor": "#eef0f6ff",
+              "align": "Left",
+              "drawBackground": true,
+              "backgroundColor": "#1e2026c8"
+            }
+          },
+          {
+            "type": "UILabelNode",
+            "name": "Level",
+            "uid": "xmj8e868",
+            "position": [16, 44],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "size": [220, 22],
+              "keyboardFocus": true,
+              "text": "Pick level 1",
+              "fontSize": 16,
+              "textColor": "#eef0f6ff",
+              "align": "Left",
+              "drawBackground": true,
+              "backgroundColor": "#1e2026c8"
+            }
+          },
+          {
+            "type": "UIButtonNode",
+            "name": "Upgrade",
+            "uid": "h7wscfg0",
+            "position": [16, 72],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "size": [220, 30],
+              "keyboardFocus": false,
+              "text": "Upgrade: 10 gems",
+              "fontSize": 16,
+              "icon": "None",
+              "iconSize": 0,
+              "normalColor": "#232731ff",
+              "hoverColor": "#323848ff",
+              "pressedColor": "#2563ebff",
+              "borderColor": "#4b5366ff",
+              "textColor": "#eef0f6ff",
+              "align": "Center"
+            }
+          },
+          {
+            "type": "UILabelNode",
+            "name": "Status",
+            "uid": "k4dp3g1p",
+            "position": [16, 326],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "size": [360, 22],
+              "keyboardFocus": true,
+              "text": "",
+              "fontSize": 16,
+              "textColor": "#eef0f6ff",
+              "align": "Left",
+              "drawBackground": false,
+              "backgroundColor": "#1e2026c8"
+            }
+          },
+          {
+            "type": "ScreenLayerNode",
+            "name": "TopRight",
+            "uid": "2940oskq",
+            "position": [-116, 12],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "anchor": "TopRight"
+            },
+            "children": [
+              {
+                "type": "UIButtonNode",
+                "name": "Menu",
+                "uid": "7mzbwud8",
+                "position": [0, 0],
+                "scale": [1, 1],
+                "rotation": 0,
+                "enabled": true,
+                "visible": true,
+                "layer": 7,
+                "properties": {
+                  "size": [100, 30],
+                  "keyboardFocus": false,
+                  "text": "Menu",
+                  "fontSize": 16,
+                  "icon": "None",
+                  "iconSize": 0,
+                  "normalColor": "#232731ff",
+                  "hoverColor": "#323848ff",
+                  "pressedColor": "#2563ebff",
+                  "borderColor": "#4b5366ff",
+                  "textColor": "#eef0f6ff",
+                  "align": "Center"
+                }
+              }
+            ]
+          }
+        ]
+      }
     ]
-   }
-  ]
- }
+  }
 }

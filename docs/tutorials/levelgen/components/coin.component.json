@@ -1,44 +1,49 @@
 {
- "type": "AreaNode",
- "name": "Coin",
- "tags": [
-  "coin"
- ],
- "shapes": [
-  {
-   "type": "Circle",
-   "radius": 6
-  }
- ],
- "script": {
-  "path": "scripts/coin.lua"
- },
- "children": [
-  {
-   "type": "AnimationPlayerNode",
-   "name": "Sprite",
-   "position": [0, 0],
-   "pivot": [0.5, 0.5],
-   "layer": 2,
-   "z_index": 0,
-   "fps": 8,
-   "animation": "spin",
-   "default_animation": "spin",
-   "animations": [
+  "format": 1,
+  "type": "AreaNode",
+  "name": "Coin",
+  "uid": "4061nz71",
+  "position": [0, 0],
+  "scale": [1, 1],
+  "rotation": 0,
+  "enabled": true,
+  "visible": true,
+  "layer": 0,
+  "tags": ["coin"],
+  "shapes": [
+    {"type": "Circle", "offset": [0, 0], "rotation": 0, "radius": 6, "size": [40, 40], "cornerRadius": 4, "point1": [-25, 0], "point2": [25, 0], "vertexCount": 4, "isLoop": false, "density": 1, "friction": 0.6, "restitution": 0.2, "rollingResistance": 0, "tangentSpeed": 0, "isSensor": false, "enableSensorEvents": true, "enableContactEvents": true, "enableHitEvents": false, "enablePreSolveEvents": false, "categoryLayers": ["Layer1"], "maskLayers": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8", "Layer9", "Layer10", "Layer11", "Layer12", "Layer13", "Layer14", "Layer15", "Layer16"], "groupIndex": 0}
+  ],
+  "properties": {
+    "monitoring": true,
+    "debugColor": "#a855f7ff",
+    "activeColor": "#ec4899ff"
+  },
+  "script": {
+    "path": "scripts/coin.lua"
+  },
+  "children": [
     {
-     "name": "spin",
-     "loop": true,
-     "fps": 4,
-     "sheet": "textures/coin.png",
-     "grid": [2, 1],
-     "cells": [0, 1],
-     "start": 0,
-     "end": 1
+      "type": "AnimationPlayerNode",
+      "name": "Sprite",
+      "uid": "vd0elnwm",
+      "position": [0, 0],
+      "scale": [1, 1],
+      "rotation": 0,
+      "pivot": [0.5, 0.5],
+      "enabled": true,
+      "visible": true,
+      "layer": 2,
+      "fps": 8,
+      "animation": "spin",
+      "default_animation": "spin",
+      "animations": [
+        {"name": "spin", "loop": true, "flip_x": false, "flip_y": false, "fps": 4, "sheet": "textures/coin.png", "grid": [2, 1], "start": 0, "end": 1, "cells": [0, 1]}
+      ],
+      "properties": {
+        "shininess": 0,
+        "reverse": false,
+        "autoplay": true
+      }
     }
-   ],
-   "properties": {
-    "autoplay": true
-   }
-  }
- ]
+  ]
 }

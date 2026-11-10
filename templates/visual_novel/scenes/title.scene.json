@@ -1,461 +1,657 @@
 {
- "name": "title",
- "background": [
-  20,
-  22,
-  30,
-  255
- ],
- "root": {
-  "type": "Node",
-  "name": "root",
-  "children": [
-   {
-    "type": "CameraNode",
-    "name": "Camera",
-    "position": [
-     640,
-     360
-    ],
-    "properties": {
-     "isCurrent": true
-    }
-   },
-   {
-    "type": "TextureNode",
-    "name": "Background",
-    "position": [
-     0,
-     0
-    ],
-    "pivot": [
-     0,
-     0
-    ],
-    "scale": [
-     1.25,
-     1.25
-    ],
-    "layer": 1,
-    "texture": "textures/bg_castle.png"
-   },
-   {
-    "type": "TextureNode",
-    "name": "Ada",
-    "position": [
-     260,
-     724
-    ],
-    "scale": [
-     2,
-     2
-    ],
-    "layer": 2,
-    "pivot": [
-     0.5,
-     1
-    ],
-    "visible": true,
-    "texture": "textures/ada_idle.png"
-   },
-   {
-    "type": "TextureNode",
-    "name": "Theo",
-    "position": [
-     1020,
-     724
-    ],
-    "scale": [
-     2,
-     2
-    ],
-    "layer": 2,
-    "pivot": [
-     0.5,
-     1
-    ],
-    "visible": true,
-    "texture": "textures/theo_idle.png"
-   },
-   {
+  "format": 1,
+  "name": "title",
+  "draw_bounds": false,
+  "background": [20, 22, 30, 255],
+  "root": {
     "type": "Node",
-    "name": "Title",
-    "script": {
-     "path": "scripts/title.lua"
-    }
-   },
-   {
-    "type": "TextNode",
-    "name": "Name",
-    "position": [
-     640,
-     60
-    ],
-    "pivot": [
-     0.5,
-     0
-    ],
-    "layer": 7,
-    "properties": {
-     "text": "The Castle Road",
-     "fontSize": 80,
-     "align": "Center",
-     "color": "#1e2840ff",
-     "richText": true
-    }
-   },
-   {
-    "type": "TextNode",
-    "name": "Endings",
-    "position": [
-     640,
-     640
-    ],
-    "pivot": [
-     0.5,
-     0
-    ],
-    "layer": 7,
-    "properties": {
-     "text": "",
-     "fontSize": 22,
-     "align": "Center",
-     "color": "#1e2840cc",
-     "richText": true
-    }
-   },
-   {
-    "type": "UIContainerNode",
-    "name": "Menu",
-    "position": [
-     500,
-     220
-    ],
-    "layer": 8,
-    "properties": {
-     "size": [
-      280,
-      360
-     ],
-     "direction": "Vertical",
-     "alignment": "Center",
-     "spacing": 12,
-     "paddingTop": 16,
-     "paddingBottom": 16,
-     "drawBackground": false,
-     "drawBorder": false,
-     "showHeader": false,
-     "backgroundColor": "#0f121ce6",
-     "borderColor": "#5c8dffff"
-    },
+    "name": "root",
+    "uid": "9axgwp1n",
+    "position": [0, 0],
+    "scale": [1, 1],
+    "rotation": 0,
+    "enabled": true,
+    "visible": true,
+    "layer": 0,
     "children": [
-     {
-      "type": "UIButtonNode",
-      "name": "NewGame",
-      "layer": 8,
-      "properties": {
-       "size": [
-        260,
-        48
-       ],
-       "text": "New game",
-       "fontSize": 24,
-       "normalColor": "#0f121ce6",
-       "hoverColor": "#5c8dffc8",
-       "borderColor": "#5c8dffff",
-       "textColor": "#eef0f6ff"
+      {
+        "type": "CameraNode",
+        "name": "Camera",
+        "uid": "6ifloit6",
+        "position": [640, 360],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
+        "properties": {
+          "isCurrent": true,
+          "followMode": "SingleTarget",
+          "dragType": "SmoothDamp",
+          "targetPosition": [0, 0],
+          "smoothDrag": true,
+          "smoothDragSpeed": [0.2, 0.2],
+          "springConstant": 15,
+          "dampingRatio": 1,
+          "predictionTime": [0.5, 0.5],
+          "maxDistance": [100000, 100000],
+          "offset": [0, 0],
+          "smoothOffset": true,
+          "smoothOffsetSpeed": 0.2,
+          "screenOffset": [640, 360],
+          "customScreenOffset": false,
+          "targetRotation": 0,
+          "allowRotation": true,
+          "smoothRotation": true,
+          "smoothRotationSpeed": 0.2,
+          "targetZoom": 1,
+          "smoothZoom": true,
+          "smoothZoomSpeed": 0.2,
+          "minZoom": 0.1,
+          "maxZoom": 10,
+          "autoZoom": true,
+          "zoomMargin": 0.1,
+          "hasLimits": false,
+          "smoothLimit": true,
+          "leftLimit": -1000000,
+          "rightLimit": 1000000,
+          "topLimit": -1000000,
+          "bottomLimit": 1000000,
+          "useHMargins": false,
+          "useVMargins": false,
+          "leftMargin": 0.25,
+          "rightMargin": 0.25,
+          "topMargin": 0.25,
+          "bottomMargin": 0.25,
+          "enableMouseFollow": false,
+          "mouseInfluence": [0.2, 0.2],
+          "shakePreset": "Custom",
+          "shakeTypes": ["Vertical", "Horizontal", "Random"],
+          "shakeSpeed": 15,
+          "shakeIntensity": 10,
+          "shakeTrauma": 1
+        }
+      },
+      {
+        "type": "TextureNode",
+        "name": "Background",
+        "uid": "5z78v1nc",
+        "position": [0, 0],
+        "scale": [1.25, 1.25],
+        "rotation": 0,
+        "pivot": [0, 0],
+        "enabled": true,
+        "visible": true,
+        "layer": 1,
+        "texture": "textures/bg_castle.png",
+        "properties": {
+          "shininess": 0,
+          "tint": "#ffffffff"
+        }
+      },
+      {
+        "type": "TextureNode",
+        "name": "Ada",
+        "uid": "glkimwpj",
+        "position": [260, 724],
+        "scale": [2, 2],
+        "rotation": 0,
+        "pivot": [0.5, 1],
+        "enabled": true,
+        "visible": true,
+        "layer": 2,
+        "texture": "textures/ada_idle.png",
+        "properties": {
+          "shininess": 0,
+          "tint": "#ffffffff"
+        }
+      },
+      {
+        "type": "TextureNode",
+        "name": "Theo",
+        "uid": "neyxmgfg",
+        "position": [1020, 724],
+        "scale": [2, 2],
+        "rotation": 0,
+        "pivot": [0.5, 1],
+        "enabled": true,
+        "visible": true,
+        "layer": 2,
+        "texture": "textures/theo_idle.png",
+        "properties": {
+          "shininess": 0,
+          "tint": "#ffffffff"
+        }
+      },
+      {
+        "type": "Node",
+        "name": "Title",
+        "uid": "y0b8ebin",
+        "position": [0, 0],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
+        "script": {
+          "path": "scripts/title.lua",
+          "properties": {
+            "endings": 3
+          }
+        }
+      },
+      {
+        "type": "TextNode",
+        "name": "Name",
+        "uid": "9nni56lu",
+        "position": [640, 60],
+        "scale": [1, 1],
+        "rotation": 0,
+        "pivot": [0.5, 0],
+        "enabled": true,
+        "visible": true,
+        "layer": 7,
+        "properties": {
+          "text": "The Castle Road",
+          "font": "",
+          "fontSize": 80,
+          "color": "#1e2840ff",
+          "align": "Center",
+          "maxWidth": 0,
+          "lineSpacing": 1.2,
+          "richText": true,
+          "localized": false,
+          "rendering": "Auto",
+          "path": "",
+          "pathOffset": 0,
+          "pathAlign": "Left",
+          "pathUpright": false,
+          "revealSpeed": 0
+        }
+      },
+      {
+        "type": "TextNode",
+        "name": "Endings",
+        "uid": "o8aalsg4",
+        "position": [640, 640],
+        "scale": [1, 1],
+        "rotation": 0,
+        "pivot": [0.5, 0],
+        "enabled": true,
+        "visible": true,
+        "layer": 7,
+        "properties": {
+          "text": "",
+          "font": "",
+          "fontSize": 22,
+          "color": "#1e2840cc",
+          "align": "Center",
+          "maxWidth": 0,
+          "lineSpacing": 1.2,
+          "richText": true,
+          "localized": false,
+          "rendering": "Auto",
+          "path": "",
+          "pathOffset": 0,
+          "pathAlign": "Left",
+          "pathUpright": false,
+          "revealSpeed": 0
+        }
+      },
+      {
+        "type": "UIContainerNode",
+        "name": "Menu",
+        "uid": "3s9xrxuv",
+        "position": [500, 220],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 7,
+        "properties": {
+          "size": [280, 360],
+          "keyboardFocus": true,
+          "title": "Panel",
+          "direction": "Vertical",
+          "alignment": "Center",
+          "spacing": 12,
+          "paddingTop": 16,
+          "paddingBottom": 16,
+          "paddingLeft": 14,
+          "paddingRight": 14,
+          "columns": 0,
+          "autoSizeHeight": false,
+          "drawBackground": false,
+          "drawBorder": false,
+          "showHeader": false,
+          "headerHeight": 36,
+          "backgroundColor": "#0f121ce6",
+          "headerColor": "#1c202aff",
+          "borderColor": "#5c8dffff",
+          "titleColor": "#eef0f6ff"
+        },
+        "children": [
+          {
+            "type": "UIButtonNode",
+            "name": "NewGame",
+            "uid": "c0y5lg1a",
+            "position": [0, 0],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "size": [260, 48],
+              "keyboardFocus": true,
+              "text": "New game",
+              "fontSize": 24,
+              "icon": "None",
+              "iconSize": 0,
+              "normalColor": "#0f121ce6",
+              "hoverColor": "#5c8dffc8",
+              "pressedColor": "#2563ebff",
+              "borderColor": "#5c8dffff",
+              "textColor": "#eef0f6ff",
+              "align": "Center"
+            }
+          },
+          {
+            "type": "UIButtonNode",
+            "name": "Continue",
+            "uid": "rzzzmu7l",
+            "position": [0, 0],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "size": [260, 48],
+              "keyboardFocus": true,
+              "text": "Continue",
+              "fontSize": 24,
+              "icon": "None",
+              "iconSize": 0,
+              "normalColor": "#0f121ce6",
+              "hoverColor": "#5c8dffc8",
+              "pressedColor": "#2563ebff",
+              "borderColor": "#5c8dffff",
+              "textColor": "#eef0f6ff",
+              "align": "Center"
+            }
+          },
+          {
+            "type": "UIButtonNode",
+            "name": "Load",
+            "uid": "qr8l2rvv",
+            "position": [0, 0],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "size": [260, 48],
+              "keyboardFocus": true,
+              "text": "Load",
+              "fontSize": 24,
+              "icon": "None",
+              "iconSize": 0,
+              "normalColor": "#0f121ce6",
+              "hoverColor": "#5c8dffc8",
+              "pressedColor": "#2563ebff",
+              "borderColor": "#5c8dffff",
+              "textColor": "#eef0f6ff",
+              "align": "Center"
+            }
+          },
+          {
+            "type": "UIButtonNode",
+            "name": "Settings",
+            "uid": "1elvtly2",
+            "position": [0, 0],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "size": [260, 48],
+              "keyboardFocus": true,
+              "text": "Settings",
+              "fontSize": 24,
+              "icon": "None",
+              "iconSize": 0,
+              "normalColor": "#0f121ce6",
+              "hoverColor": "#5c8dffc8",
+              "pressedColor": "#2563ebff",
+              "borderColor": "#5c8dffff",
+              "textColor": "#eef0f6ff",
+              "align": "Center"
+            }
+          },
+          {
+            "type": "UIButtonNode",
+            "name": "Quit",
+            "uid": "0g4qoiuv",
+            "position": [0, 0],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "size": [260, 48],
+              "keyboardFocus": true,
+              "text": "Quit",
+              "fontSize": 24,
+              "icon": "None",
+              "iconSize": 0,
+              "normalColor": "#0f121ce6",
+              "hoverColor": "#5c8dffc8",
+              "pressedColor": "#2563ebff",
+              "borderColor": "#5c8dffff",
+              "textColor": "#eef0f6ff",
+              "align": "Center"
+            }
+          }
+        ]
+      },
+      {
+        "type": "UIContainerNode",
+        "name": "SettingsPanel",
+        "uid": "6o00d798",
+        "position": [340, 190],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 7,
+        "properties": {
+          "size": [600, 300],
+          "keyboardFocus": true,
+          "title": "Settings",
+          "direction": "Vertical",
+          "alignment": "Center",
+          "spacing": 12,
+          "paddingTop": 16,
+          "paddingBottom": 16,
+          "paddingLeft": 14,
+          "paddingRight": 14,
+          "columns": 0,
+          "autoSizeHeight": false,
+          "drawBackground": true,
+          "drawBorder": true,
+          "showHeader": true,
+          "headerHeight": 36,
+          "backgroundColor": "#0f121ce6",
+          "headerColor": "#1e2840ff",
+          "borderColor": "#5c8dffff",
+          "titleColor": "#eef0f6ff"
+        },
+        "children": [
+          {
+            "type": "UISliderNode",
+            "name": "TextSpeed",
+            "uid": "l32zqqoo",
+            "position": [0, 0],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "size": [520, 36],
+              "keyboardFocus": true,
+              "label": "Text speed",
+              "value": 40,
+              "minValue": 10,
+              "maxValue": 120,
+              "defaultValue": 40,
+              "fineScale": 0.1,
+              "isInteger": true,
+              "showResetButton": true,
+              "labelWidth": 170
+            }
+          },
+          {
+            "type": "UISliderNode",
+            "name": "AutoDelay",
+            "uid": "mm9ck7vi",
+            "position": [0, 0],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "size": [520, 36],
+              "keyboardFocus": true,
+              "label": "Auto delay (s)",
+              "value": 1.2,
+              "minValue": 0.3,
+              "maxValue": 4,
+              "defaultValue": 1.2,
+              "fineScale": 0.1,
+              "isInteger": false,
+              "showResetButton": true,
+              "labelWidth": 170
+            }
+          },
+          {
+            "type": "UISliderNode",
+            "name": "MusicVolume",
+            "uid": "3jsoi5hs",
+            "position": [0, 0],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "size": [520, 36],
+              "keyboardFocus": true,
+              "label": "Music",
+              "value": 1,
+              "minValue": 0,
+              "maxValue": 1,
+              "defaultValue": 1,
+              "fineScale": 0.1,
+              "isInteger": false,
+              "showResetButton": true,
+              "labelWidth": 170
+            }
+          },
+          {
+            "type": "UISliderNode",
+            "name": "SoundVolume",
+            "uid": "wpe9ilrv",
+            "position": [0, 0],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "size": [520, 36],
+              "keyboardFocus": true,
+              "label": "Sound",
+              "value": 1,
+              "minValue": 0,
+              "maxValue": 1,
+              "defaultValue": 1,
+              "fineScale": 0.1,
+              "isInteger": false,
+              "showResetButton": true,
+              "labelWidth": 170
+            }
+          },
+          {
+            "type": "UIButtonNode",
+            "name": "SettingsClose",
+            "uid": "prh91vm6",
+            "position": [0, 0],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "size": [160, 40],
+              "keyboardFocus": true,
+              "text": "Done",
+              "fontSize": 20,
+              "icon": "None",
+              "iconSize": 0,
+              "normalColor": "#0f121ce6",
+              "hoverColor": "#5c8dffc8",
+              "pressedColor": "#2563ebff",
+              "borderColor": "#5c8dffff",
+              "textColor": "#eef0f6ff",
+              "align": "Center"
+            }
+          }
+        ]
+      },
+      {
+        "type": "UIContainerNode",
+        "name": "Slots",
+        "uid": "hada42cf",
+        "position": [340, 150],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 7,
+        "properties": {
+          "size": [600, 290],
+          "keyboardFocus": true,
+          "title": "Load a slot",
+          "direction": "Vertical",
+          "alignment": "Center",
+          "spacing": 12,
+          "paddingTop": 16,
+          "paddingBottom": 16,
+          "paddingLeft": 14,
+          "paddingRight": 14,
+          "columns": 0,
+          "autoSizeHeight": false,
+          "drawBackground": true,
+          "drawBorder": true,
+          "showHeader": true,
+          "headerHeight": 36,
+          "backgroundColor": "#0f121ce6",
+          "headerColor": "#1e2840ff",
+          "borderColor": "#5c8dffff",
+          "titleColor": "#eef0f6ff"
+        },
+        "script": {
+          "path": "scripts/slots.lua"
+        },
+        "children": [
+          {
+            "type": "UIButtonNode",
+            "name": "Slot1",
+            "uid": "equsym7q",
+            "position": [0, 0],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "size": [540, 48],
+              "keyboardFocus": true,
+              "text": "1.",
+              "fontSize": 24,
+              "icon": "None",
+              "iconSize": 0,
+              "normalColor": "#0f121ce6",
+              "hoverColor": "#5c8dffc8",
+              "pressedColor": "#2563ebff",
+              "borderColor": "#5c8dffff",
+              "textColor": "#eef0f6ff",
+              "align": "Center"
+            }
+          },
+          {
+            "type": "UIButtonNode",
+            "name": "Slot2",
+            "uid": "d7nf561w",
+            "position": [0, 0],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "size": [540, 48],
+              "keyboardFocus": true,
+              "text": "2.",
+              "fontSize": 24,
+              "icon": "None",
+              "iconSize": 0,
+              "normalColor": "#0f121ce6",
+              "hoverColor": "#5c8dffc8",
+              "pressedColor": "#2563ebff",
+              "borderColor": "#5c8dffff",
+              "textColor": "#eef0f6ff",
+              "align": "Center"
+            }
+          },
+          {
+            "type": "UIButtonNode",
+            "name": "Slot3",
+            "uid": "otzpw043",
+            "position": [0, 0],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "size": [540, 48],
+              "keyboardFocus": true,
+              "text": "3.",
+              "fontSize": 24,
+              "icon": "None",
+              "iconSize": 0,
+              "normalColor": "#0f121ce6",
+              "hoverColor": "#5c8dffc8",
+              "pressedColor": "#2563ebff",
+              "borderColor": "#5c8dffff",
+              "textColor": "#eef0f6ff",
+              "align": "Center"
+            }
+          },
+          {
+            "type": "UIButtonNode",
+            "name": "Close",
+            "uid": "fyl7jqjf",
+            "position": [0, 0],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "size": [160, 40],
+              "keyboardFocus": true,
+              "text": "Close",
+              "fontSize": 20,
+              "icon": "None",
+              "iconSize": 0,
+              "normalColor": "#0f121ce6",
+              "hoverColor": "#5c8dffc8",
+              "pressedColor": "#2563ebff",
+              "borderColor": "#5c8dffff",
+              "textColor": "#eef0f6ff",
+              "align": "Center"
+            }
+          }
+        ]
       }
-     },
-     {
-      "type": "UIButtonNode",
-      "name": "Continue",
-      "layer": 8,
-      "properties": {
-       "size": [
-        260,
-        48
-       ],
-       "text": "Continue",
-       "fontSize": 24,
-       "normalColor": "#0f121ce6",
-       "hoverColor": "#5c8dffc8",
-       "borderColor": "#5c8dffff",
-       "textColor": "#eef0f6ff"
-      }
-     },
-     {
-      "type": "UIButtonNode",
-      "name": "Load",
-      "layer": 8,
-      "properties": {
-       "size": [
-        260,
-        48
-       ],
-       "text": "Load",
-       "fontSize": 24,
-       "normalColor": "#0f121ce6",
-       "hoverColor": "#5c8dffc8",
-       "borderColor": "#5c8dffff",
-       "textColor": "#eef0f6ff"
-      }
-     },
-     {
-      "type": "UIButtonNode",
-      "name": "Settings",
-      "layer": 8,
-      "properties": {
-       "size": [
-        260,
-        48
-       ],
-       "text": "Settings",
-       "fontSize": 24,
-       "normalColor": "#0f121ce6",
-       "hoverColor": "#5c8dffc8",
-       "borderColor": "#5c8dffff",
-       "textColor": "#eef0f6ff"
-      }
-     },
-     {
-      "type": "UIButtonNode",
-      "name": "Quit",
-      "layer": 8,
-      "properties": {
-       "size": [
-        260,
-        48
-       ],
-       "text": "Quit",
-       "fontSize": 24,
-       "normalColor": "#0f121ce6",
-       "hoverColor": "#5c8dffc8",
-       "borderColor": "#5c8dffff",
-       "textColor": "#eef0f6ff"
-      }
-     }
     ]
-   },
-   {
-    "type": "UIContainerNode",
-    "name": "SettingsPanel",
-    "position": [
-     340,
-     190
-    ],
-    "layer": 8,
-    "properties": {
-     "size": [
-      600,
-      300
-     ],
-     "direction": "Vertical",
-     "alignment": "Center",
-     "spacing": 12,
-     "paddingTop": 16,
-     "paddingBottom": 16,
-     "drawBackground": true,
-     "drawBorder": true,
-     "showHeader": true,
-     "backgroundColor": "#0f121ce6",
-     "borderColor": "#5c8dffff",
-     "title": "Settings",
-     "headerHeight": 36,
-     "headerColor": "#1e2840ff"
-    },
-    "children": [
-     {
-      "type": "UISliderNode",
-      "name": "TextSpeed",
-      "layer": 8,
-      "properties": {
-       "size": [
-        520,
-        36
-       ],
-       "label": "Text speed",
-       "labelWidth": 170,
-       "minValue": 10,
-       "maxValue": 120,
-       "value": 40,
-       "defaultValue": 40,
-       "isInteger": true
-      }
-     },
-     {
-      "type": "UISliderNode",
-      "name": "AutoDelay",
-      "layer": 8,
-      "properties": {
-       "size": [
-        520,
-        36
-       ],
-       "label": "Auto delay (s)",
-       "labelWidth": 170,
-       "minValue": 0.3,
-       "maxValue": 4,
-       "value": 1.2,
-       "defaultValue": 1.2,
-       "isInteger": false
-      }
-     },
-     {
-      "type": "UISliderNode",
-      "name": "MusicVolume",
-      "layer": 8,
-      "properties": {
-       "size": [
-        520,
-        36
-       ],
-       "label": "Music",
-       "labelWidth": 170,
-       "minValue": 0,
-       "maxValue": 1,
-       "value": 1,
-       "defaultValue": 1,
-       "isInteger": false
-      }
-     },
-     {
-      "type": "UISliderNode",
-      "name": "SoundVolume",
-      "layer": 8,
-      "properties": {
-       "size": [
-        520,
-        36
-       ],
-       "label": "Sound",
-       "labelWidth": 170,
-       "minValue": 0,
-       "maxValue": 1,
-       "value": 1,
-       "defaultValue": 1,
-       "isInteger": false
-      }
-     },
-     {
-      "type": "UIButtonNode",
-      "name": "SettingsClose",
-      "layer": 8,
-      "properties": {
-       "size": [
-        160,
-        40
-       ],
-       "text": "Done",
-       "fontSize": 20,
-       "normalColor": "#0f121ce6",
-       "hoverColor": "#5c8dffc8",
-       "borderColor": "#5c8dffff",
-       "textColor": "#eef0f6ff"
-      }
-     }
-    ]
-   },
-   {
-    "type": "UIContainerNode",
-    "name": "Slots",
-    "position": [
-     340,
-     150
-    ],
-    "layer": 8,
-    "properties": {
-     "size": [
-      600,
-      290
-     ],
-     "direction": "Vertical",
-     "alignment": "Center",
-     "spacing": 12,
-     "paddingTop": 16,
-     "paddingBottom": 16,
-     "drawBackground": true,
-     "drawBorder": true,
-     "showHeader": true,
-     "backgroundColor": "#0f121ce6",
-     "borderColor": "#5c8dffff",
-     "title": "Load a slot",
-     "headerHeight": 36,
-     "headerColor": "#1e2840ff"
-    },
-    "children": [
-     {
-      "type": "UIButtonNode",
-      "name": "Slot1",
-      "layer": 8,
-      "properties": {
-       "size": [
-        540,
-        48
-       ],
-       "text": "1.",
-       "fontSize": 24,
-       "normalColor": "#0f121ce6",
-       "hoverColor": "#5c8dffc8",
-       "borderColor": "#5c8dffff",
-       "textColor": "#eef0f6ff"
-      }
-     },
-     {
-      "type": "UIButtonNode",
-      "name": "Slot2",
-      "layer": 8,
-      "properties": {
-       "size": [
-        540,
-        48
-       ],
-       "text": "2.",
-       "fontSize": 24,
-       "normalColor": "#0f121ce6",
-       "hoverColor": "#5c8dffc8",
-       "borderColor": "#5c8dffff",
-       "textColor": "#eef0f6ff"
-      }
-     },
-     {
-      "type": "UIButtonNode",
-      "name": "Slot3",
-      "layer": 8,
-      "properties": {
-       "size": [
-        540,
-        48
-       ],
-       "text": "3.",
-       "fontSize": 24,
-       "normalColor": "#0f121ce6",
-       "hoverColor": "#5c8dffc8",
-       "borderColor": "#5c8dffff",
-       "textColor": "#eef0f6ff"
-      }
-     },
-     {
-      "type": "UIButtonNode",
-      "name": "Close",
-      "layer": 8,
-      "properties": {
-       "size": [
-        160,
-        40
-       ],
-       "text": "Close",
-       "fontSize": 20,
-       "normalColor": "#0f121ce6",
-       "hoverColor": "#5c8dffc8",
-       "borderColor": "#5c8dffff",
-       "textColor": "#eef0f6ff"
-      }
-     }
-    ],
-    "script": {
-     "path": "scripts/slots.lua"
-    }
-   }
-  ]
- }
+  }
 }

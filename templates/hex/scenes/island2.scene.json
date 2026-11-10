@@ -1,729 +1,575 @@
 {
- "name": "island2",
- "background": [
-  64,
-  140,
-  196,
-  255
- ],
- "root": {
-  "type": "Node",
-  "name": "root",
-  "children": [
-   {
-    "type": "CameraNode",
-    "name": "Camera",
-    "position": [
-     640,
-     360
-    ],
-    "properties": {
-     "isCurrent": true
-    }
-   },
-   {
-    "type": "TileMapNode",
-    "name": "Ground",
-    "position": [
-     217.5,
-     92.5
-    ],
-    "layer": 1,
-    "z_index": 0,
-    "tilemap": {
-     "tileset": "textures/hex_tiles.png",
-     "tile_size": [
-      65,
-      89
-     ],
-     "map_size": [
-      13,
-      10
-     ],
-     "data": [
-      [
-       15,
-       7
-      ],
-      [
-       3,
-       0
-      ],
-      [
-       3,
-       7
-      ],
-      [
-       1,
-       3
-      ],
-      [
-       3,
-       0
-      ],
-      [
-       2,
-       7
-      ],
-      [
-       1,
-       3
-      ],
-      [
-       3,
-       0
-      ],
-      [
-       1,
-       3
-      ],
-      [
-       2,
-       7
-      ],
-      [
-       4,
-       0
-      ],
-      [
-       2,
-       7
-      ],
-      [
-       5,
-       0
-      ],
-      [
-       1,
-       3
-      ],
-      [
-       1,
-       7
-      ],
-      [
-       4,
-       0
-      ],
-      [
-       2,
-       7
-      ],
-      [
-       1,
-       3
-      ],
-      [
-       3,
-       0
-      ],
-      [
-       1,
-       2
-      ],
-      [
-       3,
-       3
-      ],
-      [
-       2,
-       0
-      ],
-      [
-       4,
-       7
-      ],
-      [
-       4,
-       0
-      ],
-      [
-       2,
-       7
-      ],
-      [
-       1,
-       3
-      ],
-      [
-       1,
-       2
-      ],
-      [
-       1,
-       0
-      ],
-      [
-       1,
-       3
-      ],
-      [
-       2,
-       7
-      ],
-      [
-       1,
-       3
-      ],
-      [
-       4,
-       0
-      ],
-      [
-       2,
-       7
-      ],
-      [
-       4,
-       0
-      ],
-      [
-       3,
-       7
-      ],
-      [
-       1,
-       3
-      ],
-      [
-       2,
-       0
-      ],
-      [
-       1,
-       3
-      ],
-      [
-       2,
-       7
-      ],
-      [
-       1,
-       3
-      ],
-      [
-       2,
-       0
-      ],
-      [
-       1,
-       3
-      ],
-      [
-       4,
-       7
-      ],
-      [
-       2,
-       3
-      ],
-      [
-       4,
-       7
-      ],
-      [
-       2,
-       3
-      ],
-      [
-       15,
-       7
-      ]
-     ]
-    },
-    "properties": {
-     "solid": false,
-     "layout": "HexPointy",
-     "stagger": "Odd",
-     "cellSize": [
-      65,
-      66
-     ],
-     "tileOffset": [
-      0,
-      23
-     ]
-    }
-   },
-   {
-    "type": "TileMapNode",
-    "name": "Walk",
-    "position": [
-     217.5,
-     92.5
-    ],
-    "layer": 1,
-    "z_index": 0,
-    "tilemap": {
-     "tile_size": [
-      65,
-      89
-     ],
-     "map_size": [
-      13,
-      10
-     ],
-     "data": [
-      [
-       130,
-       -1
-      ]
-     ]
-    },
-    "properties": {
-     "solid": false,
-     "layout": "HexPointy",
-     "stagger": "Odd",
-     "cellSize": [
-      65,
-      66
-     ],
-     "tileOffset": [
-      0,
-      0
-     ]
-    }
-   },
-   {
+  "format": 1,
+  "name": "island2",
+  "draw_bounds": false,
+  "background": [64, 140, 196, 255],
+  "root": {
     "type": "Node",
-    "name": "Island",
-    "layer": 1,
-    "script": {
-     "path": "scripts/island.lua",
-     "properties": {
-      "island": 2,
-      "step_limit": 35
-     }
-    }
-   },
-   {
-    "type": "Node",
-    "name": "World",
-    "ySort": true,
+    "name": "root",
+    "uid": "2yh0ldi5",
+    "position": [0, 0],
+    "scale": [1, 1],
+    "rotation": 0,
+    "enabled": true,
+    "visible": true,
+    "layer": 0,
     "children": [
-     {
-      "type": "TileMapNode",
-      "name": "Objects",
-      "position": [
-       217.5,
-       92.5
-      ],
-      "layer": 2,
-      "z_index": 0,
-      "tilemap": {
-       "tileset": "textures/hex_objects.png",
-       "tile_size": [
-        65,
-        107
-       ],
-       "map_size": [
-        13,
-        10
-       ],
-       "data": [
-        [
-         17,
-         -1
-        ],
-        [
-         1,
-         8
-        ],
-        [
-         6,
-         -1
-        ],
-        [
-         1,
-         9
-        ],
-        [
-         4,
-         -1
-        ],
-        [
-         1,
-         0
-        ],
-        [
-         5,
-         -1
-        ],
-        [
-         1,
-         5
-        ],
-        [
-         5,
-         -1
-        ],
-        [
-         1,
-         10
-        ],
-        [
-         1,
-         -1
-        ],
-        [
-         1,
-         2
-        ],
-        [
-         4,
-         -1
-        ],
-        [
-         1,
-         0
-        ],
-        [
-         1,
-         2
-        ],
-        [
-         1,
-         8
-        ],
-        [
-         17,
-         -1
-        ],
-        [
-         1,
-         5
-        ],
-        [
-         13,
-         -1
-        ],
-        [
-         1,
-         9
-        ],
-        [
-         4,
-         -1
-        ],
-        [
-         1,
-         4
-        ],
-        [
-         6,
-         -1
-        ],
-        [
-         1,
-         7
-        ],
-        [
-         6,
-         -1
-        ],
-        [
-         1,
-         10
-        ],
-        [
-         28,
-         -1
+      {
+        "type": "CameraNode",
+        "name": "Camera",
+        "uid": "ptkjq3mx",
+        "position": [640, 360],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
+        "properties": {
+          "isCurrent": true,
+          "followMode": "SingleTarget",
+          "dragType": "SmoothDamp",
+          "targetPosition": [0, 0],
+          "smoothDrag": true,
+          "smoothDragSpeed": [0.2, 0.2],
+          "springConstant": 15,
+          "dampingRatio": 1,
+          "predictionTime": [0.5, 0.5],
+          "maxDistance": [100000, 100000],
+          "offset": [0, 0],
+          "smoothOffset": true,
+          "smoothOffsetSpeed": 0.2,
+          "screenOffset": [640, 360],
+          "customScreenOffset": false,
+          "targetRotation": 0,
+          "allowRotation": true,
+          "smoothRotation": true,
+          "smoothRotationSpeed": 0.2,
+          "targetZoom": 1,
+          "smoothZoom": true,
+          "smoothZoomSpeed": 0.2,
+          "minZoom": 0.1,
+          "maxZoom": 10,
+          "autoZoom": true,
+          "zoomMargin": 0.1,
+          "hasLimits": false,
+          "smoothLimit": true,
+          "leftLimit": -1000000,
+          "rightLimit": 1000000,
+          "topLimit": -1000000,
+          "bottomLimit": 1000000,
+          "useHMargins": false,
+          "useVMargins": false,
+          "leftMargin": 0.25,
+          "rightMargin": 0.25,
+          "topMargin": 0.25,
+          "bottomMargin": 0.25,
+          "enableMouseFollow": false,
+          "mouseInfluence": [0.2, 0.2],
+          "shakePreset": "Custom",
+          "shakeTypes": ["Vertical", "Horizontal", "Random"],
+          "shakeSpeed": 15,
+          "shakeIntensity": 10,
+          "shakeTrauma": 1
+        }
+      },
+      {
+        "type": "TileMapNode",
+        "name": "Ground",
+        "uid": "e789z8jq",
+        "position": [217.5, 92.5],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 1,
+        "tilemap": {"tileset": "textures/hex_tiles.png", "tile_size": [65, 89], "map_size": [13, 10], "data": [[15, 7], [3, 0], [3, 7], [1, 3], [3, 0], [2, 7], [1, 3], [3, 0], [1, 3], [2, 7], [4, 0], [2, 7], [5, 0], [1, 3], [1, 7], [4, 0], [2, 7], [1, 3], [3, 0], [1, 2], [3, 3], [2, 0], [4, 7], [4, 0], [2, 7], [1, 3], [1, 2], [1, 0], [1, 3], [2, 7], [1, 3], [4, 0], [2, 7], [4, 0], [3, 7], [1, 3], [2, 0], [1, 3], [2, 7], [1, 3], [2, 0], [1, 3], [4, 7], [2, 3], [4, 7], [2, 3], [15, 7]]},
+        "properties": {
+          "shininess": 0,
+          "solid": false,
+          "categoryLayers": ["Layer1"],
+          "maskLayers": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8", "Layer9", "Layer10", "Layer11", "Layer12", "Layer13", "Layer14", "Layer15", "Layer16"],
+          "tint": "#ffffffff",
+          "layout": "HexPointy",
+          "stagger": "Odd",
+          "cellSize": [65, 66],
+          "tileOffset": [0, 23],
+          "asepriteLayer": ""
+        }
+      },
+      {
+        "type": "TileMapNode",
+        "name": "Walk",
+        "uid": "jy6ycvvy",
+        "position": [217.5, 92.5],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 1,
+        "tilemap": {"tileset": "", "tile_size": [65, 89], "map_size": [13, 10], "data": [[130, -1]]},
+        "properties": {
+          "shininess": 0,
+          "solid": false,
+          "categoryLayers": ["Layer1"],
+          "maskLayers": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8", "Layer9", "Layer10", "Layer11", "Layer12", "Layer13", "Layer14", "Layer15", "Layer16"],
+          "tint": "#ffffffff",
+          "layout": "HexPointy",
+          "stagger": "Odd",
+          "cellSize": [65, 66],
+          "tileOffset": [0, 0],
+          "asepriteLayer": ""
+        }
+      },
+      {
+        "type": "Node",
+        "name": "Island",
+        "uid": "stkgq5gm",
+        "position": [0, 0],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 1,
+        "script": {
+          "path": "scripts/island.lua",
+          "properties": {
+            "island": 2,
+            "step_limit": 35
+          }
+        }
+      },
+      {
+        "type": "Node",
+        "name": "World",
+        "uid": "9kie0fmu",
+        "position": [0, 0],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
+        "y_sort": true,
+        "children": [
+          {
+            "type": "TileMapNode",
+            "name": "Objects",
+            "uid": "qjqe6zgy",
+            "position": [217.5, 92.5],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 2,
+            "y_sort": true,
+            "tilemap": {"tileset": "textures/hex_objects.png", "tile_size": [65, 107], "map_size": [13, 10], "data": [[17, -1], [1, 8], [6, -1], [1, 9], [4, -1], [1, 0], [5, -1], [1, 5], [5, -1], [1, 10], [1, -1], [1, 2], [4, -1], [1, 0], [1, 2], [1, 8], [17, -1], [1, 5], [13, -1], [1, 9], [4, -1], [1, 4], [6, -1], [1, 7], [6, -1], [1, 10], [28, -1]]},
+            "properties": {
+              "shininess": 0,
+              "solid": false,
+              "categoryLayers": ["Layer1"],
+              "maskLayers": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8", "Layer9", "Layer10", "Layer11", "Layer12", "Layer13", "Layer14", "Layer15", "Layer16"],
+              "tint": "#ffffffff",
+              "layout": "HexPointy",
+              "stagger": "Odd",
+              "cellSize": [65, 66],
+              "tileOffset": [0, -25],
+              "asepriteLayer": ""
+            }
+          },
+          {
+            "type": "Node",
+            "name": "Explorer",
+            "uid": "163pxtj5",
+            "position": [445, 323.5],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 0,
+            "script": {
+              "path": "scripts/explorer.lua",
+              "properties": {
+                "speed": 160
+              }
+            },
+            "children": [
+              {
+                "type": "TextureNode",
+                "name": "Sprite",
+                "uid": "ip4hmnrg",
+                "position": [0, 6],
+                "scale": [1, 1],
+                "rotation": 0,
+                "pivot": [0.5, 1],
+                "enabled": true,
+                "visible": true,
+                "layer": 2,
+                "texture": "textures/explorer.png",
+                "properties": {
+                  "shininess": 0,
+                  "tint": "#ffffffff"
+                }
+              }
+            ]
+          }
         ]
-       ]
       },
-      "properties": {
-       "solid": false,
-       "layout": "HexPointy",
-       "stagger": "Odd",
-       "cellSize": [
-        65,
-        66
-       ],
-       "tileOffset": [
-        0,
-        -25
-       ]
+      {
+        "type": "TextNode",
+        "name": "IslandText",
+        "uid": "a3qrtvso",
+        "position": [16, 12],
+        "scale": [1, 1],
+        "rotation": 0,
+        "pivot": [0, 0],
+        "enabled": true,
+        "visible": true,
+        "layer": 7,
+        "properties": {
+          "text": "",
+          "font": "fonts/kenney_pixel.ttf",
+          "fontSize": 32,
+          "color": "#ffffffff",
+          "align": "Left",
+          "maxWidth": 0,
+          "lineSpacing": 1.2,
+          "richText": true,
+          "localized": false,
+          "rendering": "Auto",
+          "path": "",
+          "pathOffset": 0,
+          "pathAlign": "Left",
+          "pathUpright": false,
+          "revealSpeed": 0
+        }
       },
-      "ySort": true
-     },
-     {
-      "type": "Node",
-      "name": "Explorer",
-      "position": [
-       445.0,
-       323.5
-      ],
-      "script": {
-       "path": "scripts/explorer.lua"
+      {
+        "type": "TextNode",
+        "name": "Flowers",
+        "uid": "bbh6ez4e",
+        "position": [16, 52],
+        "scale": [1, 1],
+        "rotation": 0,
+        "pivot": [0, 0],
+        "enabled": true,
+        "visible": true,
+        "layer": 7,
+        "properties": {
+          "text": "Flowers 0 / 0",
+          "font": "fonts/kenney_pixel.ttf",
+          "fontSize": 32,
+          "color": "#ffffffff",
+          "align": "Left",
+          "maxWidth": 0,
+          "lineSpacing": 1.2,
+          "richText": true,
+          "localized": false,
+          "rendering": "Auto",
+          "path": "",
+          "pathOffset": 0,
+          "pathAlign": "Left",
+          "pathUpright": false,
+          "revealSpeed": 0
+        }
       },
-      "children": [
-       {
-        "type": "TextureNode",
-        "name": "Sprite",
-        "position": [
-         0,
-         6
-        ],
-        "pivot": [
-         0.5,
-         1
-        ],
-        "layer": 2,
-        "texture": "textures/explorer.png"
-       }
-      ]
-     }
+      {
+        "type": "TextNode",
+        "name": "Steps",
+        "uid": "k6vor9p1",
+        "position": [16, 92],
+        "scale": [1, 1],
+        "rotation": 0,
+        "pivot": [0, 0],
+        "enabled": true,
+        "visible": true,
+        "layer": 7,
+        "properties": {
+          "text": "",
+          "font": "fonts/kenney_pixel.ttf",
+          "fontSize": 32,
+          "color": "#ffffffff",
+          "align": "Left",
+          "maxWidth": 0,
+          "lineSpacing": 1.2,
+          "richText": true,
+          "localized": false,
+          "rendering": "Auto",
+          "path": "",
+          "pathOffset": 0,
+          "pathAlign": "Left",
+          "pathUpright": false,
+          "revealSpeed": 0
+        }
+      },
+      {
+        "type": "TextNode",
+        "name": "Message",
+        "uid": "h1nramxd",
+        "position": [640, 60],
+        "scale": [1, 1],
+        "rotation": 0,
+        "pivot": [0.5, 0.5],
+        "enabled": true,
+        "visible": true,
+        "layer": 7,
+        "properties": {
+          "text": "",
+          "font": "fonts/kenney_pixel.ttf",
+          "fontSize": 48,
+          "color": "#ffe066ff",
+          "align": "Center",
+          "maxWidth": 0,
+          "lineSpacing": 1.2,
+          "richText": true,
+          "localized": false,
+          "rendering": "Auto",
+          "path": "",
+          "pathOffset": 0,
+          "pathAlign": "Left",
+          "pathUpright": false,
+          "revealSpeed": 0
+        }
+      },
+      {
+        "type": "TextNode",
+        "name": "Help",
+        "uid": "qagcaos2",
+        "position": [1264, 690],
+        "scale": [1, 1],
+        "rotation": 0,
+        "pivot": [1, 1],
+        "enabled": true,
+        "visible": true,
+        "layer": 7,
+        "properties": {
+          "text": "Click a hex to walk   D A E Q C Z: one step   Esc pause",
+          "font": "fonts/kenney_pixel.ttf",
+          "fontSize": 32,
+          "color": "#ffffffaa",
+          "align": "Right",
+          "maxWidth": 0,
+          "lineSpacing": 1.2,
+          "richText": true,
+          "localized": false,
+          "rendering": "Auto",
+          "path": "",
+          "pathOffset": 0,
+          "pathAlign": "Left",
+          "pathUpright": false,
+          "revealSpeed": 0
+        }
+      },
+      {
+        "type": "Node",
+        "name": "PauseMenu",
+        "uid": "4hcnrgvx",
+        "position": [0, 0],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": false,
+        "layer": 7,
+        "pause_mode": "always",
+        "script": {
+          "path": "scripts/menu.lua",
+          "properties": {
+            "item_height": 56,
+            "item_width": 640,
+            "kind": "pause",
+            "selected": "#ffe066ff"
+          }
+        },
+        "children": [
+          {
+            "type": "UIContainerNode",
+            "name": "Shade",
+            "uid": "rhjlznne",
+            "position": [0, 0],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "size": [1280, 720],
+              "keyboardFocus": true,
+              "title": "Panel",
+              "direction": "Vertical",
+              "alignment": "Stretch",
+              "spacing": 8,
+              "paddingTop": 14,
+              "paddingBottom": 14,
+              "paddingLeft": 14,
+              "paddingRight": 14,
+              "columns": 0,
+              "autoSizeHeight": false,
+              "drawBackground": true,
+              "drawBorder": false,
+              "showHeader": false,
+              "headerHeight": 36,
+              "backgroundColor": "#14141ec8",
+              "headerColor": "#1c202aff",
+              "borderColor": "#373e4eff",
+              "titleColor": "#eef0f6ff"
+            }
+          },
+          {
+            "type": "TextNode",
+            "name": "Heading",
+            "uid": "ko56z3yh",
+            "position": [640, 184],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "text": "Paused",
+              "font": "fonts/kenney_pixel.ttf",
+              "fontSize": 96,
+              "color": "#ffffffff",
+              "align": "Center",
+              "maxWidth": 0,
+              "lineSpacing": 1.2,
+              "richText": true,
+              "localized": false,
+              "rendering": "Auto",
+              "path": "",
+              "pathOffset": 0,
+              "pathAlign": "Left",
+              "pathUpright": false,
+              "revealSpeed": 0
+            }
+          },
+          {
+            "type": "TextNode",
+            "name": "Resume",
+            "uid": "92tv79va",
+            "position": [640, 336],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "tags": ["item"],
+            "properties": {
+              "text": "Resume",
+              "font": "fonts/kenney_pixel.ttf",
+              "fontSize": 48,
+              "color": "#ffffffff",
+              "align": "Center",
+              "maxWidth": 0,
+              "lineSpacing": 1.2,
+              "richText": true,
+              "localized": false,
+              "rendering": "Auto",
+              "path": "",
+              "pathOffset": 0,
+              "pathAlign": "Left",
+              "pathUpright": false,
+              "revealSpeed": 0
+            }
+          },
+          {
+            "type": "TextNode",
+            "name": "Restart",
+            "uid": "al091q15",
+            "position": [640, 400],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "tags": ["item"],
+            "properties": {
+              "text": "Restart level",
+              "font": "fonts/kenney_pixel.ttf",
+              "fontSize": 48,
+              "color": "#ffffffff",
+              "align": "Center",
+              "maxWidth": 0,
+              "lineSpacing": 1.2,
+              "richText": true,
+              "localized": false,
+              "rendering": "Auto",
+              "path": "",
+              "pathOffset": 0,
+              "pathAlign": "Left",
+              "pathUpright": false,
+              "revealSpeed": 0
+            }
+          },
+          {
+            "type": "TextNode",
+            "name": "Title",
+            "uid": "7vuk453u",
+            "position": [640, 464],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "tags": ["item"],
+            "properties": {
+              "text": "Title screen",
+              "font": "fonts/kenney_pixel.ttf",
+              "fontSize": 48,
+              "color": "#ffffffff",
+              "align": "Center",
+              "maxWidth": 0,
+              "lineSpacing": 1.2,
+              "richText": true,
+              "localized": false,
+              "rendering": "Auto",
+              "path": "",
+              "pathOffset": 0,
+              "pathAlign": "Left",
+              "pathUpright": false,
+              "revealSpeed": 0
+            }
+          }
+        ]
+      },
+      {
+        "type": "ScreenLayerNode",
+        "name": "TouchTop",
+        "uid": "nzlrmd2s",
+        "position": [0, 0],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 7,
+        "properties": {
+          "anchor": "TopRight"
+        },
+        "children": [
+          {
+            "type": "TouchButtonNode",
+            "name": "TouchPause",
+            "uid": "4qfnrx4e",
+            "position": [-60, 60],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "radius": 34,
+              "action": "pause",
+              "label": "II",
+              "fontSize": 24,
+              "color": "#ffffff3c",
+              "pressedColor": "#ffffff8c",
+              "textColor": "#ffffffdc",
+              "alwaysShow": false
+            }
+          }
+        ]
+      }
     ]
-   },
-   {
-    "type": "TextNode",
-    "name": "IslandText",
-    "position": [
-     16,
-     12
-    ],
-    "pivot": [
-     0,
-     0
-    ],
-    "layer": 7,
-    "properties": {
-     "text": "",
-     "font": "fonts/kenney_pixel.ttf",
-     "fontSize": 32,
-     "align": "Left",
-     "color": "#ffffffff"
-    }
-   },
-   {
-    "type": "TextNode",
-    "name": "Flowers",
-    "position": [
-     16,
-     52
-    ],
-    "pivot": [
-     0,
-     0
-    ],
-    "layer": 7,
-    "properties": {
-     "text": "Flowers 0 / 0",
-     "font": "fonts/kenney_pixel.ttf",
-     "fontSize": 32,
-     "align": "Left",
-     "color": "#ffffffff"
-    }
-   },
-   {
-    "type": "TextNode",
-    "name": "Steps",
-    "position": [
-     16,
-     92
-    ],
-    "pivot": [
-     0,
-     0
-    ],
-    "layer": 7,
-    "properties": {
-     "text": "",
-     "font": "fonts/kenney_pixel.ttf",
-     "fontSize": 32,
-     "align": "Left",
-     "color": "#ffffffff"
-    }
-   },
-   {
-    "type": "TextNode",
-    "name": "Message",
-    "position": [
-     640,
-     60
-    ],
-    "pivot": [
-     0.5,
-     0.5
-    ],
-    "layer": 7,
-    "properties": {
-     "text": "",
-     "font": "fonts/kenney_pixel.ttf",
-     "fontSize": 48,
-     "align": "Center",
-     "color": "#ffe066ff"
-    }
-   },
-   {
-    "type": "TextNode",
-    "name": "Help",
-    "position": [
-     1264,
-     690
-    ],
-    "pivot": [
-     1,
-     1
-    ],
-    "layer": 7,
-    "properties": {
-     "text": "Click a hex to walk   D A E Q C Z: one step   Esc pause",
-     "font": "fonts/kenney_pixel.ttf",
-     "fontSize": 32,
-     "align": "Right",
-     "color": "#ffffffaa"
-    }
-   },
-   {
-    "type": "Node",
-    "name": "PauseMenu",
-    "layer": 7,
-    "script": {
-     "path": "scripts/menu.lua",
-     "properties": {
-      "kind": "pause",
-      "item_width": 640,
-      "item_height": 56,
-      "selected": "#ffe066ff"
-     }
-    },
-    "children": [
-     {
-      "type": "UIContainerNode",
-      "name": "Shade",
-      "layer": 7,
-      "position": [
-       0,
-       0
-      ],
-      "properties": {
-       "size": [
-        1280,
-        720
-       ],
-       "drawBackground": true,
-       "drawBorder": false,
-       "showHeader": false,
-       "backgroundColor": "#14141ec8"
-      }
-     },
-     {
-      "type": "TextNode",
-      "name": "Heading",
-      "position": [
-       640.0,
-       184.0
-      ],
-      "pivot": [
-       0.5,
-       0.5
-      ],
-      "layer": 7,
-      "properties": {
-       "text": "Paused",
-       "font": "fonts/kenney_pixel.ttf",
-       "fontSize": 96,
-       "align": "Center",
-       "color": "#ffffffff"
-      }
-     },
-     {
-      "type": "TextNode",
-      "name": "Resume",
-      "position": [
-       640.0,
-       336.0
-      ],
-      "pivot": [
-       0.5,
-       0.5
-      ],
-      "layer": 7,
-      "properties": {
-       "text": "Resume",
-       "font": "fonts/kenney_pixel.ttf",
-       "fontSize": 48,
-       "align": "Center",
-       "color": "#ffffffff"
-      },
-      "tags": [
-       "item"
-      ]
-     },
-     {
-      "type": "TextNode",
-      "name": "Restart",
-      "position": [
-       640.0,
-       400.0
-      ],
-      "pivot": [
-       0.5,
-       0.5
-      ],
-      "layer": 7,
-      "properties": {
-       "text": "Restart level",
-       "font": "fonts/kenney_pixel.ttf",
-       "fontSize": 48,
-       "align": "Center",
-       "color": "#ffffffff"
-      },
-      "tags": [
-       "item"
-      ]
-     },
-     {
-      "type": "TextNode",
-      "name": "Title",
-      "position": [
-       640.0,
-       464.0
-      ],
-      "pivot": [
-       0.5,
-       0.5
-      ],
-      "layer": 7,
-      "properties": {
-       "text": "Title screen",
-       "font": "fonts/kenney_pixel.ttf",
-       "fontSize": 48,
-       "align": "Center",
-       "color": "#ffffffff"
-      },
-      "tags": [
-       "item"
-      ]
-     }
-    ],
-    "visible": false,
-    "pause_mode": "always"
-   },
-   {
-    "type": "ScreenLayerNode",
-    "name": "TouchTop",
-    "properties": {
-     "anchor": "TopRight"
-    },
-    "children": [
-     {
-      "type": "TouchButtonNode",
-      "name": "TouchPause",
-      "position": [
-       -60.0,
-       60.0
-      ],
-      "properties": {
-       "radius": 34.0,
-       "action": "pause",
-       "label": "II",
-       "fontSize": 24.0
-      }
-     }
-    ]
-   }
-  ]
- }
+  }
 }

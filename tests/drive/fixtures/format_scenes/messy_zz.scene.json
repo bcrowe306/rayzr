@@ -1,0 +1,21 @@
+{
+ "name": "messy_zz",
+ "root": {
+  "type": "Node",
+  "name": "root",
+  "children": [
+   {
+    "type": "TextNode",
+    "name": "Hello",
+    "position": [
+     100,
+     50
+    ],
+    "properties": {
+     "text": "hi",
+     "fontSize": 24
+    }
+   }
+  ]
+ }
+}

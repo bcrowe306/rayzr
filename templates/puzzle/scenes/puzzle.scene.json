@@ -1,332 +1,524 @@
 {
- "name": "puzzle",
- "background": [
-  229,
-  207,
-  167,
-  255
- ],
- "root": {
-  "type": "Node",
-  "name": "root",
-  "children": [
-   {
-    "type": "CameraNode",
-    "name": "Camera",
-    "position": [
-     640,
-     360
-    ],
-    "properties": {
-     "isCurrent": true
-    }
-   },
-   {
+  "format": 1,
+  "name": "puzzle",
+  "draw_bounds": false,
+  "background": [229, 207, 167, 255],
+  "root": {
     "type": "Node",
-    "name": "Board",
-    "script": {
-     "path": "scripts/puzzle.lua",
-     "properties": {
-      "start_level": 1
-     }
-    }
-   },
-   {
-    "type": "TextNode",
-    "name": "Level",
-    "position": [
-     24,
-     16
-    ],
-    "pivot": [
-     0,
-     0
-    ],
-    "layer": 7,
-    "properties": {
-     "text": "Level 1",
-     "font": "fonts/kenney_pixel.ttf",
-     "fontSize": 32,
-     "align": "Left",
-     "color": "#3b2a20ff"
-    }
-   },
-   {
-    "type": "TextNode",
-    "name": "Moves",
-    "position": [
-     1256,
-     16
-    ],
-    "pivot": [
-     1,
-     0
-    ],
-    "layer": 7,
-    "properties": {
-     "text": "Moves 0",
-     "font": "fonts/kenney_pixel.ttf",
-     "fontSize": 32,
-     "align": "Right",
-     "color": "#3b2a20ff"
-    }
-   },
-   {
-    "type": "TextNode",
-    "name": "Help",
-    "position": [
-     640,
-     690
-    ],
-    "pivot": [
-     0.5,
-     1
-    ],
-    "layer": 7,
-    "properties": {
-     "text": "Arrows / WASD move   Z undo   R restart   Esc pause",
-     "font": "fonts/kenney_pixel.ttf",
-     "fontSize": 32,
-     "align": "Center",
-     "color": "#3b2a20aa"
-    }
-   },
-   {
-    "type": "TextNode",
-    "name": "Message",
-    "position": [
-     640,
-     80
-    ],
-    "pivot": [
-     0.5,
-     0.5
-    ],
-    "layer": 7,
-    "properties": {
-     "text": "",
-     "font": "fonts/kenney_pixel.ttf",
-     "fontSize": 48,
-     "align": "Center",
-     "color": "#3b2a20ff"
-    }
-   },
-   {
-    "type": "Node",
-    "name": "PauseMenu",
-    "layer": 7,
-    "script": {
-     "path": "scripts/menu.lua",
-     "properties": {
-      "kind": "pause",
-      "item_width": 640,
-      "item_height": 56,
-      "selected": "#c0392bff"
-     }
-    },
+    "name": "root",
+    "uid": "lujpomc9",
+    "position": [0, 0],
+    "scale": [1, 1],
+    "rotation": 0,
+    "enabled": true,
+    "visible": true,
+    "layer": 0,
     "children": [
-     {
-      "type": "UIContainerNode",
-      "name": "Shade",
-      "layer": 7,
-      "position": [
-       0,
-       0
-      ],
-      "properties": {
-       "size": [
-        1280,
-        720
-       ],
-       "drawBackground": true,
-       "drawBorder": false,
-       "showHeader": false,
-       "backgroundColor": "#14141ec8"
-      }
-     },
-     {
-      "type": "TextNode",
-      "name": "Heading",
-      "position": [
-       640.0,
-       184.0
-      ],
-      "pivot": [
-       0.5,
-       0.5
-      ],
-      "layer": 7,
-      "properties": {
-       "text": "Paused",
-       "font": "fonts/kenney_pixel.ttf",
-       "fontSize": 96,
-       "align": "Center",
-       "color": "#ffffffff"
-      }
-     },
-     {
-      "type": "TextNode",
-      "name": "Resume",
-      "position": [
-       640.0,
-       336.0
-      ],
-      "pivot": [
-       0.5,
-       0.5
-      ],
-      "layer": 7,
-      "properties": {
-       "text": "Resume",
-       "font": "fonts/kenney_pixel.ttf",
-       "fontSize": 48,
-       "align": "Center",
-       "color": "#ffffffff"
+      {
+        "type": "CameraNode",
+        "name": "Camera",
+        "uid": "qerbupma",
+        "position": [640, 360],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
+        "properties": {
+          "isCurrent": true,
+          "followMode": "SingleTarget",
+          "dragType": "SmoothDamp",
+          "targetPosition": [0, 0],
+          "smoothDrag": true,
+          "smoothDragSpeed": [0.2, 0.2],
+          "springConstant": 15,
+          "dampingRatio": 1,
+          "predictionTime": [0.5, 0.5],
+          "maxDistance": [100000, 100000],
+          "offset": [0, 0],
+          "smoothOffset": true,
+          "smoothOffsetSpeed": 0.2,
+          "screenOffset": [640, 360],
+          "customScreenOffset": false,
+          "targetRotation": 0,
+          "allowRotation": true,
+          "smoothRotation": true,
+          "smoothRotationSpeed": 0.2,
+          "targetZoom": 1,
+          "smoothZoom": true,
+          "smoothZoomSpeed": 0.2,
+          "minZoom": 0.1,
+          "maxZoom": 10,
+          "autoZoom": true,
+          "zoomMargin": 0.1,
+          "hasLimits": false,
+          "smoothLimit": true,
+          "leftLimit": -1000000,
+          "rightLimit": 1000000,
+          "topLimit": -1000000,
+          "bottomLimit": 1000000,
+          "useHMargins": false,
+          "useVMargins": false,
+          "leftMargin": 0.25,
+          "rightMargin": 0.25,
+          "topMargin": 0.25,
+          "bottomMargin": 0.25,
+          "enableMouseFollow": false,
+          "mouseInfluence": [0.2, 0.2],
+          "shakePreset": "Custom",
+          "shakeTypes": ["Vertical", "Horizontal", "Random"],
+          "shakeSpeed": 15,
+          "shakeIntensity": 10,
+          "shakeTrauma": 1
+        }
       },
-      "tags": [
-       "item"
-      ]
-     },
-     {
-      "type": "TextNode",
-      "name": "Restart",
-      "position": [
-       640.0,
-       400.0
-      ],
-      "pivot": [
-       0.5,
-       0.5
-      ],
-      "layer": 7,
-      "properties": {
-       "text": "Restart level",
-       "font": "fonts/kenney_pixel.ttf",
-       "fontSize": 48,
-       "align": "Center",
-       "color": "#ffffffff"
+      {
+        "type": "Node",
+        "name": "Board",
+        "uid": "h5yqunrl",
+        "position": [0, 0],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
+        "script": {
+          "path": "scripts/puzzle.lua",
+          "properties": {
+            "repeat_time": 0.16,
+            "slide_time": 0.08,
+            "start_level": 1,
+            "tile": 64
+          }
+        }
       },
-      "tags": [
-       "item"
-      ]
-     },
-     {
-      "type": "TextNode",
-      "name": "Title",
-      "position": [
-       640.0,
-       464.0
-      ],
-      "pivot": [
-       0.5,
-       0.5
-      ],
-      "layer": 7,
-      "properties": {
-       "text": "Title screen",
-       "font": "fonts/kenney_pixel.ttf",
-       "fontSize": 48,
-       "align": "Center",
-       "color": "#ffffffff"
+      {
+        "type": "TextNode",
+        "name": "Level",
+        "uid": "sra1mius",
+        "position": [24, 16],
+        "scale": [1, 1],
+        "rotation": 0,
+        "pivot": [0, 0],
+        "enabled": true,
+        "visible": true,
+        "layer": 7,
+        "properties": {
+          "text": "Level 1",
+          "font": "fonts/kenney_pixel.ttf",
+          "fontSize": 32,
+          "color": "#3b2a20ff",
+          "align": "Left",
+          "maxWidth": 0,
+          "lineSpacing": 1.2,
+          "richText": true,
+          "localized": false,
+          "rendering": "Auto",
+          "path": "",
+          "pathOffset": 0,
+          "pathAlign": "Left",
+          "pathUpright": false,
+          "revealSpeed": 0
+        }
       },
-      "tags": [
-       "item"
-      ]
-     }
-    ],
-    "visible": false,
-    "pause_mode": "always"
-   },
-   {
-    "type": "ScreenLayerNode",
-    "name": "TouchLeft",
-    "properties": {
-     "anchor": "BottomLeft"
-    },
-    "children": [
-     {
-      "type": "TouchJoystickNode",
-      "name": "TouchStick",
-      "position": [
-       320.0,
-       -216.0
-      ],
-      "properties": {
-       "radius": 70.0,
-       "knobRadius": 30.0,
-       "floating": true,
-       "area": [
-        640.0,
-        432.0
-       ],
-       "actionLeft": "move_left",
-       "actionRight": "move_right",
-       "actionUp": "move_up",
-       "actionDown": "move_down"
+      {
+        "type": "TextNode",
+        "name": "Moves",
+        "uid": "zkogm2kp",
+        "position": [1256, 16],
+        "scale": [1, 1],
+        "rotation": 0,
+        "pivot": [1, 0],
+        "enabled": true,
+        "visible": true,
+        "layer": 7,
+        "properties": {
+          "text": "Moves 0",
+          "font": "fonts/kenney_pixel.ttf",
+          "fontSize": 32,
+          "color": "#3b2a20ff",
+          "align": "Right",
+          "maxWidth": 0,
+          "lineSpacing": 1.2,
+          "richText": true,
+          "localized": false,
+          "rendering": "Auto",
+          "path": "",
+          "pathOffset": 0,
+          "pathAlign": "Left",
+          "pathUpright": false,
+          "revealSpeed": 0
+        }
+      },
+      {
+        "type": "TextNode",
+        "name": "Help",
+        "uid": "i3fwzqvs",
+        "position": [640, 690],
+        "scale": [1, 1],
+        "rotation": 0,
+        "pivot": [0.5, 1],
+        "enabled": true,
+        "visible": true,
+        "layer": 7,
+        "properties": {
+          "text": "Arrows / WASD move   Z undo   R restart   Esc pause",
+          "font": "fonts/kenney_pixel.ttf",
+          "fontSize": 32,
+          "color": "#3b2a20aa",
+          "align": "Center",
+          "maxWidth": 0,
+          "lineSpacing": 1.2,
+          "richText": true,
+          "localized": false,
+          "rendering": "Auto",
+          "path": "",
+          "pathOffset": 0,
+          "pathAlign": "Left",
+          "pathUpright": false,
+          "revealSpeed": 0
+        }
+      },
+      {
+        "type": "TextNode",
+        "name": "Message",
+        "uid": "tpr6rlyz",
+        "position": [640, 80],
+        "scale": [1, 1],
+        "rotation": 0,
+        "pivot": [0.5, 0.5],
+        "enabled": true,
+        "visible": true,
+        "layer": 7,
+        "properties": {
+          "text": "",
+          "font": "fonts/kenney_pixel.ttf",
+          "fontSize": 48,
+          "color": "#3b2a20ff",
+          "align": "Center",
+          "maxWidth": 0,
+          "lineSpacing": 1.2,
+          "richText": true,
+          "localized": false,
+          "rendering": "Auto",
+          "path": "",
+          "pathOffset": 0,
+          "pathAlign": "Left",
+          "pathUpright": false,
+          "revealSpeed": 0
+        }
+      },
+      {
+        "type": "Node",
+        "name": "PauseMenu",
+        "uid": "gho43sa8",
+        "position": [0, 0],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": false,
+        "layer": 7,
+        "pause_mode": "always",
+        "script": {
+          "path": "scripts/menu.lua",
+          "properties": {
+            "item_height": 56,
+            "item_width": 640,
+            "kind": "pause",
+            "selected": "#c0392bff"
+          }
+        },
+        "children": [
+          {
+            "type": "UIContainerNode",
+            "name": "Shade",
+            "uid": "bq35ua8l",
+            "position": [0, 0],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "size": [1280, 720],
+              "keyboardFocus": true,
+              "title": "Panel",
+              "direction": "Vertical",
+              "alignment": "Stretch",
+              "spacing": 8,
+              "paddingTop": 14,
+              "paddingBottom": 14,
+              "paddingLeft": 14,
+              "paddingRight": 14,
+              "columns": 0,
+              "autoSizeHeight": false,
+              "drawBackground": true,
+              "drawBorder": false,
+              "showHeader": false,
+              "headerHeight": 36,
+              "backgroundColor": "#14141ec8",
+              "headerColor": "#1c202aff",
+              "borderColor": "#373e4eff",
+              "titleColor": "#eef0f6ff"
+            }
+          },
+          {
+            "type": "TextNode",
+            "name": "Heading",
+            "uid": "g2ade2sp",
+            "position": [640, 184],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "text": "Paused",
+              "font": "fonts/kenney_pixel.ttf",
+              "fontSize": 96,
+              "color": "#ffffffff",
+              "align": "Center",
+              "maxWidth": 0,
+              "lineSpacing": 1.2,
+              "richText": true,
+              "localized": false,
+              "rendering": "Auto",
+              "path": "",
+              "pathOffset": 0,
+              "pathAlign": "Left",
+              "pathUpright": false,
+              "revealSpeed": 0
+            }
+          },
+          {
+            "type": "TextNode",
+            "name": "Resume",
+            "uid": "tadf2wfh",
+            "position": [640, 336],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "tags": ["item"],
+            "properties": {
+              "text": "Resume",
+              "font": "fonts/kenney_pixel.ttf",
+              "fontSize": 48,
+              "color": "#ffffffff",
+              "align": "Center",
+              "maxWidth": 0,
+              "lineSpacing": 1.2,
+              "richText": true,
+              "localized": false,
+              "rendering": "Auto",
+              "path": "",
+              "pathOffset": 0,
+              "pathAlign": "Left",
+              "pathUpright": false,
+              "revealSpeed": 0
+            }
+          },
+          {
+            "type": "TextNode",
+            "name": "Restart",
+            "uid": "io05b1da",
+            "position": [640, 400],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "tags": ["item"],
+            "properties": {
+              "text": "Restart level",
+              "font": "fonts/kenney_pixel.ttf",
+              "fontSize": 48,
+              "color": "#ffffffff",
+              "align": "Center",
+              "maxWidth": 0,
+              "lineSpacing": 1.2,
+              "richText": true,
+              "localized": false,
+              "rendering": "Auto",
+              "path": "",
+              "pathOffset": 0,
+              "pathAlign": "Left",
+              "pathUpright": false,
+              "revealSpeed": 0
+            }
+          },
+          {
+            "type": "TextNode",
+            "name": "Title",
+            "uid": "rxtpa38z",
+            "position": [640, 464],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "tags": ["item"],
+            "properties": {
+              "text": "Title screen",
+              "font": "fonts/kenney_pixel.ttf",
+              "fontSize": 48,
+              "color": "#ffffffff",
+              "align": "Center",
+              "maxWidth": 0,
+              "lineSpacing": 1.2,
+              "richText": true,
+              "localized": false,
+              "rendering": "Auto",
+              "path": "",
+              "pathOffset": 0,
+              "pathAlign": "Left",
+              "pathUpright": false,
+              "revealSpeed": 0
+            }
+          }
+        ]
+      },
+      {
+        "type": "ScreenLayerNode",
+        "name": "TouchLeft",
+        "uid": "b5iwi0r3",
+        "position": [0, 0],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 7,
+        "properties": {
+          "anchor": "BottomLeft"
+        },
+        "children": [
+          {
+            "type": "TouchJoystickNode",
+            "name": "TouchStick",
+            "uid": "005h65co",
+            "position": [320, -216],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "radius": 70,
+              "knobRadius": 30,
+              "floating": true,
+              "area": [640, 432],
+              "deadzone": 0.2,
+              "actionLeft": "move_left",
+              "actionRight": "move_right",
+              "actionUp": "move_up",
+              "actionDown": "move_down",
+              "color": "#ffffff3c",
+              "knobColor": "#ffffff96",
+              "alwaysShow": false
+            }
+          }
+        ]
+      },
+      {
+        "type": "ScreenLayerNode",
+        "name": "TouchRight",
+        "uid": "ebj8jady",
+        "position": [0, 0],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 7,
+        "properties": {
+          "anchor": "BottomRight"
+        },
+        "children": [
+          {
+            "type": "TouchButtonNode",
+            "name": "TouchUndo",
+            "uid": "x7exyuwr",
+            "position": [-110, -110],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "radius": 52,
+              "action": "undo",
+              "label": "Undo",
+              "fontSize": 36,
+              "color": "#ffffff3c",
+              "pressedColor": "#ffffff8c",
+              "textColor": "#ffffffdc",
+              "alwaysShow": false
+            }
+          },
+          {
+            "type": "TouchButtonNode",
+            "name": "TouchRestart",
+            "uid": "ubnudlif",
+            "position": [-240, -80],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "radius": 52,
+              "action": "restart",
+              "label": "R",
+              "fontSize": 36,
+              "color": "#ffffff3c",
+              "pressedColor": "#ffffff8c",
+              "textColor": "#ffffffdc",
+              "alwaysShow": false
+            }
+          }
+        ]
+      },
+      {
+        "type": "ScreenLayerNode",
+        "name": "TouchTop",
+        "uid": "pxvia5g5",
+        "position": [0, 0],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 7,
+        "properties": {
+          "anchor": "TopRight"
+        },
+        "children": [
+          {
+            "type": "TouchButtonNode",
+            "name": "TouchPause",
+            "uid": "i0ori4ka",
+            "position": [-60, 60],
+            "scale": [1, 1],
+            "rotation": 0,
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "radius": 34,
+              "action": "pause",
+              "label": "II",
+              "fontSize": 24,
+              "color": "#ffffff3c",
+              "pressedColor": "#ffffff8c",
+              "textColor": "#ffffffdc",
+              "alwaysShow": false
+            }
+          }
+        ]
       }
-     }
     ]
-   },
-   {
-    "type": "ScreenLayerNode",
-    "name": "TouchRight",
-    "properties": {
-     "anchor": "BottomRight"
-    },
-    "children": [
-     {
-      "type": "TouchButtonNode",
-      "name": "TouchUndo",
-      "position": [
-       -110.0,
-       -110.0
-      ],
-      "properties": {
-       "radius": 52.0,
-       "action": "undo",
-       "label": "Undo",
-       "fontSize": 36.0
-      }
-     },
-     {
-      "type": "TouchButtonNode",
-      "name": "TouchRestart",
-      "position": [
-       -240.0,
-       -80.0
-      ],
-      "properties": {
-       "radius": 52.0,
-       "action": "restart",
-       "label": "R",
-       "fontSize": 36.0
-      }
-     }
-    ]
-   },
-   {
-    "type": "ScreenLayerNode",
-    "name": "TouchTop",
-    "properties": {
-     "anchor": "TopRight"
-    },
-    "children": [
-     {
-      "type": "TouchButtonNode",
-      "name": "TouchPause",
-      "position": [
-       -60.0,
-       60.0
-      ],
-      "properties": {
-       "radius": 34.0,
-       "action": "pause",
-       "label": "II",
-       "fontSize": 24.0
-      }
-     }
-    ]
-   }
-  ]
- }
+  }
 }

@@ -1,414 +1,270 @@
 {
- "name": "result",
- "background": [
-  223,
-  246,
-  245,
-  255
- ],
- "root": {
-  "type": "Node",
-  "name": "root",
-  "children": [
-   {
-    "type": "CameraNode",
-    "name": "Camera",
-    "position": [
-     160.0,
-     90.0
-    ],
-    "properties": {
-     "isCurrent": true
-    }
-   },
-   {
-    "type": "TileMapNode",
-    "name": "Backdrop",
-    "position": [
-     0,
-     84
-    ],
-    "layer": 0,
-    "z_index": 0,
-    "tilemap": {
-     "tileset": "textures/backgrounds.png",
-     "tile_size": [
-      24,
-      24
-     ],
-     "map_size": [
-      15,
-      4
-     ],
-     "data": [
-      [
-       1,
-       9
-      ],
-      [
-       1,
-       11
-      ],
-      [
-       1,
-       9
-      ],
-      [
-       1,
-       11
-      ],
-      [
-       1,
-       9
-      ],
-      [
-       1,
-       11
-      ],
-      [
-       1,
-       9
-      ],
-      [
-       1,
-       11
-      ],
-      [
-       1,
-       9
-      ],
-      [
-       1,
-       11
-      ],
-      [
-       1,
-       9
-      ],
-      [
-       1,
-       11
-      ],
-      [
-       1,
-       9
-      ],
-      [
-       1,
-       11
-      ],
-      [
-       1,
-       9
-      ],
-      [
-       1,
-       16
-      ],
-      [
-       1,
-       17
-      ],
-      [
-       1,
-       18
-      ],
-      [
-       1,
-       19
-      ],
-      [
-       1,
-       16
-      ],
-      [
-       1,
-       17
-      ],
-      [
-       1,
-       18
-      ],
-      [
-       1,
-       19
-      ],
-      [
-       1,
-       16
-      ],
-      [
-       1,
-       17
-      ],
-      [
-       1,
-       18
-      ],
-      [
-       1,
-       19
-      ],
-      [
-       1,
-       16
-      ],
-      [
-       1,
-       17
-      ],
-      [
-       1,
-       18
-      ],
-      [
-       1,
-       16
-      ],
-      [
-       1,
-       17
-      ],
-      [
-       1,
-       18
-      ],
-      [
-       1,
-       19
-      ],
-      [
-       1,
-       16
-      ],
-      [
-       1,
-       17
-      ],
-      [
-       1,
-       18
-      ],
-      [
-       1,
-       19
-      ],
-      [
-       1,
-       16
-      ],
-      [
-       1,
-       17
-      ],
-      [
-       1,
-       18
-      ],
-      [
-       1,
-       19
-      ],
-      [
-       1,
-       16
-      ],
-      [
-       1,
-       17
-      ],
-      [
-       1,
-       18
-      ],
-      [
-       1,
-       16
-      ],
-      [
-       1,
-       17
-      ],
-      [
-       1,
-       18
-      ],
-      [
-       1,
-       19
-      ],
-      [
-       1,
-       16
-      ],
-      [
-       1,
-       17
-      ],
-      [
-       1,
-       18
-      ],
-      [
-       1,
-       19
-      ],
-      [
-       1,
-       16
-      ],
-      [
-       1,
-       17
-      ],
-      [
-       1,
-       18
-      ],
-      [
-       1,
-       19
-      ],
-      [
-       1,
-       16
-      ],
-      [
-       1,
-       17
-      ],
-      [
-       1,
-       18
-      ]
-     ]
-    },
-    "properties": {
-     "solid": false
-    }
-   },
-   {
+  "format": 1,
+  "name": "result",
+  "draw_bounds": false,
+  "background": [223, 246, 245, 255],
+  "root": {
     "type": "Node",
-    "name": "Menu",
-    "layer": 7,
-    "script": {
-     "path": "scripts/menu.lua",
-     "properties": {
-      "kind": "result",
-      "item_width": 170,
-      "item_height": 16,
-      "selected": "#c0392bff"
-     }
-    },
+    "name": "root",
+    "uid": "g2th0vob",
+    "position": [0, 0],
+    "scale": [1, 1],
+    "rotation": 0,
+    "enabled": true,
+    "visible": true,
+    "layer": 0,
     "children": [
-     {
-      "type": "TextNode",
-      "name": "Heading",
-      "position": [
-       160.0,
-       46.0
-      ],
-      "pivot": [
-       0.5,
-       0.5
-      ],
-      "layer": 7,
-      "properties": {
-       "text": "",
-       "font": "fonts/kenney_pixel.ttf",
-       "fontSize": 32,
-       "align": "Center",
-       "color": "#3c3c5aff"
-      }
-     },
-     {
-      "type": "TextNode",
-      "name": "Score",
-      "position": [
-       160.0,
-       78.0
-      ],
-      "pivot": [
-       0.5,
-       0.5
-      ],
-      "layer": 7,
-      "properties": {
-       "text": "",
-       "font": "fonts/kenney_pixel.ttf",
-       "fontSize": 16,
-       "align": "Center",
-       "color": "#3c3c5aff"
-      }
-     },
-     {
-      "type": "TextNode",
-      "name": "Best",
-      "position": [
-       160.0,
-       96.0
-      ],
-      "pivot": [
-       0.5,
-       0.5
-      ],
-      "layer": 7,
-      "properties": {
-       "text": "",
-       "font": "fonts/kenney_pixel.ttf",
-       "fontSize": 16,
-       "align": "Center",
-       "color": "#3c3c5aff"
-      }
-     },
-     {
-      "type": "TextNode",
-      "name": "Again",
-      "position": [
-       160.0,
-       124.0
-      ],
-      "pivot": [
-       0.5,
-       0.5
-      ],
-      "layer": 7,
-      "properties": {
-       "text": "Play again",
-       "font": "fonts/kenney_pixel.ttf",
-       "fontSize": 16,
-       "align": "Center",
-       "color": "#3c3c5aff"
+      {
+        "type": "CameraNode",
+        "name": "Camera",
+        "uid": "rpdgf6cq",
+        "position": [160, 90],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
+        "properties": {
+          "isCurrent": true,
+          "followMode": "SingleTarget",
+          "dragType": "SmoothDamp",
+          "targetPosition": [0, 0],
+          "smoothDrag": true,
+          "smoothDragSpeed": [0.2, 0.2],
+          "springConstant": 15,
+          "dampingRatio": 1,
+          "predictionTime": [0.5, 0.5],
+          "maxDistance": [100000, 100000],
+          "offset": [0, 0],
+          "smoothOffset": true,
+          "smoothOffsetSpeed": 0.2,
+          "screenOffset": [640, 360],
+          "customScreenOffset": false,
+          "targetRotation": 0,
+          "allowRotation": true,
+          "smoothRotation": true,
+          "smoothRotationSpeed": 0.2,
+          "targetZoom": 1,
+          "smoothZoom": true,
+          "smoothZoomSpeed": 0.2,
+          "minZoom": 0.1,
+          "maxZoom": 10,
+          "autoZoom": true,
+          "zoomMargin": 0.1,
+          "hasLimits": false,
+          "smoothLimit": true,
+          "leftLimit": -1000000,
+          "rightLimit": 1000000,
+          "topLimit": -1000000,
+          "bottomLimit": 1000000,
+          "useHMargins": false,
+          "useVMargins": false,
+          "leftMargin": 0.25,
+          "rightMargin": 0.25,
+          "topMargin": 0.25,
+          "bottomMargin": 0.25,
+          "enableMouseFollow": false,
+          "mouseInfluence": [0.2, 0.2],
+          "shakePreset": "Custom",
+          "shakeTypes": ["Vertical", "Horizontal", "Random"],
+          "shakeSpeed": 15,
+          "shakeIntensity": 10,
+          "shakeTrauma": 1
+        }
       },
-      "tags": [
-       "item"
-      ]
-     },
-     {
-      "type": "TextNode",
-      "name": "Title",
-      "position": [
-       160.0,
-       142.0
-      ],
-      "pivot": [
-       0.5,
-       0.5
-      ],
-      "layer": 7,
-      "properties": {
-       "text": "Title screen",
-       "font": "fonts/kenney_pixel.ttf",
-       "fontSize": 16,
-       "align": "Center",
-       "color": "#3c3c5aff"
+      {
+        "type": "TileMapNode",
+        "name": "Backdrop",
+        "uid": "kwz0fmmt",
+        "position": [0, 84],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 0,
+        "tilemap": {"tileset": "textures/backgrounds.png", "tile_size": [24, 24], "map_size": [15, 4], "data": [[1, 9], [1, 11], [1, 9], [1, 11], [1, 9], [1, 11], [1, 9], [1, 11], [1, 9], [1, 11], [1, 9], [1, 11], [1, 9], [1, 11], [1, 9], [1, 16], [1, 17], [1, 18], [1, 19], [1, 16], [1, 17], [1, 18], [1, 19], [1, 16], [1, 17], [1, 18], [1, 19], [1, 16], [1, 17], [1, 18], [1, 16], [1, 17], [1, 18], [1, 19], [1, 16], [1, 17], [1, 18], [1, 19], [1, 16], [1, 17], [1, 18], [1, 19], [1, 16], [1, 17], [1, 18], [1, 16], [1, 17], [1, 18], [1, 19], [1, 16], [1, 17], [1, 18], [1, 19], [1, 16], [1, 17], [1, 18], [1, 19], [1, 16], [1, 17], [1, 18]]},
+        "properties": {
+          "shininess": 0,
+          "solid": false,
+          "categoryLayers": ["Layer1"],
+          "maskLayers": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8", "Layer9", "Layer10", "Layer11", "Layer12", "Layer13", "Layer14", "Layer15", "Layer16"],
+          "tint": "#ffffffff",
+          "layout": "Square",
+          "stagger": "Odd",
+          "cellSize": [0, 0],
+          "tileOffset": [0, 0],
+          "asepriteLayer": ""
+        }
       },
-      "tags": [
-       "item"
-      ]
-     }
+      {
+        "type": "Node",
+        "name": "Menu",
+        "uid": "9anqnrjm",
+        "position": [0, 0],
+        "scale": [1, 1],
+        "rotation": 0,
+        "enabled": true,
+        "visible": true,
+        "layer": 7,
+        "script": {
+          "path": "scripts/menu.lua",
+          "properties": {
+            "item_height": 16,
+            "item_width": 170,
+            "kind": "result",
+            "selected": "#c0392bff"
+          }
+        },
+        "children": [
+          {
+            "type": "TextNode",
+            "name": "Heading",
+            "uid": "6uibo8h4",
+            "position": [160, 46],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "text": "",
+              "font": "fonts/kenney_pixel.ttf",
+              "fontSize": 32,
+              "color": "#3c3c5aff",
+              "align": "Center",
+              "maxWidth": 0,
+              "lineSpacing": 1.2,
+              "richText": true,
+              "localized": false,
+              "rendering": "Auto",
+              "path": "",
+              "pathOffset": 0,
+              "pathAlign": "Left",
+              "pathUpright": false,
+              "revealSpeed": 0
+            }
+          },
+          {
+            "type": "TextNode",
+            "name": "Score",
+            "uid": "tlf90ftc",
+            "position": [160, 78],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "text": "",
+              "font": "fonts/kenney_pixel.ttf",
+              "fontSize": 16,
+              "color": "#3c3c5aff",
+              "align": "Center",
+              "maxWidth": 0,
+              "lineSpacing": 1.2,
+              "richText": true,
+              "localized": false,
+              "rendering": "Auto",
+              "path": "",
+              "pathOffset": 0,
+              "pathAlign": "Left",
+              "pathUpright": false,
+              "revealSpeed": 0
+            }
+          },
+          {
+            "type": "TextNode",
+            "name": "Best",
+            "uid": "kcmo0dyn",
+            "position": [160, 96],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "properties": {
+              "text": "",
+              "font": "fonts/kenney_pixel.ttf",
+              "fontSize": 16,
+              "color": "#3c3c5aff",
+              "align": "Center",
+              "maxWidth": 0,
+              "lineSpacing": 1.2,
+              "richText": true,
+              "localized": false,
+              "rendering": "Auto",
+              "path": "",
+              "pathOffset": 0,
+              "pathAlign": "Left",
+              "pathUpright": false,
+              "revealSpeed": 0
+            }
+          },
+          {
+            "type": "TextNode",
+            "name": "Again",
+            "uid": "nq1om63e",
+            "position": [160, 124],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "tags": ["item"],
+            "properties": {
+              "text": "Play again",
+              "font": "fonts/kenney_pixel.ttf",
+              "fontSize": 16,
+              "color": "#3c3c5aff",
+              "align": "Center",
+              "maxWidth": 0,
+              "lineSpacing": 1.2,
+              "richText": true,
+              "localized": false,
+              "rendering": "Auto",
+              "path": "",
+              "pathOffset": 0,
+              "pathAlign": "Left",
+              "pathUpright": false,
+              "revealSpeed": 0
+            }
+          },
+          {
+            "type": "TextNode",
+            "name": "Title",
+            "uid": "eh83n48p",
+            "position": [160, 142],
+            "scale": [1, 1],
+            "rotation": 0,
+            "pivot": [0.5, 0.5],
+            "enabled": true,
+            "visible": true,
+            "layer": 7,
+            "tags": ["item"],
+            "properties": {
+              "text": "Title screen",
+              "font": "fonts/kenney_pixel.ttf",
+              "fontSize": 16,
+              "color": "#3c3c5aff",
+              "align": "Center",
+              "maxWidth": 0,
+              "lineSpacing": 1.2,
+              "richText": true,
+              "localized": false,
+              "rendering": "Auto",
+              "path": "",
+              "pathOffset": 0,
+              "pathAlign": "Left",
+              "pathUpright": false,
+              "revealSpeed": 0
+            }
+          }
+        ]
+      }
     ]
-   }
-  ]
- }
+  }
 }
