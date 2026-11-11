@@ -3592,7 +3592,6 @@ lua_node_get_property :: proc "c" (L: ^lua.State) -> c.int {
 
 // --- collision layers by name -------------------------------------------------
 
-@(private="file")
 layers_arg :: proc(L: ^lua.State, from: c.int) -> (set: CollisionLayerSet, ok: bool) {
 	ok = true
 	add :: proc(L: ^lua.State, i: c.int, set: ^CollisionLayerSet) -> bool {
@@ -5165,6 +5164,8 @@ RegisterEngineLuaBindings :: proc(L: ^lua.State, sm: ^ScriptManager) {
 		Script_RegisterUIListBindings(L) // ui_set_items / ui_get_items (ui_list_props.odin)
 		Script_RegisterJointBindings(L) // joint_set_bodies / joint_get_bodies / joint_is_active (joint_node.odin)
 		Script_RegisterFloorBindings(L) // character_get_floor / body_get_floor (floor_query.odin)
+		Script_RegisterPhysicsNodeExtras(L) // collision exceptions, forces at points, shapes, test moves (physics_queries.odin)
+		Script_RegisterMoverExtras(L) // platform velocity, test move, coyote (physics_mover.odin)
 
 		// DynamicBodyNode Physics
 		lua.pushcfunction(L, lua_node_apply_force)
@@ -5594,10 +5595,9 @@ RegisterEngineLuaBindings :: proc(L: ^lua.State, sm: ^ScriptManager) {
 	lua.setfield(L, -2, "is_paused")
 	lua.pushcfunction(L, lua_physics_set_paused)
 	lua.setfield(L, -2, "set_paused")
-	lua.pushcfunction(L, lua_physics_raycast)
-	lua.setfield(L, -2, "raycast")
 	lua.pushcfunction(L, lua_physics_layer_name)
 	lua.setfield(L, -2, "layer_name")
+	Script_RegisterPhysicsModuleExtras(L) // raycast options, raycast_all, cast_shape, overlaps, fps (physics_queries.odin)
 	lua.setglobal(L, "Physics")
 
 	// 7. Global "Scene" table

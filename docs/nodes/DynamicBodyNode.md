@@ -109,6 +109,20 @@ function Barrel:update(dt)
 end
 ```
 
+## Forces at a point, spin and mass
+
+Besides `apply_force` and `apply_impulse` at its centre:
+
+- `apply_force_at` / `apply_impulse_at` push at a world point, so an
+  off-centre hit also spins the body.
+- `apply_torque` / `apply_angular_impulse` turn it.
+- `set_mass` gives it a mass whatever its size.
+- `get_velocity_at` reads its speed at a point.
+
+`collision_started` handlers get a contact with the point, normal and
+impact speed: `on_collision_started(other, contact)`. See
+[Physics scripting](../../engine/docs/physics_scripting.md).
+
 ## Example
 
 A grenade: thrown when it's created, it clinks on each bounce and is removed

@@ -42,3 +42,24 @@ On an LDtk level, read the IntGrid value at the contact point, just inside
 the floor:
 `level:ldtk_get_int_grid_name("Collisions", f.point_x, f.point_y + 1)`.
 Dynamic Bodies have the same query as `body_get_floor()`.
+
+## Slopes, steps and jumps
+
+The Inspector's floor settings:
+
+- **Floor Max Angle** (60°): the steepest slope it stands on.
+- **Floor Snap Length**: stays on the floor going down slopes.
+- **Stop On Slope**: doesn't slide while standing still.
+- **Step Height**: walks up steps.
+- **Coyote Time** and **Jump Buffer Time**: forgiving jumps for the
+  built-in movement.
+
+From a script, `character_get_platform_velocity()` gives the velocity of
+the moving floor under it. `character_was_on_floor(seconds)` is for coyote
+time in your own jump code. `character_test_move(dx, dy)` checks for room
+before a move without making it.
+
+With the fixed physics step, move a script-controlled mover in
+`on_physics_update(dt)` so it moves the same at any frame rate. The
+[Physics scripting](../../engine/docs/physics_scripting.md) guide has
+examples of all of these.

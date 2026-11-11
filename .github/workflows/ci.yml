@@ -24,6 +24,27 @@ env:
   ODIN_RELEASE: dev-2026-03
 
 jobs:
+  # Which heavy jobs a pull request needs: the Android runner and the
+  # emulator play-throughs (the slowest jobs) run on a PR only when it
+  # changes Android files (the runner, its scripts, this workflow); always
+  # on pushes to main and feature branches and on manual runs.
+  changes:
+    name: Changed areas
+    runs-on: ubuntu-22.04
+    outputs:
+      android: ${{ steps.diff.outputs.android }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: false
+      - id: diff
+        run: |
+          if [ "${{ github.event_name }}" != "pull_request" ]; then echo "android=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          files=$(git diff --name-only "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}")
+          echo "$files"
+          if echo "$files" | grep -qiE '(^runner/android/|android|^\.github/workflows/ci\.yml$)'; then echo "android=true" >> "$GITHUB_OUTPUT"; else echo "android=false" >> "$GITHUB_OUTPUT"; fi
+
   # The web runner (js_wasm32 + Emscripten), as release.yml builds it: an
   # engine change that doesn't compile for the web (core:os, #223) fails
   # here instead of at release time.
@@ -66,6 +87,8 @@ jobs:
   # image has the Android SDK and NDK.
   android-runner:
     name: Runner (Android)
+    needs: changes
+    if: needs.changes.outputs.android == 'true'
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
@@ -92,6 +115,8 @@ jobs:
   # runner/android/main.odin) and played by scripts/ci/android_playthroughs.sh.
   android-playthroughs:
     name: Template play-throughs (Android emulator)
+    needs: changes
+    if: needs.changes.outputs.android == 'true'
     runs-on: ubuntu-22.04
     timeout-minutes: 60
     steps:

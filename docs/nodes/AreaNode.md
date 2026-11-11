@@ -61,6 +61,17 @@ hitboxes and hurtboxes.
 | `body_entered` | A body starts overlapping the area | The body node (nil if it was destroyed) |
 | `body_exited` | A body stops overlapping, or is destroyed while inside | The body node, or nil |
 
+## Gravity and damping
+
+An Area can change the physics of what's inside it. **Gravity Mode** is
+**Add** (wind, currents) or **Replace** (water, zero-g, low gravity).
+**Gravity** sets the direction and strength, or **Gravity Point** pulls
+towards the area's centre (planets). **Damping Override** slows bodies
+inside (water, mud). **Priority** decides which area wins where areas
+overlap. Dynamic Bodies feel it as a force, and Character Movers use the
+area's gravity. See
+[Physics scripting](../../engine/docs/physics_scripting.md#area-gravity-and-damping).
+
 ## Example
 
 A coin: when the player touches it, it adds to the score and disappears.

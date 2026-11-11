@@ -186,6 +186,7 @@ DynamicBodyNode :: struct {
 	lastSyncedAngVel: f32,
 	syncedParams:     [5]f32, // damping, angular damping, gravity scale, sleep threshold, sleep enabled
 	paramsSynced:     bool,
+	interp:           Physics_Interp, // drawn between steps (physics_step.odin)
 	onCollisionStarted: EventSubject, // "collision_started"(other node)
 	onCollisionEnded: EventSubject,   // "collision_ended"(other node)
 }
@@ -301,9 +302,11 @@ DynamicBodyNode_Update :: proc(node: ^Node, gameContext: ^GameContext, deltaTime
 	}
 
 	// If user manually moved node position/rotation via Inspector slider, teleport Box2D body
+	pw := physics_world_of(gameContext)
 	if b2.Distance(db.globalPosition, db.lastSyncedPos) > 0.5 || abs(db.globalRotation - db.lastSyncedRot) > 0.5 {
 		b2.Body_SetTransform(db.bodyId, db.globalPosition, DegreesToRot(db.globalRotation))
 		b2.Body_SetAwake(db.bodyId, true)
+		if pw != nil do Physics_InterpReset(&db.interp, pw, db.globalPosition, db.globalRotation) // (placed: not drawn sliding there)
 	}
 
 	// If user manually edited velocity in Inspector, apply it to Box2D body
@@ -338,8 +341,14 @@ DynamicBodyNode_Update :: proc(node: ^Node, gameContext: ^GameContext, deltaTime
 		PhysicsShape_SyncToBox2D(&shape, db.bodyId, cast(rawptr)node, db.globalScale)
 	}
 
-	// Read back simulated state from Box2D (world space -> parent space)
-	Physics_SetWorldTransform(db, b2.Body_GetPosition(db.bodyId), RotToDegrees(b2.Body_GetRotation(db.bodyId)))
+	// Read back simulated state from Box2D (world space -> parent space):
+	// with the fixed step, drawn between its last two steps.
+	if pw != nil && Physics_Fixed(pw) && db.interp.valid {
+		p, r := Physics_InterpAt(&db.interp, pw)
+		Physics_SetWorldTransform(db, p, r)
+	} else {
+		Physics_SetWorldTransform(db, b2.Body_GetPosition(db.bodyId), RotToDegrees(b2.Body_GetRotation(db.bodyId)))
+	}
 	db.linearVelocity = b2.Body_GetLinearVelocity(db.bodyId)
 	db.angularVelocity = math.to_degrees(b2.Body_GetAngularVelocity(db.bodyId))
 	db.isAwake = b2.Body_IsAwake(db.bodyId)
@@ -390,6 +399,7 @@ KinematicBodyNode :: struct {
 	lastSyncedVel: [2]f32,
 	lastSyncedAngVel: f32,
 	targetTransformActive: bool,
+	interp: Physics_Interp, // drawn between steps (physics_step.odin)
 	onCollisionStarted: EventSubject, // "collision_started"(other node)
 	onCollisionEnded: EventSubject,   // "collision_ended"(other node)
 }
@@ -489,6 +499,7 @@ KinematicBodyNode_Update :: proc(node: ^Node, gameContext: ^GameContext, deltaTi
 		}
 		kb.lastSyncedPos = kb.globalPosition
 		kb.lastSyncedRot = kb.globalRotation
+		kb.interp.valid = false // (moved by its node: drawn where the node is)
 	} else {
 		if kb.targetTransformActive {
 			b2.Body_SetTransform(kb.bodyId, kb.globalPosition, DegreesToRot(kb.globalRotation))
@@ -502,7 +513,12 @@ KinematicBodyNode_Update :: proc(node: ^Node, gameContext: ^GameContext, deltaTi
 			if abs(kb.angularVelocity - kb.lastSyncedAngVel) > 0.01 {
 				b2.Body_SetAngularVelocity(kb.bodyId, math.to_radians(kb.angularVelocity))
 			}
-			Physics_SetWorldTransform(kb, b2.Body_GetPosition(kb.bodyId), RotToDegrees(b2.Body_GetRotation(kb.bodyId)))
+			if pw := physics_world_of(gameContext); pw != nil && Physics_Fixed(pw) && kb.interp.valid {
+				p, r := Physics_InterpAt(&kb.interp, pw)
+				Physics_SetWorldTransform(kb, p, r)
+			} else {
+				Physics_SetWorldTransform(kb, b2.Body_GetPosition(kb.bodyId), RotToDegrees(b2.Body_GetRotation(kb.bodyId)))
+			}
 			kb.linearVelocity = b2.Body_GetLinearVelocity(kb.bodyId)
 			kb.angularVelocity = math.to_degrees(b2.Body_GetAngularVelocity(kb.bodyId))
 			kb.lastSyncedPos = kb.globalPosition
@@ -570,6 +586,20 @@ CharacterMoverNode :: struct {
 	enableKeyboardInput: bool `gui:"true"`,
 	playerIndex: int `gui:"true" min:"0" max:"4"`,
 	isGrounded: bool `gui:"true" save:"false"`,
+	// Floors and slopes (physics_mover.odin).
+	floorMaxAngle: f32 `gui:"true" min:"0" max:"89"`,    // steepest floor (degrees); steeper is a wall
+	floorSnapLength: f32 `gui:"true" min:"0" max:"64"`,  // keep to the floor going down slopes and steps (px)
+	stopOnSlope: bool `gui:"true"`,                       // don't slide down a slope while standing still
+	stepHeight: f32 `gui:"true" min:"0" max:"64"`,       // walk up steps this high (px)
+	coyoteTime: f32 `gui:"true" min:"0" max:"1"`,        // built-in jump still allowed this long after leaving a floor (s)
+	jumpBufferTime: f32 `gui:"true" min:"0" max:"1"`,    // a jump pressed this long before landing still happens (s)
+	platformVelocity: [2]f32 `save:"false"`,             // the floor's velocity where it stands (px/s)
+	timeSinceFloor: f32 `save:"false"`,
+	jumpedSinceFloor: bool,
+	jumpQueued: bool,
+	jumpBufferLeft: f32,
+	interp: Physics_Interp, // drawn between steps (physics_step.odin)
+	interpShown: [2]f32,    // where it was last drawn (moved since: by a script)
 	categoryLayers: CollisionLayerSet `gui:"true"`,
 	maskLayers: CollisionLayerSet `gui:"true"`,
 	debugColor: rl.Color `gui:"true"`,
@@ -619,6 +649,7 @@ CharacterMoverNode_Create :: proc(scene: ^Scene, name: string = "CharacterMover"
 	cm.gravityScale = 1.0
 	cm.pushLimit = 500.0
 	cm.clipVelocity = true
+	cm.floorMaxAngle = 60
 
 	// Check if the scene already has an input-enabled player mover.
 	// If so, default this new mover to disabled input and playerIndex 0 (NPC/Enemy/Secondary).
@@ -789,6 +820,7 @@ character_mover_cast :: proc(worldId: b2.WorldId, capsule: b2.Capsule, translati
 		if b2.Shape_IsSensor(shapeId) do return true // (a trigger: no obstacle)
 		body := b2.Shape_GetBody(shapeId)
 		if b2.Body_IsValid(mc.self) && body == mc.self do return true
+		if moverCastOwner != nil && mover_excepted(moverCastOwner, shapeId) do return true
 		// A one-way platform stops only a move into it from its open side.
 		if side, oneWay := Physics_OneWaySide(shapeId); oneWay && mc.translation.x * side.x + mc.translation.y * side.y >= 0 do return true
 		proxy, ok := shape_proxy(shapeId)
@@ -807,7 +839,6 @@ character_mover_cast :: proc(worldId: b2.WorldId, capsule: b2.Capsule, translati
 }
 
 // shape_proxy: a shape's distance proxy in its body's frame.
-@(private = "file")
 shape_proxy :: proc "contextless" (shapeId: b2.ShapeId) -> (b2.ShapeProxy, bool) {
 	#partial switch b2.Shape_GetType(shapeId) {
 	case .circleShape:
@@ -849,6 +880,7 @@ CharacterMover_PlaneResultCallback :: proc "c" (shapeId: b2.ShapeId, planeResult
 	if b2.Shape_IsValid(shapeId) && b2.Shape_IsSensor(shapeId) {
 		return true
 	}
+	if mover_excepted(cm, shapeId) do return true // (a collision exception)
 	// A one-way platform (#219) holds the mover only from its open side
 	// (the plane pushes that way) and not while it moves out through it.
 	if side, oneWay := Physics_OneWaySide(shapeId); oneWay {
@@ -866,7 +898,7 @@ CharacterMover_PlaneResultCallback :: proc "c" (shapeId: b2.ShapeId, planeResult
 			clipVelocity = cm.clipVelocity,
 		}
 		cm.planeCount += 1
-		if planeResult.plane.normal.y < -0.5 { // a floor (normals point up: -y)
+		if planeResult.plane.normal.y < -Mover_FloorCos(cm) { // a floor (normals point up: -y)
 			cm.floorShape = shapeId
 			cm.floorPointNext = b2.Body_GetWorldPoint(b2.Shape_GetBody(shapeId), planeResult.point) // (given on the shape's body)
 		}
@@ -928,44 +960,25 @@ CharacterMoverNode_Update :: proc(node: ^Node, gameContext: ^GameContext, deltaT
 	}
 
 	cm.frameDelta = deltaTime
-	// Script mode: the script moves the node (character_move_and_slide).
-	if cm.controlMode == .Script do return
-
-	// If a script is attached and no player is assigned, the script controls this node (e.g. enemy/AI);
-	// do not process built-in player keyboard actions.
-	if cm.node.scriptInstance != nil && cm.playerIndex == 0 do return
-
-	// Query Logical Actions via the Two-Tier Input System (MoveLeft, MoveRight, Jump)
-	desiredVX := cm.targetSpeedX
-	if cm.enableKeyboardInput && cm.playerIndex > 0 && cm.playerIndex <= MAX_PLAYERS {
-		moveAxis := GetPlayerActionAxis(gameContext, .MoveLeft, .MoveRight, cm.playerIndex)
-		if moveAxis != 0.0 {
-			desiredVX = moveAxis * cm.maxSpeed
+	builtIn := Mover_IsBuiltIn(cm)
+	if builtIn do mover_read_jump(cm, gameContext) // (pressed this frame: used by the next move)
+	if Physics_Fixed(pw) {
+		// The fixed step moves it (CharacterMover_PhysicsTick, or the script's
+		// on_physics_update); drawn between its last two moves.
+		if cm.interp.valid {
+			p, r := Physics_InterpAt(&cm.interp, pw)
+			Physics_SetWorldTransform(cm, p, r)
+			cm.interpShown = cm.globalPosition
 		}
-		if IsPlayerActionPressed(gameContext, .Jump, cm.playerIndex) && cm.isGrounded {
-			cm.velocity.y = -cm.jumpSpeed
-			cm.isGrounded = false
-		}
+		return
 	}
-
-	// Horizontal acceleration toward desiredVX
-	diffX := desiredVX - cm.velocity.x
-	maxDeltaV := cm.acceleration * deltaTime
-	if abs(diffX) <= maxDeltaV {
-		cm.velocity.x = desiredVX
-	} else {
-		cm.velocity.x += math.copy_sign(maxDeltaV, diffX)
-	}
-
-	// Apply world gravity
-	cm.velocity += pw.gravity * cm.gravityScale * deltaTime
-
-	CharacterMoverNode_MoveAndSlide(cm, gameContext, deltaTime)
+	if builtIn do CharacterMover_BuiltInMove(cm, gameContext, deltaTime)
 }
 
 // CharacterMoverNode_Gravity: the world's gravity scaled by gravityScale.
 CharacterMoverNode_Gravity :: proc(cm: ^CharacterMoverNode, gameContext: ^GameContext) -> [2]f32 {
 	if gameContext == nil || gameContext.game == nil do return {}
+	if g, inArea := Area_GravityFor(cm, gameContext); inArea do return g * cm.gravityScale // (an Area's gravity override)
 	return gameContext.game.physicsWorld.gravity * cm.gravityScale
 }
 
@@ -985,10 +998,30 @@ CharacterMoverNode_MoveAndSlide :: proc(cm: ^CharacterMoverNode, gameContext: ^G
 		maskBits     = CollisionLayerSet_ToBits(cm.maskLayers),
 	}
 
-	// 0. Ride a moving floor: move with it by how far it moved since last frame.
+	// The fixed step: move from where physics has it (not where it's drawn).
+	fixed := Physics_Fixed(pw) && pw.inStep
+	if fixed && cm.interp.valid {
+		// (Moved by a script since it was drawn: from there.)
+		if b2.Distance(cm.globalPosition, cm.interpShown) > 0.01 do Physics_InterpReset(&cm.interp, pw, cm.globalPosition, cm.globalRotation)
+		else do Physics_SetWorldTransform(cm, cm.interp.curPos, cm.interp.curRot)
+	}
+	moverCastOwner = cm
+	defer moverCastOwner = nil
+	wasOnFloor := cm.isOnFloor
+	prevFloor, prevFloorNormal, prevFloorPoint := cm.floorNode, cm.floorNormal, cm.floorPoint
+
+	// 0. Ride a moving floor: a body's velocity where the mover stands, else
+	// how far the floor node moved since the last move.
+	cm.platformVelocity = {}
 	if cm.floorNode != nil {
 		if Node_IsAlive(cm.floorNode) && !cm.floorNode.removing {
 			carry := cm.floorNode.globalPosition - cm.floorLastPos
+			if fb := Physics_BodyOf(cm.floorNode); b2.Body_IsValid(fb) && b2.Body_GetType(fb) != .staticBody {
+				cm.platformVelocity = b2.Body_GetWorldPointVelocity(fb, cm.floorPoint)
+				carry = cm.platformVelocity * deltaTime
+			} else if deltaTime > 0 {
+				cm.platformVelocity = carry / deltaTime
+			}
 			if carry != {} && carry.x * carry.x + carry.y * carry.y < 256 * 256 { // (not a teleport)
 				Physics_SetWorldTransform(cm, cm.globalPosition + carry, cm.globalRotation)
 			}
@@ -1012,18 +1045,23 @@ CharacterMoverNode_MoveAndSlide :: proc(cm: ^CharacterMoverNode, gameContext: ^G
 	}
 
 	// 2. Solve collision planes for target translation using Box2D v3 SolvePlanes
+	// (Stop On Slope: standing still on a slope, gravity doesn't slide it down.)
+	if cm.stopOnSlope && wasOnFloor && abs(cm.velocity.x) < 1 && cm.velocity.y >= 0 {
+		cm.velocity.y = 0
+	}
 	targetDelta := cm.velocity * deltaTime
 	planesSlice := cm.collisionPlanes[:cm.planeCount]
 	solverResult := b2.SolvePlanes(targetDelta, planesSlice)
 
 	// 3. Contact state from the plane normals (screen coordinates, +Y down:
-	// a floor's normal points up, y < -0.5) and velocity clipping.
+	// a floor's normal points up within Floor Max Angle) and velocity clipping.
+	floorCos := Mover_FloorCos(cm)
 	cm.isOnFloor, cm.isOnWall, cm.isOnCeiling = false, false, false
 	cm.floorNormal, cm.wallNormal = {}, {}
 	for i in 0..<cm.planeCount {
 		n := cm.collisionPlanes[i].plane.normal
 		switch {
-		case n.y < -0.5:
+		case n.y < -floorCos:
 			cm.isOnFloor = true
 			cm.floorNormal = n
 		case n.y > 0.5:
@@ -1049,21 +1087,39 @@ CharacterMoverNode_MoveAndSlide :: proc(cm: ^CharacterMoverNode, gameContext: ^G
 
 	// 4. Cast mover along solved translation to prevent tunneling - past
 	// sensors (Areas are triggers: #173) and its own proxy body.
-	fraction: f32 = 1.0
-	if len(cm.shapes) == 0 {
-		moverCapsule := CharacterMoverNode_GetWorldCapsule(cm)
-		fraction = character_mover_cast(pw.worldId, moverCapsule, solverResult.translation, qFilter, cm.bodyId)
-	} else {
-		for &s in cm.shapes {
-			if s.isSensor do continue
-			cap := CharacterMoverNode_ShapeWorldCapsule(cm, &s)
-			f := character_mover_cast(pw.worldId, cap, solverResult.translation, qFilter, cm.bodyId)
-			if f < fraction do fraction = f
+	fraction := mover_cast_all(cm, pw, {}, solverResult.translation, qFilter)
+	delta := solverResult.translation * fraction
+
+	// Step Height: walking into a low step on the floor, go up over it.
+	if cm.stepHeight > 0 && wasOnFloor && cm.isOnWall && abs(targetDelta.x) > 0.01 {
+		if up, ok := mover_step_up(cm, pw, targetDelta.x, qFilter); ok && abs(up.x) > abs(delta.x) + 0.01 {
+			delta = up
+			cm.isOnFloor, cm.isGrounded = true, true
 		}
 	}
-	delta := solverResult.translation * fraction
 	cm.lastMotion = delta
 	Physics_SetWorldTransform(cm, cm.globalPosition + delta, cm.globalRotation)
+
+	// Floor Snap: walking off the top of a slope or down a step, stay on the
+	// floor (not while jumping).
+	if cm.floorSnapLength > 0 && wasOnFloor && !cm.isOnFloor && cm.velocity.y >= 0 && !cm.jumpedSinceFloor {
+		f := mover_cast_all(cm, pw, {}, {0, cm.floorSnapLength}, qFilter)
+		if f < 1 {
+			Physics_SetWorldTransform(cm, cm.globalPosition + {0, cm.floorSnapLength * f}, cm.globalRotation)
+			cm.isOnFloor, cm.isGrounded = true, true
+			cm.floorNode, cm.floorNormal, cm.floorPoint = prevFloor, prevFloorNormal, prevFloorPoint
+			if cm.floorNode != nil && Node_IsAlive(cm.floorNode) do cm.floorLastPos = cm.floorNode.globalPosition
+			cm.velocity.y = 0
+		}
+	}
+
+	// Coyote time: how long since it left a floor.
+	if cm.isOnFloor {
+		cm.timeSinceFloor = 0
+		cm.jumpedSinceFloor = false
+	} else {
+		cm.timeSinceFloor += deltaTime
+	}
 
 	// Sync kinematic proxy body so sensors (AreaNode) and dynamic bodies interact with the mover
 	if b2.Body_IsValid(cm.bodyId) {
@@ -1074,6 +1130,10 @@ CharacterMoverNode_MoveAndSlide :: proc(cm: ^CharacterMoverNode, gameContext: ^G
 			PhysicsShape_SyncToBox2D(&shape, cm.bodyId, cast(rawptr)(cast(^Node)cm), cm.globalScale)
 		}
 	}
+	// (Drawn between this move and the last one; a move outside the fixed
+	// step - a script's update(dt) - is drawn where it is.)
+	if fixed do Physics_InterpPush(&cm.interp, pw, cm.globalPosition, cm.globalRotation)
+	else do cm.interp.valid = false
 	return cm.planeCount > 0
 }
 
@@ -1135,6 +1195,15 @@ AreaNode :: struct {
 	onBodyExited: EventSubject,
 	debugColor: rl.Color `gui:"true"`,
 	activeColor: rl.Color `gui:"true"`,
+	// Overrides for the bodies inside (physics_areas.odin; needs Monitoring).
+	gravityMode: Area_GravityMode `gui:"true"`,
+	gravity: [2]f32 `gui:"true" min:"-3000" max:"3000"`,
+	gravityPoint: bool `gui:"true"`,
+	gravityStrength: f32 `gui:"true" min:"-3000" max:"3000"`,
+	dampingOverride: bool `gui:"true"`,
+	linearDamping: f32 `gui:"true" min:"0" max:"20"`,
+	angularDamping: f32 `gui:"true" min:"0" max:"20"`,
+	priority: int `gui:"true" min:"-10" max:"10"`,
 	lastSyncedPos: [2]f32,
 	lastSyncedRot: f32,
 }
@@ -1144,6 +1213,10 @@ Area :: AreaNode
 AreaNode_Create :: proc(scene: ^Scene, name: string = "Area", parent: ^Node = nil) -> ^AreaNode {
 	area := CreateNode(scene.manager, AreaNode)
 	area.name = strings.clone(name, area.allocator) // owned: callers pass temp strings too
+	area.gravity = {0, -300}
+	area.gravityStrength = 600
+	area.linearDamping = 3
+	area.angularDamping = 2
 	area.position = {640, 460}
 	area.monitoring = true
 	area.debugColor = rl.Color{168, 85, 247, 255}  // Purple

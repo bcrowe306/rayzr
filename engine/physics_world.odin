@@ -21,6 +21,16 @@ PhysicsWorld :: struct {
 	drawPhysicsDebug: bool `gui:"true"`,
 	paused: bool `gui:"true"`,
 	contactCounts: map[[2]rawptr]int,
+	// The fixed step (physics_step.odin): steps per second (0: one per frame).
+	physicsFps:     int `gui:"true" min:"0" max:"240"`,
+	accumulator:    f32,
+	alpha:          f32, // how far the frame is between the last two steps (0..1)
+	stepDt:         f32, // the last step's time
+	stepIndex:      u64, // steps so far
+	stepsThisFrame: int,
+	inStep:         bool, // running a step's work (on_physics_update, movers)
+	// Collision exceptions (physics_queries.odin): node pairs that don't collide.
+	exceptions:     map[[2]rawptr]bool,
 }
 
 PhysicsWorld_Init :: proc(pw: ^PhysicsWorld) {
@@ -42,8 +52,10 @@ PhysicsWorld_Init :: proc(pw: ^PhysicsWorld) {
 	pw.enableWarmStarting = true
 	pw.drawPhysicsDebug = true
 	pw.paused = false
+	pw.physicsFps = 60
 
 	pw.worldId = b2.CreateWorld(def)
+	b2.World_SetCustomFilterCallback(pw.worldId, Physics_CustomFilter, pw)
 }
 
 PhysicsWorld_SyncSettings :: proc(pw: ^PhysicsWorld) {
@@ -73,6 +85,7 @@ PhysicsWorld_Step :: proc(pw: ^PhysicsWorld, deltaTime: f32, gameContext: ^GameC
 
 	subSteps := c.int(max(pw.subStepCount, 1))
 	b2.World_Step(pw.worldId, deltaTime, subSteps)
+	Physics_RecordMoves(pw) // (the fixed step draws bodies between steps)
 
 	// Dispatch Sensor Events (for AreaNode and sensor shapes)
 	sensorEvents := b2.World_GetSensorEvents(pw.worldId)
@@ -113,6 +126,13 @@ PhysicsWorld_Step :: proc(pw: ^PhysicsWorld, deltaTime: f32, gameContext: ^GameC
 
 	// Contact begin/end -> "collision_started"/"collision_ended" on both bodies (once per body pair, even with multiple shapes).
 	contactEvents := b2.World_GetContactEvents(pw.worldId)
+	// (How fast new contacts came together: Box2D's hit events.)
+	hitSpeeds := make(map[[2]b2.ShapeId]f32, allocator = context.temp_allocator)
+	for i in 0..<contactEvents.hitCount {
+		h := contactEvents.hitEvents[i]
+		hitSpeeds[{h.shapeIdA, h.shapeIdB}] = h.approachSpeed
+		hitSpeeds[{h.shapeIdB, h.shapeIdA}] = h.approachSpeed
+	}
 	for i in 0..<contactEvents.beginCount {
 		ev := contactEvents.beginEvents[i]
 		nodeA, nodeB := contact_nodes(ev.shapeIdA, ev.shapeIdB)
@@ -121,8 +141,12 @@ PhysicsWorld_Step :: proc(pw: ^PhysicsWorld, deltaTime: f32, gameContext: ^GameC
 			prev := pw.contactCounts[pair]
 			pw.contactCounts[pair] = prev + 1
 			if prev == 0 {
+				ca, cb := Physics_ContactOf(ev.shapeIdA, ev.shapeIdB, ev.manifold, hitSpeeds[{ev.shapeIdA, ev.shapeIdB}])
+				collisionContact = ca
 				Node_NotifyCollision(nodeA, nodeB, true, gameContext)
+				collisionContact = cb
 				Node_NotifyCollision(nodeB, nodeA, true, gameContext)
+				collisionContact = {}
 			}
 		} else {
 			Node_NotifyCollision(nodeA, nodeB, true, gameContext)
@@ -160,6 +184,7 @@ ordered_node_pair :: proc(a, b: ^Node) -> [2]rawptr {
 }
 
 PhysicsWorld_ClearNodeContacts :: proc(pw: ^PhysicsWorld, node: ^Node) {
+	if pw != nil && node != nil do Physics_ForgetNode(pw, node) // (its collision exceptions)
 	if pw == nil || node == nil || len(pw.contactCounts) == 0 do return
 	raw := cast(rawptr)node
 	toDelete := make([dynamic][2]rawptr, context.temp_allocator)
@@ -209,6 +234,8 @@ Node_NotifyCollision :: proc(node, other: ^Node, started: bool, gameContext: ^Ga
 PhysicsWorld_Destroy :: proc(pw: ^PhysicsWorld) {
 	delete(pw.contactCounts)
 	pw.contactCounts = nil
+	delete(pw.exceptions)
+	pw.exceptions = nil
 	if b2.World_IsValid(pw.worldId) {
 		b2.DestroyWorld(pw.worldId)
 		pw.worldId = b2.nullWorldId
