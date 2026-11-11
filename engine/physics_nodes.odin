@@ -589,6 +589,8 @@ CharacterMoverNode :: struct {
 	floorNode:    ^Node,
 	floorLastPos: [2]f32,
 	floorShape:   b2.ShapeId, // (while gathering planes)
+	floorPoint:   [2]f32 `save:"false"`, // where it touches its floor (world px)
+	floorPointNext: [2]f32 `save:"false"`, // (while gathering planes)
 	frameDelta: f32 `save:"false"`, // delta of the current frame (move_and_slide's default)
 	collisionPlanes: [MAX_MOVER_PLANES]b2.CollisionPlane,
 	planeCount: int,
@@ -864,7 +866,10 @@ CharacterMover_PlaneResultCallback :: proc "c" (shapeId: b2.ShapeId, planeResult
 			clipVelocity = cm.clipVelocity,
 		}
 		cm.planeCount += 1
-		if planeResult.plane.normal.y < -0.5 do cm.floorShape = shapeId // a floor (normals point up: -y)
+		if planeResult.plane.normal.y < -0.5 { // a floor (normals point up: -y)
+			cm.floorShape = shapeId
+			cm.floorPointNext = b2.Body_GetWorldPoint(b2.Shape_GetBody(shapeId), planeResult.point) // (given on the shape's body)
+		}
 	}
 	return true
 }
@@ -1035,6 +1040,7 @@ CharacterMoverNode_MoveAndSlide :: proc(cm: ^CharacterMoverNode, gameContext: ^G
 		if n := cast(^Node)b2.Body_GetUserData(b2.Shape_GetBody(cm.floorShape)); n != nil && Node_IsAlive(n) {
 			cm.floorNode = n
 			cm.floorLastPos = n.globalPosition
+			cm.floorPoint = cm.floorPointNext
 		}
 	}
 	if cm.planeCount > 0 && cm.clipVelocity {
