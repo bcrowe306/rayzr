@@ -16,7 +16,8 @@ motors, springs and limits.
 - **Gluing bodies** (Weld): breakable structures, parts that bend a little
   (with softness).
 - **Driving one body towards another** (Motor), **dragging with the
-  mouse** (Mouse), or **stopping two bodies colliding** with each other
+  mouse or carrying an object** (Mouse - see
+  [Picking up and throwing objects](../../engine/docs/carrying_objects.md)), or **stopping two bodies colliding** with each other
   (Filter).
 - **Not** for moving platforms on a set path: use a
   [Kinematic Body](KinematicBodyNode.md) (with a
@@ -67,6 +68,30 @@ motors, springs and limits.
 - Changing **Type** while the game runs replaces the joint with one of the
   new type. A disabled Joint (`set_enabled(false)`) lets go; enabled
   again, it's made again.
+
+## Changing the bodies from a script
+
+`joint_set_bodies(a, b)` sets Body A and Body B while the game runs. Each one
+is a physics body node, a path from the joint, or `nil` (Body A: the joint's
+parent; Body B: none, and the joint lets go). A node is held by the node
+itself, not its name, so it works for spawned objects that share a name.
+The joint is made again with the new bodies on the next frame. These bodies
+last for the run and aren't saved with the scene.
+
+```lua
+local grab = self.node:get_node("Grab") ---@type JointNode
+grab:set_property("joint.mouse.target", crate:get_global_position())
+grab:joint_set_bodies(nil, crate)     -- hold the crate (Body A: the parent)
+grab:joint_set_bodies(nil, nil)       -- let go
+local a, b = grab:joint_get_bodies()  -- the two body nodes (nil when missing)
+if grab:joint_is_active() then ... end
+```
+
+With a **Mouse** joint, set **Target** to the point to hold the body by
+(usually its position) before giving it the body: the grab point is wherever
+the target is when the joint is made. The
+[Picking up and throwing objects](../../engine/docs/carrying_objects.md)
+guide builds a full carry-and-throw on this.
 
 ## Example
 

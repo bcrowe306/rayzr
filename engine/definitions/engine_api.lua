@@ -13186,6 +13186,27 @@ function ViewportNode:viewport_save_png(path) end
 ---@return boolean saved
 function ViewportNode:save_png(path) end
 
+---Sets the two bodies this joint connects while the game runs: pick up an object with a Mouse joint, chain spawned links, tie a rope to whatever was hit. A body given as a node is held by that node itself (spawned nodes with the same name are fine) until it's destroyed; a string is a path from the joint. The joint is made again with the new bodies on the next frame. Not saved with the scene.
+---
+---Example: `self.grab:joint_set_bodies(nil, crate) -- Body A: the joint's parent; Body B: the crate`
+---@param a Node|string|nil Body A: a physics body node, a path from the joint, or nil for the joint's parent
+---@param b Node|string|nil Body B: a physics body node, a path from the joint, or nil for none (the joint lets go)
+---@return boolean ok False (nothing changes, with a warning) when a body isn't a physics body node, a path or nil
+function JointNode:joint_set_bodies(a, b) end
+
+---The two bodies this joint connects (set in the Inspector or with `joint_set_bodies`).
+---
+---Example: `local _, held = self.grab:joint_get_bodies(); if held then held:apply_impulse(0, -500) end`
+---@return Node|nil a Body A (nil when missing)
+---@return Node|nil b Body B (nil when none or destroyed)
+function JointNode:joint_get_bodies() end
+
+---Whether the joint exists in the physics world: both bodies were found and it's enabled.
+---
+---Example: `if not self.grab:joint_is_active() then self.held = nil end`
+---@return boolean active
+function JointNode:joint_is_active() end
+
 ---Starts the oscillator from the start of its cycle (again, when it's running). It remembers the targets' values first, so `oscillator_stop` can put them back.
 ---
 ---Example: `self.node:get_node("Bob"):oscillator_start()`
