@@ -18,6 +18,19 @@
 ---@field fraction number Hit fraction from 0.0 to 1.0 along ray length
 ---@field node? Node Engine node attached to the struck body, if any
 
+---@class FloorHit
+---@field node Node What it stands on (a TileMap or LDtk level for their tiles, not their collider body)
+---@field point_x number World X where it touches the floor (px)
+---@field point_y number World Y where it touches the floor (px)
+---@field point Vec2 World contact point (point_x, point_y as a Vec2)
+---@field normal_x number Floor normal X (points up out of the floor)
+---@field normal_y number Floor normal Y (-1 on flat ground: +y is down)
+---@field normal Vec2 Floor normal (normal_x, normal_y as a Vec2)
+---@field angle number Slope of the floor in degrees: 0 flat, up to 60
+---@field cell_x? integer On a TileMap: the column of the cell under the feet
+---@field cell_y? integer On a TileMap: the row of the cell under the feet
+---@field tile? integer On a TileMap: the tile there (its index in the tileset; -1 none)
+
 ---@class Node
 ---@field name string The node's name (assigning renames it). Properties read and write as fields: `node.rotation = node.rotation + 5`.
 ---@field uid string The node's stable id, saved with the scene and kept when it is renamed or moved (read-only). Look it up with `Scene.find_by_uid`; useful for saved games pointing at scene nodes.
@@ -11642,6 +11655,12 @@ function DynamicBodyNode:is_fixed_rotation() end
 ---@param fixed boolean True locks rotation (good for characters and crates that must stay upright); false lets collisions spin it
 function DynamicBodyNode:set_fixed_rotation(fixed) end
 
+---What the body is resting on: of the surfaces it touches now, the one facing most upwards (within 60 degrees of up). Gives the node (a TileMap or LDtk level for their tiles), the contact point, the floor's normal and slope, and on a TileMap the cell and tile. Nil when nothing is under it.
+---
+---Example: `local f = self.node:body_get_floor(); if f and f.tile == WATER_TILE then self.node:set_linear_damping(4) end`
+---@return FloorHit? floor The floor, or nil when nothing is under it
+function DynamicBodyNode:body_get_floor() end
+
 ---Sets the linear drag/damping coefficient.
 ---
 ---Example: `self.node:set_linear_damping(2.0)`
@@ -12716,6 +12735,12 @@ function CharacterMoverNode:character_set_control_mode(mode) end
 ---@param dirX number Horizontal input from -1 (left) to 1 (right); the target speed is this x the max speed (character_set_speed), reached with the node's acceleration. Builtin mode only, and not on a node with a script and player index 0 (builtin movement is skipped there); a player's own input overrides it while held
 ---@param jump? boolean True jumps (vy = -jump speed) when grounded; nil or false doesn't
 function CharacterMoverNode:character_move(dirX, jump) end
+
+---What the character stands on after its last move: the node (a TileMap or LDtk level for their tiles), where it touches, the floor's normal and slope, and on a TileMap the cell and tile under its feet. Nil while it's in the air. Use it for footstep sounds, ice and mud, damage floors.
+---
+---Example: `local f = self.node:character_get_floor(); if f and f.node:has_tag("ice") then accel = 200 end`
+---@return FloorHit? floor The floor, or nil in the air
+function CharacterMoverNode:character_get_floor() end
 
 ---Deprecated: use `character_is_on_floor` (works until Rayzr 2.0).
 ---@deprecated Use character_is_on_floor

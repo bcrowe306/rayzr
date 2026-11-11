@@ -89,6 +89,26 @@ Each pair of bodies is reported once, even when either has several shapes:
 while its **Enable Contact Events** is on (the default). Trigger Areas
 don't raise these; they raise their own `body_entered` / `body_exited`.
 
+## What it's resting on
+
+`body_get_floor()` returns the surface the body rests on, or nil when
+nothing is under it. Of all the surfaces it touches, it picks the one facing
+most upwards, up to 60 degrees from straight up. The table has the same
+fields as a Character Mover's `character_get_floor()`:
+
+- `node`: the floor (a TileMap or LDtk level for their tiles).
+- `point`: where it touches.
+- `normal` and `angle`: the floor's slope.
+- `cell_x`, `cell_y` and `tile`: on a TileMap only.
+
+```lua
+function Barrel:update(dt)
+    local f = self.node:body_get_floor()
+    -- Rolls slowly in mud, freely elsewhere.
+    self.node:set_linear_damping((f and f.node:has_tag("mud")) and 4 or 0)
+end
+```
+
 ## Example
 
 A grenade: thrown when it's created, it clinks on each bounce and is removed

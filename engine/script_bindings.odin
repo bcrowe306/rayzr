@@ -5164,6 +5164,7 @@ RegisterEngineLuaBindings :: proc(L: ^lua.State, sm: ^ScriptManager) {
 		Script_RegisterOscillatorBindings(L) // oscillator_start / stop / pause / resume ... (oscillator_node.odin)
 		Script_RegisterUIListBindings(L) // ui_set_items / ui_get_items (ui_list_props.odin)
 		Script_RegisterJointBindings(L) // joint_set_bodies / joint_get_bodies / joint_is_active (joint_node.odin)
+		Script_RegisterFloorBindings(L) // character_get_floor / body_get_floor (floor_query.odin)
 
 		// DynamicBodyNode Physics
 		lua.pushcfunction(L, lua_node_apply_force)

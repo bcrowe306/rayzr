@@ -1,6 +1,7 @@
 ## Use it for
 
 - **Line of sight and ledge checks**: `Physics.raycast(x1, y1, x2, y2)` returns the first solid thing between two world points (its node, the hit point and the surface normal), or nil when the way is clear.
+- **What a body stands on**: `character_get_floor()` on a Character Mover and `body_get_floor()` on a Dynamic Body return the floor's node, contact point, normal and slope (and on a TileMap the cell and tile), or nil in the air. They're quicker than a raycast down, and they report what the body actually touches.
 - **Gravity changes**: `Physics.set_gravity(gx, gy)` for low-gravity zones, upside-down rooms or a space level; `get_gravity` reads it back. It affects every body in the world.
 - **Freezing the simulation**: `Physics.set_paused(true)` stops bodies while scripts keep running - a slow-motion intro, an inspect mode. To pause the whole game, use `Engine.set_paused` instead.
 - **Debugging collisions**: `Physics.set_debug_draw(true)` draws colliders, joints and areas while the game runs, like the project's **Show Colliders** setting.
