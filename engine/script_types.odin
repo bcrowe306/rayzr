@@ -153,5 +153,6 @@ ScriptInstance :: struct {
 	properties:    map[string]ScriptValue,
 	isReady:       bool,
 	drawState:     u8,     // on_draw: 0 not looked up, 1 none, 2 defined (vector_canvas.odin)
+	physicsState:  u8,     // on_physics_update: the same (physics_step.odin)
 	canvas:        rawptr, // ^Vector_Canvas: what on_draw draws
 }

@@ -31,6 +31,40 @@
 ---@field cell_y? integer On a TileMap: the row of the cell under the feet
 ---@field tile? integer On a TileMap: the tile there (its index in the tileset; -1 none)
 
+---@class CollisionContact
+---@field point Vec2 Where the bodies touched (world px)
+---@field point_x number World X of the contact
+---@field point_y number World Y of the contact
+---@field normal Vec2 Points away from the other body: the way the contact pushes this one (on a floor: up, 0, -1)
+---@field normal_x number Normal X
+---@field normal_y number Normal Y
+---@field velocity Vec2 This body's velocity relative to the other's at the contact (px/s)
+---@field speed number How fast they came together along the normal (px/s, 0 or more): impact damage, bounce sounds
+
+---@class QueryOptions
+---@field layers? CollisionLayer|string|integer|table Only colliders on these layers (names, 1-16, or a list)
+---@field exclude? Node|Node[] Nodes the query ignores (the shooter, the player itself)
+---@field sensors? boolean Areas count too (false by default)
+
+---@class QueryShape
+---@field type "circle"|"box"|"capsule" The shape's kind
+---@field radius? number Circle and capsule radius (px)
+---@field width? number Box width (px)
+---@field height? number Box or capsule height (px)
+---@field rotation? number Box rotation (degrees)
+
+---@class ShapeSettings
+---@field type? string The shape's kind (read only): "circle", "box", "rounded_box", "capsule", "polygon", "segment" or "chain"
+---@field radius? number Circle / capsule radius (px)
+---@field width? number Box width, capsule width (px)
+---@field height? number Box height, capsule height (px)
+---@field rotation? number Rotation on the body (degrees)
+---@field offset? Vec2 Position on the body (px)
+---@field density? number Mass per px² (Dynamic Bodies)
+---@field friction? number 0 ice ... 1 rubber
+---@field restitution? number Bounciness: 0 none, 1 keeps all speed
+---@field sensor? boolean Detects overlaps without colliding
+
 ---@class Node
 ---@field name string The node's name (assigning renames it). Properties read and write as fields: `node.rotation = node.rotation + 5`.
 ---@field uid string The node's stable id, saved with the scene and kept when it is renamed or moved (read-only). Look it up with `Scene.find_by_uid`; useful for saved games pointing at scene nodes.
@@ -532,6 +566,65 @@ function Node:get_node(path) end
 ---Example: `local item = Scene.find_node("Key"); self.node:add_child(item)`
 ---@param child Node The node to move under this one; it leaves its old parent and keeps its local position, so it can jump on screen
 function Node:add_child(child) end
+
+---Stops this node and another colliding with each other (each keeps colliding with everything else): a bullet and its shooter, a thrown item and its thrower, a ghost passing through one door. Their current contact ends at once.
+---
+---Example: `bullet:add_collision_exception(self.node)`
+---@param other Node The other physics node
+---@return boolean ok False when other isn't a node
+function Node:add_collision_exception(other) end
+
+---Lets the two collide again (after add_collision_exception).
+---
+---Example: `Timer.after(0.2, function() bullet:remove_collision_exception(self.node) end)`
+---@param other Node The other physics node
+---@return boolean ok False when other isn't a node
+function Node:remove_collision_exception(other) end
+
+---Whether add_collision_exception was used for this pair.
+---
+---Example: `if not self.node:has_collision_exception(door) then self.node:add_collision_exception(door) end`
+---@param other Node The other physics node
+---@return boolean excepted
+function Node:has_collision_exception(other) end
+
+---How many collision shapes this physics node has (bodies, Character Movers, Areas).
+---
+---Example: `for i = 1, self.node:shape_count() do Log.info(self.node:shape_get(i).type) end`
+---@return integer count 0 for nodes without shapes
+function Node:shape_count() end
+
+---A collision shape's settings: type, size, offset, material, sensor.
+---
+---Example: `local s = self.node:shape_get(1); Log.info(s.width .. " x " .. s.height)`
+---@param index? integer Which shape, from 1 (the first by default)
+---@return ShapeSettings? shape nil (with a warning) when there's no such shape
+function Node:shape_get(index) end
+
+---Changes a collision shape while the game runs: only the keys given change. Crouch hitboxes, a growing pickup, icy boots (friction 0), a bouncy power-up.
+---
+---Example: `self.node:shape_set(1, { height = 20, offset = Vec2(0, 6) }) -- crouch`
+---@param index integer Which shape, from 1
+---@param settings ShapeSettings radius, width, height, rotation, offset, density, friction, restitution, sensor
+---@return boolean ok False (with a warning) when there's no such shape or settings isn't a table
+function Node:shape_set(index, settings) end
+
+---Would moving this body by (dx, dy) hit something? Sweeps its shapes along the move; nothing moves. For AI ("is the way ahead clear?"), dash checks, placing things.
+---
+---Example: `if not self.node:body_test_move(32 * self.dir, 0) then self.node.position = self.node.position + Vec2(32 * self.dir, 0) end`
+---@param dx number Move X (px)
+---@param dy number Move Y (px)
+---@return RaycastHit? hit The first hit (node, point, normal, fraction of the move), or nil when the way is clear
+function Node:body_test_move(dx, dy) end
+
+---Moves a Kinematic or Dynamic Body by (dx, dy), stopping where it would first touch something: projectiles that stop on walls, sliding blocks, grid movers.
+---
+---Example: `local hit = self.node:body_move_and_collide(self.vx * dt, 0); if hit then self.vx = -self.vx end`
+---@param dx number Move X (px)
+---@param dy number Move Y (px)
+---@return RaycastHit? hit What it stopped against, or nil when it moved all the way
+function Node:body_move_and_collide(dx, dy) end
+
 
 ---Detaches a child node from this node.
 ---
@@ -3447,6 +3540,18 @@ function KinematicBodyNode:set_property(path, value, y) end
 ---@field playerIndex integer Same as player_index (the Inspector's name)
 ---@field is_grounded boolean Standing on something now.
 ---@field isGrounded boolean Same as is_grounded (the Inspector's name)
+---@field floor_max_angle number Steepest slope it stands on (degrees); steeper surfaces are walls.
+---@field floorMaxAngle number Same as floor_max_angle (the Inspector's name)
+---@field floor_snap_length number Keeps it on the floor walking down slopes and steps this far (px; 0 off).
+---@field floorSnapLength number Same as floor_snap_length (the Inspector's name)
+---@field stop_on_slope boolean Standing still on a slope, it doesn't slide down.
+---@field stopOnSlope boolean Same as stop_on_slope (the Inspector's name)
+---@field step_height number Walks up steps this high without jumping (px; 0 off).
+---@field stepHeight number Same as step_height (the Inspector's name)
+---@field coyote_time number The built-in jump still works this long after walking off a ledge (s).
+---@field coyoteTime number Same as coyote_time (the Inspector's name)
+---@field jump_buffer_time number A jump pressed this long before landing still happens (s).
+---@field jumpBufferTime number Same as jump_buffer_time (the Inspector's name)
 ---@field debug_color number[] Colour of the collider outline drawn with Show Bounds & Colliders (and the game's debug...
 ---@field debugColor number[] Same as debug_color (the Inspector's name)
 ---@field control_mode "BuiltIn"|"Script" Built-in movement, or Script: the script moves it (character_move_and_slide).
@@ -3480,6 +3585,12 @@ function KinematicBodyNode:set_property(path, value, y) end
 ---| "enable_keyboard_input" # boolean - Built-in movement: the move / jump input actions drive it.
 ---| "player_index" # integer - Player whose actions drive this mover (1..4; 0 = none / NPC / AI).
 ---| "is_grounded" # boolean (runtime) - Standing on something now.
+---| "floor_max_angle" # number - Steepest slope it stands on (degrees); steeper surfaces are walls.
+---| "floor_snap_length" # number - Keeps it on the floor walking down slopes and steps this far (px; 0 off).
+---| "stop_on_slope" # boolean - Standing still on a slope, it doesn't slide down.
+---| "step_height" # number - Walks up steps this high without jumping (px; 0 off).
+---| "coyote_time" # number - The built-in jump still works this long after walking off a ledge (s).
+---| "jump_buffer_time" # number - A jump pressed this long before landing still happens (s).
 ---| "debug_color" # number[] - Colour of the collider outline drawn with Show Bounds & Colliders (and the game's debug...
 ---| "control_mode" # "BuiltIn"|"Script" - Built-in movement, or Script: the script moves it (character_move_and_slide).
 
@@ -3515,6 +3626,12 @@ function KinematicBodyNode:set_property(path, value, y) end
 ---@overload fun(self: CharacterMoverNode, path: "enable_keyboard_input"): boolean
 ---@overload fun(self: CharacterMoverNode, path: "player_index"): integer
 ---@overload fun(self: CharacterMoverNode, path: "is_grounded"): boolean
+---@overload fun(self: CharacterMoverNode, path: "floor_max_angle"): number
+---@overload fun(self: CharacterMoverNode, path: "floor_snap_length"): number
+---@overload fun(self: CharacterMoverNode, path: "stop_on_slope"): boolean
+---@overload fun(self: CharacterMoverNode, path: "step_height"): number
+---@overload fun(self: CharacterMoverNode, path: "coyote_time"): number
+---@overload fun(self: CharacterMoverNode, path: "jump_buffer_time"): number
 ---@overload fun(self: CharacterMoverNode, path: "debug_color"): number[]
 ---@overload fun(self: CharacterMoverNode, path: "control_mode"): "BuiltIn"|"Script"
 function CharacterMoverNode:get_property(path) end
@@ -3552,6 +3669,12 @@ function CharacterMoverNode:get_property(path) end
 ---@overload fun(self: CharacterMoverNode, path: "enable_keyboard_input", value: boolean)
 ---@overload fun(self: CharacterMoverNode, path: "player_index", value: integer)
 ---@overload fun(self: CharacterMoverNode, path: "is_grounded", value: boolean)
+---@overload fun(self: CharacterMoverNode, path: "floor_max_angle", value: number)
+---@overload fun(self: CharacterMoverNode, path: "floor_snap_length", value: number)
+---@overload fun(self: CharacterMoverNode, path: "stop_on_slope", value: boolean)
+---@overload fun(self: CharacterMoverNode, path: "step_height", value: number)
+---@overload fun(self: CharacterMoverNode, path: "coyote_time", value: number)
+---@overload fun(self: CharacterMoverNode, path: "jump_buffer_time", value: number)
 ---@overload fun(self: CharacterMoverNode, path: "debug_color", value: number[])
 ---@overload fun(self: CharacterMoverNode, path: "control_mode", value: "BuiltIn"|"Script")
 function CharacterMoverNode:set_property(path, value, y) end
@@ -3587,6 +3710,20 @@ function CharacterMoverNode:set_property(path, value, y) end
 ---@field debugColor number[] Same as debug_color (the Inspector's name)
 ---@field active_color number[] Outline colour while something overlaps.
 ---@field activeColor number[] Same as active_color (the Inspector's name)
+---@field gravity_mode "Off"|"Add"|"Replace" Off: the world's gravity. Add: plus Gravity (wind). Replace: only Gravity (water, zero-g).
+---@field gravityMode "Off"|"Add"|"Replace" Same as gravity_mode (the Inspector's name)
+---@field gravity Vec2 The area's gravity for bodies inside (px/s²).
+---@field gravity_point boolean Pull towards the area's centre instead (a planet, a black hole).
+---@field gravityPoint boolean Same as gravity_point (the Inspector's name)
+---@field gravity_strength number With Gravity Point: how strong the pull is (px/s²; negative pushes away).
+---@field gravityStrength number Same as gravity_strength (the Inspector's name)
+---@field damping_override boolean Slow bodies inside (water, mud, thick air).
+---@field dampingOverride boolean Same as damping_override (the Inspector's name)
+---@field linear_damping number How fast bodies inside lose speed.
+---@field linearDamping number Same as linear_damping (the Inspector's name)
+---@field angular_damping number How fast bodies inside stop spinning.
+---@field angularDamping number Same as angular_damping (the Inspector's name)
+---@field priority integer Higher-priority areas apply first; a Replace stops lower ones.
 
 ---@alias AreaNodeProperty
 ---| "position" # Vec2 - Position relative to the parent, in pixels (+y is down).
@@ -3608,6 +3745,14 @@ function CharacterMoverNode:set_property(path, value, y) end
 ---| "has_overlaps" # boolean (runtime) - Anything overlapping now.
 ---| "debug_color" # number[] - Outline colour when nothing overlaps.
 ---| "active_color" # number[] - Outline colour while something overlaps.
+---| "gravity_mode" # "Off"|"Add"|"Replace" - Off: the world's gravity. Add: plus Gravity (wind). Replace: only Gravity (water, zero-g).
+---| "gravity" # Vec2 - The area's gravity for bodies inside (px/s²).
+---| "gravity_point" # boolean - Pull towards the area's centre instead (a planet, a black hole).
+---| "gravity_strength" # number - With Gravity Point: how strong the pull is (px/s²; negative pushes away).
+---| "damping_override" # boolean - Slow bodies inside (water, mud, thick air).
+---| "linear_damping" # number - How fast bodies inside lose speed.
+---| "angular_damping" # number - How fast bodies inside stop spinning.
+---| "priority" # integer - Higher-priority areas apply first; a Replace stops lower ones.
 
 ---Reads an Inspector property by its path (vectors and colours as tables); "script.<name>" reads a field of the node's script.
 ---
@@ -3633,6 +3778,14 @@ function CharacterMoverNode:set_property(path, value, y) end
 ---@overload fun(self: AreaNode, path: "has_overlaps"): boolean
 ---@overload fun(self: AreaNode, path: "debug_color"): number[]
 ---@overload fun(self: AreaNode, path: "active_color"): number[]
+---@overload fun(self: AreaNode, path: "gravity_mode"): "Off"|"Add"|"Replace"
+---@overload fun(self: AreaNode, path: "gravity"): Vec2
+---@overload fun(self: AreaNode, path: "gravity_point"): boolean
+---@overload fun(self: AreaNode, path: "gravity_strength"): number
+---@overload fun(self: AreaNode, path: "damping_override"): boolean
+---@overload fun(self: AreaNode, path: "linear_damping"): number
+---@overload fun(self: AreaNode, path: "angular_damping"): number
+---@overload fun(self: AreaNode, path: "priority"): integer
 function AreaNode:get_property(path) end
 
 ---Sets an Inspector property by its path: vectors as {x, y} or x, y; colours as {r, g, b[, a]} 0..1 or "#rrggbb[aa]"; enums by name; "script.<name>" a field of the node's script.
@@ -3660,6 +3813,14 @@ function AreaNode:get_property(path) end
 ---@overload fun(self: AreaNode, path: "has_overlaps", value: boolean)
 ---@overload fun(self: AreaNode, path: "debug_color", value: number[])
 ---@overload fun(self: AreaNode, path: "active_color", value: number[])
+---@overload fun(self: AreaNode, path: "gravity_mode", value: "Off"|"Add"|"Replace")
+---@overload fun(self: AreaNode, path: "gravity", x: number|Vec2|number[], y?: number)
+---@overload fun(self: AreaNode, path: "gravity_point", value: boolean)
+---@overload fun(self: AreaNode, path: "gravity_strength", value: number)
+---@overload fun(self: AreaNode, path: "damping_override", value: boolean)
+---@overload fun(self: AreaNode, path: "linear_damping", value: number)
+---@overload fun(self: AreaNode, path: "angular_damping", value: number)
+---@overload fun(self: AreaNode, path: "priority", value: integer)
 function AreaNode:set_property(path, value, y) end
 
 ---@class RaycastNode
@@ -11661,6 +11822,58 @@ function DynamicBodyNode:set_fixed_rotation(fixed) end
 ---@return FloorHit? floor The floor, or nil when nothing is under it
 function DynamicBodyNode:body_get_floor() end
 
+---Pushes at a world point (a force, over this step): off the centre it also turns the body. Thrusters, wind on a sail, a car's wheel.
+---
+---Example: `local x, y = self.node:get_global_position(); self.node:apply_force_at(0, -2000, x + 20, y)`
+---@param fx number Force X (mass × px/s²)
+---@param fy number Force Y
+---@param px number World X of the point (a Vec2 also works for the force or the point)
+---@param py number World Y of the point
+function DynamicBodyNode:apply_force_at(fx, fy, px, py) end
+
+---An instant push at a world point: hit off-centre, the body spins. Bullet hits, kicks, explosions on one side.
+---
+---Example: `self.node:apply_impulse_at(dir_x * 300 * m, -200 * m, hit.point_x, hit.point_y)`
+---@param ix number Impulse X (mass × px/s)
+---@param iy number Impulse Y
+---@param px number World X of the point (a Vec2 also works for the impulse or the point)
+---@param py number World Y of the point
+function DynamicBodyNode:apply_impulse_at(ix, iy, px, py) end
+
+---A turning force over this step (positive turns clockwise on screen). Steering, spinning wheels.
+---
+---Example: `self.node:apply_torque(Input.get_axis("turn_left", "turn_right") * 5e6)`
+---@param torque number Mass × px² / s²: bodies are heavy at pixel scale, use big numbers
+function DynamicBodyNode:apply_torque(torque) end
+
+---An instant spin (positive clockwise on screen).
+---
+---Example: `self.node:apply_angular_impulse(2e5) -- a hit knocks it spinning`
+---@param impulse number Mass × px² / s
+function DynamicBodyNode:apply_angular_impulse(impulse) end
+
+---The body's velocity at a world point, including its spin: how fast the rim of a wheel moves, where a swinging hammer hits.
+---
+---Example: `local vx, vy = self.node:get_velocity_at(contact.point_x, contact.point_y)`
+---@param px number World X (a Vec2 also works, with py left out)
+---@param py number World Y
+---@return number vx Velocity X (px/s)
+---@return number vy Velocity Y (px/s)
+function DynamicBodyNode:get_velocity_at(px, py) end
+
+---Sets the body's mass whatever its size (its shapes' density is scaled to match): a small but heavy anvil, a big light balloon.
+---
+---Example: `self.node:set_mass(50)`
+---@param mass number Above 0
+function DynamicBodyNode:set_mass(mass) end
+
+---The world point the body turns about (its shapes' centre of mass).
+---
+---Example: `local cx, cy = self.node:get_center_of_mass()`
+---@return number x World X
+---@return number y World Y
+function DynamicBodyNode:get_center_of_mass() end
+
 ---Sets the linear drag/damping coefficient.
 ---
 ---Example: `self.node:set_linear_damping(2.0)`
@@ -12741,6 +12954,35 @@ function CharacterMoverNode:character_move(dirX, jump) end
 ---Example: `local f = self.node:character_get_floor(); if f and f.node:has_tag("ice") then accel = 200 end`
 ---@return FloorHit? floor The floor, or nil in the air
 function CharacterMoverNode:character_get_floor() end
+
+---The velocity of the floor it stands on, where it stands (px/s; 0, 0 in the air or on still ground). Keep a moving platform's momentum when jumping off it.
+---
+---Example: `if jumped then local px, py = self.node:character_get_platform_velocity(); vx = vx + px end`
+---@return number vx Platform velocity X
+---@return number vy Platform velocity Y
+function CharacterMoverNode:character_get_platform_velocity() end
+
+---Seconds since it was last on a floor (0 while on one).
+---
+---Example: `if self.node:character_get_time_since_floor() > 1 then self:play("fall_long") end`
+---@return number seconds
+function CharacterMoverNode:character_get_time_since_floor() end
+
+---On a floor now, or within the last few seconds: coyote time for a script's jump (the built-in movement has Coyote Time in the Inspector).
+---
+---Example: `if Input.is_action_pressed("jump") and self.node:character_was_on_floor(0.1) then vy = -350 end`
+---@param seconds? number How long after leaving a floor still counts (0.1 by default)
+---@return boolean on_floor
+function CharacterMoverNode:character_was_on_floor(seconds) end
+
+---Would moving by (dx, dy) hit something, and how far it would get? Nothing moves. Ledge checks, "is there room to stand up?", AI.
+---
+---Example: `local blocked = self.node:character_test_move(0, -16); if not blocked then self:stand_up() end`
+---@param dx number Move X (px)
+---@param dy number Move Y (px)
+---@return boolean blocked True when something is in the way
+---@return number fraction How far it gets, 0 to 1 of the move
+function CharacterMoverNode:character_test_move(dx, dy) end
 
 ---Deprecated: use `character_is_on_floor` (works until Rayzr 2.0).
 ---@deprecated Use character_is_on_floor
@@ -15614,14 +15856,86 @@ function PhysicsModule.set_paused(paused) end
 
 ---Casts a ray between start and end world points against non-sensor colliders.
 ---
----Example: `local hit = Physics.raycast(x, y, x, y + 64); if hit and hit.node then Log.info(hit.node.name) end`
+---Example: `local hit = Physics.raycast(x, y, x, y + 64, { exclude = self.node }); if hit and hit.node then Log.info(hit.node.name) end`
 ---@param startX number World X where the ray starts, in px (a Vec2 also works, with startY left out)
 ---@param startY number World Y where the ray starts, in px
 ---@param endX number World X where the ray ends, in px (a Vec2 also works, with endY left out)
 ---@param endY number World Y where the ray ends, in px
----@param ... CollisionLayer|string|integer|table Optional: only colliders on these layers are hit (names from Project Settings > General > Collision Layers, 1-16, or a list); none hits every layer. An unknown name is an error
+---@param ... CollisionLayer|string|integer|table|QueryOptions Optional: the layers to hit (names from Project Settings > General > Collision Layers, 1-16, or a list), or options {layers =, exclude =, sensors =}; none hits every layer. An unknown name is an error
 ---@return RaycastHit? hit The closest hit: point_x, point_y, normal_x, normal_y, fraction 0 to 1 along the ray, and node; nil when nothing solid is in the way
 function PhysicsModule.raycast(startX, startY, endX, endY, ...) end
+
+---Casts a ray and returns everything it passes through, nearest first: piercing shots, lasers through glass, counting what's in a line.
+---
+---Example: `for _, hit in ipairs(Physics.raycast_all(x, y, x + 400, y, { exclude = self.node })) do hit.node:emit("pierced") end`
+---@param startX number World X where the ray starts, in px (a Vec2 also works, with startY left out)
+---@param startY number World Y where the ray starts, in px
+---@param endX number World X where the ray ends, in px (a Vec2 also works, with endY left out)
+---@param endY number World Y where the ray ends, in px
+---@param options? QueryOptions|CollisionLayer|string|integer|table Layers, nodes to exclude, sensors (as Physics.raycast)
+---@return RaycastHit[] hits Every hit along the ray, nearest first (empty when nothing is in the way)
+function PhysicsModule.raycast_all(startX, startY, endX, endY, options) end
+
+---Sweeps a circle, box or capsule from one point to another and returns the first thing it touches: a thick bullet, a sword swing, a ground check as wide as the feet, "would the player fit here?".
+---
+---Example: `local hit = Physics.cast_shape({ type = "circle", radius = 6 }, x, y, x + 300, y, { exclude = self.node })`
+---@param shape QueryShape The shape, centred on the start point: {type = "circle", radius =} / {type = "box", width =, height =, rotation =} / {type = "capsule", radius =, height =}
+---@param startX number World X where the shape starts, in px (a Vec2 also works, with startY left out)
+---@param startY number World Y where the shape starts, in px
+---@param endX number World X where it ends, in px (a Vec2 also works, with endY left out)
+---@param endY number World Y where it ends, in px
+---@param options? QueryOptions|CollisionLayer|string|integer|table Layers, nodes to exclude, sensors (as Physics.raycast)
+---@return RaycastHit? hit The first hit: point, normal, fraction 0 to 1 of the way, node; nil when the way is clear
+function PhysicsModule.cast_shape(shape, startX, startY, endX, endY, options) end
+
+---The nodes whose colliders overlap a circle right now: an explosion's radius, enemies in range, "is anything here?".
+---
+---Example: `for _, n in ipairs(Physics.overlap_circle(x, y, 80, { exclude = self.node })) do if n.apply_impulse then n:apply_impulse(0, -n:get_mass() * 400) end end`
+---@param x number Centre X (world px; a Vec2 also works, with y left out)
+---@param y number Centre Y (world px)
+---@param radius number Radius (px)
+---@param options? QueryOptions|CollisionLayer|string|integer|table Layers, nodes to exclude, sensors (as Physics.raycast)
+---@return Node[] nodes Each node once (empty when nothing is there)
+function PhysicsModule.overlap_circle(x, y, radius, options) end
+
+---The nodes whose colliders overlap a box right now: a melee hitbox, a selection rectangle, spawn-spot checks.
+---
+---Example: `local hits = Physics.overlap_box(x + 24 * facing, y, 32, 24, 0, { exclude = self.node })`
+---@param x number Centre X (world px; a Vec2 also works, with y left out)
+---@param y number Centre Y (world px)
+---@param width number Width (px)
+---@param height number Height (px)
+---@param rotation? number Rotation (degrees)
+---@param options? QueryOptions|CollisionLayer|string|integer|table Layers, nodes to exclude, sensors (as Physics.raycast)
+---@return Node[] nodes Each node once (empty when nothing is there)
+function PhysicsModule.overlap_box(x, y, width, height, rotation, options) end
+
+---The nodes whose colliders contain a point: what's under the mouse, which tile body a point is in.
+---
+---Example: `local wx, wy = Camera.screen_to_world(Input.get_mouse_position()); local under = Physics.overlap_point(wx, wy)`
+---@param x number World X (a Vec2 also works, with y left out)
+---@param y number World Y
+---@param options? QueryOptions|CollisionLayer|string|integer|table Layers, nodes to exclude, sensors (as Physics.raycast)
+---@return Node[] nodes Each node once (empty when nothing is there)
+function PhysicsModule.overlap_point(x, y, options) end
+
+---Fixed physics steps per second (Project Settings > Physics; 60 by default). 0: one step per frame with the frame's time.
+---
+---Example: `Log.info("physics at " .. Physics.get_fps() .. " Hz")`
+---@return integer fps Steps per second; 0 for one per frame
+function PhysicsModule.get_fps() end
+
+---Changes the fixed physics step rate while the game runs (0: one step per frame with the frame's time).
+---
+---Example: `Physics.set_fps(120) -- a fast-moving game: steadier collisions`
+---@param fps integer Steps per second, 1-1000; or 0
+function PhysicsModule.set_fps(fps) end
+
+---How far this frame is between the last two physics steps (0 to 1). Bodies are drawn there already; use it to draw your own things between steps.
+---
+---Example: `local a = Physics.get_interpolation(); local x = self.prev_x + (self.x - self.prev_x) * a`
+---@return number fraction 0 at the last step, towards 1 just before the next
+function PhysicsModule.get_interpolation() end
 
 ---The project's name for collision layer n (Project Settings > General > Collision Layers), or "".
 ---
@@ -16916,6 +17230,7 @@ Vector = VectorModule
 ---@field properties table<string, any> Custom exported script properties table.
 ---@field ready? fun(self: self) Lifecycle callback invoked when the node enters the scene.
 ---@field update? fun(self: self, dt: number) Lifecycle callback invoked each frame with delta time in seconds.
+---@field on_physics_update? fun(self: self, dt: number) Called before each fixed physics step with the step's time (1/60 s by default): set velocities, apply forces and move Character Movers here for the same result at any frame rate.
 ---@field on_draw? fun(self: self) Draw callback: draw with the Vector module in the node's local space, in the node's draw order (engine/docs/vector.md).
 ---@field on_destroy? fun(self: self) Lifecycle callback invoked when the node is destroyed.
 ---@field on_entered_tree? fun(self: self) Event: the node joined the scene.
@@ -16926,7 +17241,7 @@ Vector = VectorModule
 ---@field on_tick? fun(self: self, elapsed: number) Event (TimerNode): each frame while running.
 ---@field on_body_entered? fun(self: self, other: Node) Event (AreaNode): a body entered.
 ---@field on_body_exited? fun(self: self, other: Node?) Event (AreaNode): a body left.
----@field on_collision_started? fun(self: self, other: Node) Event (bodies): contact began.
+---@field on_collision_started? fun(self: self, other: Node, contact: CollisionContact) Event (bodies): contact began - contact has the point, normal and impact speed.
 ---@field on_collision_ended? fun(self: self, other: Node) Event (bodies): contact ended.
 ---@field on_hit_started? fun(self: self, other: Node) Event (RaycastNode): the ray hit a node.
 ---@field on_hit_ended? fun(self: self, other: Node) Event (RaycastNode): the ray stopped hitting it.

@@ -98,6 +98,9 @@ Script_DispatchEvent :: proc(owner: ^Node, name: string, value: EventValue, ctx:
 	mgr := manager_for(owner, ctx)
 	if mgr == nil || !mgr.isReady || mgr.L == nil || mgr.suspended do return
 	L := mgr.L
+	// (A collision's contact: its point, normal and speed - read now, before
+	// handlers start other collisions.)
+	contact := collisionContact if name == "collision_started" else Collision_Contact{}
 
 	// 1. The owner's script method (once its ready() has run).
 	if owner.scriptInstance != nil && (cast(^ScriptInstance)owner.scriptInstance).isReady {
@@ -110,9 +113,14 @@ Script_DispatchEvent :: proc(owner: ^Node, name: string, value: EventValue, ctx:
 		if lua.type(L, -1) == .FUNCTION {
 			lua.pushvalue(L, -2) // self
 			push_event_value(L, value)
+			nargs: c.int = 2
+			if contact.valid { // (collision_started: how it began, physics_queries.odin)
+				Lua_PushContact(L, contact)
+				nargs = 3
+			}
 			prev := mgr.currentInstance
 			mgr.currentInstance = inst
-			if lua.pcall(L, 2, 0, errHandler) != 0 {
+			if lua.pcall(L, nargs, 0, errHandler) != 0 {
 				Script_Problem(.Error, "[Script] Error in %s:%s(): %s", inst.modulePath, method, lua.tostring(L, -1))
 				lua.pop(L, 1)
 			}
@@ -143,9 +151,14 @@ Script_DispatchEvent :: proc(owner: ^Node, name: string, value: EventValue, ctx:
 		lua.rawgeti(L, lua.REGISTRYINDEX, lua.Integer(conn.fnRef))
 		push_event_value(L, value)
 		push_node_userdata(L, owner)
+		nargs: c.int = 2
+		if contact.valid {
+			Lua_PushContact(L, contact)
+			nargs = 3
+		}
 		prev := mgr.currentInstance
 		mgr.currentInstance = conn.owner
-		if lua.pcall(L, 2, 0, errHandler) != 0 {
+		if lua.pcall(L, nargs, 0, errHandler) != 0 {
 			Script_Problem(.Error, "[Script] Error in '%s' handler of %s: %s", name, owner.name, lua.tostring(L, -1))
 			lua.pop(L, 1)
 		}

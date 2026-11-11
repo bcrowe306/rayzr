@@ -15,6 +15,14 @@
   "properties": {
     "monitoring": true,
     "debugColor": "#a855f7ff",
-    "activeColor": "#ec4899ff"
+    "activeColor": "#ec4899ff",
+    "gravityMode": "Off",
+    "gravity": [0, -300],
+    "gravityPoint": false,
+    "gravityStrength": 600,
+    "dampingOverride": false,
+    "linearDamping": 3,
+    "angularDamping": 2,
+    "priority": 0
   }
 }

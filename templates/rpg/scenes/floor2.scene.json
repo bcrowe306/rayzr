@@ -147,6 +147,12 @@
           "clipVelocity": true,
           "enableKeyboardInput": true,
           "playerIndex": 1,
+          "floorMaxAngle": 60,
+          "floorSnapLength": 0,
+          "stopOnSlope": false,
+          "stepHeight": 0,
+          "coyoteTime": 0,
+          "jumpBufferTime": 0,
           "categoryLayers": ["Layer2"],
           "maskLayers": ["Layer1"],
           "debugColor": "#facc15ff",
@@ -211,6 +217,12 @@
           "clipVelocity": true,
           "enableKeyboardInput": false,
           "playerIndex": 0,
+          "floorMaxAngle": 60,
+          "floorSnapLength": 0,
+          "stopOnSlope": false,
+          "stepHeight": 0,
+          "coyoteTime": 0,
+          "jumpBufferTime": 0,
           "categoryLayers": ["Layer2"],
           "maskLayers": ["Layer1"],
           "debugColor": "#facc15ff",
@@ -275,6 +287,12 @@
           "clipVelocity": true,
           "enableKeyboardInput": false,
           "playerIndex": 0,
+          "floorMaxAngle": 60,
+          "floorSnapLength": 0,
+          "stopOnSlope": false,
+          "stepHeight": 0,
+          "coyoteTime": 0,
+          "jumpBufferTime": 0,
           "categoryLayers": ["Layer2"],
           "maskLayers": ["Layer1"],
           "debugColor": "#facc15ff",
@@ -339,6 +357,12 @@
           "clipVelocity": true,
           "enableKeyboardInput": false,
           "playerIndex": 0,
+          "floorMaxAngle": 60,
+          "floorSnapLength": 0,
+          "stopOnSlope": false,
+          "stepHeight": 0,
+          "coyoteTime": 0,
+          "jumpBufferTime": 0,
           "categoryLayers": ["Layer2"],
           "maskLayers": ["Layer1"],
           "debugColor": "#facc15ff",
@@ -403,6 +427,12 @@
           "clipVelocity": true,
           "enableKeyboardInput": false,
           "playerIndex": 0,
+          "floorMaxAngle": 60,
+          "floorSnapLength": 0,
+          "stopOnSlope": false,
+          "stepHeight": 0,
+          "coyoteTime": 0,
+          "jumpBufferTime": 0,
           "categoryLayers": ["Layer2"],
           "maskLayers": ["Layer1"],
           "debugColor": "#facc15ff",
@@ -458,7 +488,15 @@
         "properties": {
           "monitoring": true,
           "debugColor": "#a855f7ff",
-          "activeColor": "#ec4899ff"
+          "activeColor": "#ec4899ff",
+          "gravityMode": "Off",
+          "gravity": [0, -300],
+          "gravityPoint": false,
+          "gravityStrength": 600,
+          "dampingOverride": false,
+          "linearDamping": 3,
+          "angularDamping": 2,
+          "priority": 0
         },
         "script": {
           "path": "scripts/potion.lua"
@@ -506,7 +544,15 @@
         "properties": {
           "monitoring": true,
           "debugColor": "#a855f7ff",
-          "activeColor": "#ec4899ff"
+          "activeColor": "#ec4899ff",
+          "gravityMode": "Off",
+          "gravity": [0, -300],
+          "gravityPoint": false,
+          "gravityStrength": 600,
+          "dampingOverride": false,
+          "linearDamping": 3,
+          "angularDamping": 2,
+          "priority": 0
         },
         "script": {
           "path": "scripts/gold.lua",
@@ -557,7 +603,15 @@
         "properties": {
           "monitoring": true,
           "debugColor": "#a855f7ff",
-          "activeColor": "#ec4899ff"
+          "activeColor": "#ec4899ff",
+          "gravityMode": "Off",
+          "gravity": [0, -300],
+          "gravityPoint": false,
+          "gravityStrength": 600,
+          "dampingOverride": false,
+          "linearDamping": 3,
+          "angularDamping": 2,
+          "priority": 0
         },
         "script": {
           "path": "scripts/gold.lua",
@@ -608,7 +662,15 @@
         "properties": {
           "monitoring": true,
           "debugColor": "#a855f7ff",
-          "activeColor": "#ec4899ff"
+          "activeColor": "#ec4899ff",
+          "gravityMode": "Off",
+          "gravity": [0, -300],
+          "gravityPoint": false,
+          "gravityStrength": 600,
+          "dampingOverride": false,
+          "linearDamping": 3,
+          "angularDamping": 2,
+          "priority": 0
         },
         "script": {
           "path": "scripts/gold.lua",
@@ -659,7 +721,15 @@
         "properties": {
           "monitoring": true,
           "debugColor": "#a855f7ff",
-          "activeColor": "#ec4899ff"
+          "activeColor": "#ec4899ff",
+          "gravityMode": "Off",
+          "gravity": [0, -300],
+          "gravityPoint": false,
+          "gravityStrength": 600,
+          "dampingOverride": false,
+          "linearDamping": 3,
+          "angularDamping": 2,
+          "priority": 0
         },
         "script": {
           "path": "scripts/gold.lua",
@@ -798,7 +868,15 @@
         "properties": {
           "monitoring": true,
           "debugColor": "#a855f7ff",
-          "activeColor": "#ec4899ff"
+          "activeColor": "#ec4899ff",
+          "gravityMode": "Off",
+          "gravity": [0, -300],
+          "gravityPoint": false,
+          "gravityStrength": 600,
+          "dampingOverride": false,
+          "linearDamping": 3,
+          "angularDamping": 2,
+          "priority": 0
         },
         "script": {
           "path": "scripts/exit.lua"
@@ -854,6 +932,12 @@
           "clipVelocity": true,
           "enableKeyboardInput": false,
           "playerIndex": 0,
+          "floorMaxAngle": 60,
+          "floorSnapLength": 0,
+          "stopOnSlope": false,
+          "stepHeight": 0,
+          "coyoteTime": 0,
+          "jumpBufferTime": 0,
           "categoryLayers": ["Layer2"],
           "maskLayers": ["Layer1"],
           "debugColor": "#facc15ff",

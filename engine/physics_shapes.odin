@@ -139,7 +139,7 @@ PhysicsShape_BuildDef :: proc(shape: ^PhysicsShape, userData: rawptr = nil) -> b
 	def.isSensor = shape.isSensor
 	def.enableSensorEvents = shape.enableSensorEvents
 	def.enableContactEvents = shape.enableContactEvents
-	def.enableHitEvents = shape.enableHitEvents
+	def.enableHitEvents = true // (always: collision_started's contact speed, physics_queries.odin)
 	def.enablePreSolveEvents = shape.enablePreSolveEvents
 	def.filter = b2.Filter{
 		categoryBits = CollisionLayerSet_ToBits(shape.categoryLayers),
@@ -284,7 +284,7 @@ PhysicsShape_SyncToBox2D :: proc(shape: ^PhysicsShape, bodyId: b2.BodyId, userDa
 		})
 		b2.Shape_EnableSensorEvents(shape.shapeId, shape.enableSensorEvents)
 		b2.Shape_EnableContactEvents(shape.shapeId, shape.enableContactEvents)
-		b2.Shape_EnableHitEvents(shape.shapeId, shape.enableHitEvents)
+		b2.Shape_EnableHitEvents(shape.shapeId, true)
 		b2.Shape_EnablePreSolveEvents(shape.shapeId, shape.enablePreSolveEvents)
 
 		g := PhysicsShape_Scaled(shape, scale)

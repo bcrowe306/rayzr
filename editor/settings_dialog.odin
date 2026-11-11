@@ -260,6 +260,7 @@ settings_save :: proc(state: ^EditorState) {
 	if checksChanged do Code_LuaChecksChanged(state) // .luarc.json + the language server (code_editor_lsp.odin)
 	e.Physics_SetLayerNames(state.projectConfig.collisionLayers[:])
 	state.game.physicsWorld.gravity = d.gravity
+	state.game.physicsWorld.physicsFps = d.physicsFps
 	e.Transition_SetDefault(state.game, d.transition, d.transitionDuration, d.transitionEasing)
 	if d.virtualWidth > 0 do state.game.virtualSize = {d.virtualWidth, d.virtualHeight}
 	if d.virtualWidth > 0 do state.game.designSize = {d.virtualWidth, d.virtualHeight}
@@ -640,6 +641,11 @@ project_general :: proc(state: ^EditorState) {
 		if UI_Button("Zero-G", "settings.zero-g") do d.gravity = {0, 0}
 		imgui.SameLine()
 		if UI_Button("Earth (0, 980)", "settings.earth-g") do d.gravity = {0, 980}
+		UI_PropLabel("Physics FPS")
+		fps := i32(d.physicsFps)
+		if imgui.DragInt("##physics_fps", &fps, 1, 0, 240) do d.physicsFps = int(clamp(fps, 0, 1000))
+		Drive_Item("settings.physics-fps")
+		UI_Tooltip("Fixed physics steps per second (60 by default): the same game at any frame rate, bodies drawn smoothly between steps. Scripts' on_physics_update(dt) runs before each step. 0: one step per frame with the frame's time (before Rayzr 1.2).")
 		UI_PropLabel("Show Colliders")
 		imgui.Checkbox("##debug_draw", &d.debugDraw)
 		Drive_Item("settings.debug-draw")

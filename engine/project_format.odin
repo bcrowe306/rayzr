@@ -41,6 +41,7 @@ ProjectConfig :: struct {
 	virtualHeight: f32,
 	targetFPS:     int,
 	gravity:       [2]f32,
+	physicsFps:    int, // fixed physics steps per second (0: one per frame)
 	debugDraw:     bool, // the running game draws colliders, joints and areas (physics.debug_draw)
 	collisionLayers: [16]string, // collision layer names ("" = unnamed; physics_extras.odin)
 	scenes:        [dynamic]string,
@@ -333,6 +334,7 @@ Project_ParseConfig :: proc(jsonBytes: []u8, allocator := context.allocator) -> 
 		virtualHeight = 720.0,
 		targetFPS     = 60,
 		gravity       = {0, 980.0},
+		physicsFps    = 60,
 		debugDraw     = true,
 		scenes        = make([dynamic]string, allocator),
 		vsync         = true,
@@ -468,6 +470,8 @@ Project_ParseConfig :: proc(jsonBytes: []u8, allocator := context.allocator) -> 
 	// Physics settings
 	if physObj, ok := json_get_obj(rootObj, "physics"); ok {
 		cfg.gravity = json_get_vec2(physObj, "gravity", cfg.gravity)
+		if v, has := physObj["fps"].(json.Integer); has do cfg.physicsFps = clamp(int(v), 0, 1000)
+		else if v, hasF := physObj["fps"].(json.Float); hasF do cfg.physicsFps = clamp(int(v), 0, 1000)
 		if v, has := physObj["debug_draw"].(json.Boolean); has do cfg.debugDraw = bool(v)
 		if arr, has := json_get_arr(physObj, "layers"); has {
 			for v, i in arr {
@@ -564,7 +568,7 @@ Project_SerializeToJSON :: proc(cfg: ^ProjectConfig, allocator := context.alloca
 	strings.write_string(&sb, "},\n")
 	if cfg.accessibility != "" do fmt.sbprintf(&sb, "  \"accessibility\": %s,\n", cfg.accessibility)
 	strings.write_string(&sb, "  \"physics\": {\n")
-	fmt.sbprintf(&sb, "    \"gravity\": [%.2f, %.2f],\n    \"debug_draw\": %t", cfg.gravity.x, cfg.gravity.y, cfg.debugDraw)
+	fmt.sbprintf(&sb, "    \"gravity\": [%.2f, %.2f],\n    \"fps\": %d,\n    \"debug_draw\": %t", cfg.gravity.x, cfg.gravity.y, cfg.physicsFps, cfg.debugDraw)
 	last := -1
 	for n, i in cfg.collisionLayers do if n != "" do last = i
 	if last >= 0 {
@@ -684,6 +688,8 @@ Game_LoadProjectConfig :: proc(game: ^Game, cfg: ^ProjectConfig, activate := tru
 	game.fill = cfg.fill
 	Render_SetPixelSettings({integerScaling = cfg.integerScaling, snap = cfg.pixelSnap, smooth = cfg.smoothCamera})
 	game.physicsWorld.gravity = cfg.gravity
+	game.physicsWorld.physicsFps = cfg.physicsFps
+	game.physicsWorld.accumulator = 0
 	Physics_SetLayerNames(cfg.collisionLayers[:])
 	game.musicVolume = cfg.musicVolume
 	game.sfxVolume = cfg.sfxVolume

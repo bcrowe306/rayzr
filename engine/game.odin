@@ -235,7 +235,7 @@ GameRun :: proc(game: ^Game, deltaTime: f32) {
 			ProcessNodeQueues(s.manager, &game.gameContext)
 			Scene_CallReady(s, s.rootNode, &game.gameContext)
 		}
-		if dt > 0 do PhysicsWorld_Step(&game.physicsWorld, dt, &game.gameContext) // (a hit-stop: no step)
+		if dt > 0 do Physics_Advance(game, dt) // (fixed steps, physics_step.odin; a hit-stop: no step)
 	}
 
 	// 4. Run game update proc if defined
