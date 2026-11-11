@@ -98,6 +98,7 @@
         { "file": "engine/docs/events.md", "slug": "guides/events" },
         { "file": "engine/docs/level_generator.md", "slug": "guides/level-generator" },
         { "file": "engine/docs/pooling.md", "slug": "guides/pooling" },
+        { "file": "engine/docs/carrying_objects.md", "slug": "guides/carrying-objects" },
         { "file": "engine/docs/aseprite.md", "slug": "guides/aseprite" },
         { "file": "engine/docs/skeletal_animation.md", "slug": "guides/skeletal-animation" },
         { "file": "engine/docs/vector.md", "slug": "guides/vector" },

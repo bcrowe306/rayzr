@@ -33,5 +33,6 @@ editor overview is [`../../editor/README.md`](../../editor/README.md).
 | [Procedural levels](level_generator.md) | Generators: a graph of nodes (noise, random fill, cellular caves, threshold, combine...) whose tile output writes a level into a TileMap; deterministic seeds; `LevelGen.generate` / `values` - with cave and terrain examples. |
 | [Global events](events.md) | The event bus: `Events.emit` / `Events.connect` between any scripts (and engine code) without references - gameplay to UI, levels to the game flow; deferred events, lifetimes - with a tutorial (a HUD that never looks for the player). |
 | [Object pooling](pooling.md) | Reuse bullets, effects, pickups: `Pool.take`, `on_spawn` / `on_despawn`, prewarm, caps - with a tutorial. |
+| [Picking up and throwing objects](carrying_objects.md) | A character that carries physics objects and throws them: a Mouse joint on the player, its bodies set from Lua (`joint_set_bodies`) for any object, spawned ones too; tuning, collisions while carried, a joint-free alternative. |
 | [Crash reports](crash_reports.md) | What a crash writes (reason, stack, recent lines), where, the editor's "report on GitHub", and the `Crash` Lua module for games. |
 | [Visibility notifier](visibility.md) | On screen / off screen events; pause, disable or remove the parent off screen. |
