@@ -42,7 +42,7 @@
 ---@field speed number How fast they came together along the normal (px/s, 0 or more): impact damage, bounce sounds
 
 ---@class QueryOptions
----@field layers? CollisionLayer|string|integer|table Only colliders on these layers (names, 1-16, or a list)
+---@field layers? CollisionLayer|string|integer|table Only colliders on these layers (names, 1-16, or a list), whatever their own masks say; nil for every layer
 ---@field exclude? Node|Node[] Nodes the query ignores (the shooter, the player itself)
 ---@field sensors? boolean Areas count too (false by default)
 

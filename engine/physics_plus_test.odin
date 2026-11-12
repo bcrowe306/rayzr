@@ -187,6 +187,45 @@ test_physics_queries :: proc(t: ^testing.T) {
 	testing.expectf(t, abs(pp_num(L, "cast_ny") + 1) < 0.01 && abs(pp_num(L, "cast_y") + 10) < 1, "hit A's top (normal y %v, y %v)", pp_num(L, "cast_ny"), pp_num(L, "cast_y"))
 }
 
+// A query is on every layer: a shape whose mask leaves out Layer1 is still
+// found by the layers it is on (Box2D's default query category was Layer1).
+@(test)
+test_physics_query_ignores_shape_mask :: proc(t: ^testing.T) {
+	game, scene, ctx := pp_game("query_mask")
+	defer game->terminate()
+	game.physicsWorld.gravity = {}
+	pp_static(scene, ctx, "Ghost", {100, 0}, {20, 20})
+	ProcessNodeQueues(scene.manager, ctx)
+	L := game.scriptManager.L
+	pp_run(t, L, `
+		local g = Scene.find_node("Ghost")
+		g:set_collision_layer("Layer2")
+		g:set_collision_mask("Layer2")
+	`)
+	game->run(1.0 / 60)
+	pp_run(t, L, `
+		local function name(h) return h and h.node:get_name() or "" end
+		ray_l2 = name(Physics.raycast(0, 0, 300, 0, "Layer2"))
+		ray_opts = name(Physics.raycast(0, 0, 300, 0, { layers = { "Layer2" } }))
+		ray_any = name(Physics.raycast(0, 0, 300, 0))
+		ray_l3 = name(Physics.raycast(0, 0, 300, 0, "Layer3"))
+		n_all = #Physics.raycast_all(0, 0, 300, 0, "Layer2")
+		n_point = #Physics.overlap_point(100, 0, "Layer2")
+		n_point_l3 = #Physics.overlap_point(100, 0, "Layer3")
+		cast = name(Physics.cast_shape({ type = "circle", radius = 5 }, 100, -60, 100, 60, "Layer2"))
+	`)
+	lua.getglobal(L, "ray_l2"); lua.getglobal(L, "ray_opts"); lua.getglobal(L, "ray_any"); lua.getglobal(L, "ray_l3"); lua.getglobal(L, "cast")
+	testing.expect(t, string(lua.tostring(L, -5)) == "Ghost", "raycast on Layer2 finds it")
+	testing.expect(t, string(lua.tostring(L, -4)) == "Ghost", "raycast {layers} finds it")
+	testing.expect(t, string(lua.tostring(L, -3)) == "Ghost", "raycast with no layers finds it")
+	testing.expect(t, string(lua.tostring(L, -2)) == "", "raycast on Layer3 skips it")
+	testing.expect(t, string(lua.tostring(L, -1)) == "Ghost", "cast_shape on Layer2 finds it")
+	lua.pop(L, 5)
+	testing.expect_value(t, pp_num(L, "n_all"), 1)
+	testing.expect_value(t, pp_num(L, "n_point"), 1)
+	testing.expect_value(t, pp_num(L, "n_point_l3"), 0)
+}
+
 // Forces at points, torque, mass; shapes changed from Lua; test moves.
 @(test)
 test_physics_forces_shapes_moves :: proc(t: ^testing.T) {

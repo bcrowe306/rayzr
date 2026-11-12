@@ -123,6 +123,12 @@ options table.
 { layers = { "Enemies", "World" }, exclude = { self.node, self.shield }, sensors = false }
 ```
 
+`layers` alone decides what a query hits: a collider on one of those layers
+is found whatever its own mask says. (A wall whose mask leaves out the
+player still shows up in `Physics.raycast(..., "World")`.) With no layers, a
+query hits colliders on every layer. Before Rayzr 1.3, a collider whose mask
+left out Layer1 was missed by every query.
+
 | Function | Returns | Use it for |
 |---|---|---|
 | `Physics.raycast(x1, y1, x2, y2, opts)` | The closest hit, or nil | Line of sight, ledge checks, hitscan. |
