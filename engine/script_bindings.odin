@@ -2429,7 +2429,7 @@ lua_physics_raycast :: proc "c" (L: ^lua.State) -> c.int {
 
 	query := WorldRaycastQuery{hit = false, fraction = 1.0}
 	// (Optional layers after the points: only shapes on them are hit.)
-	filter := b2.DefaultQueryFilter()
+	filter := Physics_QueryFilterAll()
 	if after <= lua.gettop(L) && !lua.isnil(L, after) {
 		set, valid := layers_arg(L, after)
 		if !valid do lua.L_error(L, "unknown collision layer (names from Project Settings > General > Collision Layers, or 1-16)")

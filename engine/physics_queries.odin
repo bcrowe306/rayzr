@@ -139,6 +139,13 @@ Physics_ForgetNode :: proc(pw: ^PhysicsWorld, n: ^Node) {
 
 // --- Query options ------------------------------------------------------------
 
+// Physics_QueryFilterAll: a Lua query is on every layer, so the layers it
+// names alone pick what it hits. (Box2D's default query category is bit 0:
+// a shape whose mask left out Layer1 was never found.)
+Physics_QueryFilterAll :: proc() -> b2.QueryFilter {
+	return {categoryBits = ~u64(0), maskBits = ~u64(0)}
+}
+
 Query_Options :: struct {
 	filter:  b2.QueryFilter,
 	exclude: [dynamic]^Node, // (temp)
@@ -149,7 +156,7 @@ Query_Options :: struct {
 // layers (names, numbers or a list, as Physics.raycast always took), or a
 // table {layers = ..., exclude = {node, ...} or node, sensors = bool}.
 query_options :: proc(L: ^lua.State, idx: c.int) -> (q: Query_Options, ok: bool) {
-	q.filter = b2.DefaultQueryFilter()
+	q.filter = Physics_QueryFilterAll()
 	q.exclude = make([dynamic]^Node, context.temp_allocator)
 	ok = true
 	if idx > lua.gettop(L) || lua.isnil(L, idx) do return
