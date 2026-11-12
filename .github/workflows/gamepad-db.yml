@@ -1,0 +1,62 @@
+# Weekly: refresh the controller database the engine ships
+# (engine/gamepad/gamecontrollerdb.txt, from SDL_GameControllerDB) and open
+# a PR when it changed. GITHUB_TOKEN pushes don't start other workflows, so
+# CI is started on the branch with workflow_dispatch; its checks show on the
+# PR. Where the repository doesn't let Actions open pull requests (Settings
+# > Actions > General > "Allow GitHub Actions to create and approve pull
+# requests"), an issue links the branch instead.
+name: Controller database
+
+on:
+  schedule:
+    - cron: "17 6 * * 1" # Mondays 06:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  actions: write
+
+concurrency:
+  group: gamepad-db
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Refresh the database
+        id: refresh
+        run: |
+          result="$(scripts/update_gamepad_db.sh)"
+          echo "$result"
+          echo "changed=$([[ $result == changed* ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          echo "sha=$(echo "$result" | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+      - name: Open a PR
+        if: steps.refresh.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ steps.refresh.outputs.sha }}
+        run: |
+          branch="chore/gamepad-db-${SHA:0:12}"
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null; then
+            echo "$branch is already pushed: nothing to do"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git commit -m "Controller database: SDL_GameControllerDB ${SHA:0:12}" -- engine/gamepad/gamecontrollerdb.txt
+          git push -u origin "$branch"
+          body="Refreshes \`engine/gamepad/gamecontrollerdb.txt\` from [SDL_GameControllerDB](https://github.com/mdqinc/SDL_GameControllerDB/commit/$SHA) (scripts/update_gamepad_db.sh). CI was started on the branch by this workflow."
+          if gh pr create --base main --head "$branch" --title "Controller database: SDL_GameControllerDB ${SHA:0:12}" --body "$body"; then
+            echo "PR opened"
+          else
+            echo "::warning::Actions can't open pull requests here - opening an issue instead"
+            gh issue create --title "Controller database update ready (${SHA:0:12})" \
+              --body "The branch \`$branch\` refreshes the controller database. Open a PR from it: https://github.com/${{ github.repository }}/compare/main...$branch"
+          fi
+          gh workflow run ci.yml --ref "$branch"

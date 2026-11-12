@@ -854,6 +854,7 @@ Drive_Query :: proc(state: ^EditorState, q: string) -> (string, bool) {
 	if strings.has_prefix(q, "git.") do return GitPanel_DriveQuery(q)
 	if strings.has_prefix(q, "plugin:") do return Plugins_DriveQuery(q)
 	if strings.has_prefix(q, "registry.") do return Registry_DriveQuery(state, q)
+	if strings.has_prefix(q, "controllers.") do return Controllers_DriveQuery(state, q)
 	if strings.has_prefix(q, "crash-") do return CrashReports_DriveQuery(q)
 	if strings.has_prefix(q, "update.") do return Update_DriveQuery(q)
 	if strings.has_prefix(q, "aseprite-") do return Aseprite_DriveQuery(q)

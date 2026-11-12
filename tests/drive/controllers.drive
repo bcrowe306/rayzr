@@ -1,0 +1,29 @@
+# Tools > Controllers (controllers_window.odin; gamepad_mappings.odin):
+# the window opens from the Tools menu and from Project Settings > Input,
+# whatever is connected (none in most runs: the empty note); Project
+# Settings > Input > Guess Unknown Controllers saves "gamepad_fallback";
+# F1 opens its page. (Setup itself: gamepad_mappings_test.odin feeds it.)
+wait 5
+click @menu:Tools
+click @menu:Tools/Controllers...
+wait 2
+expect controllers.open == true
+expect item:window:controllers == visible
+expect controllers.setup == false
+screenshot controllers
+key f1
+wait 2
+expect noderef.open == true
+expect noderef.page == editor/controllers
+key escape
+wait 1
+key ctrl+comma
+expect project-settings-open == true
+click @settings.tab:project
+click @settings.page:Input
+wait 1
+expect item:settings.gamepad-fallback == visible
+click @settings.gamepad-fallback
+click @settings.save
+wait 2
+expect file:project.json contains "gamepad_fallback": false

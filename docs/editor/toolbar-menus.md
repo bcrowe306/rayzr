@@ -154,6 +154,7 @@ commands to any menu.
 | **Select / Move / Rotate / Scale / Pan** | Q / W / E / R / T | The transform tools. |
 | **Sprite Sheet Slicer...** | | Cut a sprite sheet into frames. |
 | **Registry...** | | Browse and install community plugins and templates ([Registry](registry.md)). |
+| **Controllers...** | | The connected controllers, their buttons live, and Controller Setup for one that isn't recognised ([Controllers](controllers.md)). |
 | **New Plugin...** | | Start an editor plugin ([Plugins](plugins.md)). |
 | **Format Scene Files** | | Rewrite the project's scene and component files as the editor saves them, for small diffs ([Working in a team](team.md)). |
 | **Set Up Scene Merging** | | Let git merge scenes by node in this clone ([Working in a team](team.md#merging-scenes)). |

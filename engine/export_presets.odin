@@ -218,7 +218,7 @@ Export_PatternMatch :: proc(pattern, path: string) -> bool {
 // Export_PresetIncludes: whether a project file goes into the preset's
 // package (project.json always does).
 Export_PresetIncludes :: proc(p: ^Export_Preset, path: string) -> bool {
-	if path == "project.json" do return true
+	if path == "project.json" || path == GAMEPAD_DB_FILE do return true // (the project's controller mappings: gamepad_mappings.odin)
 	for pat in p.exclude do if Export_PatternMatch(pat, path) do return false
 	if len(p.include) == 0 do return true
 	for pat in p.include do if Export_PatternMatch(pat, path) do return true

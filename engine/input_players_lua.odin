@@ -176,6 +176,7 @@ Script_RegisterPlayerBindings :: proc(L: ^lua.State) {
 	Lua_SetDeprecated(L, lua_input_gamepads, "gamepads", "Input.get_gamepads")
 	reg(L, "get_player_count", lua_input_player_count)
 	Lua_SetDeprecated(L, lua_input_player_count, "player_count", "Input.get_player_count")
+	Script_RegisterGamepadMappingBindings(L) // (raw joysticks, mappings, Controller Setup: gamepad_lua.odin)
 }
 
 // Input_DispatchPadEvents (each frame, after input): hot-plug events to

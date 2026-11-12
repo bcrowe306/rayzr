@@ -616,6 +616,7 @@ Runner_Frame :: proc(rs: ^Runner_State) -> bool {
 		EditorLink_BeginFrame(game)
 		if game.linkPaused && !game.frozen do dt = 1.0 / 60 // a step
 		if Console_Frame(game, rl.GetFrameTime()) do dt = 1.0 / 60 // (the console's step)
+		ControllerSetup_Frame(game, rl.GetFrameTime()) // (Input.open_controller_setup: gamepad_setup_screen.odin)
 		Tests_BeforeFrame(game) // (a test's input this frame)
 		Recorder_Frame(game)    // (the editor's Record)
 
@@ -721,6 +722,7 @@ Runner_Frame :: proc(rs: ^Runner_State) -> bool {
 		if filtered do Colorblind_End()
 		Pixel_DrawNative(&game.gameContext, dest, vw, vh) // (Native text / UI, at the window's resolution)
 		if opts.uncapped && opts.benchFrames <= 0 && opts.perfReport == "" do runner_draw_frame_time(rs)
+		ControllerSetup_Draw(game) // (the Controller Setup screen, under the console)
 		Console_DrawScreen(game) // (the developer console and its overlays)
 		Prof_Begin("present")
 		rl.EndDrawing()

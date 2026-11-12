@@ -71,6 +71,8 @@ Input_PadsDestroy :: proc(input: ^InputSystem) {
 	delete(input.pads.events)
 	input.pads.events = nil
 	Rumble_Shutdown(input)
+	Pad_SetupCancel()
+	Gamepad_MappingsShutdown()
 }
 
 // --- pads (real or simulated) -------------------------------------------------
@@ -90,12 +92,14 @@ Input_PadName :: proc(input: ^InputSystem, pad: i32) -> string {
 Input_PadButtonDown :: proc(input: ^InputSystem, pad: i32, b: rl.GamepadButton) -> bool {
 	if !Input_PadConnected(input, pad) do return false
 	if s := &input.pads.sim[pad]; s.active do return s.buttons[b]
+	if input.padsBlocked do return false
 	return rl.IsGamepadButtonDown(pad, b)
 }
 
 Input_PadAxis :: proc(input: ^InputSystem, pad: i32, a: rl.GamepadAxis) -> f32 {
 	if !Input_PadConnected(input, pad) do return 0
 	if s := &input.pads.sim[pad]; s.active do return s.axes[a]
+	if input.padsBlocked do return 0
 	return rl.GetGamepadAxisMovement(pad, a)
 }
 
@@ -191,6 +195,8 @@ Input_UpdatePlayers :: proc(input: ^InputSystem, deltaTime: f32) {
 	// Hot-plug (the first poll only records what is there). Events are this
 	// frame's (their names are temp): taken after the update.
 	clear(&pads.events)
+	Gamepad_MappingsFrame() // (mappings for controllers that just connected: gamepad_mappings.odin)
+	if padSetup.active && !padScreen.open do Pad_SetupFrame() // (a script's Input.mapping_begin)
 	for pad in 0 ..< i32(MAX_PADS) {
 		now := Input_PadConnected(input, pad)
 		if pads.polled && now != pads.connected[pad] {

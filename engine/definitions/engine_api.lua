@@ -15445,6 +15445,105 @@ function InputModule.get_player_count() end
 ---@return integer 1 plus each of players 2-4 that has a connected gamepad
 function InputModule.player_count() end
 
+---The connected joysticks - every controller the OS reports, gamepad or not (flight sticks, wheels, arcade panels). Desktop only (empty on the web).
+---
+---Example: `for _, j in ipairs(Input.get_joysticks()) do print(j.id, j.name, j.source, j.buttons, j.axes, j.hats) end`
+---@return {id: integer, name: string, guid: string, gamepad: boolean, source: string, axes: integer, buttons: integer, hats: integer}[] One entry per joystick: id (1-16, the same numbers as gamepads), name, SDL GUID, whether it has a mapping (gamepad), where the mapping came from ("bundled", "builtin", "project", "player", "environment", "other_platform", "generic", "setup", "script" or "none"), and its axis, button and hat counts
+function InputModule.get_joysticks() end
+
+---Whether a joystick's raw button is down (buttons numbered from 0, as mapping lines name them: "b0").
+---
+---Example: `if Input.get_joystick_button(1, 0) then self:fire() end`
+---@param id integer The joystick, 1-16 (Input.get_joysticks)
+---@param index integer The button, from 0
+---@return boolean down true while it's held; false for a joystick or button that isn't there
+function InputModule.get_joystick_button(id, index) end
+
+---A joystick's raw axis (axes numbered from 0: "a0").
+---
+---Example: `local throttle = (1 - Input.get_joystick_axis(1, 2)) * 0.5 -- 0..1`
+---@param id integer The joystick, 1-16
+---@param index integer The axis, from 0
+---@return number value -1..1 (0 for a joystick or axis that isn't there)
+function InputModule.get_joystick_axis(id, index) end
+
+---A joystick's raw hat (a d-pad that reports as one input; hats numbered from 0: "h0.1").
+---
+---Example: `local up = Input.get_joystick_hat(1, 0) & 1 ~= 0`
+---@param id integer The joystick, 1-16
+---@param index integer The hat, from 0
+---@return integer bits 1 up, 2 right, 4 down, 8 left, added (0: centred, or no such hat)
+function InputModule.get_joystick_hat(id, index) end
+
+---A controller's mapping line (which raw input is A, the left stick...), and where it came from.
+---
+---Example: `local line, source = Input.get_gamepad_mapping(1); Log.info(source)`
+---@param id integer The joystick, 1-16
+---@return string? line The SDL mapping line ("guid,name,a:b0,..."); nil when it has none, or GLFW's own (not shown)
+---@return string source "bundled", "builtin", "project", "player", "environment", "other_platform", "generic", "setup", "script" or "none"
+function InputModule.get_gamepad_mapping(id) end
+
+---Uses an SDL mapping line for a controller now (its platform field is ignored) - and with save, keeps it in the player's gamecontrollerdb.txt for later runs.
+---
+---Example: `Input.set_gamepad_mapping("03000000deadbeef0000000000000000,My Pad,a:b0,b:b1,leftx:a0,lefty:a1,", true)`
+---@param line string A mapping line: a 32-character GUID, a name, then fields ("a:b0", "leftx:a0", "dpup:h0.1")
+---@param save? boolean Also save it for the player (default false)
+---@return boolean ok false (with a warning) for something that isn't a mapping line, or when saving failed
+function InputModule.set_gamepad_mapping(line, save) end
+
+---Opens the built-in Controller Setup screen: the game pauses and the player presses each button it asks for; the mapping is used at once and saved for the player. Tab skips, Backspace goes back, Left / Right picks another controller, Esc cancels; a step with no answer for 5 s is skipped. Desktop only.
+---
+---Example: `if Input.is_action_pressed("ui_accept") and selected == "controller" then Input.open_controller_setup() end`
+---@param id? integer The joystick to set up, 1-16; nil picks the first one without a proper mapping, else the first one
+---@return boolean ok false where there's no Controller Setup (the web) or no such joystick
+function InputModule.open_controller_setup(id) end
+
+---Closes the Controller Setup screen without saving.
+---
+---Example: `Input.close_controller_setup()`
+function InputModule.close_controller_setup() end
+
+---Whether the Controller Setup screen is open (the game is paused under it).
+---
+---Example: `if not Input.is_controller_setup_open() then self:resume_menu() end`
+---@return boolean open
+function InputModule.is_controller_setup_open() end
+
+---Starts Controller Setup for a custom screen: show Input.mapping_state() each frame, then Input.mapping_finish(). The sticks should be centred and the triggers let go (their positions now are "at rest").
+---
+---Example: `Input.mapping_begin(Input.get_joysticks()[1].id)`
+---@param id integer The joystick, 1-16
+---@return boolean ok false (with a warning) when it isn't connected, or the built-in screen is open
+function InputModule.mapping_begin(id) end
+
+---Where Controller Setup is: the step to show, and the mapping so far.
+---
+---Example: `local st = Input.mapping_state(); if st.active then label.text = st.label end`
+---@return {active: boolean, done: boolean, total: integer, step: integer?, field: string?, label: string?, kind: "button"|"axis"?, waiting: boolean?, used_by: string?, name: string?, id: integer?, mapping: string?} state active (running), done (every step answered or skipped: call mapping_finish), total steps, and while active: step (from 1), field ("a", "leftx"), label ("Press A (the bottom face button)"), kind, waiting (for the last input to be let go), used_by (the step that already has the input just pressed), name, id and the mapping line so far
+function InputModule.mapping_state() end
+
+---Skips this step of Controller Setup (the controller has no such button).
+---
+---Example: `if Input.is_key_pressed("Tab") then Input.mapping_skip() end`
+function InputModule.mapping_skip() end
+
+---Goes back a step in Controller Setup (and clears it).
+---
+---Example: `if Input.is_key_pressed("Backspace") then Input.mapping_back() end`
+function InputModule.mapping_back() end
+
+---Stops Controller Setup without using what it made.
+---
+---Example: `Input.mapping_cancel()`
+function InputModule.mapping_cancel() end
+
+---Finishes Controller Setup: the mapping is used at once (steps not answered are left out) and, unless save is false, kept in the player's gamecontrollerdb.txt.
+---
+---Example: `if Input.mapping_state().done then Input.mapping_finish() end`
+---@param save? boolean Keep it for later runs (default true)
+---@return string? line The mapping line; nil when setup wasn't running or no step was answered
+function InputModule.mapping_finish(save) end
+
 
 ---@class AudioModule
 ---Engine audio playback and the mixer: every sound and music plays into a bus (Master, Music, SFX and the project's own - the Mixer tab), each with a fader, pan, mute / solo and effects.

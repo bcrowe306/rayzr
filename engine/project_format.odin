@@ -74,6 +74,7 @@ ProjectConfig :: struct {
 	// Input actions (empty = the built-in defaults)
 	actions:       [dynamic]Input_Action_Config,
 	touchAsMouse:  bool, // a finger is the left mouse button (default on; "input": {"touch_as_mouse"})
+	gamepadFallback: bool, // controllers without a mapping get the standard layout (default on; "input": {"gamepad_fallback"}; gamepad_mappings.odin)
 	consoleInRelease: bool,   // the developer console in release exports too ("debug": {"console_in_release"}; dev_console.odin)
 	consoleKey:       string, // its key ("debug": {"console_key"}; "" = the backquote)
 	// How strictly the editor's Lua language server checks the scripts
@@ -344,6 +345,7 @@ Project_ParseConfig :: proc(jsonBytes: []u8, allocator := context.allocator) -> 
 		sfxVolume     = 1,
 		export        = {targets = {native_export_target()}, compress = true, includeFont = true},
 		touchAsMouse  = true,
+		gamepadFallback = true,
 	}
 
 	parsedVal, err := json.parse(jsonBytes, allocator = context.temp_allocator)
@@ -420,6 +422,7 @@ Project_ParseConfig :: proc(jsonBytes: []u8, allocator := context.allocator) -> 
 	}
 	if inputObj, ok := json_get_obj(rootObj, "input"); ok {
 		cfg.touchAsMouse = json_get_bool(inputObj, "touch_as_mouse", true)
+		cfg.gamepadFallback = json_get_bool(inputObj, "gamepad_fallback", true)
 		if arr, has := json_get_arr(inputObj, "actions"); has {
 			cfg.actions = make([dynamic]Input_Action_Config, allocator)
 			for v in arr {
@@ -581,9 +584,10 @@ Project_SerializeToJSON :: proc(cfg: ^ProjectConfig, allocator := context.alloca
 	}
 	strings.write_byte(&sb, '\n')
 	strings.write_string(&sb, "  },\n")
-	if len(cfg.actions) > 0 || !cfg.touchAsMouse {
+	if len(cfg.actions) > 0 || !cfg.touchAsMouse || !cfg.gamepadFallback {
 		strings.write_string(&sb, "  \"input\": {")
 		if !cfg.touchAsMouse do strings.write_string(&sb, "\"touch_as_mouse\": false, ")
+		if !cfg.gamepadFallback do strings.write_string(&sb, "\"gamepad_fallback\": false, ")
 		strings.write_string(&sb, "\"actions\": [\n")
 		for a, i in cfg.actions {
 			strings.write_string(&sb, "    {\"name\": "); jstr(&sb, a.name)
@@ -697,6 +701,9 @@ Game_LoadProjectConfig :: proc(game: ^Game, cfg: ^ProjectConfig, activate := tru
 	Mixer_ApplyProject(cfg) // buses, faders, effects (mixer_config.odin)
 	Input_ApplyActionConfigs(&game.input, cfg.actions[:])
 	game.input.touch.asMouse = cfg.touchAsMouse
+	// The project's controller mappings (gamecontrollerdb.txt next to project.json; the player's own too in a game).
+	padDb, _ := AssetManager_ReadFileString(&game.assetManager, GAMEPAD_DB_FILE, context.temp_allocator)
+	Gamepad_ConfigureMappings(padDb, cfg.gamepadFallback, activate)
 	Input_RebindSetDefaults(&game.input, cfg.actions[:]) // (Input.reset_bindings)
 	if activate do Input_LoadUserBindings(&game.input) // the player's own (the game, not the editor)
 	Access_SetDefaults(ProjectConfig_Accessibility(cfg))
