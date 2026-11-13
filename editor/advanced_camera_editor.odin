@@ -124,8 +124,7 @@ Viewport_DrawAdvancedCameras :: proc(state: ^EditorState) {
 		rl.DrawRectangleLinesEx(r, (2.5 if c.active else 1.5) * px, col)
 		rl.DrawCircleLinesV(center, 6 * px, col)
 		if !c.enabled do continue
-		label := fmt.ctprintf("%s  p%d%s", c.name, c.priority, " (active)" if c.active else "")
-		rl.DrawTextEx(rl.GetFontDefault(), label, {r.x + 4 * px, r.y + 4 * px}, 14 * px, px, col)
+		Viewport_Label({r.x, r.y}, fmt.tprintf("%s  p%d%s", c.name, c.priority, " (active)" if c.active else ""), col, .Inside)
 		if !sel do continue
 		if c.followMode == .Framed {
 			dz := view * c.deadZone

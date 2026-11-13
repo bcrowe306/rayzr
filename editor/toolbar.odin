@@ -104,6 +104,11 @@ Toolbar_Render :: proc(state: ^EditorState, width, height, posY: f32) {
 	toggle(&state.showGrid, ICON_FA_BORDER_ALL, "toolbar.grid", "Show grid")
 	toggle(&state.showBounds, ICON_FA_EYE, "toolbar.bounds", "Show bounds & colliders")
 	toggle(&state.showCameraBounds, ICON_FA_VIDEO, "toolbar.camera", "Show camera frames")
+	if UI_IconButton(ICON_FA_TAG, "toolbar.labels", "Show labels (camera frames, LDtk entities)", GlobalSettings.viewportLabels) {
+		GlobalSettings.viewportLabels = !GlobalSettings.viewportLabels
+		_ = Editor_SaveSettings()
+	}
+	imgui.SameLine()
 	Toolbar_PreviewShape(state) // (Expand: the screen shape shown, #202)
 	toggle(&viewportLighting, ICON_FA_SUN, "toolbar.lighting", "Preview lighting (lights, the scene's ambient) and post effects")
 	UI_VerticalDivider()
@@ -112,7 +117,7 @@ Toolbar_Render :: proc(state: ^EditorState, width, height, posY: f32) {
 	imgui.SetNextItemWidth(76)
 	imgui.PushStyleVarImVec2(.FramePadding, {6, 7})
 	if imgui.BeginCombo("##zoom", fmt.ctprintf("%.0f%%", state.cameraZoom * 100)) {
-		for z in ([]f32{0.25, 0.5, 1, 2, 4}) {
+		for z in ([]f32{0.25, 0.5, 1, 2, 4, 8, 16, 32}) {
 			if imgui.Selectable(fmt.ctprintf("%.0f%%", z * 100), abs(state.cameraZoom - z) < 0.001) do state.cameraZoom = z
 			Drive_Item(fmt.tprintf("pick:%.0f%%", z * 100))
 		}
@@ -140,7 +145,7 @@ Toolbar_Render :: proc(state: ^EditorState, width, height, posY: f32) {
 // Toolbar_PlayControls: Play / Play Scene, or Pause / Step / Restart / Stop
 // while the game runs (shared by the Game and Level toolbars).
 // The right-aligned group's width (the Play group never reaches into it).
-TOOLBAR_RIGHT_W :: f32(7 * 32 + 64 + 3 * 18 + 32 + 80)
+TOOLBAR_RIGHT_W :: f32(8 * 32 + 64 + 3 * 18 + 32 + 80)
 
 Toolbar_PlayControls :: proc(state: ^EditorState, width: f32) {
 	rightLimit := width - TOOLBAR_RIGHT_W - 10 - UI_SPACE * 3

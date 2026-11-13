@@ -105,6 +105,7 @@ assetScrollTo: string
 AssetBrowser_Render :: proc(state: ^EditorState) {
 	defer imgui.End()
 	assetsOpen := imgui.Begin("Assets###AssetBrowserWindow")
+	assetPanelFocused = assetsOpen && imgui.IsWindowFocused(imgui.FocusedFlags_RootAndChildWindows)
 	Drive_Window("assets") // (annotated docs screenshots)
 	PanelHelp_Mark("assets")
 	Dock_Remember(.Left) // (plugin panels dock next to it: plugin_panels.odin)

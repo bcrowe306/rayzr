@@ -403,18 +403,19 @@ SpawnerNode_DrawBounds :: proc(node: ^Node, ctx: ^GameContext, dt: f32) {
 		r := math.to_radians(deg)
 		return {math.cos(r), math.sin(r)} * facing
 	}
-	rl.DrawCircleLinesV(p, 6, col)
+	px := Debug_PixelSize()
+	rl.DrawCircleLinesV(p, 6 * px, col)
 	rl.DrawLineV(s.globalPosition, p, {col.r, col.g, col.b, 90})
 	rot := s.globalRotation if s.inheritRotation else 0
-	rl.DrawLineEx(p, p + dirAt(rot, facing) * 28, 2, col)
+	rl.DrawLineEx(p, p + dirAt(rot, facing) * 28 * px, 2 * px, col)
 	if s.spread > 0 {
 		half := s.spread * 0.5
-		rl.DrawLineV(p, p + dirAt(rot - half, facing) * 22, {col.r, col.g, col.b, 140})
-		rl.DrawLineV(p, p + dirAt(rot + half, facing) * 22, {col.r, col.g, col.b, 140})
+		rl.DrawLineV(p, p + dirAt(rot - half, facing) * 22 * px, {col.r, col.g, col.b, 140})
+		rl.DrawLineV(p, p + dirAt(rot + half, facing) * 22 * px, {col.r, col.g, col.b, 140})
 	}
 	if s.jitter != {} {
 		j := s.jitter * [2]f32{abs(s.globalScale.x), abs(s.globalScale.y)}
-		rl.DrawRectangleLinesEx({p.x - j.x, p.y - j.y, j.x * 2, j.y * 2}, 1, {col.r, col.g, col.b, 120})
+		rl.DrawRectangleLinesEx({p.x - j.x, p.y - j.y, j.x * 2, j.y * 2}, px, {col.r, col.g, col.b, 120})
 	}
 }
 

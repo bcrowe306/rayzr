@@ -603,7 +603,8 @@ PhysicsJoint_DrawDebug :: proc(pj: ^PhysicsJoint, color := rl.GOLD) {
 	pA := b2.Body_GetWorldPoint(bodyA, b2.Joint_GetLocalAnchorA(id))
 	pB := b2.Body_GetWorldPoint(bodyB, b2.Joint_GetLocalAnchorB(id))
 
-	rl.DrawLineEx(pA, pB, 2.0, color)
-	rl.DrawCircleV(pA, 4.0, color)
-	rl.DrawCircleV(pB, 4.0, color)
+	px := Debug_PixelSize()
+	rl.DrawLineEx(pA, pB, 2 * px, color)
+	rl.DrawCircleV(pA, 4 * px, color)
+	rl.DrawCircleV(pB, 4 * px, color)
 }

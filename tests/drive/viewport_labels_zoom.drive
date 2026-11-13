@@ -1,0 +1,135 @@
+# Viewport fixes: camera-frame labels drawn in the editor's font at one size
+# on screen (viewport_labels.odin), the toolbar's Labels toggle (saved); the
+# zoom going to 6400%; a raycast's dots kept small when zoomed in
+# (Debug_PixelSize); the arrow keys in the bottom panel's File Browser don't
+# nudge the selected node.
+wait 5
+click @asset.new-scene
+wait 5
+click @hier.add
+click @addnode.search
+type raycast
+wait 2
+click @addnode.create
+wait 3
+# A capsule collider (its outline stays round and thin zoomed in).
+click @hier.add
+click @addnode.search
+type character mover
+wait 2
+click @addnode.create
+wait 3
+key shift+home
+wait 2
+# The camera frame's name.
+expect viewport-labels >= 1
+screenshot labels_on
+
+# Labels off (saved), then on again.
+click @toolbar.labels
+wait 2
+expect viewport-labels == 0
+expect file:.editor_settings.ini contains viewport_labels = false
+screenshot labels_off
+click @toolbar.labels
+wait 2
+expect viewport-labels >= 1
+expect file:.editor_settings.ini contains viewport_labels = true
+
+# Zoom: Cmd+= past the old 1000% cap, to 6400%.
+click @hier:RaycastSensor
+key f
+wait 2
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+wait 2
+expect zoom == 64.00
+key cmd+0
+wait 1
+expect zoom == 1.00
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+key cmd+equal
+wait 2
+expect zoom >= 20
+screenshot raycast_zoomed
+
+# The File Browser has the keyboard: its arrow keys aren't the node's.
+click @hier:RaycastSensor
+click @menu:View
+click @menu:View/Workspaces
+click @menu:Workspaces/Animation
+wait 3
+click @hier:RaycastSensor
+click @bottom:files
+wait 2
+click @fb.path
+key cmd+a
+type tests/drive/fixtures/import
+key enter
+wait 2
+click @fb.row:blip.wav
+wait 1
+expect bottom-focused == true
+expect node:RaycastSensor.position ~= 640,352
+key down
+key down
+key right
+key left
+wait 1
+expect node:RaycastSensor.position ~= 640,352
+# Back in the viewport: the arrows nudge again.
+click @viewport+0,200
+click @hier:RaycastSensor
+key right
+wait 1
+expect node:RaycastSensor.position ~= 641,352

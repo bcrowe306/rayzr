@@ -991,6 +991,10 @@ Drive_Query :: proc(state: ^EditorState, q: string) -> (string, bool) {
 		return strings.to_lower(fmt.tprint(state.toolMode), context.temp_allocator), true
 	case "zoom":
 		return fmt.tprintf("%.2f", state.cameraZoom), true
+	case "viewport-labels":
+		return fmt.tprint(Viewport_LabelCount()), true
+	case "bottom-focused":
+		return "true" if bottomPanelFocused else "false", true
 	case "undo-bytes":
 		return fmt.tprint(Undo_StoreBytes()), true
 	case "tile-chunks":

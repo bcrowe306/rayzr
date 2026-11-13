@@ -1151,11 +1151,11 @@ CharacterMoverNode_Render :: proc(node: ^Node, gameContext: ^GameContext, deltaT
 	}
 	cap := CharacterMoverNode_GetWorldCapsule(cm)
 	fillColor := rl.Color{cm.debugColor.r, cm.debugColor.g, cm.debugColor.b, 70}
-	rl.DrawCircleV(cap.center1, cap.radius, fillColor)
-	rl.DrawCircleV(cap.center2, cap.radius, fillColor)
+	Debug_Circle(cap.center1, cap.radius, fillColor)
+	Debug_Circle(cap.center2, cap.radius, fillColor)
 	rl.DrawLineEx(cap.center1, cap.center2, cap.radius * 2.0, fillColor)
-	rl.DrawCircleLinesV(cap.center1, cap.radius, cm.debugColor)
-	rl.DrawCircleLinesV(cap.center2, cap.radius, cm.debugColor)
+	Debug_CircleLines(cap.center1, cap.radius, cm.debugColor)
+	Debug_CircleLines(cap.center2, cap.radius, cm.debugColor)
 	rot := DegreesToRot(cm.rotation)
 	perp := b2.RotateVector(rot, b2.Vec2{cap.radius, 0})
 	rl.DrawLineV(cap.center1 + perp, cap.center2 + perp, cm.debugColor)
@@ -1643,15 +1643,16 @@ RaycastNode_Render :: proc(node: ^Node, gameContext: ^GameContext, deltaTime: f3
 	origin := RaycastNode_GetOrigin(rc)
 	endPt := origin + RaycastNode_GetTranslation(rc)
 
-	rl.DrawCircleV(origin, 4.0, rc.rayColor)
+	px := Debug_PixelSize() // (sizes on screen, at any zoom)
+	rl.DrawCircleV(origin, 4 * px, rc.rayColor)
 	if rc.isColliding {
-		rl.DrawLineEx(origin, rc.hitPoint, 2.0, rc.hitColor)
-		rl.DrawLineEx(rc.hitPoint, endPt, 1.0, rl.Color{rc.rayColor.r, rc.rayColor.g, rc.rayColor.b, 80})
-		rl.DrawCircleV(rc.hitPoint, 5.0, rc.hitColor)
+		rl.DrawLineEx(origin, rc.hitPoint, 2 * px, rc.hitColor)
+		rl.DrawLineEx(rc.hitPoint, endPt, px, rl.Color{rc.rayColor.r, rc.rayColor.g, rc.rayColor.b, 80})
+		rl.DrawCircleV(rc.hitPoint, 5 * px, rc.hitColor)
 		// Draw surface normal at hit point
-		rl.DrawLineEx(rc.hitPoint, rc.hitPoint + rc.hitNormal * 20.0, 2.0, rl.YELLOW)
+		rl.DrawLineEx(rc.hitPoint, rc.hitPoint + rc.hitNormal * 20 * px, 2 * px, rl.YELLOW)
 	} else {
-		rl.DrawLineEx(origin, endPt, 2.0, rc.rayColor)
+		rl.DrawLineEx(origin, endPt, 2 * px, rc.rayColor)
 	}
 }
 
