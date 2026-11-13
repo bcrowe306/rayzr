@@ -183,6 +183,13 @@ built-in ones.
   direction) and a dead zone (**dz**).
 - **Press a Key**: the next key you press becomes a binding (Esc cancels).
 - **Add Binding**: adds a binding (Space) to change by hand.
+- **Touch as Mouse**: on touch screens the first finger is the left mouse
+  button (on by default).
+- **Guess Unknown Controllers**: a controller that isn't in the controller
+  database gets a standard layout, so it works at once (on by default).
+  Off: it stays unmapped until it's set up. Saved as
+  `"input": {"gamepad_fallback": false}`.
+- **Controllers...**: opens **Tools > Controllers** ([Controllers](controllers.md)).
 
 An action takes up to 4 bindings. Guides: [gamepads](../../engine/docs/gamepads.md),
 [input rebinding](../../engine/docs/input_rebinding.md).

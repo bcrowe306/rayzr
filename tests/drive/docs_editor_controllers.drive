@@ -1,0 +1,12 @@
+# Docs screenshots: Tools > Controllers (docs/editor/controllers.md), with
+# whatever controller is connected. F1 in the window opens the page.
+wait 5
+key escape
+click @menu:Tools
+click @menu:Tools/Controllers...
+wait 5
+move 1270,710
+screenshot editor_controllers
+key f1
+wait 2
+expect noderef.page == editor/controllers

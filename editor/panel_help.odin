@@ -37,6 +37,7 @@ PANEL_HELP_PAGES := [?]struct {
 	{"toolbar-menus", "Toolbar and Menus"},
 	{"welcome", "Welcome"},
 	{"registry", "Registry"},
+	{"controllers", "Controllers"},
 	{"keyboard-shortcuts", "Keyboard Shortcuts"},
 }
 

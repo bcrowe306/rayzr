@@ -194,6 +194,7 @@ MainMenu_Render :: proc(state: ^EditorState) -> f32 {
 		imgui.Separator()
 		menu_action(state, "tool.sprite_slicer")
 		menu_action(state, "tool.registry")
+		menu_action(state, "tool.controllers")
 		menu_action(state, "tool.new_plugin")
 		menu_action(state, "tool.format_scenes")
 		menu_action(state, "tool.setup_merge")

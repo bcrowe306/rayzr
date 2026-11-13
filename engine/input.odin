@@ -83,6 +83,7 @@ InputSystem :: struct {
 	useSimulatedInput:    bool,
 	mouseBlocked:         bool, // a UI widget has the mouse: mouse bindings read up (#228)
 	keyboardBlocked:      bool, // the developer console is open: key bindings read up (#285)
+	padsBlocked:          bool, // Controller Setup is open: gamepads read up (gamepad_setup_screen.odin)
 
 	// Project-defined actions (input_actions.odin).
 	named: [dynamic]Named_Action,

@@ -134,6 +134,7 @@ editor_main :: proc() -> int {
 	defer Editor_Shutdown(&GlobalEditor)
 	defer Welcome_Shutdown() // (its preview textures)
 	defer Registry_Shutdown() // (its downloads and screenshots)
+	defer Controllers_Shutdown()
 	Plugins_Load(&GlobalEditor) // project + user plugins (plugins.odin)
 	defer Plugins_Unload(&GlobalEditor)
 	UpdateCheck_Start() // a newer release? (update_check.odin; off in development builds)
@@ -303,6 +304,7 @@ editor_main :: proc() -> int {
 		AtlasRegion_Render(&GlobalEditor)
 		Welcome_Render(&GlobalEditor)
 		Registry_Render(&GlobalEditor) // Tools > Registry (registry_window.odin, #296)
+		Controllers_Render(&GlobalEditor) // Tools > Controllers (controllers_window.odin)
 		OpenProject_Render(&GlobalEditor)
 		Signals_Render(&GlobalEditor)
 		NodeRefs_Render(&GlobalEditor) // update script references after a rename / move

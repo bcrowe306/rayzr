@@ -269,6 +269,10 @@ settings_save :: proc(state: ^EditorState) {
 	state.game.sfxVolume = d.sfxVolume
 	e.Input_ApplyActionConfigs(&state.game.input, d.actions[:])
 	state.game.input.touch.asMouse = d.touchAsMouse
+	{
+		padDb, _ := e.AssetManager_ReadFileString(&state.game.assetManager, e.GAMEPAD_DB_FILE, context.temp_allocator)
+		e.Gamepad_ConfigureMappings(padDb, d.gamepadFallback, false)
+	}
 	e.Access_SetDefaults(e.ProjectConfig_Accessibility(d)) // (Simulate uses the project's accessibility defaults)
 	Editor_ReloadGlobals(state)
 
@@ -778,6 +782,13 @@ project_input :: proc(state: ^EditorState) {
 	imgui.Checkbox("Touch as Mouse##settings.touch-as-mouse", &d.touchAsMouse)
 	Drive_Item("settings.touch-as-mouse")
 	UI_Tooltip("On touch screens (the web export on phones and tablets) the first finger is the left mouse button: taps click, drags drag. Off: games read the fingers themselves (Input.get_touches). On-screen controls take their own fingers either way")
+	imgui.SameLine()
+	imgui.Checkbox("Guess Unknown Controllers##settings.gamepad-fallback", &d.gamepadFallback)
+	Drive_Item("settings.gamepad-fallback")
+	UI_Tooltip("A controller that isn't in the controller database gets a standard layout (face buttons 0-3, sticks on axes 0-3, the d-pad on its hat) so it works at once; players fix it in Controller Setup. Off: it stays unmapped until it's set up (Tools > Controllers, Input.open_controller_setup)")
+	imgui.SameLine()
+	if UI_Button(fmt.tprintf("%s  Controllers...", ICON_FA_GAMEPAD), "settings.controllers") do Controllers_Open(state)
+	UI_Tooltip("See the connected controllers and set one up (Tools > Controllers)")
 	imgui.Dummy({0, 4})
 	h := imgui.GetContentRegionAvail().y
 	// Action list.
