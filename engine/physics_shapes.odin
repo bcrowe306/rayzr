@@ -333,8 +333,8 @@ PhysicsShape_DrawDebug :: proc(shape: ^PhysicsShape, bodyPos: [2]f32, bodyRotDeg
 
 	switch g.type {
 	case .Circle:
-		rl.DrawCircleV(worldCenter, g.radius, fillColor)
-		rl.DrawCircleLinesV(worldCenter, g.radius, color)
+		Debug_Circle(worldCenter, g.radius, fillColor)
+		Debug_CircleLines(worldCenter, g.radius, color)
 		dir := b2.RotateVector(shapeRot, b2.Vec2{g.radius, 0})
 		rl.DrawLineV(worldCenter, worldCenter + dir, color)
 
@@ -343,10 +343,10 @@ PhysicsShape_DrawDebug :: proc(shape: ^PhysicsShape, bodyPos: [2]f32, bodyRotDeg
 		dir := b2.RotateVector(shapeRot, b2.Vec2{0, halfLen})
 		p1 := worldCenter - dir
 		p2 := worldCenter + dir
-		rl.DrawCircleV(p1, g.radius, fillColor)
-		rl.DrawCircleV(p2, g.radius, fillColor)
-		rl.DrawCircleLinesV(p1, g.radius, color)
-		rl.DrawCircleLinesV(p2, g.radius, color)
+		Debug_Circle(p1, g.radius, fillColor)
+		Debug_Circle(p2, g.radius, fillColor)
+		Debug_CircleLines(p1, g.radius, color)
+		Debug_CircleLines(p2, g.radius, color)
 		rl.DrawLineEx(p1, p2, g.radius * 2.0, fillColor)
 		perp := b2.RotateVector(shapeRot, b2.Vec2{g.radius, 0})
 		rl.DrawLineV(p1 + perp, p2 + perp, color)
@@ -380,7 +380,7 @@ PhysicsShape_DrawDebug :: proc(shape: ^PhysicsShape, bodyPos: [2]f32, bodyRotDeg
 	case .Segment:
 		p1 := worldCenter + b2.RotateVector(shapeRot, g.point1)
 		p2 := worldCenter + b2.RotateVector(shapeRot, g.point2)
-		rl.DrawLineEx(p1, p2, 2.0, color)
+		rl.DrawLineEx(p1, p2, 2 * Debug_PixelSize(), color)
 
 	case .Chain:
 		n := len(g.chainPoints)
@@ -388,12 +388,12 @@ PhysicsShape_DrawDebug :: proc(shape: ^PhysicsShape, bodyPos: [2]f32, bodyRotDeg
 			for i in 0..<(n - 1) {
 				p1 := worldCenter + b2.RotateVector(shapeRot, g.chainPoints[i])
 				p2 := worldCenter + b2.RotateVector(shapeRot, g.chainPoints[i + 1])
-				rl.DrawLineEx(p1, p2, 2.0, color)
+				rl.DrawLineEx(p1, p2, 2 * Debug_PixelSize(), color)
 			}
 			if g.isLoop {
 				p1 := worldCenter + b2.RotateVector(shapeRot, g.chainPoints[n - 1])
 				p2 := worldCenter + b2.RotateVector(shapeRot, g.chainPoints[0])
-				rl.DrawLineEx(p1, p2, 2.0, color)
+				rl.DrawLineEx(p1, p2, 2 * Debug_PixelSize(), color)
 			}
 		}
 	}

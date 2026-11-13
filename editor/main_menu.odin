@@ -124,6 +124,7 @@ MainMenu_Render :: proc(state: ^EditorState) -> f32 {
 		menu_action(state, "view.grid", "Grid")
 		menu_action(state, "view.bounds", "Bounds & Colliders")
 		menu_action(state, "view.camera_frames", "Camera Frames")
+		menu_action(state, "view.labels", "Labels")
 		menu_action(state, "view.colliders")
 		menu_action(state, "view.rulers")
 		menu_action(state, "view.clear_guides")

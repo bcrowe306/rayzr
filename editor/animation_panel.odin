@@ -92,6 +92,12 @@ frameClip: e.Frame_Clip
 // scene's: Delete, Cmd+C / V act on frames).
 animTimelineFocused: bool
 
+// bottomPanelFocused / assetPanelFocused: the bottom panel (any tab: the
+// File Browser's arrow keys, the Console) or the Assets panel has the
+// keyboard - the arrow keys, Delete and copy / paste there aren't the
+// selected node's (actions.odin).
+bottomPanelFocused, assetPanelFocused: bool
+
 @(private = "file")
 panel: Anim_Panel
 

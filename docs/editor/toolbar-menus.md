@@ -57,10 +57,11 @@ From left to right:
 | **Show grid** | The background grid and the origin axes. Shift+G |
 | **Show bounds & colliders** (eye) | Outlines every node and its collision shapes, not only the selected ones. |
 | **Show camera frames** (camera) | Draws each camera's frame: what the game will show. |
+| **Show labels** (tag) | The names on camera frames and LDtk entities in the viewport. Remembered. |
 | **Screen shape** | Only with the project's **Screen Fill: Expand**. Picks the screen shape to preview (16:9, 16:10, 4:3, 21:9, phone portrait). |
 | **Preview lighting** (sun) | Shows lights, the scene's ambient light and post effects in the viewport. |
 | **Fit** | Zoom to show the whole scene. **Home** |
-| **Zoom** (100%) | Pick 25%, 50%, 100%, 200%, 400%, or **Fit Scene**, **Fit Game View**, **Fit Selection**. |
+| **Zoom** (100%) | Pick 25% to 3200%, or **Fit Scene**, **Fit Game View**, **Fit Selection**. |
 | **Save** (disk) | Save the active scene. Turns orange when there are unsaved changes. Cmd+S |
 | **Export** (box) | Export a `.rayzr` package (asks for a folder). |
 | **Settings** (gear) | Project Settings. |
@@ -113,7 +114,8 @@ While a build runs, the red button cancels the build.
 | **Align** | | With two or more nodes selected: **Align Left / Right / Top / Bottom Edges**, **Align Horizontal / Vertical Centers**, **Distribute Horizontally / Vertically** (even spacing between centres). |
 
 The arrow keys nudge the selection by 1 pixel (Shift: one grid step). A
-quick burst of nudges is one undo step.
+quick burst of nudges is one undo step. While the bottom panel or the Assets
+panel has the keyboard, the arrow keys and Delete act there, not on the node.
 
 ### View menu
 
@@ -123,6 +125,7 @@ quick burst of nudges is one undo step.
 | **Grid** | Shift+G | Show the grid. |
 | **Bounds & Colliders** | | Outline every node and its shapes. |
 | **Camera Frames** | | Draw camera frames. |
+| **Labels** | | Draw the viewport's labels (camera frames, LDtk entities). |
 | **Show All Colliders** | | Every collision shape (bodies, LDtk levels, tile maps), even when the project hides them. |
 | **Rulers & Guides** | Cmd+Shift+R | Rulers on the viewport edges; drag from one to add a guide. |
 | **Clear Guides** | | Removes every guide in the scene. |
@@ -133,7 +136,7 @@ quick burst of nudges is one undo step.
 | **Snap Rotation** | | Rotation snaps to 15°. |
 | **Smart Snapping** | | Moved nodes snap to other nodes' edges and centres and to guides. On by default. |
 | **Frame Selection** | F | Centre the view on the selected node. |
-| **Zoom In / Zoom Out** | Cmd+= / Cmd+- | Zoom by steps (10% to 1000%). |
+| **Zoom In / Zoom Out** | Cmd+= / Cmd+- | Zoom by steps (2% to 6400%). |
 | **Reset Zoom (100%)** | Cmd+0 | |
 | **Fit Scene to View** | Home | The whole scene. |
 | **Fit Game View** | Shift+Home | The camera's frame at the project's resolution. |

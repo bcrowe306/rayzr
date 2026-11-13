@@ -16,6 +16,10 @@ col32 :: #force_inline proc(r, g, b: u32, a: u32 = 255) -> u32 {
 	return (r & 0xFF) | ((g & 0xFF) << 8) | ((b & 0xFF) << 16) | ((a & 0xFF) << 24)
 }
 
+// The viewport's zoom range (the wheel, Cmd+= / Cmd+-, fitting): 2% to 6400%.
+VIEWPORT_ZOOM_MIN :: f32(0.02)
+VIEWPORT_ZOOM_MAX :: f32(64)
+
 // Convert from Editor 2D World space to ImGui Screen space within the Viewport
 Viewport_WorldToScreen :: proc(state: ^EditorState, worldPos: [2]f32) -> [2]f32 {
 	halfView := state.viewportSize * 0.5
@@ -159,6 +163,8 @@ viewport_scene :: proc(state: ^EditorState) {
 	if ShapeEdit_Overlay(state) do state.viewportHovered = false
 	state.viewportDockId = imgui.GetWindowDockID()
 
+	// Labels over the scene (queued while it was drawn), then gizmos above them.
+	Viewport_DrawLabels(state)
 	// Interactive Gizmo overlays & mouse controls
 	Viewport_HandleInputAndGizmos(state)
 	// An empty scene: a hint in the middle.
@@ -652,8 +658,7 @@ draw_expand_frame :: proc(state: ^EditorState, center: [2]f32, zoom: f32) {
 	line(tr, br, dash, gap, th, col)
 	line(br, bl, dash, gap, th, col)
 	line(bl, tl, dash, gap, th, col)
-	fontSize := i32(math.clamp(11.0 / state.cameraZoom, 8.0, 32.0))
-	rl.DrawText(fmt.ctprintf("Expand on %s: %.0fx%.0f", PREVIEW_SHAPES[Editor_PreviewShape()].name, size.x * zoom, size.y * zoom), i32(r.x + 4 / state.cameraZoom), i32(r.y + r.height + 3 / state.cameraZoom), fontSize, col)
+	Viewport_Label({r.x, r.y + r.height}, fmt.tprintf("Expand on %s: %.0fx%.0f", PREVIEW_SHAPES[Editor_PreviewShape()].name, size.x * zoom, size.y * zoom), col, .Below)
 }
 
 @(private="file")
@@ -715,16 +720,8 @@ draw_camera_frustum :: proc(
 	rl.DrawLineEx({center.x - crSize, center.y}, {center.x + crSize, center.y}, th * 0.75, borderColor)
 	rl.DrawLineEx({center.x, center.y - crSize}, {center.x, center.y + crSize}, th * 0.75, borderColor)
 
-	// 5. Header label badge pill at top-left
-	badgeW: f32 = 230.0 / state.cameraZoom
-	badgeH: f32 = 18.0 / state.cameraZoom
-	badgeRect := rl.Rectangle{rect.x, rect.y - badgeH, badgeW, badgeH}
-	rl.DrawRectangleRec(badgeRect, rl.Color{18, 22, 30, 220})
-	rl.DrawRectangleLinesEx(badgeRect, 1.0 / state.cameraZoom, borderColor)
-
-	fontSize := i32(math.clamp(11.0 / state.cameraZoom, 8.0, 32.0))
-	labelStr := fmt.ctprintf("%s (%.0fx%.0f | %.2fx)", name, vW, vH, zoom)
-	rl.DrawText(labelStr, i32(rect.x + 4.0 / state.cameraZoom), i32(rect.y - badgeH + 3.0 / state.cameraZoom), fontSize, rl.Color{240, 243, 248, 255})
+	// 5. Its name over the top-left corner (screen space: viewport_labels.odin)
+	Viewport_Label({rect.x, rect.y}, fmt.tprintf("%s (%.0fx%.0f | %.2fx)", name, vW, vH, zoom), borderColor, .Above, badge = true, span = rect.height)
 
 	// 6. Camera Limits (if enabled on node)
 	if cam != nil && cam.hasLimits {
@@ -735,11 +732,7 @@ draw_camera_frustum :: proc(
 			limColor := rl.Color{235, 77, 75, 200}
 			rl.DrawRectangleLinesEx(limRect, th * 1.2, limColor)
 
-			limBadgeW: f32 = 100.0 / state.cameraZoom
-			limBadgeH: f32 = 16.0 / state.cameraZoom
-			rl.DrawRectangleRec(rl.Rectangle{limRect.x, limRect.y - limBadgeH, limBadgeW, limBadgeH}, rl.Color{30, 15, 15, 220})
-			rl.DrawRectangleLinesEx(rl.Rectangle{limRect.x, limRect.y - limBadgeH, limBadgeW, limBadgeH}, 1.0 / state.cameraZoom, limColor)
-			rl.DrawText("Camera Limits", i32(limRect.x + 4.0 / state.cameraZoom), i32(limRect.y - limBadgeH + 2.0 / state.cameraZoom), fontSize, rl.Color{255, 120, 120, 255})
+			Viewport_Label({limRect.x, limRect.y}, "Camera Limits", limColor, .Above, badge = true, span = limRect.height)
 		}
 	}
 
@@ -774,7 +767,7 @@ Viewport_HandleInputAndGizmos :: proc(state: ^EditorState) {
 		// 1. Zooming with Mouse Wheel
 		if io.MouseWheel != 0 {
 			zoomDelta := io.MouseWheel * 0.12 * state.cameraZoom
-			newZoom := math.clamp(state.cameraZoom + zoomDelta, f32(0.1), f32(10.0))
+			newZoom := math.clamp(state.cameraZoom + zoomDelta, VIEWPORT_ZOOM_MIN, VIEWPORT_ZOOM_MAX)
 
 			beforeZoomWorld := Viewport_ScreenToWorld(state, mouseScreen)
 			state.cameraZoom = newZoom
@@ -1214,8 +1207,7 @@ Viewport_DrawLdtkEntities :: proc(state: ^EditorState) {
 					col.a = 200
 					focused := focus != "" && ent.iid == focus
 					rl.DrawRectangleLinesEx(r, (3.5 if focused else 1.5) / z, rl.Color{255, 255, 255, 255} if focused else col)
-					fontSize := i32(math.clamp(11.0 / z, 6.0, 48.0))
-					rl.DrawText(strings.clone_to_cstring(ent.identifier, context.temp_allocator), i32(r.x), i32(r.y - f32(fontSize) - 2 / z), fontSize, col)
+					Viewport_Label({r.x, r.y}, ent.identifier, col, .Above)
 					// Links: an arrow to each referenced entity that's shown.
 					from := center_of(ln, lvl, &ent)
 					for ref in e.Ldtk_EntityRefs(&ent) {
@@ -1259,7 +1251,7 @@ fit_bounds :: proc(state: ^EditorState, mn, mx: [2]f32, margin: f32 = 0.9) {
 	if vs.x <= 0 || vs.y <= 0 do vs = {800, 450}
 	zx := vs.x / max(size.x, 1)
 	zy := vs.y / max(size.y, 1)
-	state.cameraZoom = clamp(min(zx, zy) * margin, 0.1, 10)
+	state.cameraZoom = clamp(min(zx, zy) * margin, VIEWPORT_ZOOM_MIN, VIEWPORT_ZOOM_MAX)
 	state.cameraPos = (mn + mx) * 0.5
 }
 

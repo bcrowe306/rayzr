@@ -127,6 +127,7 @@ BottomPanel_Render :: proc(state: ^EditorState) {
 	goapGraphFocused = false    // ... and the GOAP tab
 	defer imgui.End()
 	bottomOpen := imgui.Begin("Console###BottomPanelWindow")
+	bottomPanelFocused = bottomOpen && imgui.IsWindowFocused(imgui.FocusedFlags_RootAndChildWindows)
 	Drive_Window("console") // (annotated docs screenshots)
 	Dock_Remember(.Bottom)
 	if !bottomOpen do return

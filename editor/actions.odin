@@ -204,11 +204,12 @@ Actions_Init :: proc() {
 	add({id = "view.fit_scene", category = "View", label = "Fit Scene to View", chords = k(ch(.Home)), scope = .Scene, run = Viewport_FitScene})
 	add({id = "view.fit_game", category = "View", label = "Fit Game View", chords = k(ch(.Home, SH)), scope = .Scene, run = Viewport_FitGameView})
 	add({id = "view.fit_selection", category = "View", label = "Fit Selection", chords = k(ch(.F, SH)), scope = .Scene, run = Viewport_FitSelection, enabled = has_selection})
-	add({id = "view.zoom_in", category = "View", label = "Zoom In", chords = k(ch(.Equal, P)), scope = .Scene, run = proc(s: ^EditorState) {s.cameraZoom = min(s.cameraZoom * 1.25, 10)}, repeat = true})
-	add({id = "view.zoom_out", category = "View", label = "Zoom Out", chords = k(ch(.Minus, P)), scope = .Scene, run = proc(s: ^EditorState) {s.cameraZoom = max(s.cameraZoom / 1.25, 0.1)}, repeat = true})
+	add({id = "view.zoom_in", category = "View", label = "Zoom In", chords = k(ch(.Equal, P)), scope = .Scene, run = proc(s: ^EditorState) {s.cameraZoom = min(s.cameraZoom * 1.25, VIEWPORT_ZOOM_MAX)}, repeat = true})
+	add({id = "view.zoom_out", category = "View", label = "Zoom Out", chords = k(ch(.Minus, P)), scope = .Scene, run = proc(s: ^EditorState) {s.cameraZoom = max(s.cameraZoom / 1.25, VIEWPORT_ZOOM_MIN)}, repeat = true})
 	add({id = "view.grid", category = "View", label = "Show Grid", chords = k(ch(.G, SH)), scope = .Scene, run = proc(s: ^EditorState) {s.showGrid = !s.showGrid}, checked = proc(s: ^EditorState) -> bool {return s.showGrid}})
 	add({id = "view.bounds", category = "View", label = "Show Bounds & Colliders", scope = .Scene, run = proc(s: ^EditorState) {s.showBounds = !s.showBounds}, checked = proc(s: ^EditorState) -> bool {return s.showBounds}})
 	add({id = "view.camera_frames", category = "View", label = "Show Camera Frames", scope = .Scene, run = proc(s: ^EditorState) {s.showCameraBounds = !s.showCameraBounds}, checked = proc(s: ^EditorState) -> bool {return s.showCameraBounds}})
+	add({id = "view.labels", category = "View", label = "Show Labels", scope = .Scene, run = proc(s: ^EditorState) {GlobalSettings.viewportLabels = !GlobalSettings.viewportLabels; _ = Editor_SaveSettings()}, checked = proc(s: ^EditorState) -> bool {return GlobalSettings.viewportLabels}})
 	add({id = "view.rulers", category = "View", label = "Rulers & Guides", chords = k(ch(.R, PS)), scope = .Scene, run = proc(s: ^EditorState) {s.showRulers = !s.showRulers}, checked = proc(s: ^EditorState) -> bool {return s.showRulers}})
 	add({id = "view.clear_guides", category = "View", label = "Clear Guides", scope = .Scene, run = Editor_ClearGuides, enabled = proc(s: ^EditorState) -> bool {return s.activeScene != nil && s.activeScene.guideCount > 0}})
 	add({id = "view.smart_snap", category = "View", label = "Smart Snapping", scope = .Scene, run = proc(s: ^EditorState) {s.smartSnap = !s.smartSnap}, checked = proc(s: ^EditorState) -> bool {return s.smartSnap}})
@@ -530,6 +531,9 @@ Actions_Dispatch :: proc(state: ^EditorState) {
 			if typing || codeFocus do continue
 			// The animation timeline has its own delete / copy / paste.
 			if animTimelineFocused && strings.has_prefix(a.id, "node.") do continue
+			// The bottom panel and the Assets panel: their own arrow keys and
+			// Delete (files, assets) - not the selected node's.
+			if (bottomPanelFocused || assetPanelFocused) && strings.has_prefix(a.id, "node.") do continue
 			if stateGraphFocused && strings.has_prefix(a.id, "node.") do continue // the graph's own Delete / copy
 			if behaviorTreeFocused && strings.has_prefix(a.id, "node.") do continue // (the Behavior Tree tab's too)
 			if goapGraphFocused && strings.has_prefix(a.id, "node.") do continue // (and the GOAP tab's)

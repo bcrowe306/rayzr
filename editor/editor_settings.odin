@@ -33,6 +33,7 @@ Editor_Settings :: struct {
 	gridSize:         f32,
 	snapToGrid:       bool,
 	showGrid:         bool,
+	viewportLabels:   bool, // the viewport's labels (camera frames, LDtk entities): the toolbar's Labels toggle
 	confirmQuit:      bool,
 	showWelcome:      bool, // the Welcome window at startup
 	checkUpdates:     bool, // look for a newer release at startup (update_check.odin)
@@ -91,6 +92,7 @@ DEFAULT_EDITOR_SETTINGS :: Editor_Settings{
 	gridSize        = 32,
 	snapToGrid      = true,
 	showGrid        = true,
+	viewportLabels  = true,
 	confirmQuit     = true,
 	showWelcome     = true,
 	checkUpdates    = true,
@@ -352,6 +354,7 @@ settings_from_ini :: proc(text: string) {
 	s.gridSize = f(m, "general", "grid_size", s.gridSize)
 	s.snapToGrid = b(m, "general", "snap_to_grid", s.snapToGrid)
 	s.showGrid = b(m, "general", "show_grid", s.showGrid)
+	s.viewportLabels = b(m, "general", "viewport_labels", s.viewportLabels)
 	s.confirmQuit = b(m, "general", "confirm_quit", s.confirmQuit)
 	s.showWelcome = b(m, "general", "show_welcome", s.showWelcome)
 	s.checkUpdates = b(m, "general", "check_updates", s.checkUpdates)
@@ -510,7 +513,7 @@ Editor_SaveSettings :: proc() -> bool {
 	strings.write_string(&sb, "; Rayzr editor settings (Settings in the editor writes this file)\n\n[general]\n")
 	fmt.sbprintf(&sb, "ui_scale = %.2f\nautosave_minutes = %d\ngrid_size = %.0f\n", s.uiScale, s.autosaveMinutes, s.gridSize)
 	fmt.sbprintf(&sb, "snap_to_grid = %t\nshow_grid = %t\nconfirm_quit = %t\nshow_welcome = %t\ncheck_updates = %t\n", s.snapToGrid, s.showGrid, s.confirmQuit, s.showWelcome, s.checkUpdates)
-	fmt.sbprintf(&sb, "auto_download_updates = %t\n", s.autoDownloadUpdates)
+	fmt.sbprintf(&sb, "auto_download_updates = %t\nviewport_labels = %t\n", s.autoDownloadUpdates, s.viewportLabels)
 	fmt.sbprintf(&sb, "show_tab_bars = %t\nauto_bottom_panel = %t\n", s.showTabBars, s.autoBottomPanel)
 	{
 		names := make([dynamic]string, context.temp_allocator)

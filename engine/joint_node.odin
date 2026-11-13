@@ -151,9 +151,10 @@ JointNode_Render :: proc(node: ^Node, ctx: ^GameContext, dt: f32) {
 	if a == nil || b == nil do return
 	pa := a.globalPosition + rotate_vec(joint_anchor(&j.joint, true), a.globalRotation)
 	pb := b.globalPosition + rotate_vec(joint_anchor(&j.joint, false), b.globalRotation)
-	rl.DrawLineEx(pa, pb, 2, j.debugColor)
-	rl.DrawCircleV(pa, 4, j.debugColor)
-	rl.DrawCircleV(pb, 4, j.debugColor)
+	px := Debug_PixelSize()
+	rl.DrawLineEx(pa, pb, 2 * px, j.debugColor)
+	rl.DrawCircleV(pa, 4 * px, j.debugColor)
+	rl.DrawCircleV(pb, 4 * px, j.debugColor)
 }
 
 // joint_anchor: the local anchor on body A or B for the joint's type.

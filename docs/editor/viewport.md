@@ -26,7 +26,7 @@ camera's frame, guides.
 
 | Action | What it does |
 |---|---|
-| Mouse wheel | Zoom around the mouse (10% to 1000%). |
+| Mouse wheel | Zoom around the mouse (2% to 6400%). |
 | Middle mouse drag | Pan, with any tool. |
 | **Pan** tool (T) + left drag | Pan. |
 | Cmd+= / Cmd+- (Ctrl+= / Ctrl+-) | Zoom in / out. |
@@ -36,7 +36,7 @@ camera's frame, guides.
 | Shift+F | Fit the selected nodes. |
 | **F** | Centre the view on the selected node (the zoom stays). |
 
-The toolbar's zoom box has the same fits and fixed levels (25% to 400%).
+The toolbar's zoom box has the same fits and fixed levels (25% to 3200%).
 The status bar shows the mouse's world position and the zoom.
 
 ### Selecting
@@ -73,7 +73,10 @@ the node's pivot instead. What it shows stays where it is - its image,
 children, line points and collision shapes. The pivot snaps to the node's
 own edges and centre.
 
-The arrow keys nudge the selection 1 pixel (Shift: one grid step).
+The arrow keys nudge the selection 1 pixel (Shift: one grid step). They only
+do while the viewport, the Scene tree or the Inspector has the keyboard: in the
+bottom panel (the File Browser's rows) or the Assets panel they move through
+that panel instead.
 
 ### Snapping
 
@@ -105,6 +108,7 @@ game.
 | **Bounds & Colliders** | Toolbar eye, View menu | Every node's outline. Without it, only the selection is outlined (with corner dots). |
 | **Show All Colliders** | View menu | Every collision shape, also of LDtk levels and tile maps. |
 | **Camera frames** | Toolbar camera, View menu | Each camera's frame - what the game will show at the project's virtual resolution - with its name, size and zoom, its limits and dead zones. Without a camera, the default view. |
+| **Labels** | Toolbar tag, View menu | The names on camera frames, camera limits, the Expand frame, Advanced Cameras and LDtk entities. They are drawn at one size on screen (zooming in doesn't grow them) and fade while the mouse is over one, so the node under it can be seen and clicked. Turn them off when they are in the way; the editor remembers. |
 | **Screen shape** | Toolbar, only with **Screen Fill: Expand** | A dashed frame for the picked screen shape (16:9, 4:3, phone portrait...) around the design frame; edge-anchored HUD follows it. |
 | **Lighting** | Toolbar sun | Lights, the scene's ambient light and post effects. |
 | **Colour vision** | View menu | The scene as players with protanopia, deuteranopia or tritanopia see it. |
