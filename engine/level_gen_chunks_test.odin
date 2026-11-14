@@ -231,7 +231,7 @@ test_tilemap_endless_storage :: proc(t: ^testing.T) {
 	TileMapNode_BuildColliders(tm, ctx)
 	testing.expect(t, tm.staticBody == nil, "endless: no whole-map body")
 	body := TileMapNode_BuildCollidersIn(tm, {-1000, 500}, {-990, 510}, ctx)
-	testing.expect(t, body != nil && len(body.shapes) == 3, "three rows of the block: three boxes")
+	testing.expect(t, body != nil && len(body.shapes) == 1, "the block: one box (merged in 2D)")
 }
 
 // --- the node -------------------------------------------------------------------------

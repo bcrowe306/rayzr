@@ -244,6 +244,9 @@ PhysicsShape_AttachToBody :: proc(shape: ^PhysicsShape, bodyId: b2.BodyId, userD
 			cdef.isLoop = shape.isLoop
 			cdef.enableSensorEvents = shape.enableSensorEvents
 			cdef.filter = def.filter
+			mat := def.material // (its friction / bounce: one material for every segment)
+			cdef.materials = &mat
+			cdef.materialCount = 1
 			shape.chainId = b2.CreateChain(bodyId, cdef)
 		} else {
 			// Fallback to segment if fewer than 4 chain points

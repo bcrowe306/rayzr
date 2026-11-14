@@ -408,6 +408,8 @@ Shape_Outline :: proc(n: ^Node, s: ^PhysicsShape) -> [dynamic][2]f32 {
 		}
 	case .Segment:
 		append(&poly, to_world(n, &g, rot, g.point1), to_world(n, &g, rot, g.point2))
+	case .Chain:
+		for p in g.chainPoints do append(&poly, to_world(n, &g, rot, p)) // (a tile map's outline: a loop)
 	}
 	return poly
 }

@@ -22,6 +22,7 @@ StaticBodyNode :: struct {
 	lastSyncedRot: f32,
 	onCollisionStarted: EventSubject, // "collision_started"(other node)
 	onCollisionEnded: EventSubject,   // "collision_ended"(other node)
+	tileColliders: ^Tile_Collider_Info, // a tile map's collider body (tilemap_colliders.odin)
 }
 
 StaticBody :: StaticBodyNode
@@ -162,6 +163,7 @@ StaticBodyNode_Destroy :: proc(node: ^Node, gameContext: ^GameContext) {
 		Physics_ForgetShapeIds(sb.shapes[:]) // (destroyed with it: Box2D reuses the ids)
 		sb.bodyId = b2.nullBodyId
 	}
+	TileColliders_Free(sb)
 }
 
 // ============================================================================

@@ -658,10 +658,10 @@ test_tilemap_paint_fill_save_and_colliders :: proc(t: ^testing.T) {
 	if m2 != nil do testing.expectf(t, TileMapNode_Get(m2, 1, 1) == 3 && TileMapNode_Get(m2, 6, 0) == -1 && m2.mapSize == {8, 4}, "tiles reloaded: size %v (1,1)=%d (6,0)=%d (0,0)=%d", m2.mapSize, TileMapNode_Get(m2, 1, 1), TileMapNode_Get(m2, 6, 0), TileMapNode_Get(m2, 0, 0))
 	else do testing.fail_now(t, "no map")
 
-	// Colliders: one box per horizontal run.
+	// Colliders: the fewest boxes (5x4 and the 1x3 column beside it).
 	TileMapNode_BuildColliders(tm, &game.gameContext)
 	testing.expect(t, tm.staticBody != nil && tm.staticBody.transient, "transient collider body")
-	testing.expect(t, len(tm.staticBody.shapes) >= 4, "merged runs")
+	testing.expectf(t, len(tm.staticBody.shapes) == 2, "merged in 2D: %d boxes", len(tm.staticBody.shapes))
 
 	// Shrinking the map keeps its tiles; growing it back shows them again
 	// (also one cell at a time, like dragging the field).

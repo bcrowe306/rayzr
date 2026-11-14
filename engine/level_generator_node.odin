@@ -1069,18 +1069,20 @@ levelgen_rebuild_edited :: proc(w: ^Gen_Chunk_World, sc: ^Scene, ctx: ^GameConte
 		if mn == nil do continue
 		m := cast(^TileMapNode)mn
 		if len(m.chunkDirty) == 0 do continue
-		done := make(map[[2]int]bool, allocator = context.temp_allocator)
+		byChunk := make(map[[2]int][dynamic][2]int, allocator = context.temp_allocator)
 		for cell in m.chunkDirty {
 			c := [2]int{floor_div(cell.x, w.size), floor_div(cell.y, w.size)}
-			if c in done do continue
-			done[c] = true
+			if c not_in byChunk do byChunk[c] = make([dynamic][2]int, context.temp_allocator)
+			append(&byChunk[c], cell)
+		}
+		for c, cells in byChunk {
 			ch, ok := &w.chunks[c]
 			if !ok || !m.solid do continue
 			for b in ch.bodies {
 				if b[0] != h[0] || b[1] != h[1] do continue
-				// The chunk's body keeps going, its shapes made again.
+				// The chunk's body keeps going: just the edited sections made again.
 				if body := Node_FromSlot(b[2], b[3]); body != nil && !body.removing {
-					TileMapNode_RefillColliders(m, cast(^StaticBodyNode)body, c * w.size, (c + 1) * w.size, ctx)
+					TileColliders_RebuildCells(m, cast(^StaticBodyNode)body, cells[:], ctx)
 				}
 				break
 			}

@@ -79,9 +79,15 @@ can also hold components - coins, enemies, spikes - one per cell.
   the map smaller never deletes tiles: they are kept and come back when
   it grows.
 - **Solid**: when the scene starts (or Simulate), the map makes a static
-  body child named `<Name>_Colliders`, with one box per horizontal run of
-  painted tiles (isometric: one slanted shape per run; staggered and hex:
-  one per cell, the cell's shape). Its colliders also cast [Light](LightNode.md) shadows.
+  body child named `<Name>_Colliders`. With **Collider Shape: Boxes** it
+  covers the painted tiles with the fewest boxes, in 16 x 16-cell sections
+  (isometric: one slanted shape per run; staggered and hex: one per cell,
+  the cell's shape). **Outline** traces edge chains around them instead,
+  so bodies slide without catching on seams (square grids). Tiles can
+  have their own shape (slopes, halves, one-way, a polygon), **Friction**,
+  **Bounce** and **Trigger** on the Tile Map tab's Collision page: see
+  [Tile map collision](../../engine/docs/tile_physics.md). Its colliders
+  also cast [Light](LightNode.md) shadows.
   They are on the map's **Category Layers** and collide with its **Mask
   Layers** (Node tab; Layer 1 and everything by default), like a physics
   body's shapes.
@@ -123,8 +129,10 @@ can also hold components - coins, enemies, spikes - one per cell.
   `tilemap_set_terrain`, `tilemap_damage`. With **Retile on Edit** (on for
   new maps) the terrain tiles around an edit re-pick their edges. Tiles
   carry **tile data** (the Tile Map tab's Data page: health, breakable...);
-  the map sends `tile_changed`, `tile_damaged`, `tile_destroyed` and
-  `tile_hit`. See [Changing tiles in the game](../../engine/docs/runtime_tiles.md).
+  the map sends `tile_changed`, `tile_damaged`, `tile_destroyed`,
+  `tile_hit` (the exact tile a body hit) and, for trigger tiles,
+  `tile_entered` / `tile_exited`. See
+  [Changing tiles in the game](../../engine/docs/runtime_tiles.md).
 - **Aseprite Layer**: with an Aseprite file as the tileset, the map is that
   file's tilemap layer (its tiles, flips and tileset), updated when the file
   is saved. Leave it empty to paint the map here. See

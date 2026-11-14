@@ -15,6 +15,9 @@ import lua "lua54"
 //   map:tilemap_damage(x, y, amount)           -> health left, destroyed
 //   map:tilemap_tile_rect(tile)                -> x, y, w, h in the tileset image
 //   map:tilemap_cell_hit(contact)              -> x, y, tile: the cell a collision touched
+//   map:tilemap_tile_collision(tile)           -> {shape, friction, bounce, trigger, points}
+//   map:tilemap_set_tile_collision(tile, t)    a tile's collision on this map (colliders rebuilt)
+//   map:tilemap_trigger_cells(node)            -> {{x, y}, ...}: the trigger tiles a body is in
 //   sprite:atlas_show_tile(map, tile)          an Atlas Sprite shows a map's tile
 // ============================================================================
 
@@ -195,6 +198,123 @@ lua_tilemap_cell_hit :: proc "c" (L: ^lua.State) -> c.int {
 	return 3
 }
 
+// map:tilemap_tile_collision(tile) -> {shape, friction?, bounce?, trigger, points?}
+@(private = "file")
+lua_tilemap_tile_collision :: proc "c" (L: ^lua.State) -> c.int {
+	context = Script_Context(L)
+	tm := tr_map(L, "tilemap_tile_collision")
+	if tm == nil {
+		lua.pushnil(L)
+		return 1
+	}
+	col := TileCollision_Get(tm.sidecar, i32(lua.tointeger(L, 2)))
+	lua.newtable(L)
+	lua.pushstring(L, strings.clone_to_cstring(TILE_SHAPE_NAMES[col.shape], context.temp_allocator))
+	lua.setfield(L, -2, "shape")
+	if col.friction >= 0 {lua.pushnumber(L, lua.Number(col.friction)); lua.setfield(L, -2, "friction")}
+	if col.bounce >= 0 {lua.pushnumber(L, lua.Number(col.bounce)); lua.setfield(L, -2, "bounce")}
+	lua.pushboolean(L, b32(col.trigger))
+	lua.setfield(L, -2, "trigger")
+	if col.shape == .Custom {
+		lua.newtable(L)
+		for p, i in col.points[:col.count] {
+			lua.newtable(L)
+			lua.pushnumber(L, lua.Number(p.x))
+			lua.rawseti(L, -2, 1)
+			lua.pushnumber(L, lua.Number(p.y))
+			lua.rawseti(L, -2, 2)
+			lua.rawseti(L, -2, lua.Integer(i + 1))
+		}
+		lua.setfield(L, -2, "points")
+	}
+	return 1
+}
+
+// map:tilemap_set_tile_collision(tile, {shape, friction, bounce, trigger, points}) -> ok
+@(private = "file")
+lua_tilemap_set_tile_collision :: proc "c" (L: ^lua.State) -> c.int {
+	context = Script_Context(L)
+	tm := tr_map(L, "tilemap_set_tile_collision")
+	if tm == nil || lua.type(L, 3) != .TABLE || tm.sidecar == nil {
+		if tm != nil do Script_Problem(.Warning, "tilemap_set_tile_collision: pass a tile and a table ({shape = \"slope_up_right\", ...})")
+		lua.pushboolean(L, false)
+		return 1
+	}
+	col := TileCollision_Get(tm.sidecar, i32(lua.tointeger(L, 2)))
+	lua.getfield(L, 3, "shape")
+	if lua.type(L, -1) == .STRING {
+		name := string(lua.tostring(L, -1))
+		found := false
+		for n, k in TILE_SHAPE_NAMES do if n == name {col.shape = k; found = true}
+		if !found {
+			Script_Problem(.Warning, "tilemap_set_tile_collision: no shape \"%s\" (full, none, half_top, slope_up_right, one_way, custom, ...)", name)
+			lua.pop(L, 1)
+			lua.pushboolean(L, false)
+			return 1
+		}
+	}
+	lua.pop(L, 1)
+	opt_num :: proc(L: ^lua.State, k: cstring, v: ^f32) {
+		lua.getfield(L, 3, k)
+		defer lua.pop(L, 1)
+		if lua.type(L, -1) == .NUMBER do v^ = max(f32(lua.tonumber(L, -1)), 0)
+		else if lua.type(L, -1) == .BOOLEAN && !lua.toboolean(L, -1) do v^ = -1 // (false: the map's)
+	}
+	opt_num(L, "friction", &col.friction)
+	opt_num(L, "bounce", &col.bounce)
+	lua.getfield(L, 3, "trigger")
+	if lua.type(L, -1) == .BOOLEAN do col.trigger = bool(lua.toboolean(L, -1))
+	lua.pop(L, 1)
+	lua.getfield(L, 3, "points")
+	if lua.type(L, -1) == .TABLE {
+		col.count = 0
+		n := int(lua.rawlen(L, -1))
+		for i in 1 ..= min(n, TILE_CUSTOM_MAX) {
+			lua.rawgeti(L, -1, lua.Integer(i))
+			lua.rawgeti(L, -1, 1)
+			x := f32(lua.tonumber(L, -1))
+			lua.rawgeti(L, -2, 2)
+			y := f32(lua.tonumber(L, -1))
+			lua.pop(L, 3)
+			col.points[col.count] = {clamp(x, 0, 1), clamp(y, 0, 1)}
+			col.count += 1
+		}
+		if col.shape != .Custom do col.shape = .Custom
+	}
+	lua.pop(L, 1)
+	if col.shape == .Custom && col.count < 3 {
+		Script_Problem(.Warning, "tilemap_set_tile_collision: a custom shape needs 3 or more points")
+		lua.pushboolean(L, false)
+		return 1
+	}
+	TileCollision_Set(tm.sidecar, i32(lua.tointeger(L, 2)), col)
+	if tm.solid && tm.isReady && tm.gameContext != nil {
+		if tm.unbounded do TileMapNode_RefillAllChunks(tm, tm.gameContext)
+		else do TileMapNode_BuildColliders(tm, tm.gameContext)
+	}
+	lua.pushboolean(L, true)
+	return 1
+}
+
+// map:tilemap_trigger_cells(node) -> {{x = , y = }, ...}
+@(private = "file")
+lua_tilemap_trigger_cells :: proc "c" (L: ^lua.State) -> c.int {
+	context = Script_Context(L)
+	tm := tr_map(L, "tilemap_trigger_cells")
+	other, ok := to_node_userdata(L, 2)
+	lua.newtable(L)
+	if tm == nil || !ok || other == nil do return 1
+	for cell, i in TileMapNode_TriggerCellsOf(tm, other) {
+		lua.newtable(L)
+		lua.pushinteger(L, lua.Integer(cell.x))
+		lua.setfield(L, -2, "x")
+		lua.pushinteger(L, lua.Integer(cell.y))
+		lua.setfield(L, -2, "y")
+		lua.rawseti(L, -2, lua.Integer(i + 1))
+	}
+	return 1
+}
+
 // sprite:atlas_show_tile(map, tile) -> ok
 @(private = "file")
 lua_atlas_show_tile :: proc "c" (L: ^lua.State) -> c.int {
@@ -224,5 +344,8 @@ TileRuntime_RegisterBindings :: proc(L: ^lua.State) {
 	reg(L, "tilemap_damage", lua_tilemap_damage)
 	reg(L, "tilemap_tile_rect", lua_tilemap_tile_rect)
 	reg(L, "tilemap_cell_hit", lua_tilemap_cell_hit)
+	reg(L, "tilemap_tile_collision", lua_tilemap_tile_collision)
+	reg(L, "tilemap_set_tile_collision", lua_tilemap_set_tile_collision)
+	reg(L, "tilemap_trigger_cells", lua_tilemap_trigger_cells)
 	reg(L, "atlas_show_tile", lua_atlas_show_tile)
 }

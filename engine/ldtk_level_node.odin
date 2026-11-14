@@ -398,14 +398,23 @@ LdtkLevelNode_EntityVisual :: proc(ln: ^LdtkLevelNode, ent: ^LdtkEntityInstance)
 LdtkLevelNode_ClearBuilt :: proc(ln: ^LdtkLevelNode) {
 	scene := ln.scene
 	if scene == nil && ln.gameContext != nil do scene = ln.gameContext.scene
+	// The collider bodies stay, emptied (built again in place: replacing a
+	// body node mid-frame lost colliders, #431); triggers and entities go.
+	empty :: proc(b: ^^StaticBodyNode) {
+		if b^ == nil do return
+		if !Node_IsAlive(b^) || b^.removing {
+			b^ = nil
+			return
+		}
+		for &s in b^.shapes do PhysicsShape_Destroy(&s)
+		clear(&b^.shapes)
+	}
+	empty(&ln.staticBody)
+	empty(&ln.oneWayBody)
 	if scene != nil && scene.manager != nil {
-		if ln.staticBody != nil && Node_IsAlive(ln.staticBody) do RemoveNode(scene.manager, ln.staticBody)
-		if ln.oneWayBody != nil && Node_IsAlive(ln.oneWayBody) do RemoveNode(scene.manager, ln.oneWayBody)
 		for a in ln.triggers do if Node_IsAlive(a) do RemoveNode(scene.manager, a)
 		for n in ln.spawnedEntities do if Node_IsAlive(n) do RemoveNode(scene.manager, n)
 	}
-	ln.staticBody = nil
-	ln.oneWayBody = nil
 	clear(&ln.triggers)
 	clear(&ln.spawnedEntities)
 	clear(&ln.spawnedByIid)

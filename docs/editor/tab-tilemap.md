@@ -158,6 +158,29 @@ every map using the tileset shares it. Scripts read it with
 `map:tilemap_get_data(x, y, "health")`; see
 [Changing tiles in the game](../../engine/docs/runtime_tiles.md).
 
+### Tile collision (Collision layer)
+
+How each tile collides on a **Solid** map. Nothing is painted on this
+layer.
+
+- **Tiles** (right): click a tile to pick it; Shift or Cmd (Ctrl) adds
+  more. Each tile shows its shape: green solid, yellow one-way, blue
+  trigger; a dot means a friction or bounce of its own. Hover one for its
+  settings.
+- **Shape** (left): Full (unset tiles), None, halves, 45° and 22.5° slopes,
+  ceilings, a One-way platform, or a Custom polygon. A dash means the
+  picked tiles differ.
+- **Friction** / **Bounce**: tick to give the picked tiles their own;
+  untick for the map's.
+- **Trigger**: the tiles detect bodies instead of blocking them
+  (`tile_entered` / `tile_exited`).
+- **Polygon** (one Custom tile picked): click on the zoomed tile to add a
+  corner, drag one to move it, right-click to remove one (3 to 8 corners,
+  convex). **Square** starts again from the whole cell.
+
+It's saved at once in the tileset's `.tileset.json`, shared by every map
+using the tileset. See [Tile map collision](../../engine/docs/tile_physics.md).
+
 ## Walkthrough
 
 Paint a floor and add coins above it:
