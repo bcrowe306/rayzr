@@ -518,3 +518,78 @@ test_level_gen_chunk_apply_time :: proc(t: ^testing.T) {
 	fmt.printfln("chunk apply (32 x 32): mean %v (tiles %v, the rest colliders), worst %v; taking one out %v", total / N, tiles / N, worst, out / N)
 	testing.expectf(t, total / N < 5 * time.Millisecond, "well under a frame (mean %v)", total / N)
 }
+
+// Scripts' edits in a chunked level: kept when a chunk goes and put back
+// when it comes again; the chunk's colliders follow an edit; saved and
+// restored (levelgen_get_edits / set_edits).
+@(test)
+test_level_gen_chunks_remember_edits :: proc(t: ^testing.T) {
+	game, scene := gct_game()
+	defer os.remove_all(GCT_DIR)
+	defer game->terminate()
+	ctx := &game.gameContext
+	cam := Node_CreateByTypeName(scene, "Node")
+	cam.name = "Cam"
+	lg := LevelGeneratorNode_Create(scene, "Gen")
+	lg.gameContext = ctx
+	lg.generator = strings.clone("levels/world.levelgen.json", lg.allocator)
+	lg.chunked, lg.chunkSize, lg.chunkRadius = true, 16, 0
+	lg.background = false
+	lg.cameraPath = strings.clone("../Cam", lg.allocator)
+	tm := cast(^TileMapNode)Node_CreateByTypeName(scene, "TileMapNode", lg)
+	tm.name = "Ground"
+	tm.gameContext = ctx
+	tm.tileSize = {16, 16}
+	tm.solid = true
+	ProcessNodeQueues(scene.manager, ctx)
+	Scene_CallReady(scene, scene.rootNode, ctx)
+	cam.position = {5 * 16, 5 * 16}
+	Node_SetGlobalPositions(scene.manager, scene.rootNode)
+	gct_settle(lg, scene, ctx)
+	testing.expect(t, LevelGeneratorNode_ChunkLoaded(lg, {0, 0}), "chunk (0, 0) in")
+	testing.expect(t, tm.chunkEdits != nil, "the map records edits")
+	// Two edits in chunk (0, 0): one cell flipped, a component placed.
+	cell := [2]int{3, 4}
+	was := TileMapNode_Get(tm, cell.x, cell.y)
+	now: i32 = 1 if was < 0 else -1
+	TileMapNode_EditTile(tm, cell, now)
+	TileMapNode_PlaceComponent(tm, {6, 6}, "coin.component.json")
+	TileMapNode_RecordComponentEdit(tm, {6, 6}, "coin.component.json")
+	testing.expect_value(t, len(tm.chunkDirty), 1)
+	LevelGeneratorNode_Update(lg, ctx, 0.016)
+	ProcessNodeQueues(scene.manager, ctx)
+	testing.expect_value(t, len(tm.chunkDirty), 0)
+	_, bodies := gct_count(scene, tm)
+	testing.expect(t, bodies <= 3, "the chunk's colliders rebuilt, not added") // (radius 0: 1 to 3 chunks in)
+
+	// Far away and back: the edits come back.
+	cam.position = {10 * 16 * 16, 5 * 16}
+	Node_SetGlobalPositions(scene.manager, scene.rootNode)
+	gct_settle(lg, scene, ctx)
+	LevelGeneratorNode_Update(lg, ctx, 0.016)
+	ProcessNodeQueues(scene.manager, ctx)
+	testing.expect(t, !LevelGeneratorNode_ChunkLoaded(lg, {0, 0}), "chunk (0, 0) went")
+	cam.position = {5 * 16, 5 * 16}
+	Node_SetGlobalPositions(scene.manager, scene.rootNode)
+	gct_settle(lg, scene, ctx)
+	ProcessNodeQueues(scene.manager, ctx)
+	testing.expect_value(t, TileMapNode_Get(tm, cell.x, cell.y), now)
+	testing.expect(t, TileMapNode_ComponentAt(tm, {6, 6}) != nil, "the component came back")
+
+	// Saved and restored through Lua.
+	L := game.scriptManager.L
+	ok := lua.L_dostring(L, `
+local gen = Scene.find_node("Gen")
+saved = gen:levelgen_get_edits()
+gen:levelgen_clear_edits()
+local cleared = gen:levelgen_get_edits()
+probe = tostring(#saved.Ground.tiles) .. " " .. tostring(#saved.Ground.components) .. " " .. tostring(cleared.Ground == nil)
+gen:levelgen_set_edits(saved)
+`) == 0
+	testing.expect(t, ok, "Lua ran")
+	lua.getglobal(L, "probe")
+	testing.expect_value(t, string(lua.tostring(L, -1)), "1 1 true")
+	lua.pop(L, 1)
+	e := lg.edits["Ground"]
+	testing.expect(t, e != nil && e.tiles[cell] == now && e.components[{6, 6}] == "coin.component.json", "restored")
+}

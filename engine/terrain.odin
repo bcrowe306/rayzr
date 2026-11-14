@@ -53,6 +53,8 @@ Tile_Terrain :: struct {
 Tile_Terrains :: struct {
 	terrains:   [dynamic]Tile_Terrain,
 	animations: [dynamic]Tile_Anim, // animated tiles (tile_anims.odin)
+	fields:     [dynamic]Tile_Field, // tile data's fields (tile_data.odin)
+	data:       map[i32]map[string]Tile_Value, // each tile's values (only those set)
 	allocator:  runtime.Allocator,
 }
 
@@ -195,6 +197,8 @@ Terrains_Parse :: proc(data: []u8, allocator := context.allocator) -> (ts: Tile_
 	ts.allocator = allocator
 	ts.terrains = make([dynamic]Tile_Terrain, allocator)
 	ts.animations = make([dynamic]Tile_Anim, allocator)
+	ts.fields = make([dynamic]Tile_Field, allocator)
+	ts.data = make(map[i32]map[string]Tile_Value, allocator = allocator)
 	if len(data) == 0 do return
 	value, perr := json.parse(data, allocator = context.temp_allocator)
 	if perr != .None do return ts, fmt.tprintf("not valid JSON (%v)", perr)
@@ -235,6 +239,7 @@ Terrains_Parse :: proc(data: []u8, allocator := context.allocator) -> (ts: Tile_
 		}
 		append(&ts.animations, a)
 	}
+	TileData_Parse(&ts, root) // (fields and values: tile_data.odin)
 	return
 }
 
@@ -274,6 +279,7 @@ Terrains_Serialize :: proc(ts: ^Tile_Terrains, allocator := context.allocator) -
 		}
 		strings.write_string(&w.sb, "\n]")
 	}
+	TileData_Serialize(ts, &w)
 	strings.write_string(&w.sb, "}\n")
 	return strings.to_string(w.sb)
 }
@@ -311,6 +317,7 @@ Terrains_Destroy :: proc(ts: ^Tile_Terrains) {
 		delete(a.durations)
 	}
 	delete(ts.animations)
+	TileData_Destroy(ts)
 	ts^ = {}
 }
 

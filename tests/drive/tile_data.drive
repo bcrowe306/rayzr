@@ -1,0 +1,58 @@
+# Tile data: the Tile Map tab's Data page - a field added, a tile picked and
+# given its own value (others keep the default), the field renamed and
+# removed; saved in the tileset's .tileset.json. New maps have Retile on
+# Edit on.
+wait 5
+click @menu:View
+click @menu:View/Workspaces
+click @menu:Workspaces/Animation
+wait 3
+key escape
+key ctrl+a
+type tile map
+key enter
+expect selected == TileMap
+expect node:TileMap.prop.retileOnEdit == true
+wait 2
+click @tile.tileset
+click @pick:textures/Asteroid_1.png
+wait 2
+click @tile.layer:Data
+expect tiledata:count == 0
+screenshot data_empty
+
+# A field.
+click @tiledata.new-name
+type health
+click @tiledata.add
+expect tiledata:count == 1
+expect tiledata:3.health == 0
+
+# A tile of its own: 5; the others keep the default.
+click @tiledata.tile:3
+click @tiledata.set:health
+dblclick @tiledata.value:health
+key cmd+a
+type 5
+key enter
+expect tiledata:3.health == 5
+expect tiledata:4.health == 0
+expect file:textures/Asteroid_1.tileset.json contains "health"
+screenshot data_tile_value
+
+# Two tiles at once (Shift adds).
+hold shift
+click @tiledata.tile:4
+release
+click @tiledata.set:health
+expect tiledata:4.health == 5
+
+# Renamed (the values follow), then removed.
+dblclick @tiledata.field:0.name
+key cmd+a
+type hp
+key enter
+expect tiledata:3.hp == 5
+click @tiledata.field:0.remove
+expect tiledata:count == 0
+expect file:textures/Asteroid_1.tileset.json !contains "hp"

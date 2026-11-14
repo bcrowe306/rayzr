@@ -95,6 +95,10 @@ Event_Describe :: proc(name: string) -> (param: string, doc: string) {
 	case "generated":          return "seed", "The level generator's level is in (its seed)"
 	case "generation_failed":  return "why", "The level generator couldn't make the level (why)"
 	case "generation_progress": return "progress", "The level generator's progress moved (0 to 1, by 1% or more; 1 when the level is in)"
+	case "tile_changed":       return "change", "A cell's tile changed by a script (a table: x, y, old, new tile) - the neighbours it re-picked too"
+	case "tile_damaged":       return "hit", "tilemap_damage hit a cell (a table: x, y, tile, amount, health left)"
+	case "tile_destroyed":     return "hit", "A cell's health reached 0 and its tile went (a table: x, y, tile)"
+	case "tile_hit":           return "hit", "A body touched the map's colliders (a table: x, y, tile, other, point) - its first touch"
 	case "chunk_generated":    return "chunk", "A chunk of the chunked level went in (a Vec2: its x, y)"
 	case "chunk_unloaded":     return "chunk", "A chunk of the chunked level was taken out, far from the camera (a Vec2: its x, y)"
 	}

@@ -159,6 +159,7 @@ StaticBodyNode_Destroy :: proc(node: ^Node, gameContext: ^GameContext) {
 	DestroySubject(&sb.onCollisionEnded)
 	if b2.Body_IsValid(sb.bodyId) {
 		b2.DestroyBody(sb.bodyId)
+		Physics_ForgetShapeIds(sb.shapes[:]) // (destroyed with it: Box2D reuses the ids)
 		sb.bodyId = b2.nullBodyId
 	}
 }
@@ -382,6 +383,7 @@ DynamicBodyNode_Destroy :: proc(node: ^Node, gameContext: ^GameContext) {
 	DestroySubject(&db.onCollisionEnded)
 	if b2.Body_IsValid(db.bodyId) {
 		b2.DestroyBody(db.bodyId)
+		Physics_ForgetShapeIds(db.shapes[:]) // (destroyed with it: Box2D reuses the ids)
 		db.bodyId = b2.nullBodyId
 	}
 }
@@ -566,6 +568,7 @@ KinematicBodyNode_Destroy :: proc(node: ^Node, gameContext: ^GameContext) {
 	DestroySubject(&kb.onCollisionEnded)
 	if b2.Body_IsValid(kb.bodyId) {
 		b2.DestroyBody(kb.bodyId)
+		Physics_ForgetShapeIds(kb.shapes[:]) // (destroyed with it: Box2D reuses the ids)
 		kb.bodyId = b2.nullBodyId
 	}
 }
@@ -1179,6 +1182,7 @@ CharacterMoverNode_Destroy :: proc(node: ^Node, gameContext: ^GameContext) {
 	DestroySubject(&cm.onCollisionEnded)
 	if b2.Body_IsValid(cm.bodyId) {
 		b2.DestroyBody(cm.bodyId)
+		Physics_ForgetShapeIds(cm.shapes[:]) // (destroyed with it: Box2D reuses the ids)
 		cm.bodyId = b2.nullBodyId
 	}
 }
@@ -1460,6 +1464,7 @@ AreaNode_Destroy :: proc(node: ^Node, gameContext: ^GameContext) {
 	DestroySubject(&area.onBodyExited)
 	if b2.Body_IsValid(area.bodyId) {
 		b2.DestroyBody(area.bodyId)
+		Physics_ForgetShapeIds(area.shapes[:]) // (destroyed with it: Box2D reuses the ids)
 		area.bodyId = b2.nullBodyId
 	}
 }
@@ -1731,4 +1736,14 @@ Physics_SetWorldTransform :: proc(node: ^Node, worldPos: [2]f32, worldRot: f32) 
 	node.rotation = worldRot - parentRot
 	node.globalPosition = worldPos
 	node.globalRotation = worldRot
+}
+
+// Physics_ForgetShapeIds: a destroyed body's shapes went with it - their ids
+// are cleared, so a later destroy or sync can't hit another body's shape
+// that reused them.
+Physics_ForgetShapeIds :: proc(shapes: []PhysicsShape) {
+	for &s in shapes {
+		s.shapeId = b2.nullShapeId
+		s.chainId = b2.nullChainId
+	}
 }

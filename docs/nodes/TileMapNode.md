@@ -119,6 +119,12 @@ can also hold components - coins, enemies, spikes - one per cell.
 - Components take one cell each on isometric, staggered and hex maps
   (larger footprints are for square maps).
 - **Tint** multiplies the colours of every tile.
+- **In the game**, scripts change tiles: `tilemap_set_tile`,
+  `tilemap_set_terrain`, `tilemap_damage`. With **Retile on Edit** (on for
+  new maps) the terrain tiles around an edit re-pick their edges. Tiles
+  carry **tile data** (the Tile Map tab's Data page: health, breakable...);
+  the map sends `tile_changed`, `tile_damaged`, `tile_destroyed` and
+  `tile_hit`. See [Changing tiles in the game](../../engine/docs/runtime_tiles.md).
 - **Aseprite Layer**: with an Aseprite file as the tileset, the map is that
   file's tilemap layer (its tiles, flips and tileset), updated when the file
   is saved. Leave it empty to paint the map here. See

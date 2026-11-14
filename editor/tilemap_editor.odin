@@ -37,6 +37,7 @@ Tile_Layer :: enum {
 	Tiles,      // tileset tiles
 	Terrains,   // a terrain of the tileset (auto-tiled)
 	Components, // component instances
+	Data,       // the tileset's tile data (tile_data_editor.odin; not painted)
 }
 
 Tile_State :: struct {
@@ -92,6 +93,10 @@ TileMapPanel_Render :: proc(state: ^EditorState) {
 	imgui.Separator()
 	if ts.layer == .Components {
 		tilemap_component_palette(state, tm)
+		return
+	}
+	if ts.layer == .Data {
+		TileDataPanel_Render(state, tm)
 		return
 	}
 	if ts.layer == .Terrains {
@@ -287,15 +292,19 @@ tilemap_tools_row :: proc(tm: ^e.TileMapNode) {
 	// The layer the tools work on.
 	for l in Tile_Layer {
 		if l != .Tiles do imgui.SameLine(0, 2)
-		icon := ICON_FA_TABLE_CELLS_LARGE if l == .Tiles else ICON_FA_MOUNTAIN if l == .Terrains else ICON_FA_CUBES
-		name := "Tiles" if l == .Tiles else "Terrains" if l == .Terrains else "Components"
+		icon := ICON_FA_TABLE_CELLS_LARGE if l == .Tiles else ICON_FA_MOUNTAIN if l == .Terrains else ICON_FA_CUBES if l == .Components else ICON_FA_LIST
+		name := "Tiles" if l == .Tiles else "Terrains" if l == .Terrains else "Components" if l == .Components else "Data"
 		active := ts.layer == l // (the click below may change ts.layer: push / pop by this)
 		if active do imgui.PushStyleColorImVec4(.Button, UI_ACCENT)
-		if imgui.Button(fmt.ctprintf("%s  %s##tilelayer", icon, name), {0, 28}) do ts.layer = l
+		if imgui.Button(fmt.ctprintf("%s  %s##tilelayer", icon, name), {0, 28}) {
+			ts.layer = l
+			if l == .Data do ts.tool = .None // (nothing to paint)
+		}
 		if active do imgui.PopStyleColor()
 		Drive_Item(fmt.tprintf("tile.layer:%s", name))
-		UI_Tooltip("Paint tileset tiles" if l == .Tiles else "Paint a terrain: each cell takes its tile from its neighbours (edges and corners draw themselves)" if l == .Terrains else "Paint component instances on the grid (one per cell; Shift places one off the grid)")
+		UI_Tooltip("Paint tileset tiles" if l == .Tiles else "Paint a terrain: each cell takes its tile from its neighbours (edges and corners draw themselves)" if l == .Terrains else "Paint component instances on the grid (one per cell; Shift places one off the grid)" if l == .Components else "Tile data: values the tileset's tiles carry for scripts (health, breakable, a sound...)")
 	}
+	if ts.layer == .Data do return // (the Data page has no painting tools)
 	imgui.SameLine(0, UI_SPACE * 2)
 	tool :: proc(icon, id, tip: string, t: Tile_Tool) {
 		if UI_IconButton(icon, id, tip, GlobalTiles.tool == t, 28) {
@@ -556,6 +565,10 @@ Viewport_TilePaint :: proc(state: ^EditorState, drawList: ^imgui.DrawList, mouse
 		return false
 	}
 	e.TileMapNode_Layout(tm)
+	if ts.layer == .Data {
+		ts.tool = .None
+		return false
+	}
 	if ts.layer == .Components {
 		draw_map_outline(state, drawList, tm)
 		return tilemap_paint_components(state, drawList, tm, mouseWorld)
