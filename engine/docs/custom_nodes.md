@@ -52,6 +52,8 @@ A physics base (Area, Static / Kinematic / Dynamic Body) starts with a
 **Save as Custom Node...** (a node's right-click in the hierarchy) makes a
 type from a node you've set up: its base type, the values that differ from
 that type's defaults, and its script. The node becomes one of the new type.
+Its connections (the Inspector's Signals section) stay on that node only:
+see [Signals](#signals).
 
 The dialog writes `nodes/<Name>.node.json` and the script, and opens the
 script.
@@ -139,6 +141,40 @@ parent's signals and its own.
 
 Its script can declare them too (`---@signal damaged(amount: number)`):
 then they come with the script wherever it runs.
+
+### Handling a type's events
+
+**Connections are not part of a type.** A connection made in the
+Inspector's Signals section is saved with that one node (its target is a
+path from where the node sits), so new nodes of the type don't have it -
+not when made in the type's tab, and not when **Save as Custom Node**
+turned a connected node into the type (that node keeps its own).
+
+What every node of the type should do with its own events belongs in the
+type's script, as methods named `on_<event>`. They need no connection: a
+node's script gets each event of its node - built-in or declared - as
+that method, on every node of the type.
+
+```lua
+---@class Hurtbox : ScriptInstanceBase
+---@signal damaged(amount: number) Took a hit
+local Hurtbox = {}
+
+function Hurtbox:on_body_entered(other)   -- the Area's own event
+    self.node:emit("damaged", 1)
+end
+
+function Hurtbox:on_damaged(amount)       -- its own signal
+    self.node:flash("#ffffff", 0.1)
+end
+
+return Hurtbox
+```
+
+A handler with another name: connect it in `ready()`,
+`self.node:connect("damaged", function(amount) self:hurt(amount) end)`.
+Use the Signals section for wiring between particular nodes in a scene - a
+door's `opened` to that room's light.
 
 ## Types built on types
 
