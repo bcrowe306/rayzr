@@ -29,6 +29,9 @@
         "properties": {
           "shininess": 0,
           "solid": false,
+          "colliderShape": "Boxes",
+          "friction": 0.6,
+          "bounce": 0.2,
           "categoryLayers": ["Layer1"],
           "maskLayers": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8", "Layer9", "Layer10", "Layer11", "Layer12", "Layer13", "Layer14", "Layer15", "Layer16"],
           "tint": "#ffffffff",
@@ -55,6 +58,9 @@
         "properties": {
           "shininess": 0,
           "solid": false,
+          "colliderShape": "Boxes",
+          "friction": 0.6,
+          "bounce": 0.2,
           "categoryLayers": ["Layer1"],
           "maskLayers": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8", "Layer9", "Layer10", "Layer11", "Layer12", "Layer13", "Layer14", "Layer15", "Layer16"],
           "tint": "#ffffffff",
@@ -80,6 +86,9 @@
         "properties": {
           "shininess": 0,
           "solid": true,
+          "colliderShape": "Boxes",
+          "friction": 0.6,
+          "bounce": 0.2,
           "categoryLayers": ["Layer1"],
           "maskLayers": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8", "Layer9", "Layer10", "Layer11", "Layer12", "Layer13", "Layer14", "Layer15", "Layer16"],
           "tint": "#ffffffff",

@@ -431,7 +431,10 @@ Scene_UpdateNodeHirearchy :: proc(scene: ^Scene, node: ^Node, gameContext: ^Game
 
 @(private = "file")
 update_tree :: proc(scene: ^Scene, node: ^Node, gameContext: ^GameContext, deltaTime: f32, parentPaused: bool, parentMode: Pause_Mode) {
-	if node == nil do return
+	// (Destroyed since its parent's child list was copied: a script removed
+	// it and something processed the queues mid-frame - placing a tile
+	// component, rebuilding an instance.)
+	if node == nil || !Node_IsAlive(node) do return
 	if !node.enabled {
 		Physics_NodeDisabled(node) // (no update, so its body / joint stop here; #219)
 		return

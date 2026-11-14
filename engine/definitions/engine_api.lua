@@ -31,6 +31,14 @@
 ---@field cell_y? integer On a TileMap: the row of the cell under the feet
 ---@field tile? integer On a TileMap: the tile there (its index in the tileset; -1 none)
 
+---A tile's collision (map:tilemap_tile_collision).
+---@class TileCollision
+---@field shape? "full"|"none"|"half_top"|"half_bottom"|"half_left"|"half_right"|"slope_up_right"|"slope_up_left"|"ceiling_right"|"ceiling_left"|"slope_up_right_low"|"slope_up_right_high"|"slope_up_left_low"|"slope_up_left_high"|"one_way"|"custom"
+---@field friction? number|false The tile's friction (absent / false: the map's)
+---@field bounce? number|false The tile's bounce (absent / false: the map's)
+---@field trigger? boolean Detects instead of blocking: tile_entered / tile_exited
+---@field points? number[][] A custom shape's corners in the cell (0..1, y down), convex, up to 8
+
 ---@class CollisionContact
 ---@field point Vec2 Where the bodies touched (world px)
 ---@field point_x number World X of the contact
@@ -974,8 +982,8 @@ function PathFollowNode:connect(event, handler) end
 ---@return integer id Connection id for `disconnect`
 function LdtkLevelNode:connect(event, handler) end
 
----@alias TileMapNodeEvent NodeTreeEvent|"tile_changed"|"tile_damaged"|"tile_destroyed"|"tile_hit"|ProjectEvent
----Connects a handler to one of this node's events: tile_changed (A cell's tile changed by a script (a table: x, y, old, new tile) - the neighbours it re-picked too), tile_damaged (tilemap_damage hit a cell (a table: x, y, tile, amount, health left)), tile_destroyed (A cell's health reached 0 and its tile went (a table: x, y, tile)), tile_hit (A body touched the map's colliders (a table: x, y, tile, other, point) - its first touch); the tree events; custom ones.
+---@alias TileMapNodeEvent NodeTreeEvent|"tile_changed"|"tile_damaged"|"tile_destroyed"|"tile_hit"|"tile_entered"|"tile_exited"|ProjectEvent
+---Connects a handler to one of this node's events: tile_changed (A cell's tile changed by a script (a table: x, y, old, new tile) - the neighbours it re-picked too), tile_damaged (tilemap_damage hit a cell (a table: x, y, tile, amount, health left)), tile_destroyed (A cell's health reached 0 and its tile went (a table: x, y, tile)), tile_hit (A body's shape began touching the map's colliders (a table: x, y, tile, other, point, normal) - the exact tile it hit), tile_entered (A body went into a trigger tile (a table: x, y, tile, other)), tile_exited (A body left a trigger tile, or its tile changed (a table: x, y, tile, other)); the tree events; custom ones.
 ---
 ---Example: `self.node:connect("tile_changed", function(value, source) Log.info("tile_changed") end)`
 ---@param event TileMapNodeEvent|string The event's name (the Signals tab lists them)
@@ -6196,6 +6204,10 @@ function LdtkLevelNode:set_property(path, value, y) end
 ---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field shininess number Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---@field solid boolean Build static colliders for the painted tiles.
+---@field collider_shape "Boxes"|"Outline" With Solid: Boxes covers the tiles with the fewest boxes (rebuilt per 16x16 section whe...
+---@field colliderShape "Boxes"|"Outline" Same as collider_shape (the Inspector's name)
+---@field friction number The colliders' friction (0 ice, 0.6 default, 1+ grippy). A tile's own friction (Collisi...
+---@field bounce number The colliders' bounce (restitution: 0 none, 1 full). A tile's own bounce (Collision pag...
 ---@field tint number[] Multiplies the texture's colours (white = unchanged; alpha fades it).
 ---@field retile_on_edit boolean A script's tilemap_set_tile re-picks the terrain tiles around the cell it changes (edge...
 ---@field retileOnEdit boolean Same as retile_on_edit (the Inspector's name)
@@ -6228,6 +6240,9 @@ function LdtkLevelNode:set_property(path, value, y) end
 ---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "shininess" # number - Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---| "solid" # boolean - Build static colliders for the painted tiles.
+---| "collider_shape" # "Boxes"|"Outline" - With Solid: Boxes covers the tiles with the fewest boxes (rebuilt per 16x16 section whe...
+---| "friction" # number - The colliders' friction (0 ice, 0.6 default, 1+ grippy). A tile's own friction (Collisi...
+---| "bounce" # number - The colliders' bounce (restitution: 0 none, 1 full). A tile's own bounce (Collision pag...
 ---| "tint" # number[] - Multiplies the texture's colours (white = unchanged; alpha fades it).
 ---| "retile_on_edit" # boolean - A script's tilemap_set_tile re-picks the terrain tiles around the cell it changes (edge...
 ---| "layout" # "Square"|"Isometric"|"Staggered"|"HexPointy"|"HexFlat" - The cells' shape: Square; Isometric (diamonds on a grid turned 45 degrees); Staggered (...
@@ -6260,6 +6275,9 @@ function LdtkLevelNode:set_property(path, value, y) end
 ---@overload fun(self: TileMapNode, path: "emission_strength"): number
 ---@overload fun(self: TileMapNode, path: "shininess"): number
 ---@overload fun(self: TileMapNode, path: "solid"): boolean
+---@overload fun(self: TileMapNode, path: "collider_shape"): "Boxes"|"Outline"
+---@overload fun(self: TileMapNode, path: "friction"): number
+---@overload fun(self: TileMapNode, path: "bounce"): number
 ---@overload fun(self: TileMapNode, path: "tint"): number[]
 ---@overload fun(self: TileMapNode, path: "retile_on_edit"): boolean
 ---@overload fun(self: TileMapNode, path: "layout"): "Square"|"Isometric"|"Staggered"|"HexPointy"|"HexFlat"
@@ -6294,6 +6312,9 @@ function TileMapNode:get_property(path) end
 ---@overload fun(self: TileMapNode, path: "emission_strength", value: number)
 ---@overload fun(self: TileMapNode, path: "shininess", value: number)
 ---@overload fun(self: TileMapNode, path: "solid", value: boolean)
+---@overload fun(self: TileMapNode, path: "collider_shape", value: "Boxes"|"Outline")
+---@overload fun(self: TileMapNode, path: "friction", value: number)
+---@overload fun(self: TileMapNode, path: "bounce", value: number)
 ---@overload fun(self: TileMapNode, path: "tint", value: number[])
 ---@overload fun(self: TileMapNode, path: "retile_on_edit", value: boolean)
 ---@overload fun(self: TileMapNode, path: "layout", value: "Square"|"Isometric"|"Staggered"|"HexPointy"|"HexFlat")
@@ -15131,6 +15152,28 @@ function TileMapNode:tilemap_tile_rect(tile) end
 ---@return integer y Cell row
 ---@return integer tile The tile there (-1 when it found none)
 function TileMapNode:tilemap_cell_hit(contact) end
+
+---A tile's collision (its tileset's Collision page): shape, friction / bounce (absent: the map's), trigger, and a custom shape's points.
+---
+---Example: `if map:tilemap_tile_collision(tile).trigger then print("water") end`
+---@param tile integer The tile's index in the tileset
+---@return TileCollision collision
+function TileMapNode:tilemap_tile_collision(tile) end
+
+---Changes a tile's collision on this map while the game runs (not saved: the tileset file is the editor's); its colliders are built again. Fields left out keep their value; friction / bounce = false: the map's.
+---
+---Example: `map:tilemap_set_tile_collision(ice, {friction = 0.02})`
+---@param tile integer The tile's index in the tileset
+---@param collision TileCollision The fields to change
+---@return boolean ok false for an unknown shape or a custom shape under 3 points (warned)
+function TileMapNode:tilemap_set_tile_collision(tile, collision) end
+
+---The trigger tiles a body is in now (tile_entered without a tile_exited yet).
+---
+---Example: `local swimming = #map:tilemap_trigger_cells(player) > 0`
+---@param node Node The body
+---@return {x: integer, y: integer}[] cells
+function TileMapNode:tilemap_trigger_cells(node) end
 
 ---The cell under a world position (it may be outside the map).
 ---

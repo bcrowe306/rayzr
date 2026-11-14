@@ -34,6 +34,9 @@ TileMapNode :: struct {
 	tileSize:    [2]int, // pixels per tile (in the tileset and in the world)
 	mapSize:     [2]int, // cells
 	solid:       bool `gui:"true"`,                      // build colliders for painted tiles
+	colliderShape: TileMap_Collider_Shape `gui:"true"`, // Boxes (merged) or Outline (edge chains: smooth sliding)
+	friction:    f32 `gui:"true" min:"0" max:"2"`,       // the colliders' friction (a tile's own wins: Collision page)
+	bounce:      f32 `gui:"true" min:"0" max:"1"`,       // and bounce
 	categoryLayers: CollisionLayerSet `gui:"true"`,       // the colliders' collision layers (#405)
 	maskLayers:     CollisionLayerSet `gui:"true"`,       // and the layers they collide with
 	tint:        rl.Color `gui:"true"`,
@@ -83,7 +86,12 @@ TileMapNode :: struct {
 	onTileChanged:   EventSubject, // "tile_changed" {x, y, old, new}
 	onTileDamaged:   EventSubject, // "tile_damaged" {x, y, tile, amount, health}
 	onTileDestroyed: EventSubject, // "tile_destroyed" {x, y, tile}
-	onTileHit:       EventSubject, // "tile_hit" {x, y, tile, other, point}
+	onTileHit:       EventSubject, // "tile_hit" {x, y, tile, other, point, normal}
+	onTileEntered:   EventSubject, // "tile_entered" {x, y, tile, other} (trigger tiles)
+	onTileExited:    EventSubject, // "tile_exited" {x, y, tile, other}
+	triggerInside:   map[Tile_Trigger_Key]i32,  // (bodies in trigger cells: tile_runtime.odin)
+	triggerStale:    map[Tile_Trigger_Key]bool,
+	colliderDirtyCells: [dynamic][2]int, // (cells edited this frame: their sections rebuilt)
 	chunkEdits: ^Tile_Chunk_Edits, // (a chunked generator's: its edits to this map)
 	chunkDirty: [dynamic][2]int,   // (... cells whose chunk colliders need rebuilding)
 }
@@ -98,6 +106,8 @@ TileMapNode_Create :: proc(scene: ^Scene, name: string = "TileMap", parent: ^Nod
 	tm.maskLayers = DEFAULT_COLLISION_MASK
 	tm.tiles = make([dynamic]i32, tm.allocator)
 	tm.retileOnEdit = true
+	tm.friction = 0.6
+	tm.bounce = 0.2
 	TileMapNode_InitRuntime(tm)
 	TileMapNode_Layout(tm)
 	tm.ready = TileMapNode_Ready
@@ -578,128 +588,48 @@ TileMapNode_Render :: proc(node: ^Node, ctx: ^GameContext, dt: f32) {
 }
 
 // TileMapNode_BuildColliders (re)creates the static colliders for painted
-// tiles, merging horizontal runs.
+// tiles (tilemap_colliders.odin).
 TileMapNode_BuildColliders :: proc(tm: ^TileMapNode, ctx: ^GameContext) {
 	scene := ctx.scene if ctx != nil else nil
 	if scene == nil && tm.gameContext != nil do scene = tm.gameContext.scene
 	if scene == nil do return
+	clear(&tm.colliderDirtyCells)
 	if tm.staticBody != nil && Node_IsAlive(tm.staticBody) && !tm.staticBody.removing {
-		if !tm.unbounded {
+		if !tm.unbounded && tm.staticBody.tileColliders != nil {
 			// The same body, its shapes made again (replacing the body node
 			// mid-frame lost colliders: a stale shape id hit a new shape).
-			TileMapNode_RefillColliders(tm, tm.staticBody, TileMapNode_Extent(tm), ctx)
+			info := tm.staticBody.tileColliders
+			info.lo, info.hi = TileMapNode_Extent(tm)
+			TileColliders_Rebuild(tm, tm.staticBody, ctx)
 			return
 		}
 		RemoveNode(scene.manager, tm.staticBody)
-		ProcessNodeQueues(scene.manager, ctx)
 	}
 	tm.staticBody = nil
 	if tm.unbounded do return // (built per area by its owner: TileMapNode_BuildCollidersIn)
-	tm.staticBody = StaticBodyNode_Create(scene, fmt.tprintf("%s_Colliders", tm.name), tm)
-	tm.staticBody.position = {0, 0}
-	tm.staticBody.transient = true
-	tm.staticBody.gameContext = ctx
-	TileMapNode_WatchHits(tm, tm.staticBody) // (tile_hit: tile_runtime.odin)
 	lo, hi := TileMapNode_Extent(tm) // (tiles beyond the map are solid too)
-	tilemap_add_colliders(tm, tm.staticBody, lo, hi, ctx)
+	tm.staticBody = TileColliders_Create(tm, fmt.tprintf("%s_Colliders", tm.name), lo, hi, ctx)
 }
 
 // TileMapNode_RefillColliders: a collider body's shapes made again for
 // the cells in lo .. hi (tiles changed; the body stays).
 TileMapNode_RefillColliders :: proc(tm: ^TileMapNode, body: ^StaticBodyNode, lo, hi: [2]int, ctx: ^GameContext) {
-	for &s in body.shapes do PhysicsShape_Destroy(&s)
-	clear(&body.shapes)
-	tilemap_add_colliders(tm, body, lo, hi, ctx)
+	if body.tileColliders == nil do return
+	body.tileColliders.lo, body.tileColliders.hi = lo, hi
+	TileColliders_Rebuild(tm, body, ctx)
 }
 
 // TileMapNode_BuildCollidersIn: a static body of its own (a transient
 // child of the map) with the colliders of the painted cells in lo .. hi -
 // an unbounded map's chunk; remove it when the chunk goes. nil: no scene.
 TileMapNode_BuildCollidersIn :: proc(tm: ^TileMapNode, lo, hi: [2]int, ctx: ^GameContext) -> ^StaticBodyNode {
-	scene := ctx.scene if ctx != nil else nil
-	if scene == nil && tm.gameContext != nil do scene = tm.gameContext.scene
-	if scene == nil do return nil
-	body := StaticBodyNode_Create(scene, fmt.tprintf("%s_Colliders_%d_%d", tm.name, lo.x, lo.y), tm)
-	body.position = {0, 0}
-	body.transient = true
-	body.gameContext = ctx
-	TileMapNode_WatchHits(tm, body)
-	tilemap_add_colliders(tm, body, lo, hi, ctx)
-	return body
+	return TileColliders_Create(tm, fmt.tprintf("%s_Colliders_%d_%d", tm.name, lo.x, lo.y), lo, hi, ctx)
 }
 
-// tilemap_shape: a collider shape on the map's collision layers and mask.
-@(private = "file")
-tilemap_shape :: proc(tm: ^TileMapNode, shape: PhysicsShape) -> PhysicsShape {
-	s := shape
-	s.categoryLayers = tm.categoryLayers
-	s.maskLayers = tm.maskLayers
-	return s
-}
-
-// tilemap_add_colliders: the painted cells' colliders in lo .. hi on a body.
-@(private = "file")
-tilemap_add_colliders :: proc(tm: ^TileMapNode, body: ^StaticBodyNode, lo, hi: [2]int, ctx: ^GameContext) {
-	shapes := make([dynamic]PhysicsShape, context.temp_allocator)
-	tilemap_collider_shapes(tm, lo, hi, &shapes)
-	for s in shapes do StaticBodyNode_AddShape(body, tilemap_shape(tm, s), ctx)
-}
-
-// TileMapNode_ColliderShapes: the shapes Solid builds for the whole map
-// (the editor's shadows before the colliders exist: lighting_nodes.odin).
+// TileMapNode_ColliderShapes: the solid shapes Solid builds for the whole
+// map (the editor's shadows before the colliders exist: lighting_nodes.odin).
 TileMapNode_ColliderShapes :: proc(tm: ^TileMapNode, out: ^[dynamic]PhysicsShape) {
-	lo, hi := TileMapNode_Extent(tm)
-	tilemap_collider_shapes(tm, lo, hi, out)
-}
-
-// tilemap_collider_shapes: the painted cells' collider shapes in lo .. hi
-// (square cells: horizontal runs merged into boxes).
-@(private = "file")
-tilemap_collider_shapes :: proc(tm: ^TileMapNode, lo, hi: [2]int, out: ^[dynamic]PhysicsShape) {
-	cs := TileMapNode_CellSize(tm)
-	tw, th := cs.x, cs.y
-	switch tm.layout {
-	case .Square:
-	case .Isometric:
-		// Runs along x are parallelograms: the first cell's top and left
-		// corners, the last one's right and bottom.
-		for y in lo.y ..< hi.y {
-			x := lo.x
-			for x < hi.x {
-				if TileMapNode_Get(tm, x, y) < 0 {
-					x += 1
-					continue
-				}
-				start := x
-				for x < hi.x && TileMapNode_Get(tm, x, y) >= 0 do x += 1
-				a, _ := TileMapNode_CellOutline(tm, {start, y})
-				b, _ := TileMapNode_CellOutline(tm, {x - 1, y})
-				append(out, MakePolygonPhysicsShape({a[0], b[1], b[2], a[3]}))
-			}
-		}
-		return
-	case .Staggered, .HexPointy, .HexFlat:
-		// A cell each (neighbours touch at corners / slanted sides).
-		for y in lo.y ..< hi.y do for x in lo.x ..< hi.x {
-			if TileMapNode_Get(tm, x, y) < 0 do continue
-			pts, n := TileMapNode_CellOutline(tm, {x, y})
-			append(out, MakePolygonPhysicsShape(pts[:n]))
-		}
-		return
-	}
-	for y in lo.y ..< hi.y {
-		x := lo.x
-		for x < hi.x {
-			if TileMapNode_Get(tm, x, y) < 0 {
-				x += 1
-				continue
-			}
-			start := x
-			for x < hi.x && TileMapNode_Get(tm, x, y) >= 0 do x += 1
-			w := f32(x - start) * tw
-			append(out, MakeBoxPhysicsShape(w, th, {f32(start) * tw + w * 0.5, f32(y) * th + th * 0.5}, 0))
-		}
-	}
+	TileColliders_Shapes(tm, out)
 }
 
 TileMapNode_Ready :: proc(node: ^Node, ctx: ^GameContext) {
@@ -714,7 +644,21 @@ TileMapNode_Update :: proc(node: ^Node, ctx: ^GameContext, dt: f32) {
 	tm := cast(^TileMapNode)node
 	if !tm.collidersDirty do return
 	tm.collidersDirty = false
-	if tm.solid do TileMapNode_BuildColliders(tm, ctx)
+	if !tm.solid {
+		clear(&tm.colliderDirtyCells)
+		return
+	}
+	// Just the edited cells' sections, when the body covers them.
+	if body := tm.staticBody; body != nil && Node_IsAlive(body) && !body.removing && body.tileColliders != nil && len(tm.colliderDirtyCells) > 0 {
+		info := body.tileColliders
+		lo, hi := TileMapNode_Extent(tm)
+		if lo == info.lo && hi == info.hi {
+			TileColliders_RebuildCells(tm, body, tm.colliderDirtyCells[:], ctx)
+			clear(&tm.colliderDirtyCells)
+			return
+		}
+	}
+	TileMapNode_BuildColliders(tm, ctx)
 }
 
 TileMapNode_Destroy :: proc(node: ^Node, ctx: ^GameContext) {

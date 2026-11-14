@@ -98,7 +98,9 @@ Event_Describe :: proc(name: string) -> (param: string, doc: string) {
 	case "tile_changed":       return "change", "A cell's tile changed by a script (a table: x, y, old, new tile) - the neighbours it re-picked too"
 	case "tile_damaged":       return "hit", "tilemap_damage hit a cell (a table: x, y, tile, amount, health left)"
 	case "tile_destroyed":     return "hit", "A cell's health reached 0 and its tile went (a table: x, y, tile)"
-	case "tile_hit":           return "hit", "A body touched the map's colliders (a table: x, y, tile, other, point) - its first touch"
+	case "tile_hit":           return "hit", "A body's shape began touching the map's colliders (a table: x, y, tile, other, point, normal) - the exact tile it hit"
+	case "tile_entered":       return "hit", "A body went into a trigger tile (a table: x, y, tile, other)"
+	case "tile_exited":        return "hit", "A body left a trigger tile, or its tile changed (a table: x, y, tile, other)"
 	case "chunk_generated":    return "chunk", "A chunk of the chunked level went in (a Vec2: its x, y)"
 	case "chunk_unloaded":     return "chunk", "A chunk of the chunked level was taken out, far from the camera (a Vec2: its x, y)"
 	}

@@ -55,6 +55,7 @@ Tile_Terrains :: struct {
 	animations: [dynamic]Tile_Anim, // animated tiles (tile_anims.odin)
 	fields:     [dynamic]Tile_Field, // tile data's fields (tile_data.odin)
 	data:       map[i32]map[string]Tile_Value, // each tile's values (only those set)
+	collision:  map[i32]Tile_Collision, // each tile's collision (only those not Full: tile_collision.odin)
 	allocator:  runtime.Allocator,
 }
 
@@ -240,6 +241,7 @@ Terrains_Parse :: proc(data: []u8, allocator := context.allocator) -> (ts: Tile_
 		append(&ts.animations, a)
 	}
 	TileData_Parse(&ts, root) // (fields and values: tile_data.odin)
+	TileCollision_Parse(&ts, root) // (tile_collision.odin)
 	return
 }
 
@@ -280,6 +282,7 @@ Terrains_Serialize :: proc(ts: ^Tile_Terrains, allocator := context.allocator) -
 		strings.write_string(&w.sb, "\n]")
 	}
 	TileData_Serialize(ts, &w)
+	TileCollision_Serialize(ts, &w)
 	strings.write_string(&w.sb, "}\n")
 	return strings.to_string(w.sb)
 }
@@ -318,6 +321,7 @@ Terrains_Destroy :: proc(ts: ^Tile_Terrains) {
 	}
 	delete(ts.animations)
 	TileData_Destroy(ts)
+	delete(ts.collision)
 	ts^ = {}
 }
 

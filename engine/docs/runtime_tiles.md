@@ -19,7 +19,9 @@ On any [Tile Map](../../docs/nodes/TileMapNode.md):
 | `map:tilemap_neighbors(x, y)` | The cells around it. |
 
 A **Solid** map rebuilds its colliders at the end of the frame, however
-many tiles changed, and pathfinding sees the change.
+many tiles changed (just the 16 x 16-cell sections they're in), and
+pathfinding sees the change. Tiles' own shapes, friction and trigger tiles:
+[Tile map collision](tile_physics.md).
 
 ## Terrain edges follow (Retile on Edit)
 
@@ -60,16 +62,20 @@ unbreakable tiles no health, or check `breakable` first.
 | `tile_changed` | `{x, y, old, new}` - every cell a script changed, the neighbours Retile on Edit re-picked too. |
 | `tile_damaged` | `{x, y, tile, amount, health}` |
 | `tile_destroyed` | `{x, y, tile}` |
-| `tile_hit` | `{x, y, tile, other, point}` - a body touched the map's colliders: the tile it hit. |
+| `tile_hit` | `{x, y, tile, other, point, normal}` - a body's shape began touching the map's colliders: the exact tile it hit. |
+| `tile_entered` / `tile_exited` | `{x, y, tile, other}` - a body went into / left a trigger tile ([Tile map collision](tile_physics.md)). |
 
 Connect them in the Signals tab or with `map:connect(...)`. A generator
 filling the map, or chunks coming in and going, send no `tile_changed` (the
 generator has its own events).
 
-`tile_hit` comes with a body's first touch: Box2D reports contact between
-two bodies once, while they keep touching. For a projectile that's its
-impact. In a body's own `collision_started(other, contact)`,
-`map:tilemap_cell_hit(contact)` gives the same cell.
+`tile_hit` comes each time one of a body's shapes starts touching one of
+the map's collider shapes, with the exact tile even under a merged box.
+A body sliding along one box only starts touching it once. For a
+projectile that's its impact. Character Movers move by sweeps, not
+contacts, and send none: in a body's own `collision_started(other,
+contact)` (or a mover's collision), `map:tilemap_cell_hit(contact)` gives
+the cell.
 
 ## Picking up and carrying tiles
 

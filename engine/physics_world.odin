@@ -97,6 +97,7 @@ PhysicsWorld_Step :: proc(pw: ^PhysicsWorld, deltaTime: f32, gameContext: ^GameC
 			if b2.Body_IsValid(sensorBody) {
 				sensorNode := cast(^Node)b2.Body_GetUserData(sensorBody)
 				visitorNode := cast(^Node)b2.Body_GetUserData(visitorBody) if b2.Body_IsValid(visitorBody) else nil
+				if TileColliders_OnSensor(sensorNode, visitorNode, ev.sensorShapeId, true) do continue // (a map's trigger tile)
 				if sensorNode != nil {
 					AreaNode_HandleEnter(sensorNode, visitorNode, gameContext)
 				}
@@ -117,12 +118,15 @@ PhysicsWorld_Step :: proc(pw: ^PhysicsWorld, deltaTime: f32, gameContext: ^GameC
 			}
 			if b2.Body_IsValid(sensorBody) {
 				sensorNode := cast(^Node)b2.Body_GetUserData(sensorBody)
+				if TileColliders_OnSensor(sensorNode, visitorNode, ev.sensorShapeId, false) do continue
 				if sensorNode != nil {
 					AreaNode_HandleExit(sensorNode, visitorNode, gameContext)
 				}
 			}
 		}
 	}
+
+	TileColliders_FlushTriggers() // (trigger tiles rebuilt: who left)
 
 	// Contact begin/end -> "collision_started"/"collision_ended" on both bodies (once per body pair, even with multiple shapes).
 	contactEvents := b2.World_GetContactEvents(pw.worldId)
@@ -135,6 +139,7 @@ PhysicsWorld_Step :: proc(pw: ^PhysicsWorld, deltaTime: f32, gameContext: ^GameC
 	}
 	for i in 0..<contactEvents.beginCount {
 		ev := contactEvents.beginEvents[i]
+		TileColliders_OnContact(ev.shapeIdA, ev.shapeIdB, ev.manifold, gameContext) // ("tile_hit": the exact tile)
 		nodeA, nodeB := contact_nodes(ev.shapeIdA, ev.shapeIdB)
 		if nodeA != nil && nodeB != nil && nodeA != nodeB {
 			pair := ordered_node_pair(nodeA, nodeB)

@@ -1,0 +1,72 @@
+# Tile collision: the Tile Map tab's Collision page - a tile made a slope
+# with its own friction, two tiles made triggers at once, a custom polygon
+# drawn on the zoomed tile (a corner added and one removed); saved in the
+# tileset's .tileset.json. The map's Collider Shape / Friction / Bounce.
+wait 5
+click @menu:View
+click @menu:View/Workspaces
+click @menu:Workspaces/Animation
+wait 3
+key escape
+key ctrl+a
+type tile map
+key enter
+expect selected == TileMap
+expect node:TileMap.prop.colliderShape == Boxes
+expect node:TileMap.prop.friction == 0.6
+wait 2
+click @tile.tileset
+click @pick:textures/Asteroid_1.png
+wait 2
+click @tile.layer:Collision
+expect tilecoll:3 == full -1.00 -1.00 false 0
+screenshot collision_empty
+
+# A slope with ice.
+click @tilecoll.tile:3
+click @tilecoll.shape
+click @pick:Slope up right (45°)
+expect tilecoll:3 == slope_up_right -1.00 -1.00 false 0
+click @tilecoll.friction.set
+dblclick @tilecoll.friction
+key cmd+a
+type 0.05
+key enter
+expect tilecoll:3 == slope_up_right 0.05 -1.00 false 0
+expect file:textures/Asteroid_1.tileset.json contains "slope_up_right"
+screenshot collision_slope
+
+# Two tiles made triggers (Shift adds).
+click @tilecoll.tile:4
+hold shift
+click @tilecoll.tile:5
+release
+click @tilecoll.trigger
+expect tilecoll:4 == full -1.00 -1.00 true 0
+expect tilecoll:5 == full -1.00 -1.00 true 0
+expect tilecoll:3 == slope_up_right 0.05 -1.00 false 0
+
+# A custom polygon: it starts as the slope it was (3 corners); a corner
+# added at the top-left, then removed again.
+click @tilecoll.tile:3
+click @tilecoll.shape
+click @pick:Custom polygon
+expect tilecoll:3 == custom 0.05 -1.00 false 3
+click @tilecoll.poly+-80,-80
+wait 1
+expect tilecoll:3 == custom 0.05 -1.00 false 4
+screenshot collision_polygon
+rclick @tilecoll.poly+-80,-80
+wait 1
+expect tilecoll:3 == custom 0.05 -1.00 false 3
+click @tilecoll.poly.reset
+expect tilecoll:3 == custom 0.05 -1.00 false 4
+expect file:textures/Asteroid_1.tileset.json contains "custom"
+
+# Back to full, the map's friction: no entry left for it.
+click @tilecoll.shape
+click @pick:Full
+click @tilecoll.friction.set
+expect tilecoll:3 == full -1.00 -1.00 false 0
+expect file:textures/Asteroid_1.tileset.json !contains "custom"
+expect file:textures/Asteroid_1.tileset.json contains "trigger"

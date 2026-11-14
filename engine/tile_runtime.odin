@@ -3,6 +3,7 @@ package engine
 import "core:c"
 import "core:strings"
 import lua "lua54"
+import b2 "vendor:box2d"
 
 // ============================================================================
 // Tiles changed while the game runs (the guide: engine/docs/tilemaps.md).
@@ -25,9 +26,12 @@ import lua "lua54"
 // "health" (its own, else the tile's): "tile_damaged", and at 0 the tile
 // goes ("tile_destroyed").
 //
-// "tile_hit" {x, y, tile, other, point}: a body touched the map's
-// colliders (the first touch of that body: Box2D reports a pair once while
-// they stay in contact) - the tile it hit.
+// "tile_hit" {x, y, tile, other, point, normal}: a body's shape began
+// touching one of the map's collider shapes - the exact tile (shapes know
+// their cells: tilemap_colliders.odin). Character Movers move by queries,
+// not contacts: they send none (their own collisions name the tile:
+// tilemap_cell_hit). Trigger tiles send "tile_entered" / "tile_exited"
+// {x, y, tile, other} instead.
 // ============================================================================
 
 // A chunked generator's edits to one map: cells set by scripts, and the
@@ -42,6 +46,8 @@ TileMapNode_InitRuntime :: proc(tm: ^TileMapNode) {
 	InitializeSubject(&tm.onTileDamaged, "tile_damaged", tm)
 	InitializeSubject(&tm.onTileDestroyed, "tile_destroyed", tm)
 	InitializeSubject(&tm.onTileHit, "tile_hit", tm)
+	InitializeSubject(&tm.onTileEntered, "tile_entered", tm)
+	InitializeSubject(&tm.onTileExited, "tile_exited", tm)
 }
 
 TileMapNode_FreeRuntime :: proc(tm: ^TileMapNode) {
@@ -49,6 +55,11 @@ TileMapNode_FreeRuntime :: proc(tm: ^TileMapNode) {
 	DestroySubject(&tm.onTileDamaged)
 	DestroySubject(&tm.onTileDestroyed)
 	DestroySubject(&tm.onTileHit)
+	DestroySubject(&tm.onTileEntered)
+	DestroySubject(&tm.onTileExited)
+	TileMapNode_FreeTriggers(tm)
+	delete(tm.colliderDirtyCells)
+	tm.colliderDirtyCells = nil
 	if tm.sidecar != nil {
 		Terrains_Destroy(tm.sidecar)
 		free(tm.sidecar, Engine_HeapAllocator())
@@ -162,7 +173,11 @@ tilemap_retile :: proc(tm: ^TileMapNode, t: ^Tile_Terrain, cell: [2]int) {
 @(private = "file")
 tilemap_edited :: proc(tm: ^TileMapNode, cell: [2]int, old, tile: i32) {
 	if tm.unbounded do append(&tm.chunkDirty, cell) // (its chunk's colliders: the generator)
-	else do tm.collidersDirty = true
+	else {
+		tm.collidersDirty = true
+		if tm.colliderDirtyCells == nil do tm.colliderDirtyCells = make([dynamic][2]int, Engine_HeapAllocator())
+		append(&tm.colliderDirtyCells, cell) // (just its section's colliders: tilemap_colliders.odin)
+	}
 	if e := tm.chunkEdits; e != nil {
 		if e.tiles == nil do e.tiles = make(map[[2]int]i32, allocator = Engine_HeapAllocator())
 		e.tiles[cell] = tile
@@ -284,32 +299,36 @@ AtlasSprite_ShowTile :: proc(an: ^AtlasSpriteNode, tm: ^TileMapNode, tile: i32) 
 	return true
 }
 
-// --- Tile hits -----------------------------------------------------------------------
+// --- Tile hits and triggers ------------------------------------------------------------
 
-// TileMapNode_WatchHits: the map's collider body reports the tiles bodies
-// hit ("tile_hit").
-TileMapNode_WatchHits :: proc(tm: ^TileMapNode, body: ^StaticBodyNode) {
-	if body == nil do return
-	body.onCollisionStarted->subscribe(tilemap_on_hit, tm)
+// TileColliders_OnContact: a contact began (physics_world.odin) - if one
+// side is a map's collider shape, "tile_hit" with the exact tile.
+TileColliders_OnContact :: proc(sa, sb: b2.ShapeId, m: b2.Manifold, ctx: ^GameContext) {
+	if !b2.Shape_IsValid(sa) || !b2.Shape_IsValid(sb) do return
+	na := cast(^Node)b2.Body_GetUserData(b2.Shape_GetBody(sa))
+	nb := cast(^Node)b2.Body_GetUserData(b2.Shape_GetBody(sb))
+	ta, tb := tile_collider_of(na), tile_collider_of(nb)
+	if ta == nil && tb == nil do return
+	ca, cb := Physics_ContactOf(sa, sb, m)
+	// (The map's view: Physics_ContactOf's normal for a side points away from it.)
+	if ta != nil do tile_hit(ta, sa, nb, ca.point, -ca.normal)
+	if tb != nil do tile_hit(tb, sb, na, cb.point, -cb.normal)
 }
 
 @(private = "file")
-tilemap_on_hit :: proc(source: rawptr, value: EventValue, ctx: ^GameContext, user: rawptr) {
-	tm := cast(^TileMapNode)user
-	other, isNode := value.(^Node)
-	if tm == nil || !Node_IsAlive(tm) || !isNode do return
-	ct := collisionContact // (the map's view: its normal points into the tile)
-	if !ct.valid do return
-	cs := TileMapNode_CellSize(tm)
-	inside := ct.point + ct.normal * (min(cs.x, cs.y) * 0.25)
-	cell := TileMapNode_CellAt(tm, inside)
-	tile := TileMapNode_Get(tm, cell.x, cell.y)
-	if tile < 0 {
-		// (Right on an edge: the cell on the other side.)
-		cell = TileMapNode_CellAt(tm, ct.point - ct.normal * (min(cs.x, cs.y) * 0.25))
-		tile = TileMapNode_Get(tm, cell.x, cell.y)
-	}
-	if !tile_event_wanted(tm, &tm.onTileHit) do return
+tile_collider_of :: proc(n: ^Node) -> ^StaticBodyNode {
+	if n == nil || n.typeId != StaticBodyNode do return nil
+	sb := cast(^StaticBodyNode)n
+	if sb.tileColliders == nil || sb.tileColliders.kind == .Trigger do return nil
+	return sb
+}
+
+@(private = "file")
+tile_hit :: proc(body: ^StaticBodyNode, sid: b2.ShapeId, other: ^Node, point, normal: [2]f32) {
+	tm := body.tileColliders.tileMap
+	if tm == nil || !Node_IsAlive(tm) || other == nil do return
+	cell, tile, ok := TileColliders_CellOf(body, sid, point, normal)
+	if !ok do return
 	L, ref := tile_event_begin(tm)
 	if L == nil do return
 	tile_field_int(L, "x", cell.x)
@@ -317,9 +336,121 @@ tilemap_on_hit :: proc(source: rawptr, value: EventValue, ctx: ^GameContext, use
 	tile_field_int(L, "tile", int(tile))
 	push_node_userdata(L, other)
 	lua.setfield(L, -2, "other")
-	Lua_PushVec2(L, ct.point)
+	Lua_PushVec2(L, point)
 	lua.setfield(L, -2, "point")
+	Lua_PushVec2(L, normal)
+	lua.setfield(L, -2, "normal")
 	tile_event_end(tm, &tm.onTileHit, L, ref)
+}
+
+// Trigger tiles: who is inside which cell (a body with several shapes, or
+// several of a cell's sensors after a rebuild, counts once).
+Tile_Trigger_Key :: struct {
+	cell:  [2]int,
+	other: ^Node,
+}
+
+// Maps whose trigger shapes were rebuilt: their old overlaps wait one
+// step for the new shapes' begin events, then those left have exited.
+@(private = "file")
+triggerStaleMaps: [dynamic]^TileMapNode
+
+// TileColliders_OnSensor: a sensor began or stopped touching a visitor
+// (physics_world.odin); true when it was a map's trigger tile.
+TileColliders_OnSensor :: proc(sensorNode, visitor: ^Node, sensorShape: b2.ShapeId, began: bool) -> bool {
+	if sensorNode == nil || sensorNode.typeId != StaticBodyNode do return false
+	sb := cast(^StaticBodyNode)sensorNode
+	info := sb.tileColliders
+	if info == nil || info.kind != .Trigger do return false
+	tm := info.tileMap
+	if tm == nil || !Node_IsAlive(tm) || visitor == nil do return true
+	cell, ok := TileColliders_TriggerCell(sb, sensorShape)
+	if !ok do return true
+	key := Tile_Trigger_Key{cell, visitor}
+	if tm.triggerInside == nil do tm.triggerInside = make(map[Tile_Trigger_Key]i32, allocator = Engine_HeapAllocator())
+	if began {
+		if key in tm.triggerStale {
+			delete_key(&tm.triggerStale, key) // (still inside: the cell's new shape)
+			tm.triggerInside[key] = 1
+			return true
+		}
+		n := tm.triggerInside[key] + 1
+		tm.triggerInside[key] = n
+		if n == 1 do tile_trigger_event(tm, key, true)
+	} else {
+		n, inside := tm.triggerInside[key]
+		if !inside do return true
+		if n > 1 {
+			tm.triggerInside[key] = n - 1
+			return true
+		}
+		delete_key(&tm.triggerInside, key)
+		tile_trigger_event(tm, key, false)
+	}
+	return true
+}
+
+// tile_triggers_stale: the sections' trigger shapes are being rebuilt
+// (tilemap_colliders.odin) - their overlaps wait for the new shapes.
+tile_triggers_stale :: proc(tm: ^TileMapNode, sections: map[[2]i32]bool, all: bool) {
+	moved := make([dynamic]Tile_Trigger_Key, context.temp_allocator)
+	for key in tm.triggerInside do if all || tile_section_of(key.cell) in sections do append(&moved, key)
+	if len(moved) == 0 do return
+	if tm.triggerStale == nil do tm.triggerStale = make(map[Tile_Trigger_Key]bool, allocator = Engine_HeapAllocator())
+	for key in moved {
+		delete_key(&tm.triggerInside, key)
+		tm.triggerStale[key] = true
+	}
+	if triggerStaleMaps == nil do triggerStaleMaps = make([dynamic]^TileMapNode, Engine_HeapAllocator())
+	for m in triggerStaleMaps do if m == tm do return
+	append(&triggerStaleMaps, tm)
+}
+
+// TileColliders_FlushTriggers: after a step's sensor events - overlaps
+// whose cell lost its trigger (the tile changed) have exited.
+TileColliders_FlushTriggers :: proc() {
+	if len(triggerStaleMaps) == 0 do return
+	maps := make([dynamic]^TileMapNode, context.temp_allocator)
+	for m in triggerStaleMaps do append(&maps, m)
+	clear(&triggerStaleMaps)
+	for tm in maps {
+		if !Node_IsAlive(tm) do continue
+		keys := make([dynamic]Tile_Trigger_Key, context.temp_allocator)
+		for key in tm.triggerStale do append(&keys, key)
+		clear(&tm.triggerStale)
+		for key in keys do if Node_IsAlive(key.other) do tile_trigger_event(tm, key, false)
+	}
+}
+
+// TileMapNode_Inside: the trigger cells a body is in now (Lua, tests).
+TileMapNode_TriggerCellsOf :: proc(tm: ^TileMapNode, other: ^Node, allocator := context.temp_allocator) -> [dynamic][2]int {
+	out := make([dynamic][2]int, allocator)
+	for key in tm.triggerInside do if key.other == other do append(&out, key.cell)
+	for key in tm.triggerStale do if key.other == other do append(&out, key.cell)
+	return out
+}
+
+@(private = "file")
+tile_trigger_event :: proc(tm: ^TileMapNode, key: Tile_Trigger_Key, entered: bool) {
+	L, ref := tile_event_begin(tm)
+	if L == nil do return
+	tile_field_int(L, "x", key.cell.x)
+	tile_field_int(L, "y", key.cell.y)
+	tile_field_int(L, "tile", int(TileMapNode_Get(tm, key.cell.x, key.cell.y)))
+	push_node_userdata(L, key.other)
+	lua.setfield(L, -2, "other")
+	tile_event_end(tm, &tm.onTileEntered if entered else &tm.onTileExited, L, ref)
+}
+
+TileMapNode_FreeTriggers :: proc(tm: ^TileMapNode) {
+	delete(tm.triggerInside)
+	delete(tm.triggerStale)
+	tm.triggerInside = nil
+	tm.triggerStale = nil
+	for m, i in triggerStaleMaps do if m == tm {
+		unordered_remove(&triggerStaleMaps, i)
+		break
+	}
 }
 
 // TileMapNode_HitCell: the cell a contact touched on the map - from a
