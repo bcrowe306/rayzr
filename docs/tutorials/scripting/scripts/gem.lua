@@ -3,6 +3,7 @@
 -- the custom event "caught" (the score listens to it).
 
 ---@class Gem : ScriptInstanceBase
+---@signal caught(points: integer) The player caught it
 local Gem = {}
 
 Gem.properties = {

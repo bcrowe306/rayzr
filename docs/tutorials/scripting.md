@@ -147,6 +147,7 @@ Press **F5** to play: the arrows move the player. Close the game window
 -- the custom event "caught" (the score listens to it).
 
 ---@class Gem : ScriptInstanceBase
+---@signal caught(points: integer) The player caught it
 local Gem = {}
 
 Gem.properties = {
@@ -244,7 +245,9 @@ script used on the way:
 ## 6. Events: emit your own, connect to them
 
 `self.node:emit("caught", self.points)` raises a custom event on the Gem.
-Anything can listen with `connect`. Add a **Text** node (select nothing
+The `---@signal caught(points: integer)` line at the top declares it: the
+Inspector's Signals section lists it (so it can be connected there too) and
+the code editor knows its value. Anything can listen with `connect`. Add a **Text** node (select nothing
 first), name it `Score`, put it at the top left, and give it
 `scripts/score.lua`:
 

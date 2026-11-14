@@ -1135,6 +1135,14 @@ Drive_Query :: proc(state: ^EditorState, q: string) -> (string, bool) {
 		case "tile-components":
 			if n.typeId != e.TileMapNode do return "<not a tile map>", true
 			return fmt.tprint(len(e.TileMapNode_Components(cast(^e.TileMapNode)n))), true
+		case "signals":
+			// Its declared signals: name:origin:type (as the Inspector lists them).
+			sb := strings.builder_make(context.temp_allocator)
+			for sg, i in e.Node_DeclaredSignals(n, signal_type_doc(state, n)) {
+				if i > 0 do strings.write_string(&sb, ",")
+				fmt.sbprintf(&sb, "%s:%v:%s", sg.name, sg.origin, sg.type if sg.type != "" else "any")
+			}
+			return strings.to_string(sb), true
 		case "connections":
 			sb := strings.builder_make(context.temp_allocator)
 			for c, i in n.signalConnections {

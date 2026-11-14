@@ -49,7 +49,7 @@ CUSTOM_NODE_KEY :: "node_type"
 
 // Keys a custom node always writes itself (never from its type).
 @(private = "file")
-CUSTOM_DIRECT_KEYS :: []string{"type", "name", "uid", "position", "scale", "rotation", "pivot", "children", "connections", CUSTOM_NODE_KEY}
+CUSTOM_DIRECT_KEYS :: []string{"type", "name", "uid", "position", "scale", "rotation", "pivot", "children", "connections", "signals", CUSTOM_NODE_KEY}
 
 // Custom_IsDirectKey: a key every custom node writes itself.
 Custom_IsDirectKey :: proc(k: string) -> bool {return slice.contains(CUSTOM_DIRECT_KEYS, k)}
@@ -298,6 +298,7 @@ custom_base :: proc(t: ^CustomNodeType, ctx: ^GameContext) -> json.Object {
 	base, _ := val.(json.Object)
 	if err != .None || base == nil do base = make(json.Object, 0, context.temp_allocator)
 	delete_key(&base, "uid")
+	delete_key(&base, "signals") // (the type's: CustomNode_Signals - a node's "signals" are its own)
 	if script := CustomNode_Script(t, ctx); script != "" {
 		so := make(json.Object, 0, context.temp_allocator)
 		so["properties"] = custom_script_defaults(t, ctx)
@@ -638,6 +639,8 @@ CustomNode_DefaultsFromNode :: proc(node: ^Node, manager: ^NodeManager, allocato
 	if !ok do base = make(json.Object, 0, context.temp_allocator)
 	diff, _ := diff_node(base, inst, false)
 	out := make(json.Object, 0, context.temp_allocator)
+	// The node's own signals: the type's (signal_decls.odin).
+	if sv, has := inst["signals"]; has do out["signals"] = sv
 	for k, v in diff {
 		if Custom_IsDirectKey(k) || k == "tags" && v == nil do continue
 		if _, isNull := v.(json.Null); isNull do continue

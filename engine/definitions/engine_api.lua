@@ -705,13 +705,39 @@ function Node:connect(event, handler) end
 ---@return boolean removed true when removed; false when no connection has that id
 function Node:disconnect(id) end
 
----Raises a custom event on this node: calls the node script's `on_<event>`
----method and every handler connected to that event name.
+---Raises one of this node's signals: calls the node script's `on_<event>`
+---method and every handler connected to that event name. Declare the
+---signal first - on the node (Inspector > Signals > Add Signal), its custom
+---node type, or a `---@signal health_changed(health: number)` line in its
+---script; an undeclared name still works but warns once per call site in
+---the editor and debug builds.
 ---
 ---Example: `self.node:emit("health_changed", self.health)`
 ---@param event ProjectEvent|string The event name: calls this node's script on_<event> method, its Inspector Signals, then every connect handler (the project's custom events complete)
 ---@param value? any Passed to the handlers: a boolean, number, string, node or table (the same table, not a copy); nil for none
 function Node:emit(event, value) end
+
+---A signal of a node (`get_signals`).
+---@class NodeSignal
+---@field name string The signal's name (what `emit` and `connect` take)
+---@field param string The value's name ("" when it has none)
+---@field type string The value's type hint: "any", "number", "integer", "string", "boolean", "node", "table" or "Vec2"
+---@field description string What it means ("" when none)
+---@field origin "builtin"|"type"|"node"|"script" Where it is declared: the node's type raises it, its custom node type, the node itself, or its script (---@signal)
+
+---This node's signals: its built-in events first, then the declared ones
+---(its custom node type's, its own, its script's).
+---
+---Example: `for _, s in ipairs(self.node:get_signals()) do Log.info(s.name) end`
+---@return NodeSignal[] signals
+function Node:get_signals() end
+
+---Whether this node has a signal: a built-in event or a declared one.
+---
+---Example: `if other:has_signal("damaged") then other:emit("damaged", 1) end`
+---@param name string The signal's name
+---@return boolean has true when the node raises or declares it
+function Node:has_signal(name) end
 
 -- node events begin (generated from the engine: lua_events_definitions_test.odin)
 

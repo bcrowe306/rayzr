@@ -125,6 +125,9 @@ Node :: struct {
 	// Saved signal connections from this node's events to script methods
 	// (signals.odin).
 	signalConnections: [dynamic]Signal_Connection,
+	// Signals declared on this node (signal_decls.odin; its custom type's
+	// and its script's are not in here).
+	signals: [dynamic]Signal_Decl,
 	tags: [dynamic]string, // groups ("enemy"); node_tags.odin
 }
 

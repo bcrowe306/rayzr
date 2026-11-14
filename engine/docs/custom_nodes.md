@@ -119,6 +119,27 @@ Static Body after all). Before anything changes you see:
 changed that the new base has. Open scenes with unsaved changes must be
 saved first; each file written can be undone.
 
+## Signals
+
+A type can declare signals: in its tab (**Edit Type**), select its node and
+**Add Signal** in the Inspector's Signals section, then save. Every node of
+the type - in every scene, and of the types built on it - has them, listed
+with a lock: change them in the type. A rename there updates the
+connections of every node of the type (open scenes, and the scenes and
+components on disk, each one undoable) and saves the type.
+
+A node of the type can still declare signals of its own; they are saved
+with the node, the type's are not. A type built on another has its
+parent's signals and its own.
+
+```json
+{"name": "Hurtbox", "base": "AreaNode", "script": "scripts/hurtbox.lua",
+ "defaults": {"signals": [{"name": "damaged", "param": "amount", "type": "number", "description": "Took a hit"}]}}
+```
+
+Its script can declare them too (`---@signal damaged(amount: number)`):
+then they come with the script wherever it runs.
+
 ## Types built on types
 
 Base a new type on one of yours (the dialog's **Based on**, or the type's
@@ -307,6 +328,7 @@ on This...** > *BossHurtbox*, and give its script the `take_damage` from
 | `script` | Its script (project-relative; none: the parent's, or no script) |
 | `icon`, `color`, `category`, `description` | How the editor shows it |
 | `defaults` | Node values as a scene writes them, on top of the base type's (or parent type's) and the script's defaults |
+| `defaults.signals` | The type's [signals](#signals): `[{"name", "param", "type", "description"}]` |
 
 In scenes a node of the type is its base type plus `"node_type"` and what it
 changes (see [Linked values](#linked-values)).

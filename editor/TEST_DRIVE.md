@@ -53,6 +53,7 @@ project instead of the demo project (the tutorials' drives,
 | `assets.drive` | Asset folders collapse/expand (folder icons); the Scenes folder's + creates a scene. |
 | `code_shortcuts.drive` | Zed-style code editing: auto-closing pairs, line operations, multi-cursor, find/replace, go to line, LSP rename (with its preview: Apply) and format, font size, Go to File, reopen tab, command palette, Keyboard Shortcuts window. |
 | `scene_editing.drive` | Multi-select (tree, box), align, nudge, copy/paste, multi-delete, F2 rename, select all, quit prompt. |
+| `custom_signals.drive` | Declared signals: Add Signal (name, value, type, description), connected like a built-in event (typed handler), renamed with a preview (its connection follows), Declare for an undeclared emit, a script's `---@signal`, a custom type's signal locked on every node of it, Emit while simulating, Delete with its connection. |
 | `signals.drive` | Connect an event to a script method (handler generated, connection saved), disconnect (handler removed; asks when it has code), drag assets into a script (path / asset property). |
 | `prefab_overrides.drive` | Edit a child of a linked instance: saved as an override, other instances unaffected, Revert. |
 | `animation.drive` | Animation tab: frames from dropped textures, scrubbing, rotation track with keys, preview restore, save. |

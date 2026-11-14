@@ -260,6 +260,7 @@ lua_node_emit :: proc "c" (L: ^lua.State) -> c.int {
 	node, ok := to_node_userdata(L, 1)
 	if !ok || lua.type(L, 2) != .STRING do return 0
 	name := strings.clone(string(lua.tostring(L, 2)), context.temp_allocator)
+	if Lua_WarnDeprecated && !Node_HasSignal(node, name) do Signal_WarnUndeclared(L, node, name)
 	value := to_event_value(L, 3)
 	// A table (or function) arrives as itself - the same table, by reference.
 	ref: c.int
@@ -273,9 +274,51 @@ lua_node_emit :: proc "c" (L: ^lua.State) -> c.int {
 	return 0
 }
 
+// node:get_signals() -> {{name, param, type, description, origin}, ...}:
+// its built-in events, then the declared ones.
+lua_node_get_signals :: proc "c" (L: ^lua.State) -> c.int {
+	context = Script_Context(L)
+	node, ok := to_node_userdata(L, 1)
+	lua.newtable(L)
+	if !ok do return 1
+	for s, i in Node_Signals(node) {
+		lua.newtable(L)
+		field :: proc(L: ^lua.State, k, v: string) {
+			lua.pushstring(L, strings.clone_to_cstring(v, context.temp_allocator))
+			lua.setfield(L, -2, strings.clone_to_cstring(k, context.temp_allocator))
+		}
+		field(L, "name", s.name)
+		field(L, "param", s.param)
+		field(L, "type", s.type if s.type != "" else "any")
+		field(L, "description", s.description)
+		origin := "builtin"
+		switch s.origin {
+		case .Builtin: origin = "builtin"
+		case .Type:    origin = "type"
+		case .Node:    origin = "node"
+		case .Script:  origin = "script"
+		}
+		field(L, "origin", origin)
+		lua.rawseti(L, -2, lua.Integer(i + 1))
+	}
+	return 1
+}
+
+// node:has_signal(name) -> bool: a built-in event or a declared signal.
+lua_node_has_signal :: proc "c" (L: ^lua.State) -> c.int {
+	context = Script_Context(L)
+	node, ok := to_node_userdata(L, 1)
+	lua.pushboolean(L, b32(ok && lua.type(L, 2) == .STRING && Node_HasSignal(node, string(lua.tostring(L, 2)))))
+	return 1
+}
+
 // Script_RegisterEventBindings adds connect/disconnect/emit to the node
 // metatable's method table at the top of the stack.
 Script_RegisterEventBindings :: proc(L: ^lua.State) {
+	lua.pushcfunction(L, lua_node_get_signals)
+	lua.setfield(L, -2, "get_signals")
+	lua.pushcfunction(L, lua_node_has_signal)
+	lua.setfield(L, -2, "has_signal")
 	lua.pushcfunction(L, lua_node_connect)
 	lua.setfield(L, -2, "connect")
 	lua.pushcfunction(L, lua_node_disconnect)

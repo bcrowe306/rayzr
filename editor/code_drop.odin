@@ -428,6 +428,7 @@ Code_Item_Kind :: enum {
 	Action,    // an input action: Input.is_action_pressed (Shift: is_action_down)
 	Animation, // an AnimationPlayer's animation: animation_play
 	Event,     // a node's event (Signals panel): a connect with its handler
+	Signal,    // a node's declared signal (Signals panel): an emit of it
 }
 
 Code_Item_Payload :: struct {
@@ -461,8 +462,14 @@ code_item_text :: proc(state: ^EditorState, doc: ^Code_Doc, it: ^Code_Item_Paylo
 	case .Event:
 		ref := "self.node"
 		if e.Node_IsAlive(it.node) && state.activeScene != nil do ref = code_node_ref(state, doc, it.node, true)
-		param, _ := e.Event_Describe(name)
+		param, _, _ := e.Node_DescribeSignal(it.node, name)
 		return fmt.tprintf("%s:connect(%q, function(%s, source)\n\nend)", ref, name, param if param != "" else "value")
+	case .Signal:
+		ref := "self.node"
+		if e.Node_IsAlive(it.node) && state.activeScene != nil do ref = code_node_ref(state, doc, it.node, true)
+		param, _, _ := e.Node_DescribeSignal(it.node, name)
+		if param == "" do return fmt.tprintf("%s:emit(%q)", ref, name)
+		return fmt.tprintf("%s:emit(%q, %s)", ref, name, param)
 	}
 	return ""
 }
@@ -831,14 +838,14 @@ Code_NodeDropMenu :: proc(state: ^EditorState, doc: ^Code_Doc) {
 	}
 	UI_DimText(fmt.tprintf("Connect %s's event to %s:%s()", m.node.name, m.cls, m.method))
 	imgui.Separator()
-	for ev in e.Node_EventNames(m.node) {
+	for ev in e.Node_Signals(m.node) {
 		label := fmt.tprintf("%s  %s", ICON_FA_BOLT, ev.name)
 		if imgui.MenuItem(strings.clone_to_cstring(label, context.temp_allocator)) {
 			code_connect_in_ready(state, doc, m.node, ev.name, m.cls, m.method)
 			imgui.CloseCurrentPopup()
 		}
 		Drive_Item(fmt.tprintf("node-drop.event:%s", ev.name))
-		if ev.doc != "" do UI_Tooltip(ev.doc)
+		if ev.description != "" do UI_Tooltip(ev.description)
 	}
 }
 
@@ -847,7 +854,7 @@ Code_NodeDropMenu :: proc(state: ^EditorState, doc: ^Code_Doc) {
 @(private = "file")
 code_connect_in_ready :: proc(state: ^EditorState, doc: ^Code_Doc, node: ^e.Node, event, cls, method: string) {
 	b := &doc.buffer
-	param, _ := e.Event_Describe(event)
+	param, _, _ := e.Node_DescribeSignal(node, event)
 	if param == "" do param = "value"
 	ref := code_node_ref(state, doc, node, true)
 	unit := "\t" if doc.useTabs else "    "

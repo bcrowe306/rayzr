@@ -119,12 +119,12 @@ body_is_empty :: proc(b: ^buf.Buffer, first, last: int) -> bool {
 
 // signal_doc_lines: the comment block written above a generated handler.
 @(private = "file")
-signal_handler_text :: proc(cls, method, sourceName, signal, param, doc: string) -> string {
+signal_handler_text :: proc(cls, method, sourceName, signal, param, doc: string, ptype := "") -> string {
 	sb := strings.builder_make(context.temp_allocator)
 	fmt.sbprintf(&sb, "---Signal: %s.%s", sourceName, signal)
 	if doc != "" do fmt.sbprintf(&sb, " - %s", doc)
 	strings.write_byte(&sb, '\n')
-	if param != "" do fmt.sbprintf(&sb, "---@param %s any\n", param)
+	if param != "" do fmt.sbprintf(&sb, "---@param %s %s\n", param, e.Signal_LuaType(ptype))
 	strings.write_string(&sb, "---@param source Node\n")
 	fmt.sbprintf(&sb, "function %s:%s(%s, source)\n", cls, method, param if param != "" else "_")
 	strings.write_string(&sb, "end\n")
@@ -145,7 +145,7 @@ code_doc_for_script :: proc(state: ^EditorState, rel: string, focus: bool) -> ^C
 // Code_AddSignalHandler writes a handler method into a script (unless it
 // exists), shows it in the code editor and saves (if the file had no
 // other unsaved edits).
-Code_AddSignalHandler :: proc(state: ^EditorState, scriptRel, method, sourceName, signal, param, docText: string) -> bool {
+Code_AddSignalHandler :: proc(state: ^EditorState, scriptRel, method, sourceName, signal, param, docText: string, ptype := "") -> bool {
 	doc := code_doc_for_script(state, scriptRel, true)
 	if doc == nil do return false
 	b := &doc.buffer
@@ -168,7 +168,7 @@ Code_AddSignalHandler :: proc(state: ^EditorState, scriptRel, method, sourceName
 			break
 		}
 	}
-	code := signal_handler_text(cls, method, sourceName, signal, param, docText)
+	code := signal_handler_text(cls, method, sourceName, signal, param, docText, ptype)
 	prefix := ""
 	if insertLine > 0 && strings.trim_space(buf.buffer_line_str(b, insertLine - 1)) != "" do prefix = "\n"
 	group := buf.buffer_next_group(b)
@@ -280,7 +280,8 @@ method_used_elsewhere :: proc(state: ^EditorState, target: ^e.Node, method: stri
 Inspector_Signals :: proc(state: ^EditorState, node: ^e.Node) {
 	if !UI_SectionHeader("Signals") do return
 	mgr := state.activeScene.manager
-	events := e.Node_EventNames(node)
+	typeDoc := signal_type_doc(state, node)
+	signals := e.Node_Signals(node, typeDoc)
 	ownScript := ""
 	if rel := node_script_rel(state, node); rel != "" {
 		path := fmt.tprintf("%s/%s", state.projectPath, rel)
@@ -288,24 +289,50 @@ Inspector_Signals :: proc(state: ^EditorState, node: ^e.Node) {
 	}
 	imgui.PushStyleVarImVec2(.ItemSpacing, {6, 3})
 	defer imgui.PopStyleVar()
-	for ev in events {
+	for ev in signals {
 		imgui.PushID(strings.clone_to_cstring(ev.name, context.temp_allocator))
 		imgui.AlignTextToFramePadding()
-		imgui.PushStyleColorImVec4(.Text, UI_WARNING)
-		imgui.TextUnformatted(ICON_FA_BOLT)
+		// The name and value clipped short of the buttons on the right.
+		right := imgui.GetContentRegionMax().x
+		rowStart := imgui.GetCursorScreenPos()
+		textRight := imgui.GetWindowPos().x + right - 28 - Signals_RowsWidth(state, ev) - 4
+		imgui.PushClipRect(rowStart, {max(textRight, rowStart.x + 40), rowStart.y + 30}, true)
+		// Built-in: a bolt; declared: where it comes from.
+		icon, tint := ICON_FA_BOLT, UI_WARNING
+		switch ev.origin {
+		case .Builtin:
+		case .Node:   icon, tint = ICON_FA_BOLT, UI_ACCENT
+		case .Type:   icon, tint = ICON_FA_PUZZLE_PIECE, UI_ACCENT
+		case .Script: icon, tint = ICON_FA_FILE_CODE, UI_ACCENT
+		}
+		imgui.PushStyleColorImVec4(.Text, tint)
+		imgui.TextUnformatted(strings.clone_to_cstring(icon, context.temp_allocator))
 		imgui.PopStyleColor()
 		imgui.SameLine(0, 6)
 		imgui.TextUnformatted(strings.clone_to_cstring(ev.name, context.temp_allocator))
 		Drive_Item(fmt.tprintf("insp.signal-event:%s", ev.name))
-		code_item_drag(.Event, ev.name, node, textItem = true) // into a script: a connect with its handler
+		// Into a script: a connect with its handler (a declared one's: an emit).
+		code_item_drag(.Event if ev.origin == .Builtin else .Signal, ev.name, node, textItem = true)
 		if ev.param != "" {
 			imgui.SameLine(0, 4)
-			UI_DimText(fmt.tprintf("(%s)", ev.param))
+			UI_DimText(fmt.tprintf("(%s: %s)", ev.param, ev.type) if ev.type != "" else fmt.tprintf("(%s)", ev.param))
 		}
-		if ev.doc != "" do UI_Tooltip(ev.doc)
-		imgui.SameLine(imgui.GetContentRegionMax().x - 26)
+		tip := ev.description
+		switch ev.origin {
+		case .Builtin:
+		case .Node:   tip = fmt.tprintf("%s\n\nDeclared on this node", tip) if tip != "" else "Declared on this node"
+		case .Type:   tip = fmt.tprintf("%s\n\nThe %s type's signal", tip, Editor_CustomTypeName(state, ev.from)) if tip != "" else fmt.tprintf("The %s type's signal", Editor_CustomTypeName(state, ev.from))
+		case .Script: tip = fmt.tprintf("%s\n\nDeclared in %s", tip, asset_rel_editor(state, ev.from)) if tip != "" else fmt.tprintf("Declared in %s", asset_rel_editor(state, ev.from))
+		}
+		if tip != "" do UI_Tooltip(tip)
+		imgui.PopClipRect()
+		imgui.SameLine(right - 26)
 		if UI_IconButton(ICON_FA_PLUS, fmt.tprintf("insp.signal-connect:%s", ev.name), "Connect to a script method...", size = 24) {
 			Signals_OpenConnectDialog(state, node, ev.name)
+		}
+		if Signals_RowButtons(state, node, ev, right - 28) {
+			imgui.PopID()
+			return // (the list changed)
 		}
 		// The node's own on_<event> handler (implicit, always called).
 		own := fmt.tprintf("on_%s", ev.name)
@@ -345,6 +372,24 @@ Inspector_Signals :: proc(state: ^EditorState, node: ^e.Node) {
 		}
 		imgui.PopID()
 	}
+	// Emitted by its script, declared nowhere: Declare.
+	for u in Signals_Undeclared(node, ownScript) {
+		name := u.name
+		imgui.PushID(strings.clone_to_cstring(name, context.temp_allocator))
+		imgui.AlignTextToFramePadding()
+		imgui.PushStyleColorImVec4(.Text, UI_WARNING)
+		imgui.TextUnformatted(ICON_FA_TRIANGLE_EXCLAMATION)
+		imgui.PopStyleColor()
+		imgui.SameLine(0, 6)
+		UI_DimText(name)
+		UI_Tooltip(fmt.tprintf("Its script emits %s, but no signal declares it (it warns when emitted): declare it to connect it here", name))
+		imgui.SameLine(imgui.GetContentRegionMax().x - 72)
+		if UI_Button("Declare", fmt.tprintf("insp.signal-declare:%s", name), {72, 0}) do Signals_OpenDeclDialog(state, node, preset = name, presetValue = u.hasValue)
+		imgui.PopID()
+	}
+	imgui.Dummy({0, 2})
+	if UI_Button(fmt.tprintf("%s  Add Signal", ICON_FA_PLUS), "insp.signal-add", {-1, 0}) do Signals_OpenDeclDialog(state, node)
+	UI_Tooltip("Declare a signal of this node: connect it here, raise it with self.node:emit(\"name\", value)" if !typeDoc else "Declare a signal of the type: every node of it has it")
 }
 
 // Signals_OpenHandler opens a connection's method in the target's script.
@@ -423,8 +468,8 @@ Signals_Connect :: proc(state: ^EditorState, source: ^e.Node, signal: string, ta
 	if !e.Node_AddConnection(source, signal, path, method) {
 		Editor_Log(state, .Info, "%s.%s is already connected to %s", source.name, signal, method)
 	}
-	param, docText := e.Event_Describe(signal)
-	Code_AddSignalHandler(state, node_script_rel(state, target), method, source.name, signal, param, docText)
+	param, docText, ptype := e.Node_DescribeSignal(source, signal)
+	Code_AddSignalHandler(state, node_script_rel(state, target), method, source.name, signal, param, docText, ptype)
 	Editor_Log(state, .Info, "Connected %s.%s to %s:%s", source.name, signal, target.name, method)
 	return true
 }
@@ -523,4 +568,5 @@ Signals_Render :: proc(state: ^EditorState) {
 		if UI_Button("Keep Function", "signal.keep-code") || imgui.IsKeyPressed(.Escape, false) do imgui.CloseCurrentPopup()
 		imgui.EndPopup()
 	}
+	Signals_DeclRender(state)
 }
