@@ -79,7 +79,7 @@ UI_GetMousePosRaw :: proc(gameContext: ^GameContext) -> [2]f32 {
 		g := gameContext.game
 		if p, ok := Game_Pointer(g); ok do return p.pos // (the test mouse, a finger)
 		if rl.IsWindowReady() {
-			mp := rl.GetMousePosition()
+			mp := In_GetMousePosition()
 			cRect := g.viewportCanvasRect
 			if cRect.width > 0 && cRect.height > 0 && g.virtualSize[0] > 0 && g.virtualSize[1] > 0 {
 				return {
@@ -91,7 +91,7 @@ UI_GetMousePosRaw :: proc(gameContext: ^GameContext) -> [2]f32 {
 		}
 	}
 	if rl.IsWindowReady() {
-		mp := rl.GetMousePosition()
+		mp := In_GetMousePosition()
 		return {mp.x, mp.y}
 	}
 	return {-1000, -1000}
@@ -102,7 +102,7 @@ UI_IsMouseInViewport :: proc(gameContext: ^GameContext) -> bool {
 		g := gameContext.game
 		if _, ok := Game_Pointer(g); ok do return true
 		if rl.IsWindowReady() {
-			mp := rl.GetMousePosition()
+			mp := In_GetMousePosition()
 			cRect := g.viewportCanvasRect
 			if cRect.width > 0 && cRect.height > 0 {
 				return rl.CheckCollisionPointRec(mp, cRect)
@@ -117,41 +117,41 @@ UI_IsMousePressed :: proc(gameContext: ^GameContext) -> bool {
 	if gameContext != nil {
 		if p, ok := Game_Pointer(gameContext.game); ok do return p.pressed
 	}
-	return rl.IsWindowReady() && UI_IsMouseInViewport(gameContext) && rl.IsMouseButtonPressed(.LEFT)
+	return rl.IsWindowReady() && UI_IsMouseInViewport(gameContext) && In_IsMouseButtonPressed(.LEFT)
 }
 
 UI_IsMouseDown :: proc(gameContext: ^GameContext) -> bool {
 	if gameContext != nil {
 		if p, ok := Game_Pointer(gameContext.game); ok do return p.down
 	}
-	return rl.IsWindowReady() && rl.IsMouseButtonDown(.LEFT)
+	return rl.IsWindowReady() && In_IsMouseButtonDown(.LEFT)
 }
 
 UI_IsMouseReleased :: proc(gameContext: ^GameContext) -> bool {
 	if gameContext != nil {
 		if p, ok := Game_Pointer(gameContext.game); ok do return p.released
 	}
-	return rl.IsWindowReady() && rl.IsMouseButtonReleased(.LEFT)
+	return rl.IsWindowReady() && In_IsMouseButtonReleased(.LEFT)
 }
 
 // UI_GetMouseWheel: the wheel this frame (+ up).
 UI_GetMouseWheel :: proc(gameContext: ^GameContext) -> f32 {
 	if gameContext != nil && gameContext.game != nil && gameContext.game.uiTestInputEnabled do return gameContext.game.uiTestWheel
-	return rl.GetMouseWheelMove() if rl.IsWindowReady() else 0
+	return In_GetMouseWheelMove() if rl.IsWindowReady() else 0
 }
 
 UI_IsRightMousePressed :: proc(gameContext: ^GameContext) -> bool {
 	if gameContext != nil && gameContext.game != nil && gameContext.game.uiTestInputEnabled {
 		return gameContext.game.uiTestRightPressed
 	}
-	return rl.IsWindowReady() && UI_IsMouseInViewport(gameContext) && rl.IsMouseButtonPressed(.RIGHT)
+	return rl.IsWindowReady() && UI_IsMouseInViewport(gameContext) && In_IsMouseButtonPressed(.RIGHT)
 }
 
 UI_IsShiftDown :: proc(gameContext: ^GameContext) -> bool {
 	if gameContext != nil && gameContext.game != nil && gameContext.game.uiTestInputEnabled {
 		return gameContext.game.uiTestShiftDown
 	}
-	return rl.IsWindowReady() && (rl.IsKeyDown(.LEFT_SHIFT) || rl.IsKeyDown(.RIGHT_SHIFT))
+	return rl.IsWindowReady() && (In_IsKeyDown(.LEFT_SHIFT) || In_IsKeyDown(.RIGHT_SHIFT))
 }
 
 // ui_key: a key pressed this frame for the widgets - a simulated one (the
@@ -163,7 +163,7 @@ ui_key :: proc(gameContext: ^GameContext, key: rl.KeyboardKey, repeat := false) 
 		input := &gameContext.game.input
 		if input.useSimulatedInput && Input_SimulatedKeyPressed(input, key) do return true
 	}
-	return rl.IsWindowReady() && (rl.IsKeyPressed(key) || (repeat && rl.IsKeyPressedRepeat(key)))
+	return rl.IsWindowReady() && (In_IsKeyPressed(key) || (repeat && In_IsKeyPressedRepeat(key)))
 }
 
 UI_IsKeyPressedEnter :: proc(gameContext: ^GameContext) -> bool {
@@ -243,7 +243,7 @@ UI_PopCharPressed :: proc(gameContext: ^GameContext) -> u8 {
 		return 0
 	}
 	if rl.IsWindowReady() {
-		ch := rl.GetCharPressed()
+		ch := In_GetCharPressed()
 		if ch >= 32 && ch <= 126 {
 			return u8(ch)
 		}
@@ -989,7 +989,7 @@ UISliderNode_Update :: proc(node: ^Node, gameContext: ^GameContext, deltaTime: f
 	}
 
 	// Click on value box (or Ctrl+click track) starts text editing
-	ctrlHeld := rl.IsWindowReady() && (rl.IsKeyDown(.LEFT_CONTROL) || rl.IsKeyDown(.RIGHT_CONTROL))
+	ctrlHeld := rl.IsWindowReady() && (In_IsKeyDown(.LEFT_CONTROL) || In_IsKeyDown(.RIGHT_CONTROL))
 	if UI_IsMousePressed(gameContext) {
 		if UI_PointInRect(mp, valBoxRect) || (ctrlHeld && UI_PointInRect(mp, trackRect)) {
 			UISliderNode_BeginTextEdit(s)
@@ -2071,7 +2071,7 @@ UIKnobNode_Update :: proc(node: ^Node, gameContext: ^GameContext, deltaTime: f32
 	}
 
 	if knob.isDragging {
-		if rl.IsMouseButtonReleased(.LEFT) {
+		if In_IsMouseButtonReleased(.LEFT) {
 			knob.isDragging = false
 		} else {
 			dy := knob.dragStartMouse.y - mousePos.y

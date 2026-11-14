@@ -1017,6 +1017,8 @@ Drive_Query :: proc(state: ^EditorState, q: string) -> (string, bool) {
 		return fmt.tprint(len(state.redoStack)), true
 	case "game":
 		return "running" if state.gameProcessRunning else "stopped", true
+	case "gameview", "gameview-captured", "gameview-size", "gameview-frames", "gameview-open", "gameview-stats", "gameview-tex":
+		return GameView_Query(q)
 	case "build":
 		return "running" if state.buildRunning else "idle", true
 	case "particle-preview": return "on" if particlePreview else "off", true

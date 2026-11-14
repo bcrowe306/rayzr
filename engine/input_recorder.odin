@@ -40,8 +40,8 @@ Recorder_Start :: proc(game: ^Game) {
 	fmt.sbprintf(&inputRecorder.sb, "# Recorded in Play %v (Test.replay plays it back)\n", time.now())
 	if scene != "" do fmt.sbprintf(&inputRecorder.sb, "# scene %s\n", scene)
 	if rl.IsWindowReady() {
-		inputRecorder.mouse = rl.GetMousePosition()
-		inputRecorder.mouseDown = rl.IsMouseButtonDown(.LEFT)
+		inputRecorder.mouse = In_GetMousePosition()
+		inputRecorder.mouseDown = In_IsMouseButtonDown(.LEFT)
 	}
 }
 
@@ -72,12 +72,12 @@ Recorder_Frame :: proc(game: ^Game) {
 	// Keys.
 	for k in 32 ..< 349 {
 		key := rl.KeyboardKey(k)
-		if rl.IsKeyPressed(key) do fmt.sbprintf(sb, "%d %v down\n", f, key)
-		if rl.IsKeyReleased(key) do fmt.sbprintf(sb, "%d %v up\n", f, key)
+		if In_IsKeyPressed(key) do fmt.sbprintf(sb, "%d %v down\n", f, key)
+		if In_IsKeyReleased(key) do fmt.sbprintf(sb, "%d %v up\n", f, key)
 	}
 	// The mouse (game units: the runner maps it).
-	m := rl.GetMousePosition()
-	down := rl.IsMouseButtonDown(.LEFT)
+	m := In_GetMousePosition()
+	down := In_IsMouseButtonDown(.LEFT)
 	if down != r.mouseDown {
 		fmt.sbprintf(sb, "%d mouse %.1f %.1f %s\n", f, m.x, m.y, "down" if down else "up")
 	} else if abs(m.x - r.mouse.x) >= 0.5 || abs(m.y - r.mouse.y) >= 0.5 {

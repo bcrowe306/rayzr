@@ -2684,7 +2684,7 @@ lua_input_is_key_down :: proc "c" (L: ^lua.State) -> c.int {
 		lua.pushboolean(L, b32(isDown))
 		return 1
 	}
-	isDown := rl.IsWindowReady() && !sm_keyboard_blocked(L) && rl.IsKeyDown(key)
+	isDown := rl.IsWindowReady() && !sm_keyboard_blocked(L) && In_IsKeyDown(key)
 	lua.pushboolean(L, b32(isDown))
 	return 1
 }
@@ -2706,7 +2706,7 @@ lua_input_is_key_pressed :: proc "c" (L: ^lua.State) -> c.int {
 		lua.pushboolean(L, b32(Input_SimulatedKeyPressed(&sm.game.input, key)))
 		return 1
 	}
-	isPressed := rl.IsWindowReady() && !sm_keyboard_blocked(L) && rl.IsKeyPressed(key)
+	isPressed := rl.IsWindowReady() && !sm_keyboard_blocked(L) && In_IsKeyPressed(key)
 	lua.pushboolean(L, b32(isPressed))
 	return 1
 }
@@ -2728,7 +2728,7 @@ lua_input_is_key_released :: proc "c" (L: ^lua.State) -> c.int {
 		lua.pushboolean(L, b32(Input_SimulatedKeyReleased(&sm.game.input, key)))
 		return 1
 	}
-	isRel := rl.IsWindowReady() && !sm_keyboard_blocked(L) && rl.IsKeyReleased(key)
+	isRel := rl.IsWindowReady() && !sm_keyboard_blocked(L) && In_IsKeyReleased(key)
 	lua.pushboolean(L, b32(isRel))
 	return 1
 }
@@ -2759,7 +2759,7 @@ lua_input_is_mouse_button_pressed :: proc "c" (L: ^lua.State) -> c.int {
 		lua.pushboolean(L, false)
 		return 1
 	}
-	isPressed := rl.IsWindowReady() && rl.IsMouseButtonPressed(btn) && !ui_has_mouse(L) // (not a click on UI, #228)
+	isPressed := rl.IsWindowReady() && In_IsMouseButtonPressed(btn) && !ui_has_mouse(L) // (not a click on UI, #228)
 	if m, ok := test_mouse(L); ok do isPressed = btn == .LEFT && m.pressed && !ui_has_mouse(L)
 	lua.pushboolean(L, b32(isPressed))
 	return 1
@@ -2774,7 +2774,7 @@ lua_input_is_mouse_button_down :: proc "c" (L: ^lua.State) -> c.int {
 		lua.pushboolean(L, false)
 		return 1
 	}
-	isDown := rl.IsWindowReady() && rl.IsMouseButtonDown(btn) && !ui_has_mouse(L) // (not a click on UI, #228)
+	isDown := rl.IsWindowReady() && In_IsMouseButtonDown(btn) && !ui_has_mouse(L) // (not a click on UI, #228)
 	if m, ok := test_mouse(L); ok do isDown = btn == .LEFT && m.down && !ui_has_mouse(L)
 	lua.pushboolean(L, b32(isDown))
 	return 1
@@ -2789,7 +2789,7 @@ lua_input_is_mouse_button_released :: proc "c" (L: ^lua.State) -> c.int {
 		lua.pushboolean(L, false)
 		return 1
 	}
-	isRel := rl.IsWindowReady() && rl.IsMouseButtonReleased(btn) && !ui_has_mouse(L) // (not a click on UI, #228)
+	isRel := rl.IsWindowReady() && In_IsMouseButtonReleased(btn) && !ui_has_mouse(L) // (not a click on UI, #228)
 	if m, ok := test_mouse(L); ok do isRel = btn == .LEFT && m.released && !ui_has_mouse(L)
 	lua.pushboolean(L, b32(isRel))
 	return 1
@@ -2804,7 +2804,7 @@ lua_input_get_mouse_position :: proc "c" (L: ^lua.State) -> c.int {
 		return 2
 	}
 	if rl.IsWindowReady() {
-		mPos := rl.GetMousePosition()
+		mPos := In_GetMousePosition()
 		lua.pushnumber(L, lua.Number(mPos.x))
 		lua.pushnumber(L, lua.Number(mPos.y))
 		return 2
@@ -2817,7 +2817,7 @@ lua_input_get_mouse_position :: proc "c" (L: ^lua.State) -> c.int {
 @(private="file")
 lua_input_get_mouse_wheel_move :: proc "c" (L: ^lua.State) -> c.int {
 	context = Script_Context(L)
-	move := rl.GetMouseWheelMove() if rl.IsWindowReady() else 0
+	move := In_GetMouseWheelMove() if rl.IsWindowReady() else 0
 	lua.pushnumber(L, lua.Number(move))
 	return 1
 }

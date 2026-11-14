@@ -18,6 +18,8 @@ expressions.
 - Freeze the game and advance it one frame at a time.
 - Debug a script: see the call stack and locals at a breakpoint, and watch
   expressions.
+- Play the game in the [Game View](game-view.md) to see it and this tab
+  at once.
 - For the same tree in the Scene panel (with the Inspector beside it), use
   the Scene panel's **Remote** view - see [Playtesting](playtesting.md).
   For log output and the Lua line, use the [Console](tab-console.md).

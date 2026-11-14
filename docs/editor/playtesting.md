@@ -3,7 +3,9 @@
 Playtesting runs your game while you work on it. **Play** starts the real
 game in its own window - from the startup scene, or from the scene you are
 editing - and links it to the editor, so you can pause it, step it a frame
-at a time, look at and change its nodes live, and run Lua in it.
+at a time, look at and change its nodes live, and run Lua in it. **Play in
+the Game View** runs the same game in a tab next to the Viewport instead,
+with the bottom panel beside it.
 **Simulate** runs the open scene inside the editor's viewport instead, and
 puts it back when you stop. **Export** turns the project into a package or
 a standalone game you can hand to players.
@@ -14,6 +16,8 @@ a standalone game you can hand to players.
 
 - Try the whole game from its start: **Play Project** (F5).
 - Try just the level you are building: **Play Current Scene** (F6).
+- Play and debug with the bottom panel in sight: **Play in the Game View**
+  (Opt+F5 / Opt+F6 (Alt+F5 / Alt+F6)) - see [Game View](game-view.md).
 - Watch physics, scripts and animations run without leaving the editor:
   **Simulate in Editor** (F7).
 - Find out why something goes wrong: pause, step frame by frame, inspect
@@ -33,7 +37,7 @@ on the game's state:
 
 | State | Buttons |
 |---|---|
-| Not running | **Play project** (F5), **Play this scene** (F6) |
+| Not running | **Play project** (F5), **Play this scene** (F6), **Play in the Game View** (Opt+F5; right-click: this scene, Opt+F6) |
 | Building | **Stop** - cancels the build; *Building...* |
 | Running | **Pause** / **Resume** (F9), **Step** (Shift+F9), **Restart** (Cmd+Shift+F5 (Ctrl+Shift+F5)), **Stop** (Shift+F5) |
 

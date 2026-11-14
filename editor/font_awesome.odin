@@ -123,6 +123,9 @@ ICON_FA_LIST_UL                   :: ""
 ICON_FA_LIST_OL                   :: ""
 ICON_FA_TABLE                     :: ""
 ICON_FA_TABLE_COLUMNS             :: ""
+ICON_FA_VOLUME_XMARK              :: "\uF6A9" // Game view: muted
+ICON_FA_GAUGE                     :: "\uF624" // Game view: stats
+ICON_FA_DESKTOP                   :: "\uF390" // Play in the Game view
 ICON_FA_VOLUME_HIGH               :: ""
 ICON_FA_REPEAT                    :: "\uF363" // Loop
 ICON_FA_VOLUME_LOW                :: ""

@@ -1089,7 +1089,7 @@ CameraNode_Update :: proc(node: ^Node, gameContext: ^GameContext, deltaTime: f32
 	// 6. Pointer / Mouse Follow Influence
 	// ------------------------------------------------------------------------
 	if camera.enableMouseFollow && rl.IsWindowReady() {
-		mp := rl.GetMousePosition()
+		mp := In_GetMousePosition()
 		screenCenter := camera.viewportSize * 0.5
 		mouseDelta := mp - screenCenter
 		camera.targetPosition += mouseDelta * camera.mouseInfluence

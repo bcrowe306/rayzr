@@ -1,0 +1,11 @@
+{
+  "width": 1280,
+  "height": 720,
+  "callouts": [
+    {"label": "The game's window size: Fit to Panel, the project's, or a device preset", "x": 215, "y": 134, "w": 200, "h": 23},
+    {"label": "Stats: frame rate, frame time and node count", "x": 943, "y": 134, "w": 26, "h": 26},
+    {"label": "Pause the game when it loses the keyboard", "x": 973, "y": 134, "w": 26, "h": 26},
+    {"label": "Mute the game", "x": 1003, "y": 134, "w": 26, "h": 26},
+    {"label": "Click the game to play; Shift+Esc gives the keyboard back", "x": 207, "y": 166, "w": 834, "h": 253}
+  ]
+}

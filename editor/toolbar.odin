@@ -192,6 +192,11 @@ Toolbar_PlayControls :: proc(state: ^EditorState, width: f32) {
 		if UI_IconButton(ICON_FA_CIRCLE_PLAY, "toolbar.play-scene", "Play this scene (F6)", tint = UI_SUCCESS) {
 			Editor_PlayGameProcess(state, .CurrentScene)
 		}
+		imgui.SameLine()
+		if UI_IconButton(ICON_FA_DESKTOP, "toolbar.play-view", "Play in the Game view, beside the editor (" + ALT + "+F5) - right-click: this scene (" + ALT + "+F6)", tint = UI_SUCCESS) {
+			Editor_PlayInView(state, .Project)
+		}
+		if imgui.IsItemClicked(.Right) do Editor_PlayInView(state, .CurrentScene)
 	}
 	// Show Colliders in the game (Project Settings > General > Physics); also switches
 	// a running game.

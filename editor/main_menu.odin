@@ -207,6 +207,8 @@ MainMenu_Render :: proc(state: ^EditorState) -> f32 {
 	if menu_begin("Game") {
 		menu_action(state, "game.play")
 		menu_action(state, "game.play_scene")
+		menu_action(state, "game.play_view")
+		menu_action(state, "game.play_scene_view")
 		menu_action(state, "game.pause", "Pause")
 		menu_action(state, "game.step", "Step One Frame")
 		menu_action(state, "game.restart", "Restart")
