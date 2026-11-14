@@ -142,6 +142,10 @@ ICON_FA_ARROW_RIGHT_LONG          :: ""
 ICON_FA_HAND_POINTER              :: ""
 ICON_FA_STAR                      :: "" // Default animation
 ICON_FA_GLOBE                     :: "\uF0AC" // Global script
+ICON_FA_FIRE                      :: "\uF06D" // Torch light
+ICON_FA_CIRCLE_HALF_STROKE        :: "\uF042" // Light Occluder
+ICON_FA_CLOUD_SUN                 :: "\uF6C4" // Environment
+ICON_FA_MOON                      :: "\uF186" // Neon light
 ICON_FA_BOOK                      :: "\uF02D" // Reference
 ICON_FA_SITEMAP                   :: "" // Scene tree
 ICON_FA_I_CURSOR                  :: "" // Text cursor

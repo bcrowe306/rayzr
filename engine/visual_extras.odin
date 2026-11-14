@@ -373,6 +373,11 @@ Post_Apply :: proc(effects: []^Node, src: rl.Texture2D, ctx: ^GameContext) -> rl
 // Post_Process runs the whole chain into the ping-pong targets (sized like
 // src) and returns the result (the editor's viewport).
 Post_Process :: proc(effects: []^Node, src: rl.Texture2D, ctx: ^GameContext) -> rl.Texture2D {
+	src := src
+	// The Environment's bloom first (bloom.odin).
+	if ctx != nil && ctx.scene != nil {
+		if env := Bloom_Active(ctx.scene); env != nil do src = Bloom_Apply(env, src)
+	}
 	if len(effects) == 0 || !Post_EnsureTargets(src.width, src.height) do return src
 	cur := Post_Apply(effects, src, ctx)
 	dst := &post.targets[1] if cur.id == post.targets[0].texture.id else &post.targets[0]

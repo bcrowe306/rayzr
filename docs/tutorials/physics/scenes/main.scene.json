@@ -29,6 +29,7 @@
         ],
         "properties": {
           "debugColor": "#4ade80ff",
+          "castsShadows": true,
           "oneWay": false
         },
         "children": [
@@ -69,6 +70,7 @@
         ],
         "properties": {
           "debugColor": "#4ade80ff",
+          "castsShadows": true,
           "oneWay": false
         },
         "children": [
@@ -109,6 +111,7 @@
         ],
         "properties": {
           "debugColor": "#4ade80ff",
+          "castsShadows": true,
           "oneWay": false
         },
         "children": [
@@ -149,6 +152,7 @@
         ],
         "properties": {
           "debugColor": "#4ade80ff",
+          "castsShadows": true,
           "oneWay": true
         },
         "children": [
@@ -191,7 +195,8 @@
           "linearVelocity": [0, 0],
           "angularVelocity": 0,
           "oneWay": false,
-          "debugColor": "#38bdf8ff"
+          "debugColor": "#38bdf8ff",
+          "castsShadows": true
         },
         "script": {
           "path": "scripts/lift.lua",
@@ -282,7 +287,8 @@
           "fixedRotation": false,
           "isBullet": false,
           "allowFastRotation": false,
-          "debugColor": "#60a5faff"
+          "debugColor": "#60a5faff",
+          "castsShadows": true
         },
         "script": {
           "path": "scripts/crate.lua"
@@ -333,7 +339,8 @@
           "fixedRotation": false,
           "isBullet": false,
           "allowFastRotation": false,
-          "debugColor": "#60a5faff"
+          "debugColor": "#60a5faff",
+          "castsShadows": true
         },
         "script": {
           "path": "scripts/crate.lua"
@@ -384,7 +391,8 @@
           "fixedRotation": false,
           "isBullet": false,
           "allowFastRotation": false,
-          "debugColor": "#60a5faff"
+          "debugColor": "#60a5faff",
+          "castsShadows": true
         },
         "script": {
           "path": "scripts/crate.lua"
@@ -593,6 +601,7 @@
           "categoryLayers": ["Layer2"],
           "maskLayers": ["Layer1", "Layer3"],
           "debugColor": "#facc15ff",
+          "castsShadows": true,
           "controlMode": "Script"
         },
         "script": {

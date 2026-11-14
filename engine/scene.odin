@@ -336,6 +336,11 @@ RunScene :: proc(scene: ^Scene, gameContext: ^GameContext, deltaTime: f32) {
 			Prof_Scope("lighting.prepare")
 			Lighting_Prepare(scene, CameraNode_GetCamera2D(scene.camera, lightVW, lightVH), i32(lightVW), i32(lightVH))
 		}
+	} else if rl.IsWindowReady() && !(scene.camera != nil && scene.camera.enabled && scene.camera.isCurrent) && Scene_HasLighting(scene) {
+		// No camera: the scene as placed (Layer1..7 lit, Layer8 the UI's).
+		lastWorld = int(RenderLayer.Layer7)
+		Prof_Scope("lighting.prepare")
+		if !Lighting_Prepare(scene, rl.Camera2D{zoom = 1}, i32(lightVW), i32(lightVH)) do lastWorld = -1
 	}
 	// Smooth camera (pixel_perfect.odin): the world layers go to a texture a
 	// pixel larger on every side, the others to the frame (on top).
@@ -604,6 +609,18 @@ render_bucket :: proc(scene: ^Scene, nodes: []^Node, gameContext: ^GameContext, 
 			normalPassNode = node
 			Pixel_BeginNode(node) // (snapped as in the colour pass)
 			if node.render != nil do node->render(gameContext, deltaTime)
+			Pixel_EndNode()
+			continue
+		}
+		// Lighting's info / emission passes (lighting_passes.odin): each
+		// node as its value, its own shader / material left out.
+		if renderValuePass != .None {
+			if !Value_NodeDrawn(node) do continue
+			normalPassNode = node
+			Value_BeginNode(node)
+			Pixel_BeginNode(node)
+			if node.render != nil do node->render(gameContext, deltaTime)
+			if node.scriptInstance != nil do Script_DrawNode(node, gameContext)
 			Pixel_EndNode()
 			continue
 		}

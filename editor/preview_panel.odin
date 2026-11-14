@@ -1344,6 +1344,33 @@ preview_texture_import :: proc(state: ^EditorState) {
 		Drive_Item("preview.import.green-down")
 		UI_Tooltip("The normal map's green points down (DirectX style, e.g. from some 3D tools); off: up (OpenGL style, most 2D tools)")
 	}
+	// Emission map (lighting): <image>_e.png found by itself, none, or another image.
+	same_or_wrap(150)
+	{
+		choices := make([dynamic]string, context.temp_allocator)
+		append(&choices, "Emission: Auto (_e)", "Emission: None")
+		cur := 0 if imp.emissionMap == "" else 1 if imp.emissionMap == "none" else -1
+		for t in Editor_ListProjectFiles(state, "", TEXTURE_EXTS) do if t != rel && (strings.contains(t, "_e.") || strings.contains(strings.to_lower(t, context.temp_allocator), "emissi") || strings.contains(strings.to_lower(t, context.temp_allocator), "glow")) {
+			if t == imp.emissionMap do cur = len(choices)
+			append(&choices, fmt.tprintf("Emission: %s", t))
+		}
+		if cur < 0 {
+			cur = len(choices)
+			append(&choices, fmt.tprintf("Emission: %s", imp.emissionMap))
+		}
+		imgui.SetNextItemWidth(150)
+		if c, ok := UI_Combo("preview.import.emission", cur, choices[:]); ok {
+			switch c {
+			case 0: imp.emissionMap = ""
+			case 1: imp.emissionMap = "none"
+			case: imp.emissionMap = strings.clone(choices[c][len("Emission: "):], context.temp_allocator)
+			}
+			changed = true
+			e.Emission_ForgetAll()
+		}
+		found := e.Emission_PathFor(rm, state.previewTexturePath)
+		UI_Tooltip(fmt.tprintf("The emission map: the parts of the image that glow in the dark (2D lighting; black = no glow). Auto: %s next to it.%s", filepath.base(found) if found != "" else "<image>_e.png", "" if found != "" else " (none found)"))
+	}
 	// Slicing preset (the Sprite Sheet Slicer starts from it; Save Preset there).
 	if imp.slice.grid != {} {
 		same_or_wrap(110)

@@ -1,0 +1,80 @@
+# The lighting round: an Environment (overbright, bloom), soft shadows from a
+# body and a Light Occluder (a body with Casts Shadows off casts none), a
+# window-textured spot light on Layer2 lighting only Layer2 nodes, Ignore
+# Lighting and emission - in the editor's viewport. Then the Inspector's
+# Lighting section, Add Node presets, Make Light Occluder from Sprite, a
+# light texture picked, and the scene saved.
+wait 5
+exec cp tests/drive/fixtures/lighting/lighting_lab_zz.scene.json $PROJECT/scenes/lighting_lab_zz.scene.json
+wait-until item:asset:scenes/lighting_lab_zz.scene.json == visible timeout=300
+dblclick @asset:scenes/lighting_lab_zz.scene.json
+expect scene == scenes/lighting_lab_zz.scene.json
+wait 20
+screenshot lighting_lab
+
+# The fixture's lighting settings were read.
+expect node:Rock.prop.litLayers == 2
+expect node:Ship.prop.ignoreLighting == true
+expect node:Ember.prop.emissionStrength == 1.5
+expect node:Glass.prop.castsShadows == false
+expect node:Lamp.prop.softness == 10
+expect node:Window.prop.texture == builtin:window
+
+# Shadows: in front of the wall lit, behind it dark; the glass casts none.
+expect brightness:500,420 >= 0.5
+expect brightness:700,420 <= 0.2
+expect brightness:300,200 >= 0.3
+
+# The Inspector's Lighting section on a sprite (undoable).
+click @hier:Ember
+expect item:insp.emission-strength == visible
+click @insp.ignore-lighting
+expect node:Ember.prop.ignoreLighting == true
+key cmd+z
+expect node:Ember.prop.ignoreLighting == false
+
+# Casts Shadows off on the wall: light passes (and back).
+click @hier:Wall
+expect item:insp.prop:castsShadows == visible
+click @insp.prop:castsShadows
+expect node:Wall.prop.castsShadows == false
+expect brightness:700,420 >= 0.2
+key cmd+z
+expect node:Wall.prop.castsShadows == true
+
+# A light texture from the picker (built-ins first).
+click @hier:Lamp
+click @insp.prop:texture
+click @pick:builtin:ring
+expect node:Lamp.prop.texture == builtin:ring
+screenshot lamp_ring
+
+# Add Node presets.
+key escape
+click @hier.add
+type torch
+click @addnode.create
+expect node:Torch.type == LightNode
+expect node:Torch.prop.flicker >= 0.34
+key escape
+click @hier.add
+type light occluder
+click @addnode.create
+expect node:LightOccluder.type == LightOccluderNode
+expect node:LightOccluder.shapes == 1
+expect item:insp.prop:layers == visible
+
+# Make Light Occluder from Sprite: the rock's silhouette.
+rclick @hier:Rock
+click @ctx:make-occluder
+expect node:Occluder.parent == Rock
+expect node:Occluder.shapes >= 1
+expect log contains Made a Light Occluder from Rock
+screenshot rock_occluder
+
+# Saved.
+key cmd+s
+wait 3
+expect file:scenes/lighting_lab_zz.scene.json contains "LightOccluderNode"
+expect file:scenes/lighting_lab_zz.scene.json contains "builtin:ring"
+expect file:scenes/lighting_lab_zz.scene.json contains "EnvironmentNode"

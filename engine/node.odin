@@ -9,6 +9,7 @@ import "core:mem"
 import "core:crypto"
 import "core:encoding/uuid"
 import vmem "core:mem/virtual"
+import rl "vendor:raylib"
 
 // Field order: what the per-frame walks (update, transforms, Y-sort,
 // render, Lua calls) read comes first, packed (the bools and small enums
@@ -47,6 +48,12 @@ Node :: struct {
 	pixelFilter: Pixel_Filter,
 	pixelSnap:   Pixel_Snap,
 	pixelText:   Pixel_Text,
+	// Lighting (lighting.odin): the light layers that light it, unlit
+	// (Ignore Lighting), and its glow (Emission colour x strength).
+	litLayers:        LightLayerSet,
+	ignoreLighting:   bool,
+	emission:         rl.Color,
+	emissionStrength: f32,
 	renderable: bool `gui:"true"`,
 	enabled: bool `gui:"true"`,
 	ySort: bool,
@@ -215,6 +222,8 @@ InitializeNode :: proc(node: ^Node) {
 	node.enabled = true
 	node.renderable = true
 	node.layer = RenderLayer.Layer1
+	node.litLayers = ALL_LIGHT_LAYERS
+	node.emission = {255, 255, 255, 255}
 	node.events = nil
 }
 

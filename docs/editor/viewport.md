@@ -110,7 +110,7 @@ game.
 | **Camera frames** | Toolbar camera, View menu | Each camera's frame - what the game will show at the project's virtual resolution - with its name, size and zoom, its limits and dead zones. Without a camera, the default view. |
 | **Labels** | Toolbar tag, View menu | The names on camera frames, camera limits, the Expand frame, Advanced Cameras and LDtk entities. They are drawn at one size on screen (zooming in doesn't grow them) and fade while the mouse is over one, so the node under it can be seen and clicked. Turn them off when they are in the way; the editor remembers. |
 | **Screen shape** | Toolbar, only with **Screen Fill: Expand** | A dashed frame for the picked screen shape (16:9, 4:3, phone portrait...) around the design frame; edge-anchored HUD follows it. |
-| **Lighting** | Toolbar sun | Lights, the scene's ambient light and post effects. |
+| **Lighting** | Toolbar sun | Lights, the scene's ambient light (or its Environment's), shadows, emission, bloom and post effects. Light Occluders are outlined in violet. |
 | **Colour vision** | View menu | The scene as players with protanopia, deuteranopia or tritanopia see it. |
 
 The viewport also draws editor-only helpers: a marker for each light (and

@@ -14,7 +14,11 @@
     {"name": "enabled", "kind": "boolean", "owner": "Node", "default": true, "doc": "Disabled nodes (and their children) neither update nor draw."},
     {"name": "pixelFilter", "kind": "enum", "owner": "Node", "default": "Inherit", "values": ["Inherit", "Sharp", "Smooth"], "doc": "How its textures are sampled when drawn scaled or between pixels: Inherit (each texture's import setting), Sharp (nearest-neighbour) or Smooth (bilinear)."},
     {"name": "pixelSnap", "kind": "enum", "owner": "Node", "default": "Inherit", "values": ["Inherit", "On", "Off"], "doc": "Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off."},
-    {"name": "pixelText", "kind": "enum", "owner": "Node", "default": "Default", "values": ["Default", "Native", "Pixel"], "doc": "Text and UI when the game is scaled up: Native (crisp at the window's resolution, over the game) or Pixel (in the game's pixels); Default: UI Native, Text Pixel."}
+    {"name": "pixelText", "kind": "enum", "owner": "Node", "default": "Default", "values": ["Default", "Native", "Pixel"], "doc": "Text and UI when the game is scaled up: Native (crisp at the window's resolution, over the game) or Pixel (in the game's pixels); Default: UI Native, Text Pixel."},
+    {"name": "litLayers", "kind": "flags", "owner": "Node", "default": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8"], "values": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8"], "doc": "The light layers whose lights light it (Project Settings > Light Layers names them): a light lights it when they share one."},
+    {"name": "ignoreLighting", "kind": "boolean", "owner": "Node", "default": false, "doc": "Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things that light themselves)."},
+    {"name": "emission", "kind": "color", "owner": "Node", "default": "#ffffffff", "doc": "The colour it glows in the dark (with Emission Strength above 0): added after the lighting, so it shows in a dark scene."},
+    {"name": "emissionStrength", "kind": "number", "owner": "Node", "default": 0, "min": 0, "max": 8, "doc": "How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its image glow on their own."}
   ],
   "nodes": [
     {
@@ -407,6 +411,7 @@
       "hasOrigin": false,
       "properties": [
         {"name": "debugColor", "kind": "color", "owner": "StaticBodyNode", "default": "#4ade80ff", "doc": "Colour of the collider outline drawn with Show Bounds & Colliders (and the game's debug draw)."},
+        {"name": "castsShadows", "kind": "boolean", "owner": "StaticBodyNode", "default": true, "doc": "Its shapes block light (lights with Shadows on). Off: it still collides, but light passes through."},
         {"name": "oneWay", "kind": "boolean", "owner": "StaticBodyNode", "default": false, "doc": "Jump-through platform: bodies pass from below and land on top."}
       ]
     },
@@ -429,7 +434,8 @@
         {"name": "fixedRotation", "kind": "boolean", "owner": "DynamicBodyNode", "default": false, "doc": "Never rotate (characters, upright crates)."},
         {"name": "isBullet", "kind": "boolean", "owner": "DynamicBodyNode", "default": false, "doc": "Continuous collision against other moving bodies (fast projectiles)."},
         {"name": "allowFastRotation", "kind": "boolean", "owner": "DynamicBodyNode", "default": false, "doc": "Allow very fast spin (wheels); can be less stable."},
-        {"name": "debugColor", "kind": "color", "owner": "DynamicBodyNode", "default": "#60a5faff", "doc": "Colour of the collider outline drawn with Show Bounds & Colliders (and the game's debug draw)."}
+        {"name": "debugColor", "kind": "color", "owner": "DynamicBodyNode", "default": "#60a5faff", "doc": "Colour of the collider outline drawn with Show Bounds & Colliders (and the game's debug draw)."},
+        {"name": "castsShadows", "kind": "boolean", "owner": "DynamicBodyNode", "default": true, "doc": "Its shapes block light (lights with Shadows on). Off: it still collides, but light passes through."}
       ]
     },
     {
@@ -443,7 +449,8 @@
         {"name": "linearVelocity", "kind": "vec2", "owner": "KinematicBodyNode", "default": [0, 0], "min": -1000, "max": 1000, "doc": "Velocity (px/s)."},
         {"name": "angularVelocity", "kind": "number", "owner": "KinematicBodyNode", "default": 0, "min": -360, "max": 360, "doc": "Spin (degrees/s)."},
         {"name": "oneWay", "kind": "boolean", "owner": "KinematicBodyNode", "default": false, "doc": "Jump-through platform: bodies pass from below and land on top."},
-        {"name": "debugColor", "kind": "color", "owner": "KinematicBodyNode", "default": "#38bdf8ff", "doc": "Colour of the collider outline drawn with Show Bounds & Colliders (and the game's debug draw)."}
+        {"name": "debugColor", "kind": "color", "owner": "KinematicBodyNode", "default": "#38bdf8ff", "doc": "Colour of the collider outline drawn with Show Bounds & Colliders (and the game's debug draw)."},
+        {"name": "castsShadows", "kind": "boolean", "owner": "KinematicBodyNode", "default": true, "doc": "Its shapes block light (lights with Shadows on). Off: it still collides, but light passes through."}
       ]
     },
     {
@@ -476,6 +483,7 @@
         {"name": "categoryLayers", "kind": "flags", "owner": "CharacterMoverNode", "default": ["Layer1"], "values": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8", "Layer9", "Layer10", "Layer11", "Layer12", "Layer13", "Layer14", "Layer15", "Layer16"], "doc": "Collision layers this object is on (names in Project Settings > General > Collision Layers)."},
         {"name": "maskLayers", "kind": "flags", "owner": "CharacterMoverNode", "default": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8", "Layer9", "Layer10", "Layer11", "Layer12", "Layer13", "Layer14", "Layer15", "Layer16"], "values": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8", "Layer9", "Layer10", "Layer11", "Layer12", "Layer13", "Layer14", "Layer15", "Layer16"], "doc": "Collision layers this object collides with."},
         {"name": "debugColor", "kind": "color", "owner": "CharacterMoverNode", "default": "#facc15ff", "doc": "Colour of the collider outline drawn with Show Bounds & Colliders (and the game's debug draw)."},
+        {"name": "castsShadows", "kind": "boolean", "owner": "CharacterMoverNode", "default": true, "doc": "Its shapes block light (lights with Shadows on). Off: it still collides, but light passes through."},
         {"name": "controlMode", "kind": "enum", "owner": "CharacterMoverNode", "default": "BuiltIn", "values": ["BuiltIn", "Script"], "doc": "Built-in movement, or Script: the script moves it (character_move_and_slide)."}
       ]
     },
@@ -806,8 +814,8 @@
       "type": "LightNode",
       "name": "Light",
       "category": "Graphics & Rendering",
-      "description": "2D point or spot light with colour, energy, radius and falloff; casts shadows from physics shapes. Set the scene's Ambient to darken unlit areas.",
-      "aliases": ["light", "pointlight", "spotlight"],
+      "description": "2D point, spot or directional (sun) light with colour, energy, radius and falloff; soft shadows from bodies and Light Occluders, light layers, a light texture, flicker and pulse. Darken the scene's Ambient (or an Environment's) to see it.",
+      "aliases": ["light", "pointlight", "spotlight", "torch", "lamp", "flashlight", "sun", "neon"],
       "hasOrigin": false,
       "properties": [
         {"name": "kind", "kind": "enum", "owner": "LightNode", "default": "Point", "values": ["Point", "Spot", "Directional"], "doc": "Point: shines all round. Spot: a cone along the node's rotation. Directional: the sun - one direction (the node's rotation) over everything, no radius."},
@@ -816,10 +824,47 @@
         {"name": "radius", "kind": "number", "owner": "LightNode", "default": 256, "min": 1, "max": 4000, "doc": "Reach of the light (px)."},
         {"name": "falloff", "kind": "number", "owner": "LightNode", "default": 2, "min": 0.1, "max": 8, "doc": "Fade towards the edge: 1 linear, 2 smooth, higher = tighter."},
         {"name": "spread", "kind": "number", "owner": "LightNode", "default": 35, "min": 1, "max": 180, "doc": "Spot: half-angle of the cone (degrees)."},
-        {"name": "shadows", "kind": "boolean", "owner": "LightNode", "default": true, "doc": "Cast shadows from the scene's physics shapes (bodies, LDtk and tile map colliders; not sensors)."},
+        {"name": "texture", "kind": "string", "owner": "LightNode", "default": "", "doc": "A light texture (cookie) shaping the light: a project image (its brightness, rotated with the light) or a built-in one - ring, window, blinds, noise. Not for the sun."},
+        {"name": "layers", "kind": "flags", "owner": "LightNode", "default": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8"], "values": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8"], "doc": "The light layers it lights: it lights the nodes, and is blocked by the occluders, that share one with it."},
+        {"name": "shadows", "kind": "boolean", "owner": "LightNode", "default": true, "doc": "Cast shadows from bodies with Casts Shadows on (and LDtk / tile map colliders; not sensors) and from Light Occluders."},
+        {"name": "softness", "kind": "number", "owner": "LightNode", "default": 6, "min": 0, "max": 64, "doc": "How soft its shadows' edges are (px of blur); 0: hard edges."},
+        {"name": "shadowStrength", "kind": "number", "owner": "LightNode", "default": 1, "min": 0, "max": 1, "doc": "How dark its shadows are: 1 blocks it fully, 0.5 lets half through."},
+        {"name": "ignoreParentBodies", "kind": "boolean", "owner": "LightNode", "default": true, "doc": "The bodies it sits in (its parent, grandparent...) cast no shadow for it - a lantern's light isn't blocked by the lantern."},
         {"name": "height", "kind": "number", "owner": "LightNode", "default": 64, "min": 0, "max": 2000, "doc": "How high above the ground it is (px). On normal-mapped art a low light rakes across the bumps, a high one lights them evenly. No effect on art without normal maps."},
         {"name": "elevation", "kind": "number", "owner": "LightNode", "default": 45, "min": 1, "max": 90, "doc": "Directional: the sun's angle above the ground (degrees) - low for long, raking light, 90 for straight down."},
-        {"name": "shadowLength", "kind": "number", "owner": "LightNode", "default": 120, "min": 0, "max": 4000, "doc": "Directional: how far shadows reach from what casts them (px); 0: to the edge of the view."}
+        {"name": "shadowLength", "kind": "number", "owner": "LightNode", "default": 120, "min": 0, "max": 4000, "doc": "Directional: how far shadows reach from what casts them (px); 0: to the edge of the view."},
+        {"name": "flicker", "kind": "number", "owner": "LightNode", "default": 0, "min": 0, "max": 1, "doc": "Random dips in brightness, like a flame: 0 off, 1 can drop to dark."},
+        {"name": "flickerSpeed", "kind": "number", "owner": "LightNode", "default": 10, "min": 0, "max": 30, "doc": "How fast it flickers (changes a second)."},
+        {"name": "pulse", "kind": "number", "owner": "LightNode", "default": 0, "min": 0, "max": 1, "doc": "A steady rise and fall in brightness: 0 off, 1 down to dark and back."},
+        {"name": "pulseSpeed", "kind": "number", "owner": "LightNode", "default": 1, "min": 0, "max": 10, "doc": "Pulses a second."}
+      ]
+    },
+    {
+      "type": "LightOccluderNode",
+      "name": "Light Occluder",
+      "category": "Graphics & Rendering",
+      "description": "Shapes that block light without being physics bodies: painted walls, pillars, foliage. Edited like collision shapes; on light layers.",
+      "aliases": ["light occluder", "occluder", "shadow caster", "light blocker"],
+      "hasOrigin": false,
+      "properties": [
+        {"name": "layers", "kind": "flags", "owner": "LightOccluderNode", "default": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8"], "values": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8"], "doc": "The lights it blocks: those that share one of these light layers."}
+      ]
+    },
+    {
+      "type": "EnvironmentNode",
+      "name": "Environment",
+      "category": "Graphics & Rendering",
+      "description": "The scene's look: ambient light, Overbright lights, Bloom, a half-resolution light map. Key it in the Animation tab for day and night.",
+      "aliases": ["environment", "world environment", "ambient", "bloom", "day night"],
+      "hasOrigin": false,
+      "properties": [
+        {"name": "ambient", "kind": "color", "owner": "EnvironmentNode", "default": "#ffffffff", "doc": "The colour of the unlit areas: white shows the scene as drawn, dark colours make lights matter (Dusk, Night...)."},
+        {"name": "overbright", "kind": "boolean", "owner": "EnvironmentNode", "default": false, "doc": "Lights can make art up to twice as bright as drawn (energy above 1 overexposes): bright lights for Bloom to catch."},
+        {"name": "bloom", "kind": "boolean", "owner": "EnvironmentNode", "default": false, "doc": "Bright parts of the picture glow past their edges (lights, emission, bright art)."},
+        {"name": "bloomThreshold", "kind": "number", "owner": "EnvironmentNode", "default": 0.8, "min": 0, "max": 1, "doc": "How bright a pixel has to be to glow (0: everything, 1: only the brightest)."},
+        {"name": "bloomStrength", "kind": "number", "owner": "EnvironmentNode", "default": 1, "min": 0, "max": 4, "doc": "How much glow is added."},
+        {"name": "bloomRadius", "kind": "number", "owner": "EnvironmentNode", "default": 12, "min": 1, "max": 64, "doc": "How far the glow spreads (px)."},
+        {"name": "halfResolution", "kind": "boolean", "owner": "EnvironmentNode", "default": false, "doc": "Build the light map at half the size: faster with many lights, a little softer."}
       ]
     },
     {

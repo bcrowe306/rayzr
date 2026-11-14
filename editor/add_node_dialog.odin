@@ -18,6 +18,7 @@ NodeCatalogEntry :: struct {
 	icon:        string,
 	description: string,
 	typeName:    string, // engine node type (see engine/node_registry.odin)
+	preset:      string, // a light preset (engine Light_ApplyPreset): Torch, Lamp...
 }
 
 nodeSearchBuf: [64]u8
@@ -242,8 +243,62 @@ NODE_CATALOG := [?]NodeCatalogEntry{
 		name        = "Light",
 		category    = "Graphics & Rendering",
 		icon        = ICON_FA_LIGHTBULB,
-		description = "2D point or spot light with colour, energy, radius and falloff; casts shadows from physics shapes. Set the scene's Ambient to darken unlit areas.",
+		description = "2D point, spot or directional (sun) light with colour, energy, radius and falloff; soft shadows from bodies and Light Occluders, light layers, a light texture, flicker and pulse. Darken the scene's Ambient (or an Environment's) to see it.",
 		typeName    = "LightNode",
+	},
+	{
+		name        = "Torch",
+		category    = "Graphics & Rendering",
+		icon        = ICON_FA_FIRE,
+		description = "A Light set up as a torch: warm, flickering, soft shadows.",
+		typeName    = "LightNode",
+		preset      = "Torch",
+	},
+	{
+		name        = "Lamp",
+		category    = "Graphics & Rendering",
+		icon        = ICON_FA_LIGHTBULB,
+		description = "A Light set up as a lamp: a steady warm white with a wide reach.",
+		typeName    = "LightNode",
+		preset      = "Lamp",
+	},
+	{
+		name        = "Flashlight",
+		category    = "Graphics & Rendering",
+		icon        = ICON_FA_LIGHTBULB,
+		description = "A Light set up as a flashlight: a spot with a ring texture - rotate it to aim.",
+		typeName    = "LightNode",
+		preset      = "Flashlight",
+	},
+	{
+		name        = "Sun",
+		category    = "Graphics & Rendering",
+		icon        = ICON_FA_SUN,
+		description = "A directional Light: daylight from one direction over the whole view, with long shadows.",
+		typeName    = "LightNode",
+		preset      = "Sun",
+	},
+	{
+		name        = "Neon",
+		category    = "Graphics & Rendering",
+		icon        = ICON_FA_MOON,
+		description = "A Light set up as a neon sign: a saturated colour that pulses, no shadows.",
+		typeName    = "LightNode",
+		preset      = "Neon",
+	},
+	{
+		name        = "Light Occluder",
+		category    = "Graphics & Rendering",
+		icon        = ICON_FA_CIRCLE_HALF_STROKE,
+		description = "Shapes that block light without being physics bodies: painted walls, pillars, foliage. Edited like collision shapes; on light layers.",
+		typeName    = "LightOccluderNode",
+	},
+	{
+		name        = "Environment",
+		category    = "Graphics & Rendering",
+		icon        = ICON_FA_CLOUD_SUN,
+		description = "The scene's look: ambient light, Overbright lights, Bloom, a half-resolution light map. Key it in the Animation tab for day and night.",
+		typeName    = "EnvironmentNode",
 	},
 	{
 		name        = "Tile Map",
@@ -741,6 +796,7 @@ AddNodeDialog_CreateSelected :: proc(state: ^EditorState) {
 		return
 	}
 	newNode := Editor_CreateNode(state, entry.typeName, strings.trim_space(strings.concatenate({entry.name}, context.temp_allocator)))
+	if newNode != nil && entry.preset != "" && newNode.typeId == e.LightNode do e.Light_ApplyPreset(cast(^e.LightNode)newNode, entry.preset)
 	if newNode != nil {
 		Editor_Log(state, .Info, "Created new node: %s (%s)", newNode.name, entry.name)
 	}

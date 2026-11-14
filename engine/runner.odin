@@ -674,13 +674,14 @@ Runner_Frame :: proc(rs: ^Runner_State) -> bool {
 		// every pixel, #331); one that goes through post effects or the
 		// colour-blind filter first is made opaque here, as those read it.
 		effects := Scene_PostEffects(game.sceneManager.currentScene)
-		opaquePass, opaqueInCopy := Runner_OpaqueFrame(renderPixel.smooth, Game_ClearColor(game).a, len(effects), Colorblind_Filtering(access.colorblind, access.colorblindStrength))
+		postWanted := Post_Wanted(game.sceneManager.currentScene, effects) // (effects or the Environment's bloom)
+		opaquePass, opaqueInCopy := Runner_OpaqueFrame(renderPixel.smooth, Game_ClearColor(game).a, 1 if postWanted else 0, Colorblind_Filtering(access.colorblind, access.colorblindStrength))
 		if opaquePass do Render_MakeOpaque(vw, vh)
 		rl.EndTextureMode()
 		Render_SetFrameTarget(nil)
 		frame := target.texture
-		if len(effects) > 0 && !renderPixel.smooth {
-			frame = Post_Process(effects, frame, &game.gameContext) // through each effect
+		if postWanted && !renderPixel.smooth {
+			frame = Post_Process(effects, frame, &game.gameContext) // through bloom and each effect
 		}
 		runTime := time.tick_since(frameStart)
 
@@ -695,7 +696,7 @@ Runner_Frame :: proc(rs: ^Runner_State) -> bool {
 			rl.DrawRectangleRec(dest, Game_ClearColor(game))
 			if renderPixel.usedWorld {
 				world := renderPixel.world.texture
-				if effects := Scene_PostEffects(game.sceneManager.currentScene); len(effects) > 0 do world = Post_Process(effects, world, &game.gameContext)
+				if effects := Scene_PostEffects(game.sceneManager.currentScene); Post_Wanted(game.sceneManager.currentScene, effects) do world = Post_Process(effects, world, &game.gameContext)
 				Pixel_DrawWorld(world, dest, vw, vh, video.sharpScaling && !filtered)
 			}
 			// (Premultiplied: scene.odin draws the layers over the world so.)

@@ -14,6 +14,7 @@
   ],
   "properties": {
     "debugColor": "#4ade80ff",
+    "castsShadows": true,
     "oneWay": false
   }
 }

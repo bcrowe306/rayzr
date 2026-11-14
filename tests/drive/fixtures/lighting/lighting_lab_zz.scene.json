@@ -1,0 +1,24 @@
+{
+ "name": "lighting_lab_zz",
+ "background": [20, 20, 28, 255],
+ "root": {
+  "type": "Node", "name": "Root", "position": [0, 0],
+  "children": [
+   {"type": "TextureNode", "name": "Backdrop", "position": [640, 360], "scale": [2.67, 2.65], "texture": "textures/Background.png"},
+   {"type": "EnvironmentNode", "name": "Environment", "position": [0, 0],
+    "properties": {"ambient": "#2a2a40ff", "overbright": true, "bloom": true, "bloomThreshold": 0.75, "bloomStrength": 1.2, "bloomRadius": 14, "halfResolution": false}},
+   {"type": "LightNode", "name": "Lamp", "position": [380, 420],
+    "properties": {"kind": "Point", "color": "#ffd8a0ff", "energy": 1.1, "radius": 560, "falloff": 1.6, "spread": 35, "texture": "", "layers": ["Layer1", "Layer2", "Layer3", "Layer4", "Layer5", "Layer6", "Layer7", "Layer8"],
+     "shadows": true, "softness": 10, "shadowStrength": 1, "ignoreParentBodies": true, "height": 64, "elevation": 45, "shadowLength": 120, "flicker": 0, "flickerSpeed": 10, "pulse": 0, "pulseSpeed": 1}},
+   {"type": "StaticBodyNode", "name": "Wall", "position": [560, 420], "shapes": [{"type": "Box", "size": [40, 220]}], "properties": {"castsShadows": true}},
+   {"type": "StaticBodyNode", "name": "Glass", "position": [300, 250], "shapes": [{"type": "Box", "size": [120, 30]}], "properties": {"castsShadows": false}},
+   {"type": "LightOccluderNode", "name": "Pillar", "position": [430, 600], "shapes": [{"type": "Circle", "radius": 34}]},
+   {"type": "TextureNode", "name": "Rock", "position": [960, 300], "scale": [0.3, 0.3], "texture": "textures/Asteroid_1.png", "lit_layers": 2},
+   {"type": "LightNode", "name": "Window", "position": [1180, 120], "rotation": 135,
+    "properties": {"kind": "Spot", "color": "#bcd8ffff", "energy": 1.4, "radius": 520, "falloff": 1.2, "spread": 34, "texture": "builtin:window", "layers": ["Layer2"],
+     "shadows": false, "softness": 0, "shadowStrength": 1, "ignoreParentBodies": true, "height": 64, "elevation": 45, "shadowLength": 120, "flicker": 0, "flickerSpeed": 10, "pulse": 0, "pulseSpeed": 1}},
+   {"type": "TextureNode", "name": "Ship", "position": [900, 590], "scale": [0.25, 0.25], "texture": "textures/Spaceship_1.png", "ignore_lighting": true},
+   {"type": "TextureNode", "name": "Ember", "position": [180, 610], "scale": [0.18, 0.18], "texture": "textures/Asteroid_1.png", "emission": "#ff6020ff", "emission_strength": 1.5}
+  ]
+ }
+}

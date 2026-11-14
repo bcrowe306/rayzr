@@ -259,6 +259,7 @@ settings_save :: proc(state: ^EditorState) {
 	state.projectConfig = e.ProjectConfig_Clone(d)
 	if checksChanged do Code_LuaChecksChanged(state) // .luarc.json + the language server (code_editor_lsp.odin)
 	e.Physics_SetLayerNames(state.projectConfig.collisionLayers[:])
+	e.Lighting_SetLayerNames(state.projectConfig.lightLayers[:])
 	state.game.physicsWorld.gravity = d.gravity
 	state.game.physicsWorld.physicsFps = d.physicsFps
 	e.Transition_SetDefault(state.game, d.transition, d.transitionDuration, d.transitionEasing)
@@ -691,6 +692,15 @@ project_general :: proc(state: ^EditorState) {
 		for i in 0 ..< 16 {
 			UI_PropLabel(fmt.tprintf("Layer %d", i + 1))
 			text_field(fmt.tprintf("settings.layer:%d", i + 1), &d.collisionLayers[i], "unnamed")
+		}
+		UI_EndProps()
+	}
+	if UI_SectionHeader("Light Layers", false) && UI_BeginProps("##light-layers") {
+		// Names for the 8 light layers (lights' Layers, nodes' Lit By,
+		// occluders' Layers; scripts: light:light_set_layers({"World"})).
+		for i in 0 ..< 8 {
+			UI_PropLabel(fmt.tprintf("Light Layer %d", i + 1))
+			text_field(fmt.tprintf("settings.light-layer:%d", i + 1), &d.lightLayers[i], "unnamed")
 		}
 		UI_EndProps()
 	}

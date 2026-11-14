@@ -113,6 +113,7 @@ them.
 | **Copy to Scene / Move to Scene** | Put the selection into another scene of the project, at the same world position, and open that scene. |
 | **Open Script / Detach Script** | When it has a script. |
 | **Attach Script** | **New Script...** or any script in `scripts/`. |
+| **Make Light Occluder from Sprite** | On a Sprite or Atlas Sprite: a [Light Occluder](../nodes/LightOccluderNode.md) child traced from the image's opaque pixels, so lights cast its silhouette's shadow. |
 | **Documentation** | The node type's page. Shift+F1 |
 | **Save as Component** / **Save as Component Named...** | Save this node and its children as a reusable component. |
 | **Save as Custom Node...** | Make a node type of your own from this node (its type, values and script). |

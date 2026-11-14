@@ -130,6 +130,7 @@ node_shapes :: proc(node: ^Node) -> ^[dynamic]PhysicsShape {
 	case KinematicBodyNode: return &(cast(^KinematicBodyNode)node).shapes
 	case CharacterMoverNode: return &(cast(^CharacterMoverNode)node).shapes
 	case AreaNode: return &(cast(^AreaNode)node).shapes
+	case LightOccluderNode: return &(cast(^LightOccluderNode)node).shapes
 	}
 	return nil
 }
@@ -182,6 +183,13 @@ write_node :: proc(w: ^Json_Writer, node: ^Node, manager: ^NodeManager) {
 	if node.pixelFilter != .Inherit {Json_Key(w, "texture_filter", &first); Json_String(w, Pixel_FilterName(node.pixelFilter))}
 	if node.pixelSnap != .Inherit {Json_Key(w, "pixel_snap", &first); Json_String(w, Pixel_SnapName(node.pixelSnap))}
 	if node.pixelText != .Default {Json_Key(w, "text_pixels", &first); Json_String(w, Pixel_TextName(node.pixelText))}
+	// Lighting (lighting.odin): written when not the default.
+	if node.litLayers != ALL_LIGHT_LAYERS {Json_Key(w, "lit_layers", &first); fmt.sbprintf(&w.sb, "%d", transmute(u8)node.litLayers)}
+	if node.ignoreLighting {Json_Key(w, "ignore_lighting", &first); write_bool(w, true)}
+	if node.emissionStrength != 0 {
+		Json_Key(w, "emission", &first); Json_String(w, Color_ToHex(node.emission))
+		Json_Key(w, "emission_strength", &first); Json_Float(w, node.emissionStrength)
+	}
 	if node.paused {Json_Key(w, "paused", &first); write_bool(w, true)}
 	if node.editorLocked {Json_Key(w, "editor_locked", &first); write_bool(w, true)}
 	if node.editorHidden {Json_Key(w, "editor_hidden", &first); write_bool(w, true)}
@@ -1060,6 +1068,7 @@ read_node :: proc(scene: ^Scene, obj: json.Object, parent: ^Node, ctx: ^GameCont
 	node.pixelFilter = Pixel_FilterParse(sj_string(obj, "texture_filter", ""))
 	node.pixelSnap = Pixel_SnapParse(sj_string(obj, "pixel_snap", ""))
 	node.pixelText = Pixel_TextParse(sj_string(obj, "text_pixels", ""))
+	read_lighting(node, obj)
 	node.paused = sj_bool(obj, "paused", false)
 	node.editorLocked = sj_bool(obj, "editor_locked", false)
 	node.editorHidden = sj_bool(obj, "editor_hidden", false)
@@ -1080,6 +1089,9 @@ read_node :: proc(scene: ^Scene, obj: json.Object, parent: ^Node, ctx: ^GameCont
 				}
 			}
 		}
+		// A light saved before soft shadows keeps its hard ones (new
+		// lights start soft: lighting.odin).
+		if node.typeId == LightNode && "softness" not_in propsObj do (cast(^LightNode)node).softness = 0
 	}
 
 	// Type-specific resources.
@@ -1867,6 +1879,7 @@ read_component_instance :: proc(scene: ^Scene, compPath: string, inst: json.Obje
 	if "texture_filter" in inst do node.pixelFilter = Pixel_FilterParse(sj_string(inst, "texture_filter", ""))
 	if "pixel_snap" in inst do node.pixelSnap = Pixel_SnapParse(sj_string(inst, "pixel_snap", ""))
 	if "text_pixels" in inst do node.pixelText = Pixel_TextParse(sj_string(inst, "text_pixels", ""))
+	read_lighting(node, inst, override = true)
 	node.paused = sj_bool(inst, "paused", node.paused)
 	node.editorLocked = sj_bool(inst, "editor_locked", false)
 	node.editorHidden = sj_bool(inst, "editor_hidden", false)
@@ -2242,4 +2255,17 @@ read_state_machine :: proc(sm: ^StateMachineNode, obj: json.Object) {
 	sm.current = -1
 	sm.previous = -1
 	sm.running = false
+}
+
+// read_lighting: a node's lighting settings (lit_layers, ignore_lighting,
+// emission, emission_strength); an instance's (`override`) only those it sets.
+@(private = "file")
+read_lighting :: proc(node: ^Node, obj: json.Object, override := false) {
+	if !override || "lit_layers" in obj do node.litLayers = transmute(LightLayerSet)u8(clamp(sj_int(obj, "lit_layers", 255), 0, 255))
+	if !override || "ignore_lighting" in obj do node.ignoreLighting = sj_bool(obj, "ignore_lighting", false)
+	if !override || "emission" in obj {
+		node.emission = {255, 255, 255, 255}
+		if s := sj_string(obj, "emission", ""); s != "" do if c, ok := Color_FromHex(s); ok do node.emission = c
+	}
+	if !override || "emission_strength" in obj do node.emissionStrength = max(sj_float(obj, "emission_strength", 0), 0)
 }

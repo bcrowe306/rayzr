@@ -54,6 +54,13 @@ viewportLighting := true
 Viewport_DrawLights :: proc(state: ^EditorState) {
 	if state.activeScene == nil do return
 	z := state.cameraZoom
+	// Light Occluders: their outlines (violet; brighter when selected).
+	for n in state.activeScene.manager.nodes {
+		if n == nil || n.typeId != e.LightOccluderNode || !n.enabled || !e.Node_VisibleInTree(n) do continue
+		sel := Editor_IsSelected(state, n) || n == state.selectedNode
+		col := rl.Color{180, 120, 255, 230 if sel else 120}
+		for &sh in (cast(^e.LightOccluderNode)n).shapes do e.PhysicsShape_DrawDebug(&sh, n.globalPosition, n.globalRotation, col, n.globalScale)
+	}
 	for n in state.activeScene.manager.nodes {
 		if n == nil || n.typeId != e.LightNode || !n.enabled do continue
 		l := cast(^e.LightNode)n
@@ -63,6 +70,7 @@ Viewport_DrawLights :: proc(state: ^EditorState) {
 		rl.DrawCircleV(c, 6 / z, col)
 		rl.DrawCircleLinesV(c, 9 / z, rl.Color{255, 255, 255, 200})
 		if !Editor_IsSelected(state, n) && n != state.selectedNode do continue
+		if l.kind == .Directional do continue
 		r := l.radius * max(abs(l.globalScale.x), abs(l.globalScale.y))
 		ring := col
 		ring.a = 160
@@ -133,7 +141,7 @@ viewport_scene :: proc(state: ^EditorState) {
 	@(static) shown: rl.Texture2D
 	shown = state.renderTexture.texture
 	if viewportLighting && state.activeScene != nil {
-		if effects := e.Scene_PostEffects(state.activeScene); len(effects) > 0 {
+		if effects := e.Scene_PostEffects(state.activeScene); e.Post_Wanted(state.activeScene, effects) {
 			shown = e.Post_Process(effects, shown, &state.game.gameContext)
 		}
 	}
@@ -389,7 +397,7 @@ Node_Bounds :: proc(state: ^EditorState, node: ^e.Node) -> (corners: [4][2]f32, 
 	case e.SpawnerNode:
 		r := 10 / state.cameraZoom // (a small marker to pick)
 		lo, hi, have = {-r, -r}, {r, r}, true
-	case e.StaticBodyNode, e.DynamicBodyNode, e.KinematicBodyNode, e.CharacterMoverNode, e.AreaNode:
+	case e.StaticBodyNode, e.DynamicBodyNode, e.KinematicBodyNode, e.CharacterMoverNode, e.AreaNode, e.LightOccluderNode:
 		// Every shape (rotated, any type), scaled with the node.
 		if shapes := node_shapes_editor(node); shapes != nil && len(shapes) > 0 {
 			lo, hi, have = ShapeEdit_LocalBounds(node, shapes[:])
