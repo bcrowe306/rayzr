@@ -1,0 +1,120 @@
+# Play in Viewport: Opt+F6 plays the current scene in the Game view (the
+# real game process, its frames through shared memory). Clicking the game
+# hands it the keyboard and mouse - the editor's own shortcuts stay off but
+# Play / Pause / Stop - and Shift+Esc takes them back. The size dropdown
+# resizes the game's window; Pause When Unfocused, stats and Restart.
+wait 5
+# (The Animation workspace: a taller bottom panel for the Game tab's tree.)
+click @menu:View
+click @menu:View/Workspaces
+click @menu:Workspaces/Animation
+wait 3
+key escape
+exec cp tests/drive/fixtures/game_view/gv_input_zz.scene.json $PROJECT/scenes/gv_input_zz.scene.json
+exec cp tests/drive/fixtures/game_view/gv_input_zz.lua $PROJECT/scripts/gv_input_zz.lua
+wait-until item:asset:scenes/gv_input_zz.scene.json == visible timeout=300
+dblclick @asset:scenes/gv_input_zz.scene.json
+expect scene == scenes/gv_input_zz.scene.json
+expect gameview-open == false
+
+# Opt+F6: the game starts hidden; its frames show in the Game view.
+key alt+f6
+wait-until game == running timeout=600
+expect gameview-open == true
+wait-until remote-connected == true timeout=600
+wait-until gameview == showing timeout=600
+wait-until gameview-frames >= 30 timeout=600
+expect log contains in the Game view
+expect gameview-captured == false
+screenshot game_view_playing
+
+# The Game tab works as with Play: the probe's live script values.
+click @bottom:game
+wait-until remote-nodes >= 2 timeout=300
+click @remote.node:Probe
+wait-until remote-prop:script.clicks contains 0 timeout=300
+
+# A click hands the game the input (and is its first click).
+key q
+expect tool == select
+click @game-view
+wait-until gameview-captured == true timeout=60
+wait-until remote-prop:script.clicks contains 1 timeout=300
+expect remote-prop:script.mouse_x !contains -1
+key right
+wait-until remote-prop:script.right_presses contains 1 timeout=300
+screenshot game_view_captured
+
+# The editor's shortcuts are off while the game has the keys (W: the Move
+# tool), but Pause (F9) works.
+key w
+expect tool == select
+key f9
+wait-until remote-paused == true timeout=300
+screenshot game_view_paused
+key f9
+wait-until remote-paused == false timeout=300
+
+# Shift+Esc gives the keyboard back.
+key shift+escape
+expect gameview-captured == false
+click @game-view
+wait-until gameview-captured == true timeout=60
+click @hier:Probe
+expect gameview-captured == false
+
+# Pause When Unfocused: losing the input pauses, clicking resumes.
+click @gv-pause-unfocused
+expect file:.editor_settings.ini contains pause_unfocused = true
+click @game-view
+wait-until gameview-captured == true timeout=60
+click @hier:Probe
+wait-until remote-paused == true timeout=300
+click @game-view
+wait-until remote-paused == false timeout=300
+key shift+escape
+wait-until remote-paused == true timeout=300
+click @gv-pause-unfocused
+click @game-view
+wait-until remote-paused == false timeout=300
+key shift+escape
+
+# Sizes: a preset resizes the game's window (shown to fit); Fit follows the panel.
+click @gv-size
+click @gv-size:720p
+wait-until gameview-size == 1280x720 timeout=300
+wait-until gameview-tex == 1280x720 timeout=300
+screenshot game_view_720p
+click @gv-zoom
+click @gv-zoom:100
+expect file:.editor_settings.ini contains zoom = 100
+click @gv-size
+click @gv-size:phone_portrait
+wait-until gameview-size == 390x844 timeout=300
+screenshot game_view_phone
+click @gv-size
+click @gv-size:fit
+wait-until gameview-size !contains 390x844 timeout=300
+expect file:.editor_settings.ini contains size = fit
+
+# Stats: the game's frame rate and node count over the picture.
+click @gv-stats
+wait-until gameview-stats contains fps timeout=300
+screenshot game_view_stats
+click @gv-stats
+
+# Restart plays in the Game view again; Stop ends it.
+key cmd+shift+f5
+wait-until gameview == showing timeout=900
+expect game == running
+key shift+f5
+wait-until game == stopped timeout=300
+expect gameview == inactive
+screenshot game_view_stopped
+
+# F6 still plays in its own window (the Game view stays idle).
+game-args --frames 20
+key f6
+wait-until game == running timeout=600
+expect gameview == inactive
+wait-until game == stopped timeout=900

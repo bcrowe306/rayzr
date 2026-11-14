@@ -162,6 +162,7 @@ Editor_UpdatePlaytest :: proc(state: ^EditorState) {
 				}
 			} else {
 				Editor_Log(state, .Error, "Build failed (exit %d) - see errors above; not launching", pstate.exit_code)
+				state.pendingPlayInView = false
 			}
 		}
 	}
@@ -197,6 +198,13 @@ Editor_LaunchGame :: proc(state: ^EditorState) {
 	if state.pendingPlayScene != "" {
 		append(&cmd, "--scene", state.pendingPlayScene)
 	}
+	// Play in Viewport: the hidden game's frames to the Game view.
+	inView := state.pendingPlayInView
+	state.pendingPlayInView = false
+	if inView {
+		if args := GameView_LaunchArgs(state); args != nil do append(&cmd, ..args)
+		else do inView = false
+	}
 	for extra in state.extraGameArgs {
 		append(&cmd, extra)
 	}
@@ -217,10 +225,13 @@ Editor_LaunchGame :: proc(state: ^EditorState) {
 		if perr == nil do os.close(r)
 		if ierr == nil do os.close(inW)
 		Editor_Log(state, .Error, "Failed to launch game process: %v", err)
+		if inView do GameView_Ended()
 		return
 	}
 	if perr == nil do state.gameOutput = r
 	if ierr == nil do RemoteGame_Attach(inW)
+	if inView do GameView_Started()
+	state.lastPlayInView = inView
 
 	state.gameProcess = procHandle
 	state.gameProcessRunning = true
@@ -228,7 +239,7 @@ Editor_LaunchGame :: proc(state: ^EditorState) {
 	state.lastPlayedScene = strings.clone(state.pendingPlayScene)
 	state.hasPlayed = true
 	what := state.pendingPlayScene if state.pendingPlayScene != "" else fmt.tprintf("project (initial scene %s)", state.projectConfig.initialScene)
-	Editor_Log(state, .Info, "Playing %s - PID %d", what, procHandle.pid)
+	Editor_Log(state, .Info, "Playing %s%s - PID %d", what, " in the Game view" if inView else "", procHandle.pid)
 }
 
 // drain_pipe moves whatever the process wrote into console lines.
@@ -481,6 +492,7 @@ Editor_RestartGame :: proc(state: ^EditorState) {
 	pkg := strings.clone(state.lastPlayPackage, context.temp_allocator)
 	if state.gameProcessRunning do Editor_StopGameProcess(state)
 	Editor_Log(state, .Info, "Restarting the game")
+	state.pendingPlayInView = state.lastPlayInView && pkg == "" // (where it played)
 	switch {
 	case pkg != "":   Editor_RunPackage(state, pkg)
 	case scene != "": Editor_PlayRequest(state, .CurrentScene, scene)

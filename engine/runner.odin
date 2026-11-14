@@ -39,6 +39,8 @@ Run_Options :: struct {
 	perfReport:     string, // --perf-report <file.json>: every frame's time and the startup times, written at the end (perf_report.odin; #331)
 	modsDir:        string, // --mods <dir>: another folder of mods (when the project allows mods: mods.odin)
 	noMods:         bool,   // --no-mods: play without the installed mods
+	embed:          string, // --embed <name>: the editor's Game view - frames to its shared block, input from the link (embed.odin)
+	embedSize:      [2]i32, // --embed-size <w>x<h>: the hidden window's size then
 }
 
 // An --input-script event: `key` goes down / up at `frame`; pad events
@@ -289,6 +291,11 @@ Engine_ParseRunArgs :: proc(args: []string) -> (opts: Run_Options) {
 			opts.modsDir = next; i += 1
 		case arg == "--no-mods":
 			opts.noMods = true
+		case arg == "--embed" && next != "":
+			opts.embed = next; i += 1
+		case arg == "--embed-size" && next != "":
+			if sz, ok := Embed_ParseSize(next); ok do opts.embedSize = sz
+			i += 1
 		case !strings.has_prefix(arg, "-") && opts.projectPath == "":
 			opts.projectPath = arg
 		}
@@ -461,14 +468,25 @@ Runner_Start :: proc(opts: Run_Options) -> (^Runner_State, bool) {
 		}
 	}
 	rs.video = video
+	// The editor's Game view: its frame buffer, a hidden window its size.
+	if opts.embed != "" {
+		if !Embed_Open(opts.embed, opts.embedSize if opts.embedSize != {} else {winW, winH}) {
+			Runner_Stop(rs)
+			return nil, false
+		}
+		winW, winH = embed.size.x, embed.size.y
+		rs.opts.hidden = true
+	}
 
 	// Project Video settings.
 	flags: rl.ConfigFlags = {}
 	if video.resizable do flags += {.WINDOW_RESIZABLE}
-	if video.vsync && !opts.uncapped do flags += {.VSYNC_HINT}
+	// (Not in the Game view: a hidden window's swap needn't wait for the
+	// display - the frame cap paces it.)
+	if video.vsync && !opts.uncapped && opts.embed == "" do flags += {.VSYNC_HINT}
 	if video.msaa do flags += {.MSAA_4X_HINT}
 	if video.highDPI do flags += {.WINDOW_HIGHDPI}
-	if opts.hidden {
+	if opts.hidden || opts.embed != "" {
 		flags += {.WINDOW_HIDDEN, .WINDOW_UNFOCUSED} // (never takes the focus)
 	}
 	rl.SetConfigFlags(flags)
@@ -495,7 +513,7 @@ Runner_Start :: proc(opts: Run_Options) -> (^Runner_State, bool) {
 	rs.perf.windowMs = Process_SinceStartMs()
 	// Fullscreen (project Video, Engine.set_fullscreen): applied from the
 	// first frames on (Runner_ApplyFullscreen); the frame scales to the window.
-	if video.fullscreen && !opts.hidden do game.fullscreenRequest = true
+	if video.fullscreen && !opts.hidden && opts.embed == "" do game.fullscreenRequest = true
 	if !opts.noRenderCache do Render_InitBatching()
 
 	rl.SetTargetFPS(0 if opts.uncapped else targetFPS)
@@ -613,6 +631,7 @@ Runner_Frame :: proc(rs: ^Runner_State) -> bool {
 			if ev.mouse do Runner_ApplyMouseEvent(game, ev)
 			else do Runner_ApplyInputEvent(&game.input, ev)
 		}
+		Embed_BeginFrame()
 		EditorLink_BeginFrame(game)
 		if game.linkPaused && !game.frozen do dt = 1.0 / 60 // a step
 		if Console_Frame(game, rl.GetFrameTime()) do dt = 1.0 / 60 // (the console's step)
@@ -628,8 +647,8 @@ Runner_Frame :: proc(rs: ^Runner_State) -> bool {
 		// the window (fullscreen, resized) - the mouse reads in game units.
 		vw, vh := Runner_VirtualSize(game)
 		dest := Runner_FitRect(vw, vh, f32(rl.GetScreenWidth()), f32(rl.GetScreenHeight()))
-		rl.SetMouseOffset(i32(-dest.x), i32(-dest.y))
-		rl.SetMouseScale(vw / dest.width, vh / dest.height)
+		In_SetMouseOffset(i32(-dest.x), i32(-dest.y))
+		In_SetMouseScale(vw / dest.width, vh / dest.height)
 		game.screenToGame = {-dest.x, -dest.y, vw / dest.width, vh / dest.height} // (touches: as the mouse)
 		game.viewportCanvasRect = {0, 0, vw, vh}
 		target := Runner_FrameTarget(i32(vw), i32(vh), video.sharpScaling)
@@ -666,6 +685,7 @@ Runner_Frame :: proc(rs: ^Runner_State) -> bool {
 		runTime := time.tick_since(frameStart)
 
 		rl.BeginDrawing()
+		Embed_BeginDraw() // (the Game view: off screen - embed.odin)
 		rl.ClearBackground(rl.BLACK) // the letterbox bars
 		// Accessibility: the frame through the colour-blind filter on its way out.
 		filtered := Colorblind_Begin(access.colorblind, access.colorblindStrength, access.simulate)
@@ -724,6 +744,7 @@ Runner_Frame :: proc(rs: ^Runner_State) -> bool {
 		if opts.uncapped && opts.benchFrames <= 0 && opts.perfReport == "" do runner_draw_frame_time(rs)
 		ControllerSetup_Draw(game) // (the Controller Setup screen, under the console)
 		Console_DrawScreen(game) // (the developer console and its overlays)
+		Embed_EndDraw(game) // (the Game view: this frame to the editor)
 		Prof_Begin("present")
 		rl.EndDrawing()
 		Prof_End()
@@ -825,6 +846,7 @@ Runner_Stop :: proc(rs: ^Runner_State) {
 		rl.UnloadRenderTexture(runnerTarget)
 		runnerTarget = {}
 	}
+	Embed_Close() // (its pixel buffers: before the window goes)
 	if rs.windowOpen do rl.CloseWindow()
 	Console_Shutdown() // (before the game: its Lua commands)
 	if Tests_Active() do Tests_Shutdown(rs.game)
@@ -843,6 +865,7 @@ Runner_Stop :: proc(rs: ^Runner_State) {
 // back. Called at the start of a frame, once the window is up: on macOS the
 // switch made right after InitWindow doesn't take.
 Runner_ApplyFullscreen :: proc(game: ^Game, on: bool) {
+	if Embed_Enabled() do return // (the Game view's window is the editor's panel)
 	if rl.IsWindowState({.BORDERLESS_WINDOWED_MODE}) != on do rl.ToggleBorderlessWindowed()
 	game.fullscreen = on
 }

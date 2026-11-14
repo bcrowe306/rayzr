@@ -27,6 +27,7 @@ PANEL_HELP_PAGES := [?]struct {
 	{"vector-edit", "Vector Edit Mode"},
 	{"assets", "Assets"},
 	{"code", "Code Tab"},
+	{"game-view", "Game View"},
 	{"level", "Level Tab"},
 	{"level-generator", "Level Generator"},
 	{"terrain-tiles", "Terrain Tiles"},

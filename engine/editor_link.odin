@@ -74,6 +74,11 @@ link_wait_command :: proc() -> string {
 			if b != '\n' do continue
 			line := strings.clone(strings.trim_space(string(editorLink.inBuf[:i])), context.temp_allocator)
 			remove_range(&editorLink.inBuf, 0, i + 1)
+			// (The Game view's input and size: not the debugger's.)
+			if link_is_embed_line(line) {
+				EditorLink_Command(editorLink.game, line)
+				break
+			}
 			if line != "" do return line
 			break
 		}
@@ -92,6 +97,11 @@ link_wait_command :: proc() -> string {
 	}
 }
 
+@(private = "file")
+link_is_embed_line :: proc(line: string) -> bool {
+	return strings.has_prefix(line, "in ") || line == "in" || strings.has_prefix(line, "embed-")
+}
+
 // EditorLink_Enabled: the editor drives this game (its Play).
 EditorLink_Enabled :: proc() -> bool {return editorLink.enabled}
 
@@ -99,6 +109,7 @@ EditorLink_Enabled :: proc() -> bool {return editorLink.enabled}
 // frame runs (game.frozen = false) or only draws.
 EditorLink_BeginFrame :: proc(game: ^Game) {
 	if !editorLink.enabled do return
+	In_BeginFrame() // (the Game view's input: last frame's presses end)
 	for {
 		has, err := os.pipe_has_data(os.stdin)
 		if err != nil || !has do break
@@ -132,6 +143,7 @@ EditorLink_BeginFrame :: proc(game: ^Game) {
 EditorLink_Command :: proc(game: ^Game, line: string) {
 	cmd, rest := line, ""
 	if i := strings.index_byte(line, ' '); i >= 0 do cmd, rest = line[:i], strings.trim_space(line[i + 1:])
+	if Embed_Command(game, cmd, rest) do return // (the Game view: embed.odin)
 	switch cmd {
 	case "pause":
 		game.linkPaused = true
@@ -757,10 +769,10 @@ EditorLink_DrawOverlay :: proc(game: ^Game) {
 // still sees the click).
 EditorLink_UpdatePick :: proc(game: ^Game) {
 	if !editorLink.enabled || !editorLink.picking || !rl.IsWindowReady() do return
-	if !rl.IsMouseButtonPressed(.LEFT) do return
+	if !In_IsMouseButtonPressed(.LEFT) do return
 	editorLink.picking = false
 	scene := game.sceneManager.currentScene
-	n := EditorLink_Pick(game, rl.GetMousePosition())
+	n := EditorLink_Pick(game, In_GetMousePosition())
 	path := link_path(scene.manager, scene.rootNode, n) if n != nil else ""
 	fmt.printfln("@rayzr:picked %s", path)
 }

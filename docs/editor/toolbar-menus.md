@@ -50,6 +50,7 @@ From left to right:
 | **Undo / Redo** | Undo and redo scene edits. Cmd+Z (Ctrl+Z) / Cmd+Shift+Z (Cmd+Y also redoes). |
 | **Play** (green) | Play the project from its startup scene. Saves your changes first and rebuilds if code changed. **F5** |
 | **Play Scene** (green circle) | Play only the current scene. **F6** |
+| **Play in Game View** (screen) | Play the project in the [Game View](game-view.md), a tab next to the Viewport. Right-click: the current scene. **Opt+F5** / **Opt+F6** (Alt) |
 | **Colliders** (square) | Whether the running game draws collision shapes. Lit = shown. Also switches a game that is already running. |
 | **Status** | *Building...*, *Running*, *Paused* or *Breakpoint*. |
 | **Snap to grid** (magnet) | Moves, guides and shape handles snap to the grid. Shift+S |
@@ -169,6 +170,8 @@ commands to any menu.
 |---|---|---|
 | **Play Project** | F5 | Run the game from its startup scene. |
 | **Play Current Scene** | F6 | Run only this scene. |
+| **Play Project in Game View** | Opt+F5 (Alt+F5) | Run the game in the [Game View](game-view.md), next to the Viewport. |
+| **Play Current Scene in Game View** | Opt+F6 (Alt+F6) | Run only this scene there. |
 | **Pause** | F9 | Pause or resume the running game. |
 | **Step One Frame** | Shift+F9 | |
 | **Restart** | Cmd+Shift+F5 | |

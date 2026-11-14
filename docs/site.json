@@ -47,6 +47,7 @@
         { "file": "docs/editor/settings.md", "slug": "editor/settings" },
         { "file": "docs/editor/updates.md", "slug": "editor/updates" },
         { "file": "docs/editor/playtesting.md", "slug": "editor/playtesting" },
+        { "file": "docs/editor/game-view.md", "slug": "editor/game-view" },
         { "file": "docs/editor/export.md", "slug": "editor/export" },
         { "file": "docs/editor/team.md", "slug": "editor/team" },
         { "file": "docs/editor/tab-console.md", "slug": "editor/tab-console" },

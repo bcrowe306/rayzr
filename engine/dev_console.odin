@@ -147,9 +147,9 @@ Console_Frame :: proc(game: ^Game, frameSeconds: f32) -> (step: bool) {
 	devConsole.frameMs[devConsole.frameIdx] = frameSeconds * 1000
 	devConsole.frameIdx = (devConsole.frameIdx + 1) % len(devConsole.frameMs)
 	if rl.IsWindowReady() {
-		if rl.IsKeyPressed(devConsole.key) {
+		if In_IsKeyPressed(devConsole.key) {
 			devConsole.open = !devConsole.open
-			for rl.GetCharPressed() != 0 {} // (not the key's own character)
+			for In_GetCharPressed() != 0 {} // (not the key's own character)
 		} else if devConsole.open {
 			console_type(game)
 		}
@@ -170,19 +170,19 @@ Console_Frame :: proc(game: ^Game, frameSeconds: f32) -> (step: bool) {
 @(private = "file")
 console_type :: proc(game: ^Game) {
 	context.allocator = Engine_HeapAllocator()
-	for ch := rl.GetCharPressed(); ch != 0; ch = rl.GetCharPressed() {
+	for ch := In_GetCharPressed(); ch != 0; ch = In_GetCharPressed() {
 		if ch < 32 || ch == '`' && devConsole.key == .GRAVE do continue
 		bytes, n := utf8.encode_rune(ch)
 		append(&devConsole.input, ..bytes[:n])
 	}
-	pressed :: proc(k: rl.KeyboardKey) -> bool {return rl.IsKeyPressed(k) || rl.IsKeyPressedRepeat(k)}
+	pressed :: proc(k: rl.KeyboardKey) -> bool {return In_IsKeyPressed(k) || In_IsKeyPressedRepeat(k)}
 	if pressed(.BACKSPACE) && len(devConsole.input) > 0 {
 		// (a whole UTF-8 character)
 		i := len(devConsole.input) - 1
 		for i > 0 && devConsole.input[i] & 0xC0 == 0x80 do i -= 1
 		resize(&devConsole.input, i)
 	}
-	if rl.IsKeyPressed(.ESCAPE) {
+	if In_IsKeyPressed(.ESCAPE) {
 		if len(devConsole.input) > 0 do clear(&devConsole.input)
 		else do devConsole.open = false
 	}
@@ -196,11 +196,11 @@ console_type :: proc(game: ^Game) {
 	}
 	if pressed(.PAGE_UP) do devConsole.scroll = min(devConsole.scroll + 10, max(len(devConsole.lines) - 1, 0))
 	if pressed(.PAGE_DOWN) do devConsole.scroll = max(devConsole.scroll - 10, 0)
-	if wheel := rl.GetMouseWheelMove(); wheel != 0 {
+	if wheel := In_GetMouseWheelMove(); wheel != 0 {
 		devConsole.scroll = clamp(devConsole.scroll + int(wheel * 3), 0, max(len(devConsole.lines) - 1, 0))
 	}
-	if rl.IsKeyPressed(.TAB) do Console_Complete()
-	if rl.IsKeyPressed(.ENTER) || rl.IsKeyPressed(.KP_ENTER) {
+	if In_IsKeyPressed(.TAB) do Console_Complete()
+	if In_IsKeyPressed(.ENTER) || In_IsKeyPressed(.KP_ENTER) {
 		line := strings.clone(string(devConsole.input[:]), context.temp_allocator)
 		clear(&devConsole.input)
 		Console_Exec(game, line)

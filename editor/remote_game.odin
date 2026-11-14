@@ -181,6 +181,7 @@ RemoteGame_HandleLine :: proc(state: ^EditorState, line: string) -> bool {
 	case "bt": BehaviorTree_RemoteReply(rest)
 	case "goap": Goap_RemoteReply(rest)
 	case "mixer-peaks": MixerPanel_RemoteReply(rest)
+	case "stats": GameView_HandleStats(rest) // (the Game view's overlay)
 	case "sm-break":
 		remote.paused = true
 		Editor_Log(state, .Info, "Game paused: a state machine entered a break-on-enter state %s", rest)

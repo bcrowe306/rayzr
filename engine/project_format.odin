@@ -721,7 +721,7 @@ Game_LoadProjectConfig :: proc(game: ^Game, cfg: ^ProjectConfig, activate := tru
 			titleC := strings.clone_to_cstring(cfg.windowTitle, context.temp_allocator)
 			rl.SetWindowTitle(titleC)
 		}
-		if cfg.windowWidth > 0 && cfg.windowHeight > 0 {
+		if cfg.windowWidth > 0 && cfg.windowHeight > 0 && !Embed_Enabled() { // (the Game view sets its own)
 			rl.SetWindowSize(c.int(cfg.windowWidth), c.int(cfg.windowHeight))
 		}
 		if cfg.targetFPS > 0 {

@@ -95,7 +95,7 @@ ControllerSetup_Frame :: proc(game: ^Game, dt: f32) {
 		if padScreen.closing <= 0 do Gamepad_CloseSetupScreen(game)
 		return
 	}
-	if rl.IsKeyPressed(.ESCAPE) {
+	if In_IsKeyPressed(.ESCAPE) {
 		Gamepad_CloseSetupScreen(game)
 		return
 	}
@@ -105,14 +105,14 @@ ControllerSetup_Frame :: proc(game: ^Game, dt: f32) {
 		padScreen.stepTime = 0
 		padScreen.lastStep = 0
 	}
-	if rl.IsKeyPressed(.RIGHT) || rl.IsKeyPressed(.LEFT) {
-		next := pad_screen_cycle(padSetup.jid, 1 if rl.IsKeyPressed(.RIGHT) else -1)
+	if In_IsKeyPressed(.RIGHT) || In_IsKeyPressed(.LEFT) {
+		next := pad_screen_cycle(padSetup.jid, 1 if In_IsKeyPressed(.RIGHT) else -1)
 		padScreen.wanted = next
 		Pad_SetupBegin(next)
 		return
 	}
-	if rl.IsKeyPressed(.TAB) do Pad_SetupSkip()
-	if rl.IsKeyPressed(.BACKSPACE) do Pad_SetupBack()
+	if In_IsKeyPressed(.TAB) do Pad_SetupSkip()
+	if In_IsKeyPressed(.BACKSPACE) do Pad_SetupBack()
 	if !Pad_SetupFrame() {
 		padScreen.wanted = -1 // (it went away: the next one, if any)
 		return

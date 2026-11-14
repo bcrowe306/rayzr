@@ -215,15 +215,15 @@ Input_RebindUpdate :: proc(input: ^InputSystem) -> (done: bool) {
 	pad := input.gamepadIndex
 	padOk := pad >= 0 && pad < MAX_PADS && rl.IsGamepadAvailable(pad)
 	// The last device (for prompts / glyphs).
-	if rl.IsMouseButtonPressed(.LEFT) do input.rebind.lastDevice = .Keyboard_Mouse
-	else do for k in 32 ..< 350 do if rl.IsKeyPressed(rl.KeyboardKey(k)) {input.rebind.lastDevice = .Keyboard_Mouse; break}
+	if In_IsMouseButtonPressed(.LEFT) do input.rebind.lastDevice = .Keyboard_Mouse
+	else do for k in 32 ..< 350 do if In_IsKeyPressed(rl.KeyboardKey(k)) {input.rebind.lastDevice = .Keyboard_Mouse; break}
 	if padOk do for gb in rl.GamepadButton do if gb != .UNKNOWN && rl.IsGamepadButtonPressed(pad, gb) {input.rebind.lastDevice = .Gamepad; break}
 	r := &input.rebind
 	if !r.listening do return false
 	if !r.armed {
 		// Wait for the key / button that opened the menu to be let go.
-		for k in 1 ..< 350 do if rl.IsKeyDown(rl.KeyboardKey(k)) do return false
-		for m in rl.MouseButton do if rl.IsMouseButtonDown(m) do return false
+		for k in 1 ..< 350 do if In_IsKeyDown(rl.KeyboardKey(k)) do return false
+		for m in rl.MouseButton do if In_IsMouseButtonDown(m) do return false
 		if padOk {
 			for gb in rl.GamepadButton do if gb != .UNKNOWN && rl.IsGamepadButtonDown(pad, gb) do return false
 			for ax in rl.GamepadAxis do if abs(rl.GetGamepadAxisMovement(pad, ax)) > REBIND_AXIS_PUSH * 0.5 && !axis_is_trigger(ax) do return false
@@ -233,7 +233,7 @@ Input_RebindUpdate :: proc(input: ^InputSystem) -> (done: bool) {
 	}
 	b: InputBinding
 	if r.device != .Gamepad {
-		for k in 1 ..< 350 do if rl.IsKeyPressed(rl.KeyboardKey(k)) {
+		for k in 1 ..< 350 do if In_IsKeyPressed(rl.KeyboardKey(k)) {
 			key := rl.KeyboardKey(k)
 			if key == r.cancelKey {
 				r.listening, r.result = false, .Cancelled
@@ -242,7 +242,7 @@ Input_RebindUpdate :: proc(input: ^InputSystem) -> (done: bool) {
 			b = {deviceType = .KeyboardKey, key = key}
 			break
 		}
-		if b.deviceType == .None do for m in rl.MouseButton do if rl.IsMouseButtonPressed(m) {
+		if b.deviceType == .None do for m in rl.MouseButton do if In_IsMouseButtonPressed(m) {
 			b = {deviceType = .MouseButton, mouseButton = m}
 			break
 		}

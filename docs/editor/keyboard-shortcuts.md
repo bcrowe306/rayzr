@@ -86,6 +86,7 @@ In the list below, **Where** is *Anywhere* (global), *Scene editing* or
 | Show Grid | `Shift+G` | Scene editing |
 | Show Bounds & Colliders |  | Scene editing |
 | Show Camera Frames |  | Scene editing |
+| Show Labels |  | Scene editing |
 | Rulers & Guides | `Cmd+Shift+R` | Scene editing |
 | Clear Guides |  | Scene editing |
 | Smart Snapping |  | Scene editing |
@@ -124,6 +125,8 @@ In the list below, **Where** is *Anywhere* (global), *Scene editing* or
 |---|---|---|
 | Play Project | `F5` | Anywhere |
 | Play Current Scene | `F6` | Anywhere |
+| Play Project in Game View | `Opt+F5` | Anywhere |
+| Play Current Scene in Game View | `Opt+F6` | Anywhere |
 | Stop Game | `Shift+F5` | Anywhere |
 | Pause Game | `F9` | Anywhere |
 | Step One Frame | `Shift+F9` | Anywhere |
@@ -191,6 +194,7 @@ In the list below, **Where** is *Anywhere* (global), *Scene editing* or
 | Set Up Scene Merging |  | Anywhere |
 | Merge Conflicts... |  | Anywhere |
 | Registry... |  | Anywhere |
+| Controllers... |  | Anywhere |
 | New Plugin... |  | Anywhere |
 
 ### Scene

@@ -402,7 +402,7 @@ Input_EvaluateBindingFor :: proc(input: ^InputSystem, bind: InputBinding, pad: i
 				return true, 1.0
 			}
 		}
-		if !input.keyboardBlocked && rl.IsWindowReady() && rl.IsKeyDown(bind.key) {
+		if !input.keyboardBlocked && rl.IsWindowReady() && In_IsKeyDown(bind.key) {
 			return true, 1.0
 		}
 
@@ -416,7 +416,7 @@ Input_EvaluateBindingFor :: proc(input: ^InputSystem, bind: InputBinding, pad: i
 		if game := touch_mouse_game; game != nil && game.touchMouse.active && bind.mouseButton == .LEFT && !input.mouseBlocked {
 			if game.touchMouse.down do return true, 1.0 // (a finger is the left button)
 		}
-		if !input.mouseBlocked && rl.IsWindowReady() && rl.IsMouseButtonDown(bind.mouseButton) {
+		if !input.mouseBlocked && rl.IsWindowReady() && In_IsMouseButtonDown(bind.mouseButton) {
 			return true, 1.0
 		}
 

@@ -45,6 +45,7 @@ Editor_Settings :: struct {
 	previewAutoplay:  bool, // File Browser / Assets: play a sound or animation when selected (#203)
 	previewLoop:      bool, // ... and loop it
 	previewVolume:    f32,  // ... at this volume
+	gameView:         Game_View_Settings, // Play in Viewport's Game view (game_view.odin)
 	window:           Window_State, // the editor window as it was left (window_state.odin, #265)
 	// Code Editor
 	codeFontSize:     f32,
@@ -101,6 +102,7 @@ DEFAULT_EDITOR_SETTINGS :: Editor_Settings{
 	previewAutoplay = true,
 	previewLoop = true,
 	previewVolume = 0.8,
+	gameView = {customW = 1280, customH = 720},
 	codeFontSize    = CODE_FONT_SIZE,
 	tabWidth        = 4,
 	insertSpaces    = true,
@@ -377,6 +379,16 @@ settings_from_ini :: proc(text: string) {
 		if v, vok := pv["loop"]; vok do s.previewLoop = v == "true"
 		if v, vok := pv["volume"]; vok do if x, pok := strconv.parse_f32(v); pok do s.previewVolume = clamp(x, 0, 1)
 	}
+	{
+		g := &s.gameView
+		if v, ok := get(m, "game_view", "size"); ok do for name, i in GAME_VIEW_SIZE_NAMES do if name == v do g.size = Game_View_Size(i)
+		if v, ok := get(m, "game_view", "zoom"); ok do for name, i in GAME_VIEW_ZOOM_NAMES do if name == v do g.zoom = Game_View_Zoom(i)
+		g.customW = clamp(i32(f(m, "game_view", "custom_width", f32(g.customW))), 16, e.EMBED_MAX_W)
+		g.customH = clamp(i32(f(m, "game_view", "custom_height", f32(g.customH))), 16, e.EMBED_MAX_H)
+		g.stats = b(m, "game_view", "stats", g.stats)
+		g.pauseUnfocused = b(m, "game_view", "pause_unfocused", g.pauseUnfocused)
+		g.mute = b(m, "game_view", "mute", g.mute)
+	}
 	if hidden, ok := get(m, "general", "hidden_bottom_tabs"); ok {
 		s.hiddenBottomTabs = {}
 		for name in strings.split(hidden, ",", context.temp_allocator) {
@@ -555,6 +567,11 @@ Editor_SaveSettings :: proc() -> bool {
 	strings.write_string(&sb, "\n[recent_projects]\n")
 	for r, i in s.recentProjects do fmt.sbprintf(&sb, "%d = %s\n", i, r)
 	fmt.sbprintf(&sb, "\n[preview]\nautoplay = %t\nloop = %t\nvolume = %.2f\n", s.previewAutoplay, s.previewLoop, s.previewVolume)
+	{
+		g := s.gameView
+		fmt.sbprintf(&sb, "\n[game_view]\nsize = %s\nzoom = %s\ncustom_width = %d\ncustom_height = %d\nstats = %t\npause_unfocused = %t\nmute = %t\n",
+			GAME_VIEW_SIZE_NAMES[g.size], GAME_VIEW_ZOOM_NAMES[g.zoom], g.customW, g.customH, g.stats, g.pauseUnfocused, g.mute)
+	}
 	strings.write_string(&sb, "\n[file_browser]\n")
 	fmt.sbprintf(&sb, "open = %t\ndir = %s\n", s.fileBrowserOpen, s.fileBrowserDir)
 	strings.write_string(&sb, "\n[file_browser_bookmarks]\n")

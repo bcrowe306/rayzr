@@ -58,6 +58,23 @@ click @menu:Game
 click @menu:Game/Simulate in Editor
 wait 5
 
+# --- Play in Viewport: the Game view ---
+click @menu:Game
+click @menu:Game/Play Project in Game View
+wait-until gameview == showing timeout=900
+click @gv-stats
+wait 60
+annotate @gv-size The game's window size: Fit to Panel, the project's, or a device preset
+annotate @gv-stats Stats: frame rate, frame time and node count
+annotate @gv-pause-unfocused Pause the game when it loses the keyboard
+annotate @gv-mute Mute the game
+annotate @game-view Click the game to play; Shift+Esc gives the keyboard back
+screenshot editor_game-view
+click @gv-stats
+click @menu:Game
+click @menu:Game/Stop
+wait-until game == stopped timeout=300
+
 # (Last: the Search tab keeps the keyboard.)
 click @bottom:search
 wait 2

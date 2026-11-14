@@ -113,6 +113,8 @@ EditorState :: struct {
 	pendingPlayMode:    Play_Mode,
 	pendingPlayScene:   string,
 	lastPlayedScene:    string, // what Restart plays again ("" = the project)
+	pendingPlayInView:  bool,   // the next launch plays in the Game view (game_view.odin)
+	lastPlayInView:     bool,   // the last one did (Restart does it again)
 	lastPlayPackage:    string, // an exported .rayzr played last (Restart replays it)
 	hasPlayed:          bool,
 	playRequestedAt:    time.Tick, // the last Play (time-to-Play: the game's first frame - @rayzr:first-frame, #331)
@@ -397,6 +399,7 @@ Editor_CheckGameProcess :: proc(state: ^EditorState) {
 	}
 	state.gameProcessRunning = false
 	RemoteGame_Detach()
+	GameView_Ended()
 	Editor_Log(state, .Info, "Game process exited (exit code: %d)", pState.exit_code)
 }
 
@@ -407,6 +410,7 @@ Editor_PlayGameProcess :: proc(state: ^EditorState, mode: Play_Mode = .Project) 
 		Editor_StopGameProcess(state)
 		return
 	}
+	state.pendingPlayInView = false // (its own window; Opt+F5: Editor_PlayInView)
 	Editor_PlayRequest(state, mode)
 }
 
@@ -420,6 +424,7 @@ Editor_StopGameProcess :: proc(state: ^EditorState) {
 	}
 	state.gameProcessRunning = false
 	RemoteGame_Detach()
+	GameView_Ended()
 	Editor_Log(state, .Info, "Game process stopped.")
 }
 

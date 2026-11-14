@@ -124,6 +124,8 @@ Actions_Init :: proc() {
 	add({id = "file.quit", category = "File", label = "Quit", chords = k(ch(.Q, P)), scope = .Global, run = proc(s: ^EditorState) {Editor_RequestQuit(s)}})
 	add({id = "game.play", category = "Game", label = "Play Project", chords = k(ch(.F5)), scope = .Global, run = proc(s: ^EditorState) {Editor_PlayGameProcess(s, .Project)}, enabled = proc(s: ^EditorState) -> bool {return !s.gameProcessRunning && !s.buildRunning}})
 	add({id = "game.play_scene", category = "Game", label = "Play Current Scene", chords = k(ch(.F6)), scope = .Global, run = proc(s: ^EditorState) {Editor_PlayGameProcess(s, .CurrentScene)}, enabled = proc(s: ^EditorState) -> bool {return !s.gameProcessRunning && !s.buildRunning}})
+	add({id = "game.play_view", category = "Game", label = "Play Project in Game View", chords = k(ch(.F5, AL)), scope = .Global, run = proc(s: ^EditorState) {Editor_PlayInView(s, .Project)}, enabled = proc(s: ^EditorState) -> bool {return !s.gameProcessRunning && !s.buildRunning}})
+	add({id = "game.play_scene_view", category = "Game", label = "Play Current Scene in Game View", chords = k(ch(.F6, AL)), scope = .Global, run = proc(s: ^EditorState) {Editor_PlayInView(s, .CurrentScene)}, enabled = proc(s: ^EditorState) -> bool {return !s.gameProcessRunning && !s.buildRunning}})
 	add({id = "game.stop", category = "Game", label = "Stop Game", chords = k(ch(.F5, SH)), scope = .Global, run = Editor_StopGameProcess, enabled = proc(s: ^EditorState) -> bool {return s.gameProcessRunning}})
 	add({id = "game.pause", category = "Game", label = "Pause Game", chords = k(ch(.F9)), scope = .Global, run = Editor_TogglePause, enabled = proc(s: ^EditorState) -> bool {return s.gameProcessRunning && RemoteGame_Connected() && !Debug_IsStopped()}, checked = proc(s: ^EditorState) -> bool {return s.gameProcessRunning && RemoteGame_Paused()}})
 	add({id = "game.step", category = "Game", label = "Step One Frame", chords = k(ch(.F9, SH)), scope = .Global, run = Editor_StepGame, enabled = proc(s: ^EditorState) -> bool {return s.gameProcessRunning && RemoteGame_Connected() && !Debug_IsStopped()}})
@@ -395,6 +397,7 @@ Action_RecentRank :: proc(id: string) -> int {
 // CMD: the primary modifier's name in hints - "Cmd" on macOS, "Ctrl"
 // elsewhere (as Chord_Text names .Primary): "Undo (" + CMD + "+Z)" (#376).
 CMD :: "Cmd" when ODIN_OS == .Darwin else "Ctrl"
+ALT :: "Opt" when ODIN_OS == .Darwin else "Alt"
 
 // Chord_Text: "Cmd+Shift+P" (macOS) / "Ctrl+Shift+P" (`mac`: the macOS names
 // anywhere, for the docs - shortcuts_doc.odin).
@@ -547,6 +550,9 @@ Actions_Dispatch :: proc(state: ^EditorState) {
 		// A disabled action doesn't shadow another on the same key (F8: next
 		// diagnostic in the code, continue while the debugger is paused).
 		if !Action_Enabled(state, &a) do continue
+		// The Game view has the keyboard: only Play / Stop / Pause / Step
+		// and the debugger (game_view.odin).
+		if !GameView_AllowsAction(a.id) do continue
 		for c in a.chords {
 			if !chord_pressed(c, a.repeat) do continue
 			// Code actions beat global/scene ones bound to the same chord.

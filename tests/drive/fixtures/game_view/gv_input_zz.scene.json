@@ -1,0 +1,17 @@
+{
+ "name": "gv_input_zz",
+ "background": [40, 60, 90, 255],
+ "root": {
+  "type": "Node",
+  "name": "Root",
+  "position": [0, 0],
+  "children": [
+   {
+    "type": "Node",
+    "name": "Probe",
+    "position": [0, 0],
+    "script": {"path": "scripts/gv_input_zz.lua", "properties": {}}
+   }
+  ]
+ }
+}

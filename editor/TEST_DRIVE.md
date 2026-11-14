@@ -30,6 +30,7 @@ project instead of the demo project (the tutorials' drives,
 | Drive | Covers |
 |---|---|
 | `playtest.drive` | Rename and move a node, press Play: the editor saves, the game process starts, and the game's own scene dump contains the edit. Play Current Scene (F6) runs a non-initial scene. |
+| `game_view.drive` | Play in Viewport: Opt+F6 plays the scene in the Game View (frames through shared memory, the Game tab live); a click hands the game the keys and mouse (its script reads them; W doesn't switch tools, F9 still pauses), Shift+Esc and another panel take them back; Pause When Unfocused; the size presets resize the game's window; stats; Restart in the view; F6 still plays in a window. |
 | `nodes.drive` | Add Node dialog (toolbar and Ctrl+A, search, Create), texture picker, reflected property edit, duplicate, delete, undo/redo, drag-and-drop re-parenting, visibility toggle, save. |
 | `viewport.drive` | Click-select, move/rotate/scale gizmos with world-space grid snapping, undo of gizmo edits, pan tool, wheel zoom. |
 | `scripts.drive` | Attach a Lua script from the inspector, edit an exported property, save, simulate in the editor (and restore), Play: the game runs with the edited value. |
