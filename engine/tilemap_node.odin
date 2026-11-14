@@ -37,6 +37,7 @@ TileMapNode :: struct {
 	categoryLayers: CollisionLayerSet `gui:"true"`,       // the colliders' collision layers (#405)
 	maskLayers:     CollisionLayerSet `gui:"true"`,       // and the layers they collide with
 	tint:        rl.Color `gui:"true"`,
+	retileOnEdit: bool `gui:"true"`,                    // a script's set_tile re-picks its terrain neighbours (tile_runtime.odin)
 	layout:      TileMap_Layout `gui:"true"`,             // the grid: square, isometric, staggered, hex
 	stagger:     TileMap_Stagger `gui:"true"`,            // Staggered / hex: which rows (Hex Flat: columns) are shifted
 	cellSize:    [2]f32 `gui:"true" min:"0" max:"1024"`,  // the grid's cell (0 = the tile size); taller tiles stand on it
@@ -74,6 +75,17 @@ TileMapNode :: struct {
 	bandMode: bool,
 	// Animated tiles (tile_anims.odin): by the tile they start on.
 	anims: map[i32]Tile_Anim,
+	// Runtime tiles (tile_runtime.odin): the tileset's terrains and tile
+	// data, cells' own values, the edit events, and a chunked generator's
+	// edit memory.
+	sidecar:   ^Tile_Terrains,
+	cellData:  map[[2]i32]map[string]Tile_Value,
+	onTileChanged:   EventSubject, // "tile_changed" {x, y, old, new}
+	onTileDamaged:   EventSubject, // "tile_damaged" {x, y, tile, amount, health}
+	onTileDestroyed: EventSubject, // "tile_destroyed" {x, y, tile}
+	onTileHit:       EventSubject, // "tile_hit" {x, y, tile, other, point}
+	chunkEdits: ^Tile_Chunk_Edits, // (a chunked generator's: its edits to this map)
+	chunkDirty: [dynamic][2]int,   // (... cells whose chunk colliders need rebuilding)
 }
 
 TileMapNode_Create :: proc(scene: ^Scene, name: string = "TileMap", parent: ^Node = nil) -> ^TileMapNode {
@@ -85,6 +97,8 @@ TileMapNode_Create :: proc(scene: ^Scene, name: string = "TileMap", parent: ^Nod
 	tm.categoryLayers = DEFAULT_COLLISION_CATEGORIES
 	tm.maskLayers = DEFAULT_COLLISION_MASK
 	tm.tiles = make([dynamic]i32, tm.allocator)
+	tm.retileOnEdit = true
+	TileMapNode_InitRuntime(tm)
 	TileMapNode_Layout(tm)
 	tm.ready = TileMapNode_Ready
 	tm.update = TileMapNode_Update
@@ -263,6 +277,7 @@ TileMapNode_Set :: proc(tm: ^TileMapNode, x, y: int, tile: i32) -> bool {
 	}
 	if tm.tiles[i] == tile do return false
 	tm.tiles[i] = tile
+	if len(tm.cellData) > 0 do tilemap_forget_cell(tm, {x, y}) // (its own values go with its tile)
 	cs := tilemap_chunk_cells(tm)
 	c := [2]i32{i32(floor_div(x, cs.x)), i32(floor_div(y, cs.y))}
 	if tm.chunkVer == nil do tm.chunkVer = make(map[[2]i32]u64, tm.allocator)
@@ -270,7 +285,6 @@ TileMapNode_Set :: proc(tm: ^TileMapNode, x, y: int, tile: i32) -> bool {
 	return true
 }
 
-@(private = "file")
 floor_div :: #force_inline proc(a, b: int) -> int {
 	q := a / b
 	if (a % b != 0) && ((a < 0) != (b < 0)) do q -= 1
@@ -329,8 +343,9 @@ TileMapNode_SetTileset :: proc(tm: ^TileMapNode, path: string, ctx: ^GameContext
 	// Its animated tiles, from the tileset's sidecar.
 	gc := ctx if ctx != nil else tm.gameContext
 	if gc != nil && gc.game != nil {
-		ts, _ := Terrains_Load(gc, path, context.temp_allocator)
-		TileMapNode_SetAnimations(tm, ts.animations[:])
+		// (And its terrains and tile data, kept for scripts: tile_runtime.odin.)
+		TileMapNode_LoadSidecar(tm, gc, path)
+		if tm.sidecar != nil do TileMapNode_SetAnimations(tm, tm.sidecar.animations[:])
 	}
 }
 
@@ -578,6 +593,7 @@ TileMapNode_BuildColliders :: proc(tm: ^TileMapNode, ctx: ^GameContext) {
 	tm.staticBody.position = {0, 0}
 	tm.staticBody.transient = true
 	tm.staticBody.gameContext = ctx
+	TileMapNode_WatchHits(tm, tm.staticBody) // (tile_hit: tile_runtime.odin)
 	lo, hi := TileMapNode_Extent(tm) // (tiles beyond the map are solid too)
 	tilemap_add_colliders(tm, tm.staticBody, lo, hi, ctx)
 }
@@ -593,6 +609,7 @@ TileMapNode_BuildCollidersIn :: proc(tm: ^TileMapNode, lo, hi: [2]int, ctx: ^Gam
 	body.position = {0, 0}
 	body.transient = true
 	body.gameContext = ctx
+	TileMapNode_WatchHits(tm, body)
 	tilemap_add_colliders(tm, body, lo, hi, ctx)
 	return body
 }
@@ -698,6 +715,7 @@ TileMapNode_Destroy :: proc(node: ^Node, ctx: ^GameContext) {
 	tm.aseRes = nil
 	tilemap_free_anims(tm)
 	delete(tm.anims)
+	TileMapNode_FreeRuntime(tm)
 }
 
 // TileMapNode_EncodeRLE writes the tiles as [[count, tile], ...].

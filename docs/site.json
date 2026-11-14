@@ -100,6 +100,7 @@
         { "file": "engine/docs/resources.md", "slug": "guides/resources" },
         { "file": "engine/docs/events.md", "slug": "guides/events" },
         { "file": "engine/docs/level_generator.md", "slug": "guides/level-generator" },
+        { "file": "engine/docs/runtime_tiles.md", "slug": "guides/runtime-tiles" },
         { "file": "engine/docs/pooling.md", "slug": "guides/pooling" },
         { "file": "engine/docs/physics_scripting.md", "slug": "guides/physics-scripting" },
         { "file": "engine/docs/carrying_objects.md", "slug": "guides/carrying-objects" },

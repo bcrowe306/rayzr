@@ -137,6 +137,27 @@ it.
 - With no components in the project, the tab says so: select nodes and use
   **Save as Component** first.
 
+### Tile data (Data layer)
+
+Values the tileset's tiles carry for scripts - *breakable*, *health*, a
+*sound*. Nothing is painted on this layer.
+
+- **Fields** (left): each field's name (Enter renames it, and every tile's
+  value of it), its type (*Number*, *Bool*, *String*) and its default.
+  Type a name, pick a type and **Add Field** for a new one; the bin
+  removes one.
+- **Tiles** (right): click a tile to pick it; Shift or Cmd (Ctrl) adds
+  more. A dot marks tiles with values of their own; hover one for its
+  values.
+- For the picked tiles, tick a field to give them their own value and set
+  it; untick it to go back to the default. A dash means only some of them
+  have one.
+
+It's saved at once in the tileset's `.tileset.json`, with its terrains:
+every map using the tileset shares it. Scripts read it with
+`map:tilemap_get_data(x, y, "health")`; see
+[Changing tiles in the game](../../engine/docs/runtime_tiles.md).
+
 ## Walkthrough
 
 Paint a floor and add coins above it:

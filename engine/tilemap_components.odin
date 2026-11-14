@@ -406,7 +406,10 @@ lua_tilemap_set_component :: proc "c" (L: ^lua.State) -> c.int {
 	context = Script_Context(L)
 	tm := lua_tilemap_arg(L)
 	if tm == nil || lua.type(L, 4) != .STRING {lua.pushnil(L); return 1}
-	push_node_userdata(L, TileMapNode_PlaceComponent(tm, lua_cell(L), string(lua.tostring(L, 4))))
+	path := string(lua.tostring(L, 4))
+	n := TileMapNode_PlaceComponent(tm, lua_cell(L), path)
+	if n != nil do TileMapNode_RecordComponentEdit(tm, lua_cell(L), path) // (a chunked level remembers it)
+	push_node_userdata(L, n)
 	return 1
 }
 
@@ -414,7 +417,9 @@ lua_tilemap_set_component :: proc "c" (L: ^lua.State) -> c.int {
 lua_tilemap_clear_component :: proc "c" (L: ^lua.State) -> c.int {
 	context = Script_Context(L)
 	tm := lua_tilemap_arg(L)
-	lua.pushboolean(L, b32(tm != nil && TileMapNode_RemoveComponentAt(tm, lua_cell(L))))
+	removed := tm != nil && TileMapNode_RemoveComponentAt(tm, lua_cell(L))
+	if removed do TileMapNode_RecordComponentEdit(tm, lua_cell(L), "")
+	lua.pushboolean(L, b32(removed))
 	return 1
 }
 
@@ -436,8 +441,7 @@ lua_tilemap_set_tile :: proc "c" (L: ^lua.State) -> c.int {
 	if tm != nil {
 		cell := lua_cell(L)
 		tile := i32(lua.tointeger(L, 4)) if !lua.isnoneornil(L, 4) else -1
-		changed = TileMapNode_Set(tm, cell.x, cell.y, max(tile, -1))
-		if changed do tm.collidersDirty = true
+		changed = TileMapNode_EditTile(tm, cell, tile) // (retile, events, memory: tile_runtime.odin)
 	}
 	lua.pushboolean(L, b32(changed))
 	return 1
@@ -520,4 +524,5 @@ Script_RegisterTileMapComponentBindings :: proc(L: ^lua.State) {
 	reg(L, "tilemap_cell_position", lua_tilemap_cell_position)
 	reg(L, "tilemap_neighbors", lua_tilemap_neighbors)
 	reg(L, "tilemap_cell_outline", lua_tilemap_cell_outline)
+	TileRuntime_RegisterBindings(L) // terrains, data, damage, tile pictures, hits (tile_runtime_lua.odin)
 }

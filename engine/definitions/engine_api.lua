@@ -974,6 +974,15 @@ function PathFollowNode:connect(event, handler) end
 ---@return integer id Connection id for `disconnect`
 function LdtkLevelNode:connect(event, handler) end
 
+---@alias TileMapNodeEvent NodeTreeEvent|"tile_changed"|"tile_damaged"|"tile_destroyed"|"tile_hit"|ProjectEvent
+---Connects a handler to one of this node's events: tile_changed (A cell's tile changed by a script (a table: x, y, old, new tile) - the neighbours it re-picked too), tile_damaged (tilemap_damage hit a cell (a table: x, y, tile, amount, health left)), tile_destroyed (A cell's health reached 0 and its tile went (a table: x, y, tile)), tile_hit (A body touched the map's colliders (a table: x, y, tile, other, point) - its first touch); the tree events; custom ones.
+---
+---Example: `self.node:connect("tile_changed", function(value, source) Log.info("tile_changed") end)`
+---@param event TileMapNodeEvent|string The event's name (the Signals tab lists them)
+---@param handler fun(value: any, source: TileMapNode) Called with the event's value and the node that raised it
+---@return integer id Connection id for `disconnect`
+function TileMapNode:connect(event, handler) end
+
 ---@alias TextNodeEvent NodeTreeEvent|"revealed"|ProjectEvent
 ---Connects a handler to one of this node's events: revealed (The text finished revealing); the tree events; custom ones.
 ---
@@ -6188,6 +6197,8 @@ function LdtkLevelNode:set_property(path, value, y) end
 ---@field shininess number Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---@field solid boolean Build static colliders for the painted tiles.
 ---@field tint number[] Multiplies the texture's colours (white = unchanged; alpha fades it).
+---@field retile_on_edit boolean A script's tilemap_set_tile re-picks the terrain tiles around the cell it changes (edge...
+---@field retileOnEdit boolean Same as retile_on_edit (the Inspector's name)
 ---@field layout "Square"|"Isometric"|"Staggered"|"HexPointy"|"HexFlat" The cells' shape: Square; Isometric (diamonds on a grid turned 45 degrees); Staggered (...
 ---@field stagger "Odd"|"Even" Staggered and hex grids: which rows (Hex Flat: columns) are shifted by half a cell - th...
 ---@field cell_size Vec2 The grid's cell in pixels (0 = the tile size). Tiles taller than their cell - walls, bl...
@@ -6218,6 +6229,7 @@ function LdtkLevelNode:set_property(path, value, y) end
 ---| "shininess" # number - Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---| "solid" # boolean - Build static colliders for the painted tiles.
 ---| "tint" # number[] - Multiplies the texture's colours (white = unchanged; alpha fades it).
+---| "retile_on_edit" # boolean - A script's tilemap_set_tile re-picks the terrain tiles around the cell it changes (edge...
 ---| "layout" # "Square"|"Isometric"|"Staggered"|"HexPointy"|"HexFlat" - The cells' shape: Square; Isometric (diamonds on a grid turned 45 degrees); Staggered (...
 ---| "stagger" # "Odd"|"Even" - Staggered and hex grids: which rows (Hex Flat: columns) are shifted by half a cell - th...
 ---| "cell_size" # Vec2 - The grid's cell in pixels (0 = the tile size). Tiles taller than their cell - walls, bl...
@@ -6249,6 +6261,7 @@ function LdtkLevelNode:set_property(path, value, y) end
 ---@overload fun(self: TileMapNode, path: "shininess"): number
 ---@overload fun(self: TileMapNode, path: "solid"): boolean
 ---@overload fun(self: TileMapNode, path: "tint"): number[]
+---@overload fun(self: TileMapNode, path: "retile_on_edit"): boolean
 ---@overload fun(self: TileMapNode, path: "layout"): "Square"|"Isometric"|"Staggered"|"HexPointy"|"HexFlat"
 ---@overload fun(self: TileMapNode, path: "stagger"): "Odd"|"Even"
 ---@overload fun(self: TileMapNode, path: "cell_size"): Vec2
@@ -6282,6 +6295,7 @@ function TileMapNode:get_property(path) end
 ---@overload fun(self: TileMapNode, path: "shininess", value: number)
 ---@overload fun(self: TileMapNode, path: "solid", value: boolean)
 ---@overload fun(self: TileMapNode, path: "tint", value: number[])
+---@overload fun(self: TileMapNode, path: "retile_on_edit", value: boolean)
 ---@overload fun(self: TileMapNode, path: "layout", value: "Square"|"Isometric"|"Staggered"|"HexPointy"|"HexFlat")
 ---@overload fun(self: TileMapNode, path: "stagger", value: "Odd"|"Even")
 ---@overload fun(self: TileMapNode, path: "cell_size", x: number|Vec2|number[], y?: number)
@@ -13967,6 +13981,23 @@ function LevelGeneratorNode:levelgen_is_chunk_loaded(x, y) end
 ---@return integer? y The chunk's y
 function LevelGeneratorNode:levelgen_chunk_at(wx, wy) end
 
+---A chunked level's edits by scripts (tiles set, components placed or cleared), by map name - to keep in a save. They come back when a chunk is loaded again during the run.
+---
+---Example: `Save.set("level_edits", gen:levelgen_get_edits())`
+---@return table edits {[map name] = {tiles = {{x, y, tile}, ...}, components = {{x, y, path}, ...}}} (path "": cleared)
+function LevelGeneratorNode:levelgen_get_edits() end
+
+---Restores edits levelgen_get_edits gave (a save loaded): put into the chunks in now and every chunk that comes in, for this level or the next one made.
+---
+---Example: `gen:levelgen_set_edits(Save.get("level_edits", {}))`
+---@param edits table What levelgen_get_edits gave
+function LevelGeneratorNode:levelgen_set_edits(edits) end
+
+---Forgets the edits (the cells stay as they are now; chunks that come in again are as generated).
+---
+---Example: `gen:levelgen_clear_edits()`
+function LevelGeneratorNode:levelgen_clear_edits() end
+
 ---The path's length in pixels (along the curve).
 ---
 ---Example: `local len = self.node:get_node("Route"):path_get_length()`
@@ -14891,6 +14922,14 @@ function AtlasSpriteNode:texture_set_origin(ox, oy) end
 ---@return string The project-relative image path; "" when it has none
 function AtlasSpriteNode:texture_get_path() end
 
+---Shows a tile map's tile on the sprite (its tileset image, the tile's rectangle and size): a tile picked up or thrown.
+---
+---Example: `self.carried_sprite:atlas_show_tile(map, tile)`
+---@param map TileMapNode The map whose tileset it is
+---@param tile integer The tile's index in the tileset
+---@return boolean ok false for a tile that isn't in the tileset
+function AtlasSpriteNode:atlas_show_tile(map, tile) end
+
 ---Shows another image (project-relative path), keeping the region; e.g. the same layout on a recoloured sheet. Returns false when the file can't be loaded.
 ---
 ---Example: `self.node:set_texture("textures/hero_blue.png")`
@@ -15022,6 +15061,76 @@ function TileMapNode:tilemap_get_tile(x, y) end
 ---@param tile integer? Tile index in the tileset; -1 or nil erases
 ---@return boolean true when the cell changed; false when it already held that tile
 function TileMapNode:tilemap_set_tile(x, y, tile) end
+
+---Makes a cell a terrain of the tileset (its edges and corners picked from its neighbours, and theirs from it), or empties it (nil / ""): digging a hole in a grass-topped wall keeps the grass's edges right. Returns true if it changed.
+---
+---Example: `map:tilemap_set_terrain(x, y, nil) -- dig: the rock around re-picks its edges`
+---@param x integer Cell column, 0-based
+---@param y integer Cell row, 0-based
+---@param terrain string? A terrain's name (the Tile Map tab's Terrains); nil or "" empties the cell
+---@return boolean changed false when nothing changed or there's no such terrain
+function TileMapNode:tilemap_set_terrain(x, y, terrain) end
+
+---The names of the tileset's terrains.
+---
+---Example: `for _, name in ipairs(map:tilemap_terrain_names()) do Log.info(name) end`
+---@return string[] names In the tileset's order; empty when it has none
+function TileMapNode:tilemap_terrain_names() end
+
+---A cell's value of a tile data field (the Tile Map tab's Data page): its own (tilemap_set_data), else its tile's, else the field's default.
+---
+---Example: `if map:tilemap_get_data(x, y, "breakable") then map:tilemap_set_tile(x, y, -1) end`
+---@param x integer Cell column, 0-based
+---@param y integer Cell row, 0-based
+---@param field string The field's name
+---@return number|boolean|string|nil value nil for an empty cell or a field the tileset doesn't have
+function TileMapNode:tilemap_get_data(x, y, field) end
+
+---Gives a cell a value of its own (a cracked block's health left). It goes when the cell's tile changes.
+---
+---Example: `map:tilemap_set_data(x, y, "health", 1)`
+---@param x integer Cell column, 0-based
+---@param y integer Cell row, 0-based
+---@param field string A field of the tileset
+---@param value number|boolean|string Of the field's type (another type: warned, ignored)
+function TileMapNode:tilemap_set_data(x, y, field, value) end
+
+---A tile's value of a field (the tileset's: the tile's own, else the default), for a tile index rather than a cell.
+---
+---Example: `local sound = map:tilemap_tile_data(carried, "sound")`
+---@param tile integer The tile's index in the tileset
+---@param field string The field's name
+---@return number|boolean|string|nil value nil when the tileset has no such field
+function TileMapNode:tilemap_tile_data(tile, field) end
+
+---Damages a cell: its "health" (its own, else its tile's) goes down by amount; "tile_damaged" is sent, and at 0 or less the tile goes ("tile_destroyed"; with Retile on Edit the neighbours re-pick their edges).
+---
+---Example: `local left, broke = map:tilemap_damage(x, y, 1); if broke then Audio.play("sounds/crack.wav") end`
+---@param x integer Cell column, 0-based
+---@param y integer Cell row, 0-based
+---@param amount? number How much (default 1)
+---@return number? health Its health left; nil when the cell is empty or has no "health" field
+---@return boolean destroyed true when the tile went
+function TileMapNode:tilemap_damage(x, y, amount) end
+
+---Where a tile is in the tileset image: for drawing a tile picked up, or showing it on a sprite (Atlas Sprite: atlas_show_tile).
+---
+---Example: `local x, y, w, h = map:tilemap_tile_rect(tile)`
+---@param tile integer The tile's index in the tileset
+---@return number? x Left edge in the image (px); nil for a tile that isn't in it
+---@return number y Top edge (px)
+---@return number w Width (px)
+---@return number h Height (px)
+function TileMapNode:tilemap_tile_rect(tile) end
+
+---The cell a body's collision touched on this map: in the body's collision_started(other, contact), pass the contact.
+---
+---Example: `function Bullet:on_collision_started(other, contact) local x, y, tile = map:tilemap_cell_hit(contact); map:tilemap_damage(x, y, 1) end`
+---@param contact CollisionContact The contact a collision handler got
+---@return integer x Cell column
+---@return integer y Cell row
+---@return integer tile The tile there (-1 when it found none)
+function TileMapNode:tilemap_cell_hit(contact) end
 
 ---The cell under a world position (it may be outside the map).
 ---

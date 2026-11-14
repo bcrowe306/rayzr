@@ -87,6 +87,11 @@ LevelGeneratorNode :: struct {
 	started:         bool, // the first update ran (generateOnReady)
 	job:             ^Gen_Job, // a background generation in flight (heap)
 	world:           ^Gen_Chunk_World, // chunked: the chunks (heap)
+	// Chunked: scripts' edits to the maps, by map name (tile_runtime.odin),
+	// put back when a chunk comes in again; for the seed editsSeed (0: set
+	// by levelgen_set_edits - kept for the next level).
+	edits:           map[string]^Tile_Chunk_Edits,
+	editsSeed:       u64,
 	onGenerated:     EventSubject, // "generated" (the seed)
 	onFailed:        EventSubject, // "generation_failed" (why)
 	onProgress:      EventSubject, // "generation_progress" (0..1)
@@ -114,6 +119,7 @@ Gen_Chunk_World :: struct {
 // (slot, generation) handles - a script may have removed some already.
 Gen_Chunk :: struct {
 	nodes:  [dynamic][2]u32, // colliders, components, entities (heap)
+	bodies: [dynamic][4]u32, // each map's collider body: map (slot, gen), body (slot, gen) (heap)
 	failed: bool, // the generator refused it (empty; not tried again)
 }
 
@@ -164,6 +170,8 @@ LevelGeneratorNode_Destroy :: proc(node: ^Node, ctx: ^GameContext) {
 	if lg.job != nil do gen_job_free(lg.job) // (waits for the worker)
 	lg.job = nil
 	levelgen_chunks_stop(lg, nil, ctx, false) // (the scene's nodes go with it)
+	LevelGenerator_ClearEdits(lg)
+	delete(lg.edits)
 	DestroySubject(&lg.onGenerated)
 	DestroySubject(&lg.onFailed)
 	DestroySubject(&lg.onProgress)
@@ -441,11 +449,15 @@ levelgen_chunks_start :: proc(lg: ^LevelGeneratorNode, ctx: ^GameContext, seed: 
 	w.maps = make([dynamic][2]u32, a)
 	lg.world = w
 	lg.lastSeed = int(w.seed)
+	// Edits from another level go (those set by levelgen_set_edits stay).
+	if lg.editsSeed != 0 && lg.editsSeed != w.seed do LevelGenerator_ClearEdits(lg)
+	lg.editsSeed = w.seed
 	lg.progress, lg.progressSent = 0, 0
 	lg.onProgress->notify(lg, f64(0), ctx)
 	// The maps it fills: endless and empty; what the last level placed goes.
 	levelgen_endless(w, tm, sc)
 	for &n in w.graph.nodes do for name in Gen_OutputMaps(&n) do if m := Gen_LayerTileMap(tm, name); m != nil do levelgen_endless(w, m, sc)
+	for h in w.maps do if m := Node_FromSlot(h[0], h[1]); m != nil do (cast(^TileMapNode)m).chunkEdits = levelgen_map_edits(lg, m.name)
 	Node_SetGlobalPositions(sc.manager, sc.rootNode) // (the camera's place now)
 	w.center = levelgen_chunk_center(lg, w, tm, sc)
 	sync_ := !lg.background
@@ -487,9 +499,15 @@ levelgen_chunks_stop :: proc(lg: ^LevelGeneratorNode, sc: ^Scene, ctx: ^GameCont
 	for _, &ch in w.chunks {
 		if removeNodes && sc != nil do for h in ch.nodes do if n := Node_FromSlot(h[0], h[1]); n != nil && !n.removing do RemoveNode(sc.manager, n)
 		delete(ch.nodes)
+		delete(ch.bodies)
 	}
 	delete(w.chunks)
-	if removeNodes do for h in w.maps do if m := Node_FromSlot(h[0], h[1]); m != nil do (cast(^TileMapNode)m).unbounded = false
+	for h in w.maps do if m := Node_FromSlot(h[0], h[1]); m != nil {
+		mt := cast(^TileMapNode)m
+		mt.chunkEdits = nil // (the generator's edits: no longer recorded)
+		clear(&mt.chunkDirty)
+		if removeNodes do mt.unbounded = false
+	}
 	delete(w.maps)
 	Gen_GraphDestroy(&w.graph)
 	free(w, Engine_HeapAllocator())
@@ -525,6 +543,7 @@ levelgen_chunks_update :: proc(lg: ^LevelGeneratorNode, ctx: ^GameContext) {
 		}
 		gen_chunk_job_free(j)
 	}
+	levelgen_rebuild_edited(w, sc, ctx) // (scripts' edits: their chunks' colliders)
 	gone := make([dynamic][2]int, context.temp_allocator)
 	for c in w.chunks do if levelgen_cheb(c, w.center) > r + 1 do append(&gone, c)
 	for c in gone do levelgen_chunk_out(lg, w, c, sc, ctx)
@@ -592,7 +611,7 @@ levelgen_chunk_in :: proc(lg: ^LevelGeneratorNode, w: ^Gen_Chunk_World, c: [2]in
 		levelgen_failed(lg, fmt.tprintf("chunk %d, %d: %s", c.x, c.y, err), ctx)
 		return
 	}
-	ch := Gen_Chunk{nodes = make([dynamic][2]u32, Engine_HeapAllocator())}
+	ch := Gen_Chunk{nodes = make([dynamic][2]u32, Engine_HeapAllocator()), bodies = make([dynamic][4]u32, Engine_HeapAllocator())}
 	keep :: proc(ch: ^Gen_Chunk, n: ^Node) {
 		if n == nil do return
 		slot, gen := Node_SlotOf(n)
@@ -603,7 +622,19 @@ levelgen_chunk_in :: proc(lg: ^LevelGeneratorNode, w: ^Gen_Chunk_World, c: [2]in
 	fill :: proc(w: ^Gen_Chunk_World, m: ^TileMapNode, c, origin, size: [2]int, tiles: []i32, ch: ^Gen_Chunk, ctx: ^GameContext) {
 		levelgen_fit(w, m, c)
 		TileMapNode_SetBlock(m, origin, size, tiles)
-		if m.solid && m.isReady && ctx != nil do keep(ch, TileMapNode_BuildCollidersIn(m, origin, origin + size, ctx))
+		// Scripts' edits here, back (before the colliders: they follow them).
+		if e := m.chunkEdits; e != nil do for cell, tile in e.tiles {
+			if cell.x >= origin.x && cell.y >= origin.y && cell.x < origin.x + size.x && cell.y < origin.y + size.y do TileMapNode_Set(m, cell.x, cell.y, tile)
+		}
+		if m.solid && m.isReady && ctx != nil {
+			body := TileMapNode_BuildCollidersIn(m, origin, origin + size, ctx)
+			keep(ch, body)
+			if body != nil {
+				ms, mg := Node_SlotOf(m)
+				bs, bg := Node_SlotOf(body)
+				append(&ch.bodies, [4]u32{ms, mg, bs, bg})
+			}
+		}
 	}
 	if r.tiles != nil do fill(w, tm, c, origin, size, r.tiles, &ch, ctx)
 	for ly in r.layers {
@@ -635,6 +666,17 @@ levelgen_chunk_in :: proc(lg: ^LevelGeneratorNode, w: ^Gen_Chunk_World, c: [2]in
 			}
 		}
 	}
+	// Scripts' component edits here, back: cleared ones go, placed ones come.
+	for h in w.maps do if mn := Node_FromSlot(h[0], h[1]); mn != nil {
+		m := cast(^TileMapNode)mn
+		e := m.chunkEdits
+		if e == nil do continue
+		for cell, path in e.components {
+			if cell.x < origin.x || cell.y < origin.y || cell.x >= origin.x + size.x || cell.y >= origin.y + size.y do continue
+			TileMapNode_RemoveComponentAt(m, cell)
+			if path != "" do keep(&ch, TileMapNode_PlaceComponent(m, cell, path))
+		}
+	}
 	for en in r.entities {
 		n := Scene_InstantiateComponent(sc, en.component, tm, ctx)
 		if n == nil do continue
@@ -657,6 +699,7 @@ levelgen_chunk_out :: proc(lg: ^LevelGeneratorNode, w: ^Gen_Chunk_World, c: [2]i
 	for h in w.maps do if m := Node_FromSlot(h[0], h[1]); m != nil do TileMapNode_SetBlock(cast(^TileMapNode)m, c * w.size, {w.size, w.size}, nil)
 	for h in ch.nodes do if n := Node_FromSlot(h[0], h[1]); n != nil && !n.removing do RemoveNode(sc.manager, n)
 	delete(ch.nodes)
+	delete(ch.bodies)
 	delete_key(&w.chunks, c)
 	w.navDirty = true
 	lg.loadedChunks = len(w.chunks)
@@ -882,4 +925,211 @@ Script_RegisterLevelGeneratorBindings :: proc(L: ^lua.State) {
 	reg(L, "levelgen_loaded_chunks", lua_loaded_chunks)
 	reg(L, "levelgen_is_chunk_loaded", lua_is_chunk_loaded)
 	reg(L, "levelgen_chunk_at", lua_chunk_at)
+	reg(L, "levelgen_get_edits", lua_levelgen_get_edits)
+	reg(L, "levelgen_set_edits", lua_levelgen_set_edits)
+	reg(L, "levelgen_clear_edits", lua_levelgen_clear_edits)
+}
+
+// generator:levelgen_get_edits() -> {[map name] = {tiles = {{x, y, tile}, ...},
+// components = {{x, y, path}, ...}}} (path "": cleared) - for a save.
+@(private = "file")
+lua_levelgen_get_edits :: proc "c" (L: ^lua.State) -> c.int {
+	context = Script_Context(L)
+	lg := lua_levelgen_arg(L)
+	lua.newtable(L)
+	if lg == nil do return 1
+	for name, e in lg.edits {
+		if len(e.tiles) == 0 && len(e.components) == 0 do continue
+		lua.newtable(L)
+		lua.newtable(L)
+		i: lua.Integer = 1
+		for cell, tile in e.tiles {
+			lua.createtable(L, 3, 0)
+			for v, k in ([3]int{cell.x, cell.y, int(tile)}) {
+				lua.pushinteger(L, lua.Integer(v))
+				lua.rawseti(L, -2, lua.Integer(k + 1))
+			}
+			lua.rawseti(L, -2, i)
+			i += 1
+		}
+		lua.setfield(L, -2, "tiles")
+		lua.newtable(L)
+		i = 1
+		for cell, path in e.components {
+			lua.createtable(L, 3, 0)
+			lua.pushinteger(L, lua.Integer(cell.x))
+			lua.rawseti(L, -2, 1)
+			lua.pushinteger(L, lua.Integer(cell.y))
+			lua.rawseti(L, -2, 2)
+			lua.pushstring(L, strings.clone_to_cstring(path, context.temp_allocator))
+			lua.rawseti(L, -2, 3)
+			lua.rawseti(L, -2, i)
+			i += 1
+		}
+		lua.setfield(L, -2, "components")
+		lua.setfield(L, -2, strings.clone_to_cstring(name, context.temp_allocator))
+	}
+	return 1
+}
+
+// generator:levelgen_set_edits(edits): what levelgen_get_edits gave (a save
+// loaded) - kept for the level being made or the next, put into the chunks in now.
+@(private = "file")
+lua_levelgen_set_edits :: proc "c" (L: ^lua.State) -> c.int {
+	context = Script_Context(L)
+	lg := lua_levelgen_arg(L)
+	if lg == nil || lua.type(L, 2) != .TABLE {
+		Script_Problem(.Warning, "levelgen_set_edits: expected the table levelgen_get_edits gives")
+		return 0
+	}
+	edits := make(map[string]Tile_Chunk_Edits, allocator = context.temp_allocator)
+	int_at :: proc(L: ^lua.State, i: lua.Integer) -> int {
+		lua.rawgeti(L, -1, i)
+		defer lua.pop(L, 1)
+		return int(lua.tointeger(L, -1))
+	}
+	lua.pushnil(L)
+	for lua.next(L, 2) != 0 {
+		// key at -2 (map name), value at -1 ({tiles, components})
+		if lua.type(L, -2) == .STRING && lua.type(L, -1) == .TABLE {
+			name := strings.clone(string(lua.tostring(L, -2)), context.temp_allocator)
+			e := Tile_Chunk_Edits{make(map[[2]int]i32, allocator = context.temp_allocator), make(map[[2]int]string, allocator = context.temp_allocator)}
+			lua.getfield(L, -1, "tiles")
+			if lua.type(L, -1) == .TABLE do for i: lua.Integer = 1; ; i += 1 {
+				lua.rawgeti(L, -1, i)
+				if lua.type(L, -1) != .TABLE {
+					lua.pop(L, 1)
+					break
+				}
+				e.tiles[{int_at(L, 1), int_at(L, 2)}] = i32(int_at(L, 3))
+				lua.pop(L, 1)
+			}
+			lua.pop(L, 1)
+			lua.getfield(L, -1, "components")
+			if lua.type(L, -1) == .TABLE do for i: lua.Integer = 1; ; i += 1 {
+				lua.rawgeti(L, -1, i)
+				if lua.type(L, -1) != .TABLE {
+					lua.pop(L, 1)
+					break
+				}
+				lua.rawgeti(L, -1, 3)
+				path := strings.clone(string(lua.tostring(L, -1)), context.temp_allocator) if lua.type(L, -1) == .STRING else ""
+				lua.pop(L, 1)
+				e.components[{int_at(L, 1), int_at(L, 2)}] = path
+				lua.pop(L, 1)
+			}
+			lua.pop(L, 1)
+			edits[name] = e
+		}
+		lua.pop(L, 1)
+	}
+	LevelGenerator_SetEdits(lg, edits, lg.gameContext)
+	return 0
+}
+
+// generator:levelgen_clear_edits(): forget the scripts' edits (the cells stay as they are).
+@(private = "file")
+lua_levelgen_clear_edits :: proc "c" (L: ^lua.State) -> c.int {
+	context = Script_Context(L)
+	if lg := lua_levelgen_arg(L); lg != nil do LevelGenerator_ClearEdits(lg)
+	return 0
+}
+
+// --- Scripts' edits (tile_runtime.odin) ------------------------------------------------
+
+// levelgen_map_edits: a map's edit memory (made on first use).
+@(private = "file")
+levelgen_map_edits :: proc(lg: ^LevelGeneratorNode, name: string) -> ^Tile_Chunk_Edits {
+	a := Engine_HeapAllocator()
+	if lg.edits == nil do lg.edits = make(map[string]^Tile_Chunk_Edits, allocator = a)
+	if e, ok := lg.edits[name]; ok do return e
+	e := new(Tile_Chunk_Edits, a)
+	lg.edits[strings.clone(name, a)] = e
+	return e
+}
+
+// LevelGenerator_ClearEdits forgets every edit (the maps keep their cells).
+LevelGenerator_ClearEdits :: proc(lg: ^LevelGeneratorNode) {
+	a := Engine_HeapAllocator()
+	for name, e in lg.edits {
+		for _, p in e.components do delete(p, a)
+		delete(e.components)
+		delete(e.tiles)
+		e^ = {}
+	}
+	// (The records stay: maps point at them.)
+}
+
+// levelgen_rebuild_edited: the chunks whose cells scripts changed get their
+// colliders built again.
+@(private = "file")
+levelgen_rebuild_edited :: proc(w: ^Gen_Chunk_World, sc: ^Scene, ctx: ^GameContext) {
+	for h in w.maps {
+		mn := Node_FromSlot(h[0], h[1])
+		if mn == nil do continue
+		m := cast(^TileMapNode)mn
+		if len(m.chunkDirty) == 0 do continue
+		done := make(map[[2]int]bool, allocator = context.temp_allocator)
+		for cell in m.chunkDirty {
+			c := [2]int{floor_div(cell.x, w.size), floor_div(cell.y, w.size)}
+			if c in done do continue
+			done[c] = true
+			ch, ok := &w.chunks[c]
+			if !ok || !m.solid do continue
+			for &b, bi in ch.bodies {
+				if b[0] != h[0] || b[1] != h[1] do continue
+				if old := Node_FromSlot(b[2], b[3]); old != nil && !old.removing do RemoveNode(sc.manager, old)
+				body := TileMapNode_BuildCollidersIn(m, c * w.size, (c + 1) * w.size, ctx)
+				if body == nil {
+					ordered_remove(&ch.bodies, bi)
+					break
+				}
+				bs, bg := Node_SlotOf(body)
+				for &n in ch.nodes do if n == {b[2], b[3]} do n = {bs, bg}
+				b[2], b[3] = bs, bg
+				break
+			}
+		}
+		clear(&m.chunkDirty)
+	}
+}
+
+// LevelGenerator_SetEdits replaces the edits (a save loaded): kept for the
+// level being made or the next, and put into the chunks in now.
+LevelGenerator_SetEdits :: proc(lg: ^LevelGeneratorNode, edits: map[string]Tile_Chunk_Edits, ctx: ^GameContext) {
+	LevelGenerator_ClearEdits(lg)
+	a := Engine_HeapAllocator()
+	for name, src in edits {
+		e := levelgen_map_edits(lg, name)
+		e.tiles = make(map[[2]int]i32, allocator = a)
+		e.components = make(map[[2]int]string, allocator = a)
+		for cell, t in src.tiles do e.tiles[cell] = t
+		for cell, p in src.components do e.components[cell] = strings.clone(p, a)
+	}
+	lg.editsSeed = 0 // (whichever level comes)
+	w := lg.world
+	if w == nil do return
+	for h in w.maps do if mn := Node_FromSlot(h[0], h[1]); mn != nil {
+		m := cast(^TileMapNode)mn
+		m.chunkEdits = levelgen_map_edits(lg, m.name)
+		e := m.chunkEdits
+		for cell, tile in e.tiles {
+			c := [2]int{floor_div(cell.x, w.size), floor_div(cell.y, w.size)}
+			if c not_in w.chunks do continue
+			if TileMapNode_Set(m, cell.x, cell.y, tile) do append(&m.chunkDirty, cell)
+		}
+		for cell, path in e.components {
+			c := [2]int{floor_div(cell.x, w.size), floor_div(cell.y, w.size)}
+			ch, ok := &w.chunks[c]
+			if !ok do continue
+			TileMapNode_RemoveComponentAt(m, cell)
+			if path != "" {
+				if n := TileMapNode_PlaceComponent(m, cell, path); n != nil {
+					s, g := Node_SlotOf(n)
+					append(&ch.nodes, [2]u32{s, g})
+				}
+			}
+		}
+	}
+	_ = ctx
 }

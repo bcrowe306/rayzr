@@ -1077,6 +1077,7 @@ Drive_Query :: proc(state: ^EditorState, q: string) -> (string, bool) {
 		data, err := os.read_entire_file(q[9:], context.temp_allocator)
 		return string(data) if err == nil else "", true
 	}
+	if v, ok := TileData_DriveQuery(state, q); ok do return v, true // tiledata:<tile>.<field>
 	if strings.has_prefix(q, "brightness:") {
 		// brightness:x,y - how lit a world point is (Lighting.brightness_at).
 		parts := strings.split(q[len("brightness:"):], ",", context.temp_allocator)

@@ -646,9 +646,17 @@ for _, c in ipairs(gen:levelgen_loaded_chunks()) do print(c.x, c.y) end
 
 The TileMap becomes endless (cells anywhere, negative too): its storage
 covers the chunks that are in and moves with them, and each chunk has its
-own collider body. Tiles a script sets on such a map don't get colliders.
-What a chunk placed goes when it does - remember picked-up coins yourself
-(`chunk_unloaded`) if they shouldn't come back.
+own collider body - rebuilt when a script changes its tiles.
+
+What scripts change in a chunk - tiles set (`tilemap_set_tile`,
+`tilemap_set_terrain`, `tilemap_damage`), components placed or cleared on
+the map (`tilemap_set_component` / `tilemap_clear_component`) - is
+remembered and put back when the chunk comes in again.
+`gen:levelgen_get_edits()` / `levelgen_set_edits(t)` keep them in a save;
+`levelgen_clear_edits()` forgets them. Entities the generator placed as
+nodes of their own (picked-up coins) aren't remembered: track those
+yourself (`chunk_unloaded`). See
+[Changing tiles in the game](runtime_tiles.md#endless-levels-remember).
 
 ## Lua
 

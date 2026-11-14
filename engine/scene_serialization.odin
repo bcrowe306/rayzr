@@ -1092,6 +1092,9 @@ read_node :: proc(scene: ^Scene, obj: json.Object, parent: ^Node, ctx: ^GameCont
 		// A light saved before soft shadows keeps its hard ones (new
 		// lights start soft: lighting.odin).
 		if node.typeId == LightNode && "softness" not_in propsObj do (cast(^LightNode)node).softness = 0
+		// A tile map saved before Retile on Edit keeps raw set_tile (new maps
+		// retile: tile_runtime.odin).
+		if node.typeId == TileMapNode && "retileOnEdit" not_in propsObj do (cast(^TileMapNode)node).retileOnEdit = false
 	}
 
 	// Type-specific resources.
