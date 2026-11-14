@@ -160,7 +160,11 @@ See the [pixel-perfect guide](../../engine/docs/pixel_perfect.md#per-node-settin
   made if the target has none). Each connection shows its target and
   method, with buttons to **open the handler** and **disconnect** (it
   removes the generated handler, asking first if you added code). A
-  `self:on_<event>()` line means the node's own script handles it.
+  `self:on_<event>()` line means the node's own script handles it: a
+  method named `on_<event>` in the node's script is called for that event
+  with no connection. Connections are saved with this node only - a
+  [custom node type](../../engine/docs/custom_nodes.md#handling-a-types-events)
+  doesn't carry them; its script's `on_<event>` methods do.
   **Add Signal** declares one of the node's own (see [Your own
   signals](#your-own-signals)): it is listed and connected like the
   built-in ones.
