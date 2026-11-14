@@ -343,6 +343,7 @@ inspector_body :: proc(state: ^EditorState) {
 	inspector_properties(state, node)
 	if !isRoot do Inspector_Tags(state, node)
 	if !isRoot do inspector_pixels(state, node) // (inspector_material.odin)
+	if !isRoot do inspector_lighting(state, node) // (inspector_material.odin)
 	if !isRoot do inspector_material(state, node)
 	if !isRoot do inspector_script(state, node)
 	if !isRoot do Inspector_Signals(state, node)
@@ -672,12 +673,13 @@ property_widget :: proc(state: ^EditorState, node: ^e.Node, p: e.Node_Property, 
 		names := e.Property_EnumNames(p)
 		// Collision layers show the project's names (Project Settings > General > Collision Layers).
 		isLayers := p.type.id == typeid_of(e.CollisionLayerSet)
+		isLightLayers := p.type.id == typeid_of(e.LightLayerSet) // (Project Settings > Light Layers)
 		count := 0
 		for _, i in names do if e.Property_BitSetHas(p, i) do count += 1
 		if imgui.BeginCombo(label, MIXED_TEXT if mixed else fmt.ctprintf("%d selected", count)) {
 			for n, i in names {
 				on := e.Property_BitSetHas(p, i)
-				shown := e.CollisionLayer_DisplayName(e.CollisionLayer(i)) if isLayers && i < 16 else n
+				shown := e.CollisionLayer_DisplayName(e.CollisionLayer(i)) if isLayers && i < 16 else e.LightLayer_DisplayName(e.Light_Layer(i)) if isLightLayers && i < 8 else n
 				if imgui.Checkbox(fmt.ctprintf("%s##%s", shown, n), &on) {
 					Editor_RecordUndo(state, undoLabel)
 					e.Property_BitSetSet(p, i, on)
@@ -687,6 +689,20 @@ property_widget :: proc(state: ^EditorState, node: ^e.Node, p: e.Node_Property, 
 			imgui.EndCombo()
 		}
 	case .String:
+		if p.name == "texture" && p.owner == "LightNode" {
+			// A light texture (cookie): a project image or a built-in one.
+			cur := (^string)(p.ptr)^
+			files := make([dynamic]string, context.temp_allocator)
+			for b in e.LIGHT_TEXTURE_BUILTINS do append(&files, b)
+			for f in Editor_ListProjectFiles(state, "", TEXTURE_EXTS) do append(&files, f)
+			imgui.SetNextItemWidth(field_width())
+			if chosen, picked := asset_picker(id, cur, files[:]); picked {
+				Editor_RecordUndo(state, undoLabel)
+				e.Property_SetString(node, p, chosen)
+			}
+			UI_Tooltip("A light texture shaping the light (its brightness, turning with the light): a project image, or a built-in one - ring (a flashlight), window, blinds, noise (leaves). Not for the sun")
+			return
+		}
 		if p.name == "bus" && (p.owner == "SoundNode" || p.owner == "MusicNode") {
 			// The mixer's buses (the Mixer tab); "" = the default (SFX / Music).
 			cur := (^string)(p.ptr)^
@@ -1073,7 +1089,8 @@ inspector_resources :: proc(state: ^EditorState, node: ^e.Node) {
 		}
 	}
 
-	if shapes := node_shapes_editor(node); shapes != nil && UI_SectionHeader("Collision Shapes") {
+	occluder := node.typeId == e.LightOccluderNode
+	if shapes := node_shapes_editor(node); shapes != nil && UI_SectionHeader("Shapes" if occluder else "Collision Shapes") {
 		editing := ShapeEdit_IsActive(state)
 		if UI_Button(fmt.tprintf("%s  %s", ICON_FA_DRAW_POLYGON, "Stop Editing in Viewport" if editing else "Edit in Viewport"), "insp.shapes-edit", {-1, 0}) do ShapeEdit_SetActive(state, !editing)
 		UI_Tooltip("Drag handles on the shapes in the viewport: move, rotate, resize, edit points")
@@ -1099,6 +1116,7 @@ inspector_resources :: proc(state: ^EditorState, node: ^e.Node) {
 					if p.name == "type" do continue
 					if !shape_prop_relevant(shape.type, p.name) do continue
 					if node.typeId == e.AreaNode && !area_shape_prop(p.name) do continue
+					if occluder && !occluder_shape_prop(p.name) do continue
 					UI_PropLabel(pretty_name(p.name))
 					// Drive ids (#364): "shape.<name>" (shape 1), "shape<n>.<name>"
 					// after it - apart from the node's own rows (a Character
@@ -1152,6 +1170,16 @@ shape_name_clashes :: proc(own: []e.Node_Property, name: string) -> bool {
 // shapes are always sensors (no contacts, no material); their sensor events
 // follow the Area's Monitoring. Its collision layers say what it detects.
 @(private = "file")
+// occluder_shape_prop: a Light Occluder's shapes only block light: their
+// outline, nothing physical.
+occluder_shape_prop :: proc(name: string) -> bool {
+	switch name {
+	case "offset", "rotation", "radius", "size", "cornerRadius", "point1", "point2", "vertexCount", "isLoop":
+		return true
+	}
+	return false
+}
+
 area_shape_prop :: proc(name: string) -> bool {
 	switch name {
 	case "isSensor", "enableSensorEvents", "enableContactEvents", "enableHitEvents", "enablePreSolveEvents",
@@ -1242,6 +1270,7 @@ node_shapes_editor :: proc(node: ^e.Node) -> ^[dynamic]e.PhysicsShape {
 	case e.KinematicBodyNode: return &(cast(^e.KinematicBodyNode)node).shapes
 	case e.CharacterMoverNode: return &(cast(^e.CharacterMoverNode)node).shapes
 	case e.AreaNode: return &(cast(^e.AreaNode)node).shapes
+	case e.LightOccluderNode: return &(cast(^e.LightOccluderNode)node).shapes
 	}
 	return nil
 }
@@ -1343,7 +1372,7 @@ Editor_NodeIcon :: proc(node: ^e.Node) -> string {
 	@(static) byType: map[typeid]string
 	if byType == nil {
 		for entry in NODE_CATALOG {
-			if info, ok := e.Node_TypeInfoByName(entry.typeName); ok do byType[info.type] = entry.icon
+			if info, ok := e.Node_TypeInfoByName(entry.typeName); ok && info.type not_in byType do byType[info.type] = entry.icon // (the first: a type's own, not a preset's)
 		}
 	}
 	if node.typeId != e.Node || node.scriptInstance == nil {
@@ -1504,6 +1533,12 @@ inspector_scene_settings :: proc(state: ^EditorState, scene: ^e.Scene) {
 	if v, changed := UI_Combo("insp.scene-ambient-preset", 0, presets); changed && v > 0 {
 		Editor_RecordUndo(state, "Scene ambient")
 		scene.ambient = values[v]
+	}
+	if env := e.Scene_Environment(scene); env != nil {
+		// An Environment node sets the ambient instead (lighting_nodes.odin).
+		UI_PropLabel("")
+		if UI_Button(fmt.tprintf("%s  Ambient from %s", ICON_FA_CLOUD_SUN, env.name), "insp.scene-environment", {-1, 0}) do Editor_SelectNode(state, env)
+		UI_Tooltip("The scene's Environment node sets the ambient (and bloom, overbright): this one is used only without it. Click to select it")
 	}
 	UI_PropLabel("Draw Bounds")
 	bounds := scene.drawBounds

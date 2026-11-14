@@ -44,6 +44,7 @@ ProjectConfig :: struct {
 	physicsFps:    int, // fixed physics steps per second (0: one per frame)
 	debugDraw:     bool, // the running game draws colliders, joints and areas (physics.debug_draw)
 	collisionLayers: [16]string, // collision layer names ("" = unnamed; physics_extras.odin)
+	lightLayers:   [8]string,  // light layer names ("" = unnamed; lighting.odin)
 	scenes:        [dynamic]string,
 	palette:       [dynamic][4]u8, // the project's swatches (the vector drawing tools; "palette": ["#rrggbbaa", ...])
 	icon:          string, // project-relative PNG: the game window's icon (and the exported app's)
@@ -136,6 +137,7 @@ ProjectConfig_Destroy :: proc(cfg: ^ProjectConfig, allocator := context.allocato
 	if cfg.mixerBuses != "" do delete(cfg.mixerBuses, allocator)
 	if cfg.accessibility != "" do delete(cfg.accessibility, allocator)
 	for n in cfg.collisionLayers do if n != "" do delete(n, allocator)
+	for n in cfg.lightLayers do if n != "" do delete(n, allocator)
 	for s in cfg.scenes {
 		delete(s, allocator)
 	}
@@ -177,6 +179,7 @@ ProjectConfig_Clone :: proc(src: ^ProjectConfig, allocator := context.allocator)
 	c.mixerBuses = strings.clone(src.mixerBuses, allocator) if src.mixerBuses != "" else ""
 	c.accessibility = strings.clone(src.accessibility, allocator) if src.accessibility != "" else ""
 	for n, i in src.collisionLayers do c.collisionLayers[i] = strings.clone(n, allocator) if n != "" else ""
+	for n, i in src.lightLayers do c.lightLayers[i] = strings.clone(n, allocator) if n != "" else ""
 	c.scenes = make([dynamic]string, allocator)
 	for s in src.scenes do append(&c.scenes, strings.clone(s, allocator))
 	c.actions = make([dynamic]Input_Action_Config, allocator)
@@ -484,6 +487,16 @@ Project_ParseConfig :: proc(jsonBytes: []u8, allocator := context.allocator) -> 
 		}
 	}
 
+	// Light layer names ("lighting": {"layers": [...]}).
+	if lightObj, ok := json_get_obj(rootObj, "lighting"); ok {
+		if arr, has := json_get_arr(lightObj, "layers"); has {
+			for v, i in arr {
+				if i >= 8 do break
+				if s, isStr := v.(json.String); isStr && s != "" do cfg.lightLayers[i] = strings.clone(s, allocator)
+			}
+		}
+	}
+
 	// Global scripts
 	cfg.globals = make([dynamic]Global_Script, allocator)
 	if arr, ok := json_get_arr(rootObj, "globals"); ok {
@@ -584,6 +597,18 @@ Project_SerializeToJSON :: proc(cfg: ^ProjectConfig, allocator := context.alloca
 	}
 	strings.write_byte(&sb, '\n')
 	strings.write_string(&sb, "  },\n")
+	{
+		lastLight := -1
+		for n, i in cfg.lightLayers do if n != "" do lastLight = i
+		if lastLight >= 0 {
+			strings.write_string(&sb, "  \"lighting\": {\"layers\": [")
+			for i in 0 ..= lastLight {
+				if i > 0 do strings.write_string(&sb, ", ")
+				jstr(&sb, cfg.lightLayers[i])
+			}
+			strings.write_string(&sb, "]},\n")
+		}
+	}
 	if len(cfg.actions) > 0 || !cfg.touchAsMouse || !cfg.gamepadFallback {
 		strings.write_string(&sb, "  \"input\": {")
 		if !cfg.touchAsMouse do strings.write_string(&sb, "\"touch_as_mouse\": false, ")
@@ -695,6 +720,7 @@ Game_LoadProjectConfig :: proc(game: ^Game, cfg: ^ProjectConfig, activate := tru
 	game.physicsWorld.physicsFps = cfg.physicsFps
 	game.physicsWorld.accumulator = 0
 	Physics_SetLayerNames(cfg.collisionLayers[:])
+	Lighting_SetLayerNames(cfg.lightLayers[:])
 	game.musicVolume = cfg.musicVolume
 	game.sfxVolume = cfg.sfxVolume
 	game.masterVolume = cfg.masterVolume

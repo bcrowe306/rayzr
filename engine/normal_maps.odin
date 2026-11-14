@@ -315,6 +315,11 @@ Lit_Draw :: proc(tex: rl.Texture2D, src, dst: rl.Rectangle, origin: [2]f32, rota
 		tl := Pixel_SnapTexture({dst.x, dst.y} - origin) + origin
 		dst.x, dst.y = tl.x, tl.y
 	}
+	if renderValuePass != .None {
+		// Lighting's passes: the emission map in the emission pass (lighting_passes.odin).
+		rl.DrawTexturePro(Value_Texture(lit_rm(), tex), src, dst, origin, rotation, tint)
+		return
+	}
 	if !renderNormalPass {
 		Pixel_UseTexture(tex)
 		rl.DrawTexturePro(tex, src, dst, origin, rotation, tint)
@@ -331,6 +336,10 @@ Lit_DrawNPatch :: proc(tex: rl.Texture2D, info: rl.NPatchInfo, dst: rl.Rectangle
 	if rotation == 0 && Pixel_Snaps() {
 		tl := Pixel_SnapTexture({dst.x, dst.y} - origin) + origin
 		dst.x, dst.y = tl.x, tl.y
+	}
+	if renderValuePass != .None {
+		rl.DrawTextureNPatch(Value_Texture(lit_rm(), tex), info, dst, origin, rotation, tint)
+		return
 	}
 	if !renderNormalPass {
 		Pixel_UseTexture(tex)

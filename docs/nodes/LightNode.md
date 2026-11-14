@@ -1,9 +1,12 @@
 ## What it's for
 
 A Light brightens the scene around it: a torch, a lamp, a glowing crystal, a
-flashlight cone. Lights only show when the scene is darker than its art:
-set the scene's **Ambient** to a dark colour, then add lights to bring
-places back. Lights can cast shadows from physics shapes.
+flashlight cone, the sun. Lights only show when the scene is darker than
+its art: set the ambient (an [Environment](EnvironmentNode.md) node, or the
+scene's Settings) to a dark colour, then add lights to bring places back.
+Lights cast soft or hard shadows from physics bodies and
+[Light Occluders](LightOccluderNode.md). The whole picture:
+[Lighting](../../engine/docs/lighting.md).
 
 ## When to use it
 
@@ -16,26 +19,37 @@ places back. Lights can cast shadows from physics shapes.
   everything from one direction.
 - **Art with depth**: give sprites and tilesets normal maps (see Normal maps
   below) and the light shades their bumps and edges as it moves.
-- **Not** for a glow that should look bright on a light scene: lights can't
-  make anything brighter than its art. Use an additive sprite or a
-  [Post Effect](PostEffectNode.md) instead.
+- **Glowing things in the dark** are emission, not lights: a node's
+  **Emission** (Inspector > Lighting) or an `<image>_e.png` map. For lights
+  brighter than the art, turn on an [Environment](EnvironmentNode.md)'s
+  **Overbright** (and **Bloom**).
 - **Not** for tinting the whole screen: set the ambient alone (no lights),
   or use a [Post Effect](PostEffectNode.md).
 
 ## Using it
 
-1. Darken the scene: in the Scene panel's **Settings** tab, set **Ambient**
-   (or pick a preset: *Dusk*, *Night*, *Dark*; *Day (unlit)* turns it off).
+1. Darken the scene: add an [Environment](EnvironmentNode.md) and set its
+   **Ambient**, or in the Scene panel's **Settings** tab set **Ambient** (or
+   pick a preset: *Dusk*, *Night*, *Dark*; *Day (unlit)* turns it off).
    White means unlit: the scene is drawn as it is.
-2. **Add Node** (Cmd+A / Ctrl+A) > *Light*. It's a warm point light with a
-   256-pixel radius.
+2. **Add Node** (Cmd+A / Ctrl+A) > *Light* - a warm point light with a
+   256-pixel radius - or a preset: *Torch* (flickers), *Lamp*,
+   *Flashlight* (a spot with a ring texture), *Sun*, *Neon* (pulses).
 3. In the Node tab's **Properties** section:
    - **Kind**: *Point* shines all round, *Spot* shines in a cone, and
      *Directional* is the sun, one direction over the whole view.
    - **Color**, **Energy** (brightness), **Radius** (pixels), and
      **Falloff** (how it fades to the edge).
    - **Spread**: a spot's half-angle, in degrees.
-   - **Shadows**.
+   - **Texture**: a light texture shaping the light - a project image or a
+     built-in one (ring, window, blinds, noise).
+   - **Layers**: the light layers it lights (Project Settings > Light
+     Layers names them; a node's **Lit By** decides which light it).
+   - **Shadows**, **Softness** (edge blur, 0 = hard), **Shadow Strength**
+     (how dark) and **Ignore Parent Bodies** (the bodies it sits in don't
+     block it).
+   - **Flicker** / **Pulse** and their speeds: a flame or a neon sign
+     without a script.
    - **Height**: how far above the ground it is, for normal maps.
    - A sun's **Elevation** (degrees above the ground) and **Shadow Length**.
 4. For a spot light or the sun, rotate the node to aim it: at rotation 0
@@ -58,18 +72,23 @@ places back. Lights can cast shadows from physics shapes.
   higher values keep the light tight around its centre.
 - The radius grows with the node's larger scale axis.
 - **Shadows**: shapes of Static, Dynamic and Kinematic bodies and Character
-  Movers block the light, except sensors (trigger areas). The colliders a
-  [Tile Map](TileMapNode.md) or an [LDtk level](LdtkLevelNode.md) builds are
-  static bodies, so they cast shadows too - once they exist, which is when
-  the game (or Simulate) runs. Each light's shadows only darken that
-  light's own contribution.
+  Movers with **Casts Shadows** on block the light, except sensors (trigger
+  areas), and so do [Light Occluders](LightOccluderNode.md) on its layers.
+  The colliders a [Tile Map](TileMapNode.md) or an
+  [LDtk level](LdtkLevelNode.md) builds cast shadows too (the editor shows
+  them before the game runs). Each light's shadows only darken that light's
+  own contribution. **Softness** blurs their edges; lights from before soft
+  shadows load hard.
 - A light whose circle is outside the view is skipped. Each visible light is
   one extra pass, so dozens of large shadowed lights cost more than a few.
 - A **Directional** light has no position or radius: it adds its colour
   over the whole view. Its shadows run parallel, away from the sun, for
   **Shadow Length** pixels (0: to the edge of the view).
-- Scripts set the ambient with `Scene.set_ambient(r, g, b)` (0 to 1) and read
-  it with `Scene.get_ambient()`.
+- Scripts set the ambient with `Scene.set_ambient(r, g, b)` (0 to 1; the
+  Environment's when there is one) and read it with `Scene.get_ambient()`.
+  Every setting has `light_get_<setting>` / `light_set_<setting>`; see also
+  `light_fade`, `light_apply_preset` and the [Lighting](../lua/Lighting.md)
+  module.
 
 ## Normal maps
 

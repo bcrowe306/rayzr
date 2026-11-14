@@ -606,10 +606,25 @@ tilemap_shape :: proc(tm: ^TileMapNode, shape: PhysicsShape) -> PhysicsShape {
 	return s
 }
 
-// tilemap_add_colliders: the painted cells' colliders in lo .. hi on a body
-// (square cells: horizontal runs merged into boxes).
+// tilemap_add_colliders: the painted cells' colliders in lo .. hi on a body.
 @(private = "file")
 tilemap_add_colliders :: proc(tm: ^TileMapNode, body: ^StaticBodyNode, lo, hi: [2]int, ctx: ^GameContext) {
+	shapes := make([dynamic]PhysicsShape, context.temp_allocator)
+	tilemap_collider_shapes(tm, lo, hi, &shapes)
+	for s in shapes do StaticBodyNode_AddShape(body, tilemap_shape(tm, s), ctx)
+}
+
+// TileMapNode_ColliderShapes: the shapes Solid builds for the whole map
+// (the editor's shadows before the colliders exist: lighting_nodes.odin).
+TileMapNode_ColliderShapes :: proc(tm: ^TileMapNode, out: ^[dynamic]PhysicsShape) {
+	lo, hi := TileMapNode_Extent(tm)
+	tilemap_collider_shapes(tm, lo, hi, out)
+}
+
+// tilemap_collider_shapes: the painted cells' collider shapes in lo .. hi
+// (square cells: horizontal runs merged into boxes).
+@(private = "file")
+tilemap_collider_shapes :: proc(tm: ^TileMapNode, lo, hi: [2]int, out: ^[dynamic]PhysicsShape) {
 	cs := TileMapNode_CellSize(tm)
 	tw, th := cs.x, cs.y
 	switch tm.layout {
@@ -628,7 +643,7 @@ tilemap_add_colliders :: proc(tm: ^TileMapNode, body: ^StaticBodyNode, lo, hi: [
 				for x < hi.x && TileMapNode_Get(tm, x, y) >= 0 do x += 1
 				a, _ := TileMapNode_CellOutline(tm, {start, y})
 				b, _ := TileMapNode_CellOutline(tm, {x - 1, y})
-				StaticBodyNode_AddShape(body, tilemap_shape(tm, MakePolygonPhysicsShape({a[0], b[1], b[2], a[3]})), ctx)
+				append(out, MakePolygonPhysicsShape({a[0], b[1], b[2], a[3]}))
 			}
 		}
 		return
@@ -637,7 +652,7 @@ tilemap_add_colliders :: proc(tm: ^TileMapNode, body: ^StaticBodyNode, lo, hi: [
 		for y in lo.y ..< hi.y do for x in lo.x ..< hi.x {
 			if TileMapNode_Get(tm, x, y) < 0 do continue
 			pts, n := TileMapNode_CellOutline(tm, {x, y})
-			StaticBodyNode_AddShape(body, tilemap_shape(tm, MakePolygonPhysicsShape(pts[:n])), ctx)
+			append(out, MakePolygonPhysicsShape(pts[:n]))
 		}
 		return
 	}
@@ -651,8 +666,7 @@ tilemap_add_colliders :: proc(tm: ^TileMapNode, body: ^StaticBodyNode, lo, hi: [
 			start := x
 			for x < hi.x && TileMapNode_Get(tm, x, y) >= 0 do x += 1
 			w := f32(x - start) * tw
-			shape := MakeBoxPhysicsShape(w, th, {f32(start) * tw + w * 0.5, f32(y) * th + th * 0.5}, 0)
-			StaticBodyNode_AddShape(body, tilemap_shape(tm, shape), ctx)
+			append(out, MakeBoxPhysicsShape(w, th, {f32(start) * tw + w * 0.5, f32(y) * th + th * 0.5}, 0))
 		}
 	}
 }

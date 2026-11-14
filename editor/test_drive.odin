@@ -1077,6 +1077,16 @@ Drive_Query :: proc(state: ^EditorState, q: string) -> (string, bool) {
 		data, err := os.read_entire_file(q[9:], context.temp_allocator)
 		return string(data) if err == nil else "", true
 	}
+	if strings.has_prefix(q, "brightness:") {
+		// brightness:x,y - how lit a world point is (Lighting.brightness_at).
+		parts := strings.split(q[len("brightness:"):], ",", context.temp_allocator)
+		if len(parts) == 2 {
+			x, _ := strconv.parse_f32(parts[0])
+			y, _ := strconv.parse_f32(parts[1])
+			_, b := e.Lighting_BrightnessAt(state.activeScene, {x, y})
+			return fmt.tprintf("%.3f", b), true
+		}
+	}
 	if strings.has_prefix(q, "node:") {
 		body := q[5:]
 		dot := strings.index_byte(body, '.')
@@ -1111,6 +1121,9 @@ Drive_Query :: proc(state: ^EditorState, q: string) -> (string, bool) {
 			if n.material == nil do return "", true
 			return fmt.tprintf("%s %s", n.material.shader, e.Material_BlendName(n.material.blend)), true
 		case "enabled": return "true" if n.enabled else "false", true
+		case "shapes": // collision / occluder shapes
+			sh := node_shapes_editor(n)
+			return fmt.tprint(len(sh) if sh != nil else 0), true
 		case "particles": return fmt.tprint(ParticleAlive(n)), true // live particles of an emitter
 		case "state":
 			// A StateMachineNode's current state ("" until it runs) and state count.
@@ -1196,7 +1209,12 @@ property_text :: proc(p: e.Node_Property) -> string {
 		names := e.Property_EnumNames(p)
 		i := e.Property_GetEnumIndex(p)
 		return names[i] if i < len(names) else ""
-	case .Bit_Set: return fmt.tprint(e.Property_GetInt(p))
+	case .Bit_Set:
+		// The mask as a number (any size of set).
+		v: u64 = 0
+		bytes := ([^]u8)(p.ptr)
+		for i in 0 ..< min(p.type.size, 8) do v |= u64(bytes[i]) << (8 * uint(i))
+		return fmt.tprint(v)
 	case .String: return (^string)(p.ptr)^
 	case .String_List: return strings.join(e.Property_GetList(p), "|", context.temp_allocator)
 	}

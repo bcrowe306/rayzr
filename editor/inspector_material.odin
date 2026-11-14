@@ -6,6 +6,7 @@ import "core:path/filepath"
 import "core:strings"
 import e "../engine"
 import imgui "lib/imgui"
+import rl "vendor:raylib"
 
 // ============================================================================
 // Inspector: Material (shader, blend mode, shader parameters) on any
@@ -237,4 +238,85 @@ inspector_pixels :: proc(state: ^EditorState, node: ^e.Node) {
 	}
 	UI_Tooltip("When the game's low resolution is scaled up to the window. Native: drawn crisp at the window's resolution, over the game (in its order among Native nodes). Pixel: drawn in the game's pixels, scaled with them (pixel fonts)")
 	multi_end(&mt)
+}
+
+// inspector_lighting: the Lighting section of a drawn node - the light
+// layers that light it (Lit By), Ignore Lighting, and its glow (Emission
+// colour x strength). engine/lighting.odin.
+inspector_lighting :: proc(state: ^EditorState, node: ^e.Node) {
+	if node.render == nil do return
+	switch node.typeId {
+	case e.LightNode, e.EnvironmentNode, e.LightOccluderNode, e.PostEffectNode: return
+	}
+	changed := node.litLayers != e.ALL_LIGHT_LAYERS || node.ignoreLighting || node.emissionStrength != 0
+	if !UI_SectionHeader("Lighting", changed) do return
+	if !UI_BeginProps("##lighting") do return
+	defer UI_EndProps()
+
+	lf := node_field(node, &node.litLayers, "litLayers", .Bit_Set, e.LightLayerSet)
+	prop_row_label(state, node, "Lit By", lf)
+	ml := multi_begin(state, node, lf)
+	imgui.SetNextItemWidth(field_width())
+	light_layers_combo(state, "insp.lit-layers", &node.litLayers, "Lit by layers", ml.mixed[0])
+	UI_Tooltip("The light layers whose lights light it (Project Settings > Light Layers names them). A light lights it when they share a layer")
+	multi_end(&ml)
+
+	uf := node_field(node, &node.ignoreLighting, "ignoreLighting", .Bool, bool)
+	prop_row_label(state, node, "Ignore Lighting", uf)
+	mu := multi_begin(state, node, uf)
+	mixed_push(mu.mixed[0])
+	ign := node.ignoreLighting
+	if imgui.Checkbox("##insp.ignore-lighting", &ign) {
+		Editor_RecordUndo(state, "Ignore lighting") // (before the change: undo goes back to it)
+		node.ignoreLighting = ign
+	}
+	mixed_pop(mu.mixed[0])
+	Drive_Item("insp.ignore-lighting")
+	UI_Tooltip("Drawn at full brightness, whatever the lights and the ambient: signs, pickups, things that light themselves")
+	multi_end(&mu)
+
+	ef := node_field(node, &node.emission, "emission", .Color, rl.Color)
+	prop_row_label(state, node, "Emission", ef)
+	me := multi_begin(state, node, ef)
+	col := [3]f32{f32(node.emission.r) / 255, f32(node.emission.g) / 255, f32(node.emission.b) / 255}
+	imgui.SetNextItemWidth(field_width())
+	if imgui.ColorEdit3("##insp.emission", &col, {}) {
+		node.emission = {u8(col[0] * 255 + 0.5), u8(col[1] * 255 + 0.5), u8(col[2] * 255 + 0.5), 255}
+		if node.emissionStrength == 0 do node.emissionStrength = 1
+	}
+	undo_on_activate(state, "Emission colour")
+	Drive_Item("insp.emission")
+	UI_Tooltip("The colour it glows in the dark: added after the lighting (Bloom catches it). An <image>_e.png emission map makes parts of its image glow on their own")
+	multi_end(&me)
+
+	sf := node_field(node, &node.emissionStrength, "emissionStrength", .Float, f32)
+	sf.min, sf.max, sf.has_range = 0, 8, true
+	prop_row_label(state, node, "Emission Strength", sf)
+	ms := multi_begin(state, node, sf)
+	imgui.SetNextItemWidth(field_width())
+	imgui.DragFloat("##insp.emission-strength", &node.emissionStrength, 0.02, 0, 8, MIXED_TEXT if ms.mixed[0] else "%.2f")
+	undo_on_activate(state, "Emission strength")
+	Drive_Item("insp.emission-strength")
+	UI_Tooltip("How strongly it glows: 0 not at all")
+	multi_end(&ms)
+}
+
+// light_layers_combo: a light layer set with the project's names (a check
+// box each).
+light_layers_combo :: proc(state: ^EditorState, id: string, set: ^e.LightLayerSet, undoLabel: string, mixed := false) {
+	count := card(set^)
+	preview := MIXED_TEXT if mixed else "All" if set^ == e.ALL_LIGHT_LAYERS else "None" if count == 0 else fmt.ctprintf("%d layers", count)
+	if imgui.BeginCombo(fmt.ctprintf("##%s", id), preview) {
+		for l in e.Light_Layer {
+			on := l in set^
+			if imgui.Checkbox(fmt.ctprintf("%s##%s%d", e.LightLayer_DisplayName(l), id, int(l)), &on) {
+				Editor_RecordUndo(state, undoLabel)
+				if on do set^ += {l}
+				else do set^ -= {l}
+			}
+			Drive_Item(fmt.tprintf("%s:%d", id, int(l) + 1))
+		}
+		imgui.EndCombo()
+	}
+	Drive_Item(id)
 }

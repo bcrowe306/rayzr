@@ -567,6 +567,10 @@ Node_ContextMenu :: proc(state: ^EditorState, node: ^e.Node) {
 			imgui.EndMenu()
 		}
 	}
+	if Editor_CanMakeOccluder(node) {
+		if hier_menu(ICON_FA_CIRCLE_HALF_STROKE, "Make Light Occluder from Sprite", "make-occluder") do Editor_MakeOccluderFromSprite(state, node)
+		UI_Tooltip(occluder_menu_tip())
+	}
 	if hier_menu(ICON_FA_BOOK, "Documentation", "node-docs", shortcut = "Shift+F1") do NodeReference_Open(e.Node_TypeName(node))
 	// Components.
 	imgui.Separator()

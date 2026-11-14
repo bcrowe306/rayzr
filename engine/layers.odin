@@ -49,3 +49,21 @@ CollisionLayerSet_ToBits :: proc(set: CollisionLayerSet) -> u64 {
 CollisionLayerSet_FromBits :: proc(bits: u64) -> CollisionLayerSet {
 	return transmute(CollisionLayerSet)bits
 }
+
+// Light layers (lighting.odin): a light lights, and an occluder blocks, the
+// nodes that share one of its layers. Named in Project Settings (Light
+// Layers); every node, light and occluder starts on all eight.
+Light_Layer :: enum u8 {
+	Layer1,
+	Layer2,
+	Layer3,
+	Layer4,
+	Layer5,
+	Layer6,
+	Layer7,
+	Layer8,
+}
+
+LightLayerSet :: bit_set[Light_Layer; u8]
+
+ALL_LIGHT_LAYERS :: LightLayerSet{.Layer1, .Layer2, .Layer3, .Layer4, .Layer5, .Layer6, .Layer7, .Layer8}

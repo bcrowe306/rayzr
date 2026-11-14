@@ -61,7 +61,9 @@ NODE_TYPES := [?]Node_Type_Info{
 	{"PathFollowNode", PathFollowNode, factory_path_follow, {"path follow", "follower", "moving platform"}},
 	{"LdtkLevelNode", LdtkLevelNode, factory_ldtk, {"ldtk", "ldtklevel"}},
 	{"TileMapNode", TileMapNode, factory_tilemap, {"tilemap"}},
-	{"LightNode", LightNode, factory_light, {"light", "pointlight", "spotlight"}},
+	{"LightNode", LightNode, factory_light, {"light", "pointlight", "spotlight", "torch", "lamp", "flashlight", "sun", "neon"}},
+	{"LightOccluderNode", LightOccluderNode, factory_light_occluder, {"light occluder", "occluder", "shadow caster", "light blocker"}},
+	{"EnvironmentNode", EnvironmentNode, factory_environment, {"environment", "world environment", "ambient", "bloom", "day night"}},
 	{"JointNode", JointNode, factory_joint, {"joint", "physicsjoint"}},
 	{"TextNode", TextNode, factory_text, {"text", "label2d", "textlabel"}},
 	{"DialogueNode", DialogueNode, factory_dialogue, {"dialogue", "dialoguebox"}},
@@ -206,6 +208,16 @@ factory_joint :: proc(scene: ^Scene, parent: ^Node) -> ^Node {
 @(private = "file")
 factory_light :: proc(scene: ^Scene, parent: ^Node) -> ^Node {
 	return LightNode_Create(scene, "Light", parent)
+}
+
+@(private = "file")
+factory_light_occluder :: proc(scene: ^Scene, parent: ^Node) -> ^Node {
+	return LightOccluderNode_Create(scene, "LightOccluder", parent)
+}
+
+@(private = "file")
+factory_environment :: proc(scene: ^Scene, parent: ^Node) -> ^Node {
+	return EnvironmentNode_Create(scene, "Environment", parent)
 }
 
 factory_timer :: proc(scene: ^Scene, parent: ^Node) -> ^Node {

@@ -251,6 +251,7 @@
               "categoryLayers": ["Layer2"],
               "maskLayers": ["Layer1"],
               "debugColor": "#facc15ff",
+              "castsShadows": true,
               "controlMode": "Script"
             },
             "script": {

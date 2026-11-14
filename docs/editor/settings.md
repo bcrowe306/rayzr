@@ -160,6 +160,11 @@ See [scene flow](../../engine/docs/scene_flow.md).
 layer lists show them, and scripts use them:
 `body:set_collision_layer("Player")`.
 
+**Light Layers** (closed at first): names for the 8 light layers. Lights'
+**Layers**, nodes' **Lit By** and Light Occluders' **Layers** show them,
+and scripts use them: `light:light_set_layers({"World"})`. See the
+[Lighting guide](../../engine/docs/lighting.md#light-layers).
+
 **Scenes**: the scenes included in the game and in exported packages, with
 *(startup)* by the startup scene. The **x** removes a scene from the list
 (not from disk); **Add <scene>** adds the scene you are editing when it

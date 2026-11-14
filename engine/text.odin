@@ -395,13 +395,17 @@ Text_DrawGlyphs :: proc(f: ^Text_Font, glyphs: []Text_Glyph, origin: [2]f32, rot
 	// Sharp: from the font's distance field, glyph by glyph as each is ready;
 	// the others from the bitmap below.
 	drawn: []bool
-	if !f.sdf && Text_DrawsSharp(rendering, scale, rotation) {
+	// (Lighting's info / emission passes: the glyphs' coverage under the
+	// pass's own shader - lighting_passes.odin.)
+	valuePass := renderValuePass != .None
+	if !f.sdf && !valuePass && Text_DrawsSharp(rendering, scale, rotation) {
 		if mf := text_msdf_of(f, ctx); mf != nil {
 			drawn = text_draw_msdf(mf, glyphs[:n], origin, rotation, scale, time, tint)
 		}
 	}
-	if f.sdf && sdfShader.ok do rl.BeginShaderMode(sdfShader.shader)
-	defer if f.sdf && sdfShader.ok do rl.EndShaderMode()
+	useSdf := f.sdf && sdfShader.ok && !valuePass
+	if useSdf do rl.BeginShaderMode(sdfShader.shader)
+	defer if useSdf do rl.EndShaderMode()
 	// Bitmap glyphs on whole pixels with pixel snap (a fractional advance
 	// sampled the font between its texels: soft text, #409).
 	snapGlyphs := rotation == 0 && Pixel_Snaps()

@@ -24,6 +24,7 @@
     "fixedRotation": false,
     "isBullet": false,
     "allowFastRotation": false,
-    "debugColor": "#60a5faff"
+    "debugColor": "#60a5faff",
+    "castsShadows": true
   }
 }

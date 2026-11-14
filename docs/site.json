@@ -94,6 +94,7 @@
         { "file": "engine/docs/navigation.md", "slug": "guides/navigation" },
         { "file": "engine/docs/state_machine.md", "slug": "guides/state-machine" },
         { "file": "engine/docs/visibility.md", "slug": "guides/visibility" },
+        { "file": "engine/docs/lighting.md", "slug": "guides/lighting" },
         { "file": "engine/docs/components.md", "slug": "guides/components" },
         { "file": "engine/docs/custom_nodes.md", "slug": "guides/custom-nodes" },
         { "file": "engine/docs/resources.md", "slug": "guides/resources" },

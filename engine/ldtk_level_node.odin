@@ -515,7 +515,6 @@ Ldtk_Rect :: struct {
 
 // ldtk_merge_cells merges cells with equal keys (>= 0) into rectangles:
 // horizontal runs, then runs stacked on equal runs below.
-@(private = "file")
 ldtk_merge_cells :: proc(keys: []int, w, h: int) -> [dynamic]Ldtk_Rect {
 	out := make([dynamic]Ldtk_Rect, context.temp_allocator)
 	open := make([dynamic]int, context.temp_allocator) // indices in out, ending at the previous row

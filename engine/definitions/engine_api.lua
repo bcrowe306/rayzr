@@ -174,6 +174,14 @@ local TileMapNode = {}
 ---@class LightNode : Node
 local LightNode = {}
 
+---A shape that blocks light without being a physics body.
+---@class LightOccluderNode : Node
+local LightOccluderNode = {}
+
+---The scene's look: ambient light, overbright lights, bloom.
+---@class EnvironmentNode : Node
+local EnvironmentNode = {}
+
 ---@class JointNode : Node
 local JointNode = {}
 
@@ -1162,6 +1170,11 @@ function UITabContainerNode:connect(event, handler) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 
 ---@alias NodeProperty
 ---| "position" # Vec2 - Position relative to the parent, in pixels (+y is down).
@@ -1178,6 +1191,9 @@ function UITabContainerNode:connect(event, handler) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 
 ---Reads an Inspector property by its path (vectors and colours as tables); "script.<name>" reads a field of the node's script.
 ---
@@ -1198,6 +1214,9 @@ function UITabContainerNode:connect(event, handler) end
 ---@overload fun(self: Node, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: Node, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: Node, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: Node, path: "ignore_lighting"): boolean
+---@overload fun(self: Node, path: "emission"): number[]
+---@overload fun(self: Node, path: "emission_strength"): number
 function Node:get_property(path) end
 
 ---Sets an Inspector property by its path: vectors as {x, y} or x, y; colours as {r, g, b[, a]} 0..1 or "#rrggbb[aa]"; enums by name; "script.<name>" a field of the node's script.
@@ -1220,6 +1239,9 @@ function Node:get_property(path) end
 ---@overload fun(self: Node, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: Node, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: Node, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: Node, path: "ignore_lighting", value: boolean)
+---@overload fun(self: Node, path: "emission", value: number[])
+---@overload fun(self: Node, path: "emission_strength", value: number)
 function Node:set_property(path, value, y) end
 
 ---@class CameraNode
@@ -1244,6 +1266,11 @@ function Node:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field is_current boolean The camera the game renders through (one per scene).
 ---@field isCurrent boolean Same as is_current (the Inspector's name)
 ---@field follow_mode "Static"|"SingleTarget"|"MultiTarget"|"Manual" Static: stays put. Single Target: follows its Follow Target. Multi Target: frames all t...
@@ -1354,6 +1381,9 @@ function Node:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "is_current" # boolean - The camera the game renders through (one per scene).
 ---| "follow_mode" # "Static"|"SingleTarget"|"MultiTarget"|"Manual" - Static: stays put. Single Target: follows its Follow Target. Multi Target: frames all t...
 ---| "drag_type" # "None"|"SmoothDamp"|"SpringDamp"|"LookAhead"|"AutoSpeed" - How the camera catches up with its target: none (locked), smooth damp, spring, look-ahe...
@@ -1422,6 +1452,9 @@ function Node:set_property(path, value, y) end
 ---@overload fun(self: CameraNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: CameraNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: CameraNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: CameraNode, path: "ignore_lighting"): boolean
+---@overload fun(self: CameraNode, path: "emission"): number[]
+---@overload fun(self: CameraNode, path: "emission_strength"): number
 ---@overload fun(self: CameraNode, path: "is_current"): boolean
 ---@overload fun(self: CameraNode, path: "follow_mode"): "Static"|"SingleTarget"|"MultiTarget"|"Manual"
 ---@overload fun(self: CameraNode, path: "drag_type"): "None"|"SmoothDamp"|"SpringDamp"|"LookAhead"|"AutoSpeed"
@@ -1492,6 +1525,9 @@ function CameraNode:get_property(path) end
 ---@overload fun(self: CameraNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: CameraNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: CameraNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: CameraNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: CameraNode, path: "emission", value: number[])
+---@overload fun(self: CameraNode, path: "emission_strength", value: number)
 ---@overload fun(self: CameraNode, path: "is_current", value: boolean)
 ---@overload fun(self: CameraNode, path: "follow_mode", value: "Static"|"SingleTarget"|"MultiTarget"|"Manual")
 ---@overload fun(self: CameraNode, path: "drag_type", value: "None"|"SmoothDamp"|"SpringDamp"|"LookAhead"|"AutoSpeed")
@@ -1564,6 +1600,11 @@ function CameraNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field mode "Single"|"All"|"Random"|"Sequential"|"Shuffle" What one spawn makes: Single (the first entry), All (every entry), Random (one by weigh...
 ---@field sequence_end "Loop"|"Ping_Pong"|"Stop" Sequential, after the last entry: Loop (the first again), Ping Pong (back down the list...
 ---@field sequenceEnd "Loop"|"Ping_Pong"|"Stop" Same as sequence_end (the Inspector's name)
@@ -1613,6 +1654,9 @@ function CameraNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "mode" # "Single"|"All"|"Random"|"Sequential"|"Shuffle" - What one spawn makes: Single (the first entry), All (every entry), Random (one by weigh...
 ---| "sequence_end" # "Loop"|"Ping_Pong"|"Stop" - Sequential, after the last entry: Loop (the first again), Ping Pong (back down the list...
 ---| "count" # integer - How many picks one spawn makes (a burst): with Random, Sequential and Shuffle each pick...
@@ -1654,6 +1698,9 @@ function CameraNode:set_property(path, value, y) end
 ---@overload fun(self: SpawnerNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: SpawnerNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: SpawnerNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: SpawnerNode, path: "ignore_lighting"): boolean
+---@overload fun(self: SpawnerNode, path: "emission"): number[]
+---@overload fun(self: SpawnerNode, path: "emission_strength"): number
 ---@overload fun(self: SpawnerNode, path: "mode"): "Single"|"All"|"Random"|"Sequential"|"Shuffle"
 ---@overload fun(self: SpawnerNode, path: "sequence_end"): "Loop"|"Ping_Pong"|"Stop"
 ---@overload fun(self: SpawnerNode, path: "count"): integer
@@ -1697,6 +1744,9 @@ function SpawnerNode:get_property(path) end
 ---@overload fun(self: SpawnerNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: SpawnerNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: SpawnerNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: SpawnerNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: SpawnerNode, path: "emission", value: number[])
+---@overload fun(self: SpawnerNode, path: "emission_strength", value: number)
 ---@overload fun(self: SpawnerNode, path: "mode", value: "Single"|"All"|"Random"|"Sequential"|"Shuffle")
 ---@overload fun(self: SpawnerNode, path: "sequence_end", value: "Loop"|"Ping_Pong"|"Stop")
 ---@overload fun(self: SpawnerNode, path: "count", value: integer)
@@ -1742,6 +1792,11 @@ function SpawnerNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field generator string The generator it makes levels from (a .levelgen.json).
 ---@field tilemap string The TileMap it fills, as a path from this node; empty: its first TileMap child, else it...
 ---@field seed integer The level's seed: the same seed, the same level (0: the generator's own).
@@ -1781,6 +1836,9 @@ function SpawnerNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "generator" # string - The generator it makes levels from (a .levelgen.json).
 ---| "tilemap" # string - The TileMap it fills, as a path from this node; empty: its first TileMap child, else it...
 ---| "seed" # integer - The level's seed: the same seed, the same level (0: the generator's own).
@@ -1816,6 +1874,9 @@ function SpawnerNode:set_property(path, value, y) end
 ---@overload fun(self: LevelGeneratorNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: LevelGeneratorNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: LevelGeneratorNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: LevelGeneratorNode, path: "ignore_lighting"): boolean
+---@overload fun(self: LevelGeneratorNode, path: "emission"): number[]
+---@overload fun(self: LevelGeneratorNode, path: "emission_strength"): number
 ---@overload fun(self: LevelGeneratorNode, path: "generator"): string
 ---@overload fun(self: LevelGeneratorNode, path: "tilemap"): string
 ---@overload fun(self: LevelGeneratorNode, path: "seed"): integer
@@ -1853,6 +1914,9 @@ function LevelGeneratorNode:get_property(path) end
 ---@overload fun(self: LevelGeneratorNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: LevelGeneratorNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: LevelGeneratorNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: LevelGeneratorNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: LevelGeneratorNode, path: "emission", value: number[])
+---@overload fun(self: LevelGeneratorNode, path: "emission_strength", value: number)
 ---@overload fun(self: LevelGeneratorNode, path: "generator", value: string)
 ---@overload fun(self: LevelGeneratorNode, path: "tilemap", value: string)
 ---@overload fun(self: LevelGeneratorNode, path: "seed", value: integer)
@@ -1893,6 +1957,11 @@ function LevelGeneratorNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field shininess number Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---@field tint number[] Multiplies the texture's colours (white = unchanged; alpha fades it).
 
@@ -1912,6 +1981,9 @@ function LevelGeneratorNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "shininess" # number - Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---| "tint" # number[] - Multiplies the texture's colours (white = unchanged; alpha fades it).
 
@@ -1935,6 +2007,9 @@ function LevelGeneratorNode:set_property(path, value, y) end
 ---@overload fun(self: TextureNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: TextureNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: TextureNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: TextureNode, path: "ignore_lighting"): boolean
+---@overload fun(self: TextureNode, path: "emission"): number[]
+---@overload fun(self: TextureNode, path: "emission_strength"): number
 ---@overload fun(self: TextureNode, path: "shininess"): number
 ---@overload fun(self: TextureNode, path: "tint"): number[]
 function TextureNode:get_property(path) end
@@ -1960,6 +2035,9 @@ function TextureNode:get_property(path) end
 ---@overload fun(self: TextureNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: TextureNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: TextureNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: TextureNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: TextureNode, path: "emission", value: number[])
+---@overload fun(self: TextureNode, path: "emission_strength", value: number)
 ---@overload fun(self: TextureNode, path: "shininess", value: number)
 ---@overload fun(self: TextureNode, path: "tint", value: number[])
 function TextureNode:set_property(path, value, y) end
@@ -1987,6 +2065,11 @@ function TextureNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field shininess number Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---@field tint number[] Multiplies the texture's colours (white = unchanged; alpha fades it).
 
@@ -2006,6 +2089,9 @@ function TextureNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "shininess" # number - Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---| "tint" # number[] - Multiplies the texture's colours (white = unchanged; alpha fades it).
 
@@ -2029,6 +2115,9 @@ function TextureNode:set_property(path, value, y) end
 ---@overload fun(self: AtlasSpriteNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: AtlasSpriteNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: AtlasSpriteNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: AtlasSpriteNode, path: "ignore_lighting"): boolean
+---@overload fun(self: AtlasSpriteNode, path: "emission"): number[]
+---@overload fun(self: AtlasSpriteNode, path: "emission_strength"): number
 ---@overload fun(self: AtlasSpriteNode, path: "shininess"): number
 ---@overload fun(self: AtlasSpriteNode, path: "tint"): number[]
 function AtlasSpriteNode:get_property(path) end
@@ -2054,6 +2143,9 @@ function AtlasSpriteNode:get_property(path) end
 ---@overload fun(self: AtlasSpriteNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: AtlasSpriteNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: AtlasSpriteNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: AtlasSpriteNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: AtlasSpriteNode, path: "emission", value: number[])
+---@overload fun(self: AtlasSpriteNode, path: "emission_strength", value: number)
 ---@overload fun(self: AtlasSpriteNode, path: "shininess", value: number)
 ---@overload fun(self: AtlasSpriteNode, path: "tint", value: number[])
 function AtlasSpriteNode:set_property(path, value, y) end
@@ -2081,6 +2173,11 @@ function AtlasSpriteNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field shininess number Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 
 ---@alias FrameAnimationNodeProperty
@@ -2099,6 +2196,9 @@ function AtlasSpriteNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "shininess" # number - Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 
 ---Reads an Inspector property by its path (vectors and colours as tables); "script.<name>" reads a field of the node's script.
@@ -2121,6 +2221,9 @@ function AtlasSpriteNode:set_property(path, value, y) end
 ---@overload fun(self: FrameAnimationNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: FrameAnimationNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: FrameAnimationNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: FrameAnimationNode, path: "ignore_lighting"): boolean
+---@overload fun(self: FrameAnimationNode, path: "emission"): number[]
+---@overload fun(self: FrameAnimationNode, path: "emission_strength"): number
 ---@overload fun(self: FrameAnimationNode, path: "shininess"): number
 function FrameAnimationNode:get_property(path) end
 
@@ -2145,6 +2248,9 @@ function FrameAnimationNode:get_property(path) end
 ---@overload fun(self: FrameAnimationNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: FrameAnimationNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: FrameAnimationNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: FrameAnimationNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: FrameAnimationNode, path: "emission", value: number[])
+---@overload fun(self: FrameAnimationNode, path: "emission_strength", value: number)
 ---@overload fun(self: FrameAnimationNode, path: "shininess", value: number)
 function FrameAnimationNode:set_property(path, value, y) end
 
@@ -2171,6 +2277,11 @@ function FrameAnimationNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field shininess number Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---@field reverse boolean Play the animation backwards.
 ---@field autoplay boolean Start playing the current animation when the node becomes ready.
@@ -2194,6 +2305,9 @@ function FrameAnimationNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "shininess" # number - Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---| "reverse" # boolean - Play the animation backwards.
 ---| "autoplay" # boolean - Start playing the current animation when the node becomes ready.
@@ -2220,6 +2334,9 @@ function FrameAnimationNode:set_property(path, value, y) end
 ---@overload fun(self: AnimationPlayerNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: AnimationPlayerNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: AnimationPlayerNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: AnimationPlayerNode, path: "ignore_lighting"): boolean
+---@overload fun(self: AnimationPlayerNode, path: "emission"): number[]
+---@overload fun(self: AnimationPlayerNode, path: "emission_strength"): number
 ---@overload fun(self: AnimationPlayerNode, path: "shininess"): number
 ---@overload fun(self: AnimationPlayerNode, path: "reverse"): boolean
 ---@overload fun(self: AnimationPlayerNode, path: "autoplay"): boolean
@@ -2248,6 +2365,9 @@ function AnimationPlayerNode:get_property(path) end
 ---@overload fun(self: AnimationPlayerNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: AnimationPlayerNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: AnimationPlayerNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: AnimationPlayerNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: AnimationPlayerNode, path: "emission", value: number[])
+---@overload fun(self: AnimationPlayerNode, path: "emission_strength", value: number)
 ---@overload fun(self: AnimationPlayerNode, path: "shininess", value: number)
 ---@overload fun(self: AnimationPlayerNode, path: "reverse", value: boolean)
 ---@overload fun(self: AnimationPlayerNode, path: "autoplay", value: boolean)
@@ -2278,6 +2398,11 @@ function AnimationPlayerNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field shininess number Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---@field file string The Aseprite file (.aseprite / .ase, project-relative). Saving it in Aseprite updates t...
 ---@field animation string The tag played (its direction and repeat count as set in Aseprite); empty = every frame...
@@ -2309,6 +2434,9 @@ function AnimationPlayerNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "shininess" # number - Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---| "file" # string - The Aseprite file (.aseprite / .ase, project-relative). Saving it in Aseprite updates t...
 ---| "animation" # string - The tag played (its direction and repeat count as set in Aseprite); empty = every frame...
@@ -2341,6 +2469,9 @@ function AnimationPlayerNode:set_property(path, value, y) end
 ---@overload fun(self: AsepriteNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: AsepriteNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: AsepriteNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: AsepriteNode, path: "ignore_lighting"): boolean
+---@overload fun(self: AsepriteNode, path: "emission"): number[]
+---@overload fun(self: AsepriteNode, path: "emission_strength"): number
 ---@overload fun(self: AsepriteNode, path: "shininess"): number
 ---@overload fun(self: AsepriteNode, path: "file"): string
 ---@overload fun(self: AsepriteNode, path: "animation"): string
@@ -2375,6 +2506,9 @@ function AsepriteNode:get_property(path) end
 ---@overload fun(self: AsepriteNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: AsepriteNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: AsepriteNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: AsepriteNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: AsepriteNode, path: "emission", value: number[])
+---@overload fun(self: AsepriteNode, path: "emission_strength", value: number)
 ---@overload fun(self: AsepriteNode, path: "shininess", value: number)
 ---@overload fun(self: AsepriteNode, path: "file", value: string)
 ---@overload fun(self: AsepriteNode, path: "animation", value: string)
@@ -2410,6 +2544,11 @@ function AsepriteNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field active boolean Ticks the tree. Turning it off interrupts the running branch (tree_disabled); on again ...
 ---@field process_mode "Every_Frame"|"Manual" Every Frame: ticks in its update (every Tick Rate frames). Manual: only when a script c...
 ---@field processMode "Every_Frame"|"Manual" Same as process_mode (the Inspector's name)
@@ -2434,6 +2573,9 @@ function AsepriteNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "active" # boolean - Ticks the tree. Turning it off interrupts the running branch (tree_disabled); on again ...
 ---| "process_mode" # "Every_Frame"|"Manual" - Every Frame: ticks in its update (every Tick Rate frames). Manual: only when a script c...
 ---| "tick_rate" # integer - Ticks every this many frames (1: every frame). Higher is cheaper for many actors; timer...
@@ -2459,6 +2601,9 @@ function AsepriteNode:set_property(path, value, y) end
 ---@overload fun(self: BehaviorTreeNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: BehaviorTreeNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: BehaviorTreeNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: BehaviorTreeNode, path: "ignore_lighting"): boolean
+---@overload fun(self: BehaviorTreeNode, path: "emission"): number[]
+---@overload fun(self: BehaviorTreeNode, path: "emission_strength"): number
 ---@overload fun(self: BehaviorTreeNode, path: "active"): boolean
 ---@overload fun(self: BehaviorTreeNode, path: "process_mode"): "Every_Frame"|"Manual"
 ---@overload fun(self: BehaviorTreeNode, path: "tick_rate"): integer
@@ -2486,6 +2631,9 @@ function BehaviorTreeNode:get_property(path) end
 ---@overload fun(self: BehaviorTreeNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: BehaviorTreeNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: BehaviorTreeNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: BehaviorTreeNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: BehaviorTreeNode, path: "emission", value: number[])
+---@overload fun(self: BehaviorTreeNode, path: "emission_strength", value: number)
 ---@overload fun(self: BehaviorTreeNode, path: "active", value: boolean)
 ---@overload fun(self: BehaviorTreeNode, path: "process_mode", value: "Every_Frame"|"Manual")
 ---@overload fun(self: BehaviorTreeNode, path: "tick_rate", value: integer)
@@ -2515,6 +2663,11 @@ function BehaviorTreeNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field active boolean Senses, plans and acts. Off stops the running action and forgets the plan.
 ---@field actor string The node it acts for (a path; empty: its parent): the one that moves to targets and who...
 ---@field request_all boolean Every goal is requested at the start (the cheapest reachable wins). Off: a script picks...
@@ -2541,6 +2694,9 @@ function BehaviorTreeNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "active" # boolean - Senses, plans and acts. Off stops the running action and forgets the plan.
 ---| "actor" # string - The node it acts for (a path; empty: its parent): the one that moves to targets and who...
 ---| "request_all" # boolean - Every goal is requested at the start (the cheapest reachable wins). Off: a script picks...
@@ -2567,6 +2723,9 @@ function BehaviorTreeNode:set_property(path, value, y) end
 ---@overload fun(self: GoapNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: GoapNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: GoapNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: GoapNode, path: "ignore_lighting"): boolean
+---@overload fun(self: GoapNode, path: "emission"): number[]
+---@overload fun(self: GoapNode, path: "emission_strength"): number
 ---@overload fun(self: GoapNode, path: "active"): boolean
 ---@overload fun(self: GoapNode, path: "actor"): string
 ---@overload fun(self: GoapNode, path: "request_all"): boolean
@@ -2595,6 +2754,9 @@ function GoapNode:get_property(path) end
 ---@overload fun(self: GoapNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: GoapNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: GoapNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: GoapNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: GoapNode, path: "emission", value: number[])
+---@overload fun(self: GoapNode, path: "emission_strength", value: number)
 ---@overload fun(self: GoapNode, path: "active", value: boolean)
 ---@overload fun(self: GoapNode, path: "actor", value: string)
 ---@overload fun(self: GoapNode, path: "request_all", value: boolean)
@@ -2625,6 +2787,11 @@ function GoapNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field frame_tag string Frame Source Aseprite: the tag whose frames play ("" = every frame), in its direction (...
 ---@field frameTag string Same as frame_tag (the Inspector's name)
 ---@field sub_emitter string Sub-emitter: another Particle Emitter, as a path from this node (e.g. a child's name), ...
@@ -2649,6 +2816,9 @@ function GoapNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "emitter.amount" # integer - Particles alive at once (the pool size).
 ---| "emitter.lifetime" # number - Seconds each particle lives.
 ---| "emitter.lifetime_variance" # number - Each particle's lifetime varies by up to this fraction (0.3: 70%..130% of Lifetime).
@@ -2743,6 +2913,9 @@ function GoapNode:set_property(path, value, y) end
 ---@overload fun(self: ParticleEmitterNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: ParticleEmitterNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: ParticleEmitterNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: ParticleEmitterNode, path: "ignore_lighting"): boolean
+---@overload fun(self: ParticleEmitterNode, path: "emission"): number[]
+---@overload fun(self: ParticleEmitterNode, path: "emission_strength"): number
 ---@overload fun(self: ParticleEmitterNode, path: "emitter.amount"): integer
 ---@overload fun(self: ParticleEmitterNode, path: "emitter.lifetime"): number
 ---@overload fun(self: ParticleEmitterNode, path: "emitter.lifetime_variance"): number
@@ -2839,6 +3012,9 @@ function ParticleEmitterNode:get_property(path) end
 ---@overload fun(self: ParticleEmitterNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: ParticleEmitterNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: ParticleEmitterNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: ParticleEmitterNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: ParticleEmitterNode, path: "emission", value: number[])
+---@overload fun(self: ParticleEmitterNode, path: "emission_strength", value: number)
 ---@overload fun(self: ParticleEmitterNode, path: "emitter.amount", value: integer)
 ---@overload fun(self: ParticleEmitterNode, path: "emitter.lifetime", value: number)
 ---@overload fun(self: ParticleEmitterNode, path: "emitter.lifetime_variance", value: number)
@@ -2937,6 +3113,11 @@ function ParticleEmitterNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field play_mode "Single"|"All"|"Sequential"|"Sequential_Reversed"|"Random"|"Shuffle" What a play starts from its sounds: Single (the chosen one), All (every sound at once),...
 ---@field playMode "Single"|"All"|"Sequential"|"Sequential_Reversed"|"Random"|"Shuffle" Same as play_mode (the Inspector's name)
 ---@field single integer Single mode: which sound plays (1 = the first in the list).
@@ -2976,6 +3157,9 @@ function ParticleEmitterNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "play_mode" # "Single"|"All"|"Sequential"|"Sequential_Reversed"|"Random"|"Shuffle" - What a play starts from its sounds: Single (the chosen one), All (every sound at once),...
 ---| "single" # integer - Single mode: which sound plays (1 = the first in the list).
 ---| "volume" # number - Volume (0-1), before the bus and master volumes.
@@ -3012,6 +3196,9 @@ function ParticleEmitterNode:set_property(path, value, y) end
 ---@overload fun(self: SoundNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: SoundNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: SoundNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: SoundNode, path: "ignore_lighting"): boolean
+---@overload fun(self: SoundNode, path: "emission"): number[]
+---@overload fun(self: SoundNode, path: "emission_strength"): number
 ---@overload fun(self: SoundNode, path: "play_mode"): "Single"|"All"|"Sequential"|"Sequential_Reversed"|"Random"|"Shuffle"
 ---@overload fun(self: SoundNode, path: "single"): integer
 ---@overload fun(self: SoundNode, path: "volume"): number
@@ -3050,6 +3237,9 @@ function SoundNode:get_property(path) end
 ---@overload fun(self: SoundNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: SoundNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: SoundNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: SoundNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: SoundNode, path: "emission", value: number[])
+---@overload fun(self: SoundNode, path: "emission_strength", value: number)
 ---@overload fun(self: SoundNode, path: "play_mode", value: "Single"|"All"|"Sequential"|"Sequential_Reversed"|"Random"|"Shuffle")
 ---@overload fun(self: SoundNode, path: "single", value: integer)
 ---@overload fun(self: SoundNode, path: "volume", value: number)
@@ -3090,6 +3280,11 @@ function SoundNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field volume number Volume (0-1), before the bus and master volumes.
 ---@field pitch number Playback speed / pitch (1 = normal).
 ---@field pan number Stereo position: 0 left, 0.5 centre, 1 right.
@@ -3116,6 +3311,9 @@ function SoundNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "volume" # number - Volume (0-1), before the bus and master volumes.
 ---| "pitch" # number - Playback speed / pitch (1 = normal).
 ---| "pan" # number - Stereo position: 0 left, 0.5 centre, 1 right.
@@ -3145,6 +3343,9 @@ function SoundNode:set_property(path, value, y) end
 ---@overload fun(self: MusicNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: MusicNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: MusicNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: MusicNode, path: "ignore_lighting"): boolean
+---@overload fun(self: MusicNode, path: "emission"): number[]
+---@overload fun(self: MusicNode, path: "emission_strength"): number
 ---@overload fun(self: MusicNode, path: "volume"): number
 ---@overload fun(self: MusicNode, path: "pitch"): number
 ---@overload fun(self: MusicNode, path: "pan"): number
@@ -3176,6 +3377,9 @@ function MusicNode:get_property(path) end
 ---@overload fun(self: MusicNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: MusicNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: MusicNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: MusicNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: MusicNode, path: "emission", value: number[])
+---@overload fun(self: MusicNode, path: "emission_strength", value: number)
 ---@overload fun(self: MusicNode, path: "volume", value: number)
 ---@overload fun(self: MusicNode, path: "pitch", value: number)
 ---@overload fun(self: MusicNode, path: "pan", value: number)
@@ -3209,8 +3413,15 @@ function MusicNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field debug_color number[] Colour of the collider outline drawn with Show Bounds & Colliders (and the game's debug...
 ---@field debugColor number[] Same as debug_color (the Inspector's name)
+---@field casts_shadows boolean Its shapes block light (lights with Shadows on). Off: it still collides, but light pass...
+---@field castsShadows boolean Same as casts_shadows (the Inspector's name)
 ---@field one_way boolean Jump-through platform: bodies pass from below and land on top.
 ---@field oneWay boolean Same as one_way (the Inspector's name)
 
@@ -3229,7 +3440,11 @@ function MusicNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "debug_color" # number[] - Colour of the collider outline drawn with Show Bounds & Colliders (and the game's debug...
+---| "casts_shadows" # boolean - Its shapes block light (lights with Shadows on). Off: it still collides, but light pass...
 ---| "one_way" # boolean - Jump-through platform: bodies pass from below and land on top.
 
 ---Reads an Inspector property by its path (vectors and colours as tables); "script.<name>" reads a field of the node's script.
@@ -3251,7 +3466,11 @@ function MusicNode:set_property(path, value, y) end
 ---@overload fun(self: StaticBodyNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: StaticBodyNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: StaticBodyNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: StaticBodyNode, path: "ignore_lighting"): boolean
+---@overload fun(self: StaticBodyNode, path: "emission"): number[]
+---@overload fun(self: StaticBodyNode, path: "emission_strength"): number
 ---@overload fun(self: StaticBodyNode, path: "debug_color"): number[]
+---@overload fun(self: StaticBodyNode, path: "casts_shadows"): boolean
 ---@overload fun(self: StaticBodyNode, path: "one_way"): boolean
 function StaticBodyNode:get_property(path) end
 
@@ -3275,7 +3494,11 @@ function StaticBodyNode:get_property(path) end
 ---@overload fun(self: StaticBodyNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: StaticBodyNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: StaticBodyNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: StaticBodyNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: StaticBodyNode, path: "emission", value: number[])
+---@overload fun(self: StaticBodyNode, path: "emission_strength", value: number)
 ---@overload fun(self: StaticBodyNode, path: "debug_color", value: number[])
+---@overload fun(self: StaticBodyNode, path: "casts_shadows", value: boolean)
 ---@overload fun(self: StaticBodyNode, path: "one_way", value: boolean)
 function StaticBodyNode:set_property(path, value, y) end
 
@@ -3301,6 +3524,11 @@ function StaticBodyNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field linear_velocity Vec2 Velocity (px/s).
 ---@field linearVelocity Vec2 Same as linear_velocity (the Inspector's name)
 ---@field angular_velocity number Spin (degrees/s).
@@ -3324,6 +3552,8 @@ function StaticBodyNode:set_property(path, value, y) end
 ---@field allowFastRotation boolean Same as allow_fast_rotation (the Inspector's name)
 ---@field debug_color number[] Colour of the collider outline drawn with Show Bounds & Colliders (and the game's debug...
 ---@field debugColor number[] Same as debug_color (the Inspector's name)
+---@field casts_shadows boolean Its shapes block light (lights with Shadows on). Off: it still collides, but light pass...
+---@field castsShadows boolean Same as casts_shadows (the Inspector's name)
 
 ---@alias DynamicBodyNodeProperty
 ---| "position" # Vec2 - Position relative to the parent, in pixels (+y is down).
@@ -3340,6 +3570,9 @@ function StaticBodyNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "linear_velocity" # Vec2 - Velocity (px/s).
 ---| "angular_velocity" # number - Spin (degrees/s).
 ---| "linear_damping" # number - Slows movement over time (air drag).
@@ -3352,6 +3585,7 @@ function StaticBodyNode:set_property(path, value, y) end
 ---| "is_bullet" # boolean - Continuous collision against other moving bodies (fast projectiles).
 ---| "allow_fast_rotation" # boolean - Allow very fast spin (wheels); can be less stable.
 ---| "debug_color" # number[] - Colour of the collider outline drawn with Show Bounds & Colliders (and the game's debug...
+---| "casts_shadows" # boolean - Its shapes block light (lights with Shadows on). Off: it still collides, but light pass...
 
 ---Reads an Inspector property by its path (vectors and colours as tables); "script.<name>" reads a field of the node's script.
 ---
@@ -3372,6 +3606,9 @@ function StaticBodyNode:set_property(path, value, y) end
 ---@overload fun(self: DynamicBodyNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: DynamicBodyNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: DynamicBodyNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: DynamicBodyNode, path: "ignore_lighting"): boolean
+---@overload fun(self: DynamicBodyNode, path: "emission"): number[]
+---@overload fun(self: DynamicBodyNode, path: "emission_strength"): number
 ---@overload fun(self: DynamicBodyNode, path: "linear_velocity"): Vec2
 ---@overload fun(self: DynamicBodyNode, path: "angular_velocity"): number
 ---@overload fun(self: DynamicBodyNode, path: "linear_damping"): number
@@ -3384,6 +3621,7 @@ function StaticBodyNode:set_property(path, value, y) end
 ---@overload fun(self: DynamicBodyNode, path: "is_bullet"): boolean
 ---@overload fun(self: DynamicBodyNode, path: "allow_fast_rotation"): boolean
 ---@overload fun(self: DynamicBodyNode, path: "debug_color"): number[]
+---@overload fun(self: DynamicBodyNode, path: "casts_shadows"): boolean
 function DynamicBodyNode:get_property(path) end
 
 ---Sets an Inspector property by its path: vectors as {x, y} or x, y; colours as {r, g, b[, a]} 0..1 or "#rrggbb[aa]"; enums by name; "script.<name>" a field of the node's script.
@@ -3406,6 +3644,9 @@ function DynamicBodyNode:get_property(path) end
 ---@overload fun(self: DynamicBodyNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: DynamicBodyNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: DynamicBodyNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: DynamicBodyNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: DynamicBodyNode, path: "emission", value: number[])
+---@overload fun(self: DynamicBodyNode, path: "emission_strength", value: number)
 ---@overload fun(self: DynamicBodyNode, path: "linear_velocity", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: DynamicBodyNode, path: "angular_velocity", value: number)
 ---@overload fun(self: DynamicBodyNode, path: "linear_damping", value: number)
@@ -3418,6 +3659,7 @@ function DynamicBodyNode:get_property(path) end
 ---@overload fun(self: DynamicBodyNode, path: "is_bullet", value: boolean)
 ---@overload fun(self: DynamicBodyNode, path: "allow_fast_rotation", value: boolean)
 ---@overload fun(self: DynamicBodyNode, path: "debug_color", value: number[])
+---@overload fun(self: DynamicBodyNode, path: "casts_shadows", value: boolean)
 function DynamicBodyNode:set_property(path, value, y) end
 
 ---@class KinematicBodyNode
@@ -3442,6 +3684,11 @@ function DynamicBodyNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field linear_velocity Vec2 Velocity (px/s).
 ---@field linearVelocity Vec2 Same as linear_velocity (the Inspector's name)
 ---@field angular_velocity number Spin (degrees/s).
@@ -3450,6 +3697,8 @@ function DynamicBodyNode:set_property(path, value, y) end
 ---@field oneWay boolean Same as one_way (the Inspector's name)
 ---@field debug_color number[] Colour of the collider outline drawn with Show Bounds & Colliders (and the game's debug...
 ---@field debugColor number[] Same as debug_color (the Inspector's name)
+---@field casts_shadows boolean Its shapes block light (lights with Shadows on). Off: it still collides, but light pass...
+---@field castsShadows boolean Same as casts_shadows (the Inspector's name)
 
 ---@alias KinematicBodyNodeProperty
 ---| "position" # Vec2 - Position relative to the parent, in pixels (+y is down).
@@ -3466,10 +3715,14 @@ function DynamicBodyNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "linear_velocity" # Vec2 - Velocity (px/s).
 ---| "angular_velocity" # number - Spin (degrees/s).
 ---| "one_way" # boolean - Jump-through platform: bodies pass from below and land on top.
 ---| "debug_color" # number[] - Colour of the collider outline drawn with Show Bounds & Colliders (and the game's debug...
+---| "casts_shadows" # boolean - Its shapes block light (lights with Shadows on). Off: it still collides, but light pass...
 
 ---Reads an Inspector property by its path (vectors and colours as tables); "script.<name>" reads a field of the node's script.
 ---
@@ -3490,10 +3743,14 @@ function DynamicBodyNode:set_property(path, value, y) end
 ---@overload fun(self: KinematicBodyNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: KinematicBodyNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: KinematicBodyNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: KinematicBodyNode, path: "ignore_lighting"): boolean
+---@overload fun(self: KinematicBodyNode, path: "emission"): number[]
+---@overload fun(self: KinematicBodyNode, path: "emission_strength"): number
 ---@overload fun(self: KinematicBodyNode, path: "linear_velocity"): Vec2
 ---@overload fun(self: KinematicBodyNode, path: "angular_velocity"): number
 ---@overload fun(self: KinematicBodyNode, path: "one_way"): boolean
 ---@overload fun(self: KinematicBodyNode, path: "debug_color"): number[]
+---@overload fun(self: KinematicBodyNode, path: "casts_shadows"): boolean
 function KinematicBodyNode:get_property(path) end
 
 ---Sets an Inspector property by its path: vectors as {x, y} or x, y; colours as {r, g, b[, a]} 0..1 or "#rrggbb[aa]"; enums by name; "script.<name>" a field of the node's script.
@@ -3516,10 +3773,14 @@ function KinematicBodyNode:get_property(path) end
 ---@overload fun(self: KinematicBodyNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: KinematicBodyNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: KinematicBodyNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: KinematicBodyNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: KinematicBodyNode, path: "emission", value: number[])
+---@overload fun(self: KinematicBodyNode, path: "emission_strength", value: number)
 ---@overload fun(self: KinematicBodyNode, path: "linear_velocity", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: KinematicBodyNode, path: "angular_velocity", value: number)
 ---@overload fun(self: KinematicBodyNode, path: "one_way", value: boolean)
 ---@overload fun(self: KinematicBodyNode, path: "debug_color", value: number[])
+---@overload fun(self: KinematicBodyNode, path: "casts_shadows", value: boolean)
 function KinematicBodyNode:set_property(path, value, y) end
 
 ---@class CharacterMoverNode
@@ -3544,6 +3805,11 @@ function KinematicBodyNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field radius number Capsule radius (px).
 ---@field height number Capsule height (px).
 ---@field velocity Vec2 Velocity now (px/s).
@@ -3580,6 +3846,8 @@ function KinematicBodyNode:set_property(path, value, y) end
 ---@field jumpBufferTime number Same as jump_buffer_time (the Inspector's name)
 ---@field debug_color number[] Colour of the collider outline drawn with Show Bounds & Colliders (and the game's debug...
 ---@field debugColor number[] Same as debug_color (the Inspector's name)
+---@field casts_shadows boolean Its shapes block light (lights with Shadows on). Off: it still collides, but light pass...
+---@field castsShadows boolean Same as casts_shadows (the Inspector's name)
 ---@field control_mode "BuiltIn"|"Script" Built-in movement, or Script: the script moves it (character_move_and_slide).
 ---@field controlMode "BuiltIn"|"Script" Same as control_mode (the Inspector's name)
 
@@ -3598,6 +3866,9 @@ function KinematicBodyNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "radius" # number - Capsule radius (px).
 ---| "height" # number - Capsule height (px).
 ---| "velocity" # Vec2 (runtime) - Velocity now (px/s).
@@ -3618,6 +3889,7 @@ function KinematicBodyNode:set_property(path, value, y) end
 ---| "coyote_time" # number - The built-in jump still works this long after walking off a ledge (s).
 ---| "jump_buffer_time" # number - A jump pressed this long before landing still happens (s).
 ---| "debug_color" # number[] - Colour of the collider outline drawn with Show Bounds & Colliders (and the game's debug...
+---| "casts_shadows" # boolean - Its shapes block light (lights with Shadows on). Off: it still collides, but light pass...
 ---| "control_mode" # "BuiltIn"|"Script" - Built-in movement, or Script: the script moves it (character_move_and_slide).
 
 ---Reads an Inspector property by its path (vectors and colours as tables); "script.<name>" reads a field of the node's script.
@@ -3639,6 +3911,9 @@ function KinematicBodyNode:set_property(path, value, y) end
 ---@overload fun(self: CharacterMoverNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: CharacterMoverNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: CharacterMoverNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: CharacterMoverNode, path: "ignore_lighting"): boolean
+---@overload fun(self: CharacterMoverNode, path: "emission"): number[]
+---@overload fun(self: CharacterMoverNode, path: "emission_strength"): number
 ---@overload fun(self: CharacterMoverNode, path: "radius"): number
 ---@overload fun(self: CharacterMoverNode, path: "height"): number
 ---@overload fun(self: CharacterMoverNode, path: "velocity"): Vec2
@@ -3659,6 +3934,7 @@ function KinematicBodyNode:set_property(path, value, y) end
 ---@overload fun(self: CharacterMoverNode, path: "coyote_time"): number
 ---@overload fun(self: CharacterMoverNode, path: "jump_buffer_time"): number
 ---@overload fun(self: CharacterMoverNode, path: "debug_color"): number[]
+---@overload fun(self: CharacterMoverNode, path: "casts_shadows"): boolean
 ---@overload fun(self: CharacterMoverNode, path: "control_mode"): "BuiltIn"|"Script"
 function CharacterMoverNode:get_property(path) end
 
@@ -3682,6 +3958,9 @@ function CharacterMoverNode:get_property(path) end
 ---@overload fun(self: CharacterMoverNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: CharacterMoverNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: CharacterMoverNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: CharacterMoverNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: CharacterMoverNode, path: "emission", value: number[])
+---@overload fun(self: CharacterMoverNode, path: "emission_strength", value: number)
 ---@overload fun(self: CharacterMoverNode, path: "radius", value: number)
 ---@overload fun(self: CharacterMoverNode, path: "height", value: number)
 ---@overload fun(self: CharacterMoverNode, path: "velocity", x: number|Vec2|number[], y?: number)
@@ -3702,6 +3981,7 @@ function CharacterMoverNode:get_property(path) end
 ---@overload fun(self: CharacterMoverNode, path: "coyote_time", value: number)
 ---@overload fun(self: CharacterMoverNode, path: "jump_buffer_time", value: number)
 ---@overload fun(self: CharacterMoverNode, path: "debug_color", value: number[])
+---@overload fun(self: CharacterMoverNode, path: "casts_shadows", value: boolean)
 ---@overload fun(self: CharacterMoverNode, path: "control_mode", value: "BuiltIn"|"Script")
 function CharacterMoverNode:set_property(path, value, y) end
 
@@ -3727,6 +4007,11 @@ function CharacterMoverNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field monitoring boolean Detect overlapping bodies and emit body_entered / body_exited. Off: no events or overla...
 ---@field overlap_count integer Bodies overlapping now.
 ---@field overlapCount integer Same as overlap_count (the Inspector's name)
@@ -3766,6 +4051,9 @@ function CharacterMoverNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "monitoring" # boolean - Detect overlapping bodies and emit body_entered / body_exited. Off: no events or overla...
 ---| "overlap_count" # integer (runtime) - Bodies overlapping now.
 ---| "has_overlaps" # boolean (runtime) - Anything overlapping now.
@@ -3799,6 +4087,9 @@ function CharacterMoverNode:set_property(path, value, y) end
 ---@overload fun(self: AreaNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: AreaNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: AreaNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: AreaNode, path: "ignore_lighting"): boolean
+---@overload fun(self: AreaNode, path: "emission"): number[]
+---@overload fun(self: AreaNode, path: "emission_strength"): number
 ---@overload fun(self: AreaNode, path: "monitoring"): boolean
 ---@overload fun(self: AreaNode, path: "overlap_count"): integer
 ---@overload fun(self: AreaNode, path: "has_overlaps"): boolean
@@ -3834,6 +4125,9 @@ function AreaNode:get_property(path) end
 ---@overload fun(self: AreaNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: AreaNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: AreaNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: AreaNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: AreaNode, path: "emission", value: number[])
+---@overload fun(self: AreaNode, path: "emission_strength", value: number)
 ---@overload fun(self: AreaNode, path: "monitoring", value: boolean)
 ---@overload fun(self: AreaNode, path: "overlap_count", value: integer)
 ---@overload fun(self: AreaNode, path: "has_overlaps", value: boolean)
@@ -3871,6 +4165,11 @@ function AreaNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field monitoring boolean Cast the ray each frame and emit hit_started / hit_ended events.
 ---@field direction Vec2 Direction of the ray (rotated with the node).
 ---@field length number Length of the ray (px).
@@ -3906,6 +4205,9 @@ function AreaNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "monitoring" # boolean - Cast the ray each frame and emit hit_started / hit_ended events.
 ---| "direction" # Vec2 - Direction of the ray (rotated with the node).
 ---| "length" # number - Length of the ray (px).
@@ -3937,6 +4239,9 @@ function AreaNode:set_property(path, value, y) end
 ---@overload fun(self: RaycastNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: RaycastNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: RaycastNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: RaycastNode, path: "ignore_lighting"): boolean
+---@overload fun(self: RaycastNode, path: "emission"): number[]
+---@overload fun(self: RaycastNode, path: "emission_strength"): number
 ---@overload fun(self: RaycastNode, path: "monitoring"): boolean
 ---@overload fun(self: RaycastNode, path: "direction"): Vec2
 ---@overload fun(self: RaycastNode, path: "length"): number
@@ -3970,6 +4275,9 @@ function RaycastNode:get_property(path) end
 ---@overload fun(self: RaycastNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: RaycastNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: RaycastNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: RaycastNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: RaycastNode, path: "emission", value: number[])
+---@overload fun(self: RaycastNode, path: "emission_strength", value: number)
 ---@overload fun(self: RaycastNode, path: "monitoring", value: boolean)
 ---@overload fun(self: RaycastNode, path: "direction", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: RaycastNode, path: "length", value: number)
@@ -4005,6 +4313,11 @@ function RaycastNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field size Vec2 The rectangle (centred on the node, scaled with it) the camera has to see.
 ---@field margin number Grows the camera's view by this many pixels: fires a little before it really shows.
 ---@field action "None"|"Pause_Parent"|"Disable_Parent"|"Remove_Parent" What happens to the parent off screen: Pause (stops updating, resumes when seen), Disab...
@@ -4026,6 +4339,9 @@ function RaycastNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "size" # Vec2 - The rectangle (centred on the node, scaled with it) the camera has to see.
 ---| "margin" # number - Grows the camera's view by this many pixels: fires a little before it really shows.
 ---| "action" # "None"|"Pause_Parent"|"Disable_Parent"|"Remove_Parent" - What happens to the parent off screen: Pause (stops updating, resumes when seen), Disab...
@@ -4050,6 +4366,9 @@ function RaycastNode:set_property(path, value, y) end
 ---@overload fun(self: VisibilityNotifierNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: VisibilityNotifierNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: VisibilityNotifierNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: VisibilityNotifierNode, path: "ignore_lighting"): boolean
+---@overload fun(self: VisibilityNotifierNode, path: "emission"): number[]
+---@overload fun(self: VisibilityNotifierNode, path: "emission_strength"): number
 ---@overload fun(self: VisibilityNotifierNode, path: "size"): Vec2
 ---@overload fun(self: VisibilityNotifierNode, path: "margin"): number
 ---@overload fun(self: VisibilityNotifierNode, path: "action"): "None"|"Pause_Parent"|"Disable_Parent"|"Remove_Parent"
@@ -4076,6 +4395,9 @@ function VisibilityNotifierNode:get_property(path) end
 ---@overload fun(self: VisibilityNotifierNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: VisibilityNotifierNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: VisibilityNotifierNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: VisibilityNotifierNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: VisibilityNotifierNode, path: "emission", value: number[])
+---@overload fun(self: VisibilityNotifierNode, path: "emission_strength", value: number)
 ---@overload fun(self: VisibilityNotifierNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: VisibilityNotifierNode, path: "margin", value: number)
 ---@overload fun(self: VisibilityNotifierNode, path: "action", value: "None"|"Pause_Parent"|"Disable_Parent"|"Remove_Parent")
@@ -4104,6 +4426,11 @@ function VisibilityNotifierNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field anchor "TopLeft"|"Top"|"TopRight"|"Left"|"Center"|"Right"|"BottomLeft"|"Bottom"|"BottomRight" The point of the screen it sits at (its position is an offset from it): top left ... bo...
 
 ---@alias ScreenLayerNodeProperty
@@ -4121,6 +4448,9 @@ function VisibilityNotifierNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "anchor" # "TopLeft"|"Top"|"TopRight"|"Left"|"Center"|"Right"|"BottomLeft"|"Bottom"|"BottomRight" - The point of the screen it sits at (its position is an offset from it): top left ... bo...
 
 ---Reads an Inspector property by its path (vectors and colours as tables); "script.<name>" reads a field of the node's script.
@@ -4142,6 +4472,9 @@ function VisibilityNotifierNode:set_property(path, value, y) end
 ---@overload fun(self: ScreenLayerNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: ScreenLayerNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: ScreenLayerNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: ScreenLayerNode, path: "ignore_lighting"): boolean
+---@overload fun(self: ScreenLayerNode, path: "emission"): number[]
+---@overload fun(self: ScreenLayerNode, path: "emission_strength"): number
 ---@overload fun(self: ScreenLayerNode, path: "anchor"): "TopLeft"|"Top"|"TopRight"|"Left"|"Center"|"Right"|"BottomLeft"|"Bottom"|"BottomRight"
 function ScreenLayerNode:get_property(path) end
 
@@ -4165,6 +4498,9 @@ function ScreenLayerNode:get_property(path) end
 ---@overload fun(self: ScreenLayerNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: ScreenLayerNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: ScreenLayerNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: ScreenLayerNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: ScreenLayerNode, path: "emission", value: number[])
+---@overload fun(self: ScreenLayerNode, path: "emission_strength", value: number)
 ---@overload fun(self: ScreenLayerNode, path: "anchor", value: "TopLeft"|"Top"|"TopRight"|"Left"|"Center"|"Right"|"BottomLeft"|"Bottom"|"BottomRight")
 function ScreenLayerNode:set_property(path, value, y) end
 
@@ -4190,6 +4526,11 @@ function ScreenLayerNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field radius number The base's radius: the thumb this far from the middle is a full push.
 ---@field knob_radius number The knob's radius (the part under the thumb).
 ---@field knobRadius number Same as knob_radius (the Inspector's name)
@@ -4225,6 +4566,9 @@ function ScreenLayerNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "radius" # number - The base's radius: the thumb this far from the middle is a full push.
 ---| "knob_radius" # number - The knob's radius (the part under the thumb).
 ---| "floating" # boolean - The joystick appears where the thumb lands (anywhere in Area) instead of staying put - ...
@@ -4257,6 +4601,9 @@ function ScreenLayerNode:set_property(path, value, y) end
 ---@overload fun(self: TouchJoystickNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: TouchJoystickNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: TouchJoystickNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: TouchJoystickNode, path: "ignore_lighting"): boolean
+---@overload fun(self: TouchJoystickNode, path: "emission"): number[]
+---@overload fun(self: TouchJoystickNode, path: "emission_strength"): number
 ---@overload fun(self: TouchJoystickNode, path: "radius"): number
 ---@overload fun(self: TouchJoystickNode, path: "knob_radius"): number
 ---@overload fun(self: TouchJoystickNode, path: "floating"): boolean
@@ -4291,6 +4638,9 @@ function TouchJoystickNode:get_property(path) end
 ---@overload fun(self: TouchJoystickNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: TouchJoystickNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: TouchJoystickNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: TouchJoystickNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: TouchJoystickNode, path: "emission", value: number[])
+---@overload fun(self: TouchJoystickNode, path: "emission_strength", value: number)
 ---@overload fun(self: TouchJoystickNode, path: "radius", value: number)
 ---@overload fun(self: TouchJoystickNode, path: "knob_radius", value: number)
 ---@overload fun(self: TouchJoystickNode, path: "floating", value: boolean)
@@ -4327,6 +4677,11 @@ function TouchJoystickNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field radius number The button's radius (a finger a little outside still counts).
 ---@field action string The input action it presses while a finger is on it ("jump", "fire", a project action);...
 ---@field label string Text drawn on it ("A", "Jump").
@@ -4355,6 +4710,9 @@ function TouchJoystickNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "radius" # number - The button's radius (a finger a little outside still counts).
 ---| "action" # string - The input action it presses while a finger is on it ("jump", "fire", a project action);...
 ---| "label" # string - Text drawn on it ("A", "Jump").
@@ -4383,6 +4741,9 @@ function TouchJoystickNode:set_property(path, value, y) end
 ---@overload fun(self: TouchButtonNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: TouchButtonNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: TouchButtonNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: TouchButtonNode, path: "ignore_lighting"): boolean
+---@overload fun(self: TouchButtonNode, path: "emission"): number[]
+---@overload fun(self: TouchButtonNode, path: "emission_strength"): number
 ---@overload fun(self: TouchButtonNode, path: "radius"): number
 ---@overload fun(self: TouchButtonNode, path: "action"): string
 ---@overload fun(self: TouchButtonNode, path: "label"): string
@@ -4413,6 +4774,9 @@ function TouchButtonNode:get_property(path) end
 ---@overload fun(self: TouchButtonNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: TouchButtonNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: TouchButtonNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: TouchButtonNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: TouchButtonNode, path: "emission", value: number[])
+---@overload fun(self: TouchButtonNode, path: "emission_strength", value: number)
 ---@overload fun(self: TouchButtonNode, path: "radius", value: number)
 ---@overload fun(self: TouchButtonNode, path: "action", value: string)
 ---@overload fun(self: TouchButtonNode, path: "label", value: string)
@@ -4445,6 +4809,11 @@ function TouchButtonNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field mode "World"|"Children" World: the running scene through the viewport's Camera child (add one: its follow targe...
 ---@field size Vec2 The size it's drawn at (Display), in px.
 ---@field render_size Vec2 How many pixels it renders (0, 0: Size). Smaller is cheaper and pixelated - a 160x90 mi...
@@ -4472,6 +4841,9 @@ function TouchButtonNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "mode" # "World"|"Children" - World: the running scene through the viewport's Camera child (add one: its follow targe...
 ---| "size" # Vec2 - The size it's drawn at (Display), in px.
 ---| "render_size" # Vec2 - How many pixels it renders (0, 0: Size). Smaller is cheaper and pixelated - a 160x90 mi...
@@ -4500,6 +4872,9 @@ function TouchButtonNode:set_property(path, value, y) end
 ---@overload fun(self: ViewportNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: ViewportNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: ViewportNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: ViewportNode, path: "ignore_lighting"): boolean
+---@overload fun(self: ViewportNode, path: "emission"): number[]
+---@overload fun(self: ViewportNode, path: "emission_strength"): number
 ---@overload fun(self: ViewportNode, path: "mode"): "World"|"Children"
 ---@overload fun(self: ViewportNode, path: "size"): Vec2
 ---@overload fun(self: ViewportNode, path: "render_size"): Vec2
@@ -4530,6 +4905,9 @@ function ViewportNode:get_property(path) end
 ---@overload fun(self: ViewportNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: ViewportNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: ViewportNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: ViewportNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: ViewportNode, path: "emission", value: number[])
+---@overload fun(self: ViewportNode, path: "emission_strength", value: number)
 ---@overload fun(self: ViewportNode, path: "mode", value: "World"|"Children")
 ---@overload fun(self: ViewportNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: ViewportNode, path: "render_size", x: number|Vec2|number[], y?: number)
@@ -4562,6 +4940,11 @@ function ViewportNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field wave "Sine"|"Triangle"|"Square"|"Saw"|"Reverse_Saw"|"Random"|"Smooth_Noise"|"Curve" The wave's shape: Sine, Triangle, Square (high for Pulse Width), Saw, Reverse Saw, Rand...
 ---@field rate_unit "Hertz"|"Seconds" How Rate is read: Hertz (cycles a second) or Seconds (how long one cycle takes).
 ---@field rateUnit "Hertz"|"Seconds" Same as rate_unit (the Inspector's name)
@@ -4587,6 +4970,9 @@ function ViewportNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "wave" # "Sine"|"Triangle"|"Square"|"Saw"|"Reverse_Saw"|"Random"|"Smooth_Noise"|"Curve" - The wave's shape: Sine, Triangle, Square (high for Pulse Width), Saw, Reverse Saw, Rand...
 ---| "rate_unit" # "Hertz"|"Seconds" - How Rate is read: Hertz (cycles a second) or Seconds (how long one cycle takes).
 ---| "rate" # number - How fast it runs: cycles a second (Hertz) or seconds a cycle (Seconds). 0 holds it still.
@@ -4614,6 +5000,9 @@ function ViewportNode:set_property(path, value, y) end
 ---@overload fun(self: OscillatorNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: OscillatorNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: OscillatorNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: OscillatorNode, path: "ignore_lighting"): boolean
+---@overload fun(self: OscillatorNode, path: "emission"): number[]
+---@overload fun(self: OscillatorNode, path: "emission_strength"): number
 ---@overload fun(self: OscillatorNode, path: "wave"): "Sine"|"Triangle"|"Square"|"Saw"|"Reverse_Saw"|"Random"|"Smooth_Noise"|"Curve"
 ---@overload fun(self: OscillatorNode, path: "rate_unit"): "Hertz"|"Seconds"
 ---@overload fun(self: OscillatorNode, path: "rate"): number
@@ -4643,6 +5032,9 @@ function OscillatorNode:get_property(path) end
 ---@overload fun(self: OscillatorNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: OscillatorNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: OscillatorNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: OscillatorNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: OscillatorNode, path: "emission", value: number[])
+---@overload fun(self: OscillatorNode, path: "emission_strength", value: number)
 ---@overload fun(self: OscillatorNode, path: "wave", value: "Sine"|"Triangle"|"Square"|"Saw"|"Reverse_Saw"|"Random"|"Smooth_Noise"|"Curve")
 ---@overload fun(self: OscillatorNode, path: "rate_unit", value: "Hertz"|"Seconds")
 ---@overload fun(self: OscillatorNode, path: "rate", value: number)
@@ -4674,6 +5066,11 @@ function OscillatorNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field file string The skeleton: a Spine .json export or a DragonBones _ske.json (project-relative).
 ---@field atlas string Its texture atlas; empty = next to it (name.atlas for Spine, name_tex.json for DragonBo...
 ---@field armature string DragonBones: the armature to show (empty = the first).
@@ -4703,6 +5100,9 @@ function OscillatorNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "file" # string - The skeleton: a Spine .json export or a DragonBones _ske.json (project-relative).
 ---| "atlas" # string - Its texture atlas; empty = next to it (name.atlas for Spine, name_tex.json for DragonBo...
 ---| "armature" # string - DragonBones: the armature to show (empty = the first).
@@ -4734,6 +5134,9 @@ function OscillatorNode:set_property(path, value, y) end
 ---@overload fun(self: SkeletonNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: SkeletonNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: SkeletonNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: SkeletonNode, path: "ignore_lighting"): boolean
+---@overload fun(self: SkeletonNode, path: "emission"): number[]
+---@overload fun(self: SkeletonNode, path: "emission_strength"): number
 ---@overload fun(self: SkeletonNode, path: "file"): string
 ---@overload fun(self: SkeletonNode, path: "atlas"): string
 ---@overload fun(self: SkeletonNode, path: "armature"): string
@@ -4767,6 +5170,9 @@ function SkeletonNode:get_property(path) end
 ---@overload fun(self: SkeletonNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: SkeletonNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: SkeletonNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: SkeletonNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: SkeletonNode, path: "emission", value: number[])
+---@overload fun(self: SkeletonNode, path: "emission_strength", value: number)
 ---@overload fun(self: SkeletonNode, path: "file", value: string)
 ---@overload fun(self: SkeletonNode, path: "atlas", value: string)
 ---@overload fun(self: SkeletonNode, path: "armature", value: string)
@@ -4802,6 +5208,11 @@ function SkeletonNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field bone string The parent skeleton's bone this node follows (its children ride along: a weapon in the ...
 ---@field follow_rotation boolean Turn with the bone.
 ---@field followRotation boolean Same as follow_rotation (the Inspector's name)
@@ -4823,6 +5234,9 @@ function SkeletonNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "bone" # string - The parent skeleton's bone this node follows (its children ride along: a weapon in the ...
 ---| "follow_rotation" # boolean - Turn with the bone.
 ---| "follow_scale" # boolean - Scale with the bone.
@@ -4846,6 +5260,9 @@ function SkeletonNode:set_property(path, value, y) end
 ---@overload fun(self: BoneAttachmentNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: BoneAttachmentNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: BoneAttachmentNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: BoneAttachmentNode, path: "ignore_lighting"): boolean
+---@overload fun(self: BoneAttachmentNode, path: "emission"): number[]
+---@overload fun(self: BoneAttachmentNode, path: "emission_strength"): number
 ---@overload fun(self: BoneAttachmentNode, path: "bone"): string
 ---@overload fun(self: BoneAttachmentNode, path: "follow_rotation"): boolean
 ---@overload fun(self: BoneAttachmentNode, path: "follow_scale"): boolean
@@ -4871,6 +5288,9 @@ function BoneAttachmentNode:get_property(path) end
 ---@overload fun(self: BoneAttachmentNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: BoneAttachmentNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: BoneAttachmentNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: BoneAttachmentNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: BoneAttachmentNode, path: "emission", value: number[])
+---@overload fun(self: BoneAttachmentNode, path: "emission_strength", value: number)
 ---@overload fun(self: BoneAttachmentNode, path: "bone", value: string)
 ---@overload fun(self: BoneAttachmentNode, path: "follow_rotation", value: boolean)
 ---@overload fun(self: BoneAttachmentNode, path: "follow_scale", value: boolean)
@@ -4898,6 +5318,11 @@ function BoneAttachmentNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field priority integer The host camera shows the enabled advanced camera with the highest priority (a tie: the...
 ---@field follow_mode "None"|"Glued"|"Simple"|"Group"|"Path"|"Framed" None (stays where placed), Glued (exactly on the target), Simple (offset, damping, look...
 ---@field followMode "None"|"Glued"|"Simple"|"Group"|"Path"|"Framed" Same as follow_mode (the Inspector's name)
@@ -4966,6 +5391,9 @@ function BoneAttachmentNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "priority" # integer - The host camera shows the enabled advanced camera with the highest priority (a tie: the...
 ---| "follow_mode" # "None"|"Glued"|"Simple"|"Group"|"Path"|"Framed" - None (stays where placed), Glued (exactly on the target), Simple (offset, damping, look...
 ---| "follow_target" # string - The node it follows (a path like Player or ../Hero).
@@ -5015,6 +5443,9 @@ function BoneAttachmentNode:set_property(path, value, y) end
 ---@overload fun(self: AdvancedCameraNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: AdvancedCameraNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: AdvancedCameraNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: AdvancedCameraNode, path: "ignore_lighting"): boolean
+---@overload fun(self: AdvancedCameraNode, path: "emission"): number[]
+---@overload fun(self: AdvancedCameraNode, path: "emission_strength"): number
 ---@overload fun(self: AdvancedCameraNode, path: "priority"): integer
 ---@overload fun(self: AdvancedCameraNode, path: "follow_mode"): "None"|"Glued"|"Simple"|"Group"|"Path"|"Framed"
 ---@overload fun(self: AdvancedCameraNode, path: "follow_target"): string
@@ -5066,6 +5497,9 @@ function AdvancedCameraNode:get_property(path) end
 ---@overload fun(self: AdvancedCameraNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: AdvancedCameraNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: AdvancedCameraNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: AdvancedCameraNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: AdvancedCameraNode, path: "emission", value: number[])
+---@overload fun(self: AdvancedCameraNode, path: "emission_strength", value: number)
 ---@overload fun(self: AdvancedCameraNode, path: "priority", value: integer)
 ---@overload fun(self: AdvancedCameraNode, path: "follow_mode", value: "None"|"Glued"|"Simple"|"Group"|"Path"|"Framed")
 ---@overload fun(self: AdvancedCameraNode, path: "follow_target", value: string)
@@ -5119,6 +5553,11 @@ function AdvancedCameraNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field closed boolean Join the last point back to the first (a loop).
 ---@field bake_interval number Distance between the points the curve is turned into (px): smaller follows the curve mo...
 ---@field bakeInterval number Same as bake_interval (the Inspector's name)
@@ -5141,6 +5580,9 @@ function AdvancedCameraNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "closed" # boolean - Join the last point back to the first (a loop).
 ---| "bake_interval" # number - Distance between the points the curve is turned into (px): smaller follows the curve mo...
 ---| "line_width" # number - Draw the path in the game this wide (rails, ropes); 0 = invisible (the editor always sh...
@@ -5165,6 +5607,9 @@ function AdvancedCameraNode:set_property(path, value, y) end
 ---@overload fun(self: PathNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: PathNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: PathNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: PathNode, path: "ignore_lighting"): boolean
+---@overload fun(self: PathNode, path: "emission"): number[]
+---@overload fun(self: PathNode, path: "emission_strength"): number
 ---@overload fun(self: PathNode, path: "closed"): boolean
 ---@overload fun(self: PathNode, path: "bake_interval"): number
 ---@overload fun(self: PathNode, path: "line_width"): number
@@ -5191,6 +5636,9 @@ function PathNode:get_property(path) end
 ---@overload fun(self: PathNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: PathNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: PathNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: PathNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: PathNode, path: "emission", value: number[])
+---@overload fun(self: PathNode, path: "emission_strength", value: number)
 ---@overload fun(self: PathNode, path: "closed", value: boolean)
 ---@overload fun(self: PathNode, path: "bake_interval", value: number)
 ---@overload fun(self: PathNode, path: "line_width", value: number)
@@ -5219,6 +5667,11 @@ function PathNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field size Vec2 The area agents find paths in, from the node's position (px).
 ---@field cell_size number Size of a grid cell (px): smaller follows walls more closely, larger finds paths faster.
 ---@field cellSize number Same as cell_size (the Inspector's name)
@@ -5244,6 +5697,9 @@ function PathNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "size" # Vec2 - The area agents find paths in, from the node's position (px).
 ---| "cell_size" # number - Size of a grid cell (px): smaller follows walls more closely, larger finds paths faster.
 ---| "use_physics" # boolean - Static bodies' collision shapes inside the area block.
@@ -5269,6 +5725,9 @@ function PathNode:set_property(path, value, y) end
 ---@overload fun(self: NavigationRegionNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: NavigationRegionNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: NavigationRegionNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: NavigationRegionNode, path: "ignore_lighting"): boolean
+---@overload fun(self: NavigationRegionNode, path: "emission"): number[]
+---@overload fun(self: NavigationRegionNode, path: "emission_strength"): number
 ---@overload fun(self: NavigationRegionNode, path: "size"): Vec2
 ---@overload fun(self: NavigationRegionNode, path: "cell_size"): number
 ---@overload fun(self: NavigationRegionNode, path: "use_physics"): boolean
@@ -5296,6 +5755,9 @@ function NavigationRegionNode:get_property(path) end
 ---@overload fun(self: NavigationRegionNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: NavigationRegionNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: NavigationRegionNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: NavigationRegionNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: NavigationRegionNode, path: "emission", value: number[])
+---@overload fun(self: NavigationRegionNode, path: "emission_strength", value: number)
 ---@overload fun(self: NavigationRegionNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: NavigationRegionNode, path: "cell_size", value: number)
 ---@overload fun(self: NavigationRegionNode, path: "use_physics", value: boolean)
@@ -5325,6 +5787,11 @@ function NavigationRegionNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field speed number How fast it moves along its path (px/s).
 ---@field radius number Its size: paths keep this far from walls, and agents keep this far apart.
 ---@field arrive_distance number How close to the target counts as arrived (px).
@@ -5353,6 +5820,9 @@ function NavigationRegionNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "speed" # number - How fast it moves along its path (px/s).
 ---| "radius" # number - Its size: paths keep this far from walls, and agents keep this far apart.
 ---| "arrive_distance" # number - How close to the target counts as arrived (px).
@@ -5381,6 +5851,9 @@ function NavigationRegionNode:set_property(path, value, y) end
 ---@overload fun(self: NavigationAgentNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: NavigationAgentNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: NavigationAgentNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: NavigationAgentNode, path: "ignore_lighting"): boolean
+---@overload fun(self: NavigationAgentNode, path: "emission"): number[]
+---@overload fun(self: NavigationAgentNode, path: "emission_strength"): number
 ---@overload fun(self: NavigationAgentNode, path: "speed"): number
 ---@overload fun(self: NavigationAgentNode, path: "radius"): number
 ---@overload fun(self: NavigationAgentNode, path: "arrive_distance"): number
@@ -5411,6 +5884,9 @@ function NavigationAgentNode:get_property(path) end
 ---@overload fun(self: NavigationAgentNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: NavigationAgentNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: NavigationAgentNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: NavigationAgentNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: NavigationAgentNode, path: "emission", value: number[])
+---@overload fun(self: NavigationAgentNode, path: "emission_strength", value: number)
 ---@overload fun(self: NavigationAgentNode, path: "speed", value: number)
 ---@overload fun(self: NavigationAgentNode, path: "radius", value: number)
 ---@overload fun(self: NavigationAgentNode, path: "arrive_distance", value: number)
@@ -5443,6 +5919,11 @@ function NavigationAgentNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field progress number Distance travelled along the parent path (px). Set it to place the follower; scripts ca...
 ---@field speed number Pixels per second it moves along the path by itself (negative: backwards; 0: only scrip...
 ---@field loop "Stop"|"Loop"|"PingPong" At the end: Stop (path_finished), Loop (start again) or Ping Pong (turn back).
@@ -5465,6 +5946,9 @@ function NavigationAgentNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "progress" # number - Distance travelled along the parent path (px). Set it to place the follower; scripts ca...
 ---| "speed" # number - Pixels per second it moves along the path by itself (negative: backwards; 0: only scrip...
 ---| "loop" # "Stop"|"Loop"|"PingPong" - At the end: Stop (path_finished), Loop (start again) or Ping Pong (turn back).
@@ -5490,6 +5974,9 @@ function NavigationAgentNode:set_property(path, value, y) end
 ---@overload fun(self: PathFollowNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: PathFollowNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: PathFollowNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: PathFollowNode, path: "ignore_lighting"): boolean
+---@overload fun(self: PathFollowNode, path: "emission"): number[]
+---@overload fun(self: PathFollowNode, path: "emission_strength"): number
 ---@overload fun(self: PathFollowNode, path: "progress"): number
 ---@overload fun(self: PathFollowNode, path: "speed"): number
 ---@overload fun(self: PathFollowNode, path: "loop"): "Stop"|"Loop"|"PingPong"
@@ -5517,6 +6004,9 @@ function PathFollowNode:get_property(path) end
 ---@overload fun(self: PathFollowNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: PathFollowNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: PathFollowNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: PathFollowNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: PathFollowNode, path: "emission", value: number[])
+---@overload fun(self: PathFollowNode, path: "emission_strength", value: number)
 ---@overload fun(self: PathFollowNode, path: "progress", value: number)
 ---@overload fun(self: PathFollowNode, path: "speed", value: number)
 ---@overload fun(self: PathFollowNode, path: "loop", value: "Stop"|"Loop"|"PingPong")
@@ -5546,6 +6036,11 @@ function PathFollowNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field shininess number Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---@field enable_physics boolean Build colliders from IntGrid cells whose collision rule is Solid / One Way.
 ---@field enablePhysics boolean Same as enable_physics (the Inspector's name)
@@ -5580,6 +6075,9 @@ function PathFollowNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "shininess" # number - Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---| "enable_physics" # boolean - Build colliders from IntGrid cells whose collision rule is Solid / One Way.
 ---| "spawn_entities" # boolean - Spawn the level's entities (mapped to components) when ready.
@@ -5610,6 +6108,9 @@ function PathFollowNode:set_property(path, value, y) end
 ---@overload fun(self: LdtkLevelNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: LdtkLevelNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: LdtkLevelNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: LdtkLevelNode, path: "ignore_lighting"): boolean
+---@overload fun(self: LdtkLevelNode, path: "emission"): number[]
+---@overload fun(self: LdtkLevelNode, path: "emission_strength"): number
 ---@overload fun(self: LdtkLevelNode, path: "shininess"): number
 ---@overload fun(self: LdtkLevelNode, path: "enable_physics"): boolean
 ---@overload fun(self: LdtkLevelNode, path: "spawn_entities"): boolean
@@ -5642,6 +6143,9 @@ function LdtkLevelNode:get_property(path) end
 ---@overload fun(self: LdtkLevelNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: LdtkLevelNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: LdtkLevelNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: LdtkLevelNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: LdtkLevelNode, path: "emission", value: number[])
+---@overload fun(self: LdtkLevelNode, path: "emission_strength", value: number)
 ---@overload fun(self: LdtkLevelNode, path: "shininess", value: number)
 ---@overload fun(self: LdtkLevelNode, path: "enable_physics", value: boolean)
 ---@overload fun(self: LdtkLevelNode, path: "spawn_entities", value: boolean)
@@ -5676,6 +6180,11 @@ function LdtkLevelNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field shininess number Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---@field solid boolean Build static colliders for the painted tiles.
 ---@field tint number[] Multiplies the texture's colours (white = unchanged; alpha fades it).
@@ -5703,6 +6212,9 @@ function LdtkLevelNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "shininess" # number - Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---| "solid" # boolean - Build static colliders for the painted tiles.
 ---| "tint" # number[] - Multiplies the texture's colours (white = unchanged; alpha fades it).
@@ -5731,6 +6243,9 @@ function LdtkLevelNode:set_property(path, value, y) end
 ---@overload fun(self: TileMapNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: TileMapNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: TileMapNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: TileMapNode, path: "ignore_lighting"): boolean
+---@overload fun(self: TileMapNode, path: "emission"): number[]
+---@overload fun(self: TileMapNode, path: "emission_strength"): number
 ---@overload fun(self: TileMapNode, path: "shininess"): number
 ---@overload fun(self: TileMapNode, path: "solid"): boolean
 ---@overload fun(self: TileMapNode, path: "tint"): number[]
@@ -5761,6 +6276,9 @@ function TileMapNode:get_property(path) end
 ---@overload fun(self: TileMapNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: TileMapNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: TileMapNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: TileMapNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: TileMapNode, path: "emission", value: number[])
+---@overload fun(self: TileMapNode, path: "emission_strength", value: number)
 ---@overload fun(self: TileMapNode, path: "shininess", value: number)
 ---@overload fun(self: TileMapNode, path: "solid", value: boolean)
 ---@overload fun(self: TileMapNode, path: "tint", value: number[])
@@ -5793,17 +6311,34 @@ function TileMapNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field kind "Point"|"Spot"|"Directional" Point: shines all round. Spot: a cone along the node's rotation. Directional: the sun -...
 ---@field color number[] Colour of the light.
 ---@field energy number Brightness multiplier.
 ---@field radius number Reach of the light (px).
 ---@field falloff number Fade towards the edge: 1 linear, 2 smooth, higher = tighter.
 ---@field spread number Spot: half-angle of the cone (degrees).
----@field shadows boolean Cast shadows from the scene's physics shapes (bodies, LDtk and tile map colliders; not ...
+---@field texture string A light texture (cookie) shaping the light: a project image (its brightness, rotated wi...
+---@field shadows boolean Cast shadows from bodies with Casts Shadows on (and LDtk / tile map colliders; not sens...
+---@field softness number How soft its shadows' edges are (px of blur); 0: hard edges.
+---@field shadow_strength number How dark its shadows are: 1 blocks it fully, 0.5 lets half through.
+---@field shadowStrength number Same as shadow_strength (the Inspector's name)
+---@field ignore_parent_bodies boolean The bodies it sits in (its parent, grandparent...) cast no shadow for it - a lantern's ...
+---@field ignoreParentBodies boolean Same as ignore_parent_bodies (the Inspector's name)
 ---@field height number How high above the ground it is (px). On normal-mapped art a low light rakes across the...
 ---@field elevation number Directional: the sun's angle above the ground (degrees) - low for long, raking light, 9...
 ---@field shadow_length number Directional: how far shadows reach from what casts them (px); 0: to the edge of the view.
 ---@field shadowLength number Same as shadow_length (the Inspector's name)
+---@field flicker number Random dips in brightness, like a flame: 0 off, 1 can drop to dark.
+---@field flicker_speed number How fast it flickers (changes a second).
+---@field flickerSpeed number Same as flicker_speed (the Inspector's name)
+---@field pulse number A steady rise and fall in brightness: 0 off, 1 down to dark and back.
+---@field pulse_speed number Pulses a second.
+---@field pulseSpeed number Same as pulse_speed (the Inspector's name)
 
 ---@alias LightNodeProperty
 ---| "position" # Vec2 - Position relative to the parent, in pixels (+y is down).
@@ -5820,16 +6355,27 @@ function TileMapNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "kind" # "Point"|"Spot"|"Directional" - Point: shines all round. Spot: a cone along the node's rotation. Directional: the sun -...
 ---| "color" # number[] - Colour of the light.
 ---| "energy" # number - Brightness multiplier.
 ---| "radius" # number - Reach of the light (px).
 ---| "falloff" # number - Fade towards the edge: 1 linear, 2 smooth, higher = tighter.
 ---| "spread" # number - Spot: half-angle of the cone (degrees).
----| "shadows" # boolean - Cast shadows from the scene's physics shapes (bodies, LDtk and tile map colliders; not ...
+---| "texture" # string - A light texture (cookie) shaping the light: a project image (its brightness, rotated wi...
+---| "shadows" # boolean - Cast shadows from bodies with Casts Shadows on (and LDtk / tile map colliders; not sens...
+---| "softness" # number - How soft its shadows' edges are (px of blur); 0: hard edges.
+---| "shadow_strength" # number - How dark its shadows are: 1 blocks it fully, 0.5 lets half through.
+---| "ignore_parent_bodies" # boolean - The bodies it sits in (its parent, grandparent...) cast no shadow for it - a lantern's ...
 ---| "height" # number - How high above the ground it is (px). On normal-mapped art a low light rakes across the...
 ---| "elevation" # number - Directional: the sun's angle above the ground (degrees) - low for long, raking light, 9...
 ---| "shadow_length" # number - Directional: how far shadows reach from what casts them (px); 0: to the edge of the view.
+---| "flicker" # number - Random dips in brightness, like a flame: 0 off, 1 can drop to dark.
+---| "flicker_speed" # number - How fast it flickers (changes a second).
+---| "pulse" # number - A steady rise and fall in brightness: 0 off, 1 down to dark and back.
+---| "pulse_speed" # number - Pulses a second.
 
 ---Reads an Inspector property by its path (vectors and colours as tables); "script.<name>" reads a field of the node's script.
 ---
@@ -5850,16 +6396,27 @@ function TileMapNode:set_property(path, value, y) end
 ---@overload fun(self: LightNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: LightNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: LightNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: LightNode, path: "ignore_lighting"): boolean
+---@overload fun(self: LightNode, path: "emission"): number[]
+---@overload fun(self: LightNode, path: "emission_strength"): number
 ---@overload fun(self: LightNode, path: "kind"): "Point"|"Spot"|"Directional"
 ---@overload fun(self: LightNode, path: "color"): number[]
 ---@overload fun(self: LightNode, path: "energy"): number
 ---@overload fun(self: LightNode, path: "radius"): number
 ---@overload fun(self: LightNode, path: "falloff"): number
 ---@overload fun(self: LightNode, path: "spread"): number
+---@overload fun(self: LightNode, path: "texture"): string
 ---@overload fun(self: LightNode, path: "shadows"): boolean
+---@overload fun(self: LightNode, path: "softness"): number
+---@overload fun(self: LightNode, path: "shadow_strength"): number
+---@overload fun(self: LightNode, path: "ignore_parent_bodies"): boolean
 ---@overload fun(self: LightNode, path: "height"): number
 ---@overload fun(self: LightNode, path: "elevation"): number
 ---@overload fun(self: LightNode, path: "shadow_length"): number
+---@overload fun(self: LightNode, path: "flicker"): number
+---@overload fun(self: LightNode, path: "flicker_speed"): number
+---@overload fun(self: LightNode, path: "pulse"): number
+---@overload fun(self: LightNode, path: "pulse_speed"): number
 function LightNode:get_property(path) end
 
 ---Sets an Inspector property by its path: vectors as {x, y} or x, y; colours as {r, g, b[, a]} 0..1 or "#rrggbb[aa]"; enums by name; "script.<name>" a field of the node's script.
@@ -5882,17 +6439,252 @@ function LightNode:get_property(path) end
 ---@overload fun(self: LightNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: LightNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: LightNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: LightNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: LightNode, path: "emission", value: number[])
+---@overload fun(self: LightNode, path: "emission_strength", value: number)
 ---@overload fun(self: LightNode, path: "kind", value: "Point"|"Spot"|"Directional")
 ---@overload fun(self: LightNode, path: "color", value: number[])
 ---@overload fun(self: LightNode, path: "energy", value: number)
 ---@overload fun(self: LightNode, path: "radius", value: number)
 ---@overload fun(self: LightNode, path: "falloff", value: number)
 ---@overload fun(self: LightNode, path: "spread", value: number)
+---@overload fun(self: LightNode, path: "texture", value: string)
 ---@overload fun(self: LightNode, path: "shadows", value: boolean)
+---@overload fun(self: LightNode, path: "softness", value: number)
+---@overload fun(self: LightNode, path: "shadow_strength", value: number)
+---@overload fun(self: LightNode, path: "ignore_parent_bodies", value: boolean)
 ---@overload fun(self: LightNode, path: "height", value: number)
 ---@overload fun(self: LightNode, path: "elevation", value: number)
 ---@overload fun(self: LightNode, path: "shadow_length", value: number)
+---@overload fun(self: LightNode, path: "flicker", value: number)
+---@overload fun(self: LightNode, path: "flicker_speed", value: number)
+---@overload fun(self: LightNode, path: "pulse", value: number)
+---@overload fun(self: LightNode, path: "pulse_speed", value: number)
 function LightNode:set_property(path, value, y) end
+
+---@class LightOccluderNode
+---@field position Vec2 Position relative to the parent, in pixels (+y is down).
+---@field scale Vec2 Size multiplier relative to the parent (1, 1 = as is; negative flips).
+---@field rotation number Rotation relative to the parent, in degrees (clockwise).
+---@field layer "Layer1"|"Layer2"|"Layer3"|"Layer4"|"Layer5"|"Layer6"|"Layer7"|"Layer8" Drawing layer: higher layers draw over lower ones (Layer8 is for UI).
+---@field z_index integer Draw order within the layer, added to the parent's: higher draws on top (-10, 0, 10...)...
+---@field zIndex integer Same as z_index (the Inspector's name)
+---@field y_sort boolean Draw the children by their Y position (lower on screen = in front), each with its child...
+---@field ySort boolean Same as y_sort (the Inspector's name)
+---@field y_sort_offset number Added to this node's Y when its parent Y-sorts: move the sorting line to the feet (e.g....
+---@field ySortOffset number Same as y_sort_offset (the Inspector's name)
+---@field pause_mode "Inherit"|"Pausable"|"Always" Inherit the parent's pausing, Pausable (stops when paused) or Always (keeps running, e....
+---@field pauseMode "Inherit"|"Pausable"|"Always" Same as pause_mode (the Inspector's name)
+---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
+---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
+---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
+
+---@alias LightOccluderNodeProperty
+---| "position" # Vec2 - Position relative to the parent, in pixels (+y is down).
+---| "scale" # Vec2 - Size multiplier relative to the parent (1, 1 = as is; negative flips).
+---| "rotation" # number - Rotation relative to the parent, in degrees (clockwise).
+---| "layer" # "Layer1"|"Layer2"|"Layer3"|"Layer4"|"Layer5"|"Layer6"|"Layer7"|"Layer8" - Drawing layer: higher layers draw over lower ones (Layer8 is for UI).
+---| "z_index" # integer - Draw order within the layer, added to the parent's: higher draws on top (-10, 0, 10...)...
+---| "y_sort" # boolean - Draw the children by their Y position (lower on screen = in front), each with its child...
+---| "y_sort_offset" # number - Added to this node's Y when its parent Y-sorts: move the sorting line to the feet (e.g....
+---| "pause_mode" # "Inherit"|"Pausable"|"Always" - Inherit the parent's pausing, Pausable (stops when paused) or Always (keeps running, e....
+---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
+---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
+---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+
+---Reads an Inspector property by its path (vectors and colours as tables); "script.<name>" reads a field of the node's script.
+---
+---Example: `local value = self.node:get_property("position")`
+---@param path LightOccluderNodeProperty|string The property's path in snake_case ("position", "z_index", "emitter.amount"; the Inspector's camelCase names work too) or "script.<field>"
+---@return any value Its value: a number, boolean, string or enum name; vectors and colours as tables (nil when there's no such property)
+---@overload fun(self: LightOccluderNode, path: "position"): Vec2
+---@overload fun(self: LightOccluderNode, path: "scale"): Vec2
+---@overload fun(self: LightOccluderNode, path: "rotation"): number
+---@overload fun(self: LightOccluderNode, path: "layer"): "Layer1"|"Layer2"|"Layer3"|"Layer4"|"Layer5"|"Layer6"|"Layer7"|"Layer8"
+---@overload fun(self: LightOccluderNode, path: "z_index"): integer
+---@overload fun(self: LightOccluderNode, path: "y_sort"): boolean
+---@overload fun(self: LightOccluderNode, path: "y_sort_offset"): number
+---@overload fun(self: LightOccluderNode, path: "pause_mode"): "Inherit"|"Pausable"|"Always"
+---@overload fun(self: LightOccluderNode, path: "paused"): boolean
+---@overload fun(self: LightOccluderNode, path: "enabled"): boolean
+---@overload fun(self: LightOccluderNode, path: "visible"): boolean
+---@overload fun(self: LightOccluderNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: LightOccluderNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: LightOccluderNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: LightOccluderNode, path: "ignore_lighting"): boolean
+---@overload fun(self: LightOccluderNode, path: "emission"): number[]
+---@overload fun(self: LightOccluderNode, path: "emission_strength"): number
+function LightOccluderNode:get_property(path) end
+
+---Sets an Inspector property by its path: vectors as {x, y} or x, y; colours as {r, g, b[, a]} 0..1 or "#rrggbb[aa]"; enums by name; "script.<name>" a field of the node's script.
+---
+---Example: `self.node:set_property("position", 100, 50)`
+---@param path LightOccluderNodeProperty|string The property's path in snake_case (the Inspector's camelCase names work too), or "script.<field>"
+---@param value any The new value: a number, boolean, string or enum name; a vector as {x, y} (or x here and y next); a colour as {r, g, b[, a]} 0..1 or "#rrggbb[aa]"
+---@param y? number A vector's y when value is its x
+---@overload fun(self: LightOccluderNode, path: "position", x: number|Vec2|number[], y?: number)
+---@overload fun(self: LightOccluderNode, path: "scale", x: number|Vec2|number[], y?: number)
+---@overload fun(self: LightOccluderNode, path: "rotation", value: number)
+---@overload fun(self: LightOccluderNode, path: "layer", value: "Layer1"|"Layer2"|"Layer3"|"Layer4"|"Layer5"|"Layer6"|"Layer7"|"Layer8")
+---@overload fun(self: LightOccluderNode, path: "z_index", value: integer)
+---@overload fun(self: LightOccluderNode, path: "y_sort", value: boolean)
+---@overload fun(self: LightOccluderNode, path: "y_sort_offset", value: number)
+---@overload fun(self: LightOccluderNode, path: "pause_mode", value: "Inherit"|"Pausable"|"Always")
+---@overload fun(self: LightOccluderNode, path: "paused", value: boolean)
+---@overload fun(self: LightOccluderNode, path: "enabled", value: boolean)
+---@overload fun(self: LightOccluderNode, path: "visible", value: boolean)
+---@overload fun(self: LightOccluderNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: LightOccluderNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: LightOccluderNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: LightOccluderNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: LightOccluderNode, path: "emission", value: number[])
+---@overload fun(self: LightOccluderNode, path: "emission_strength", value: number)
+function LightOccluderNode:set_property(path, value, y) end
+
+---@class EnvironmentNode
+---@field position Vec2 Position relative to the parent, in pixels (+y is down).
+---@field scale Vec2 Size multiplier relative to the parent (1, 1 = as is; negative flips).
+---@field rotation number Rotation relative to the parent, in degrees (clockwise).
+---@field layer "Layer1"|"Layer2"|"Layer3"|"Layer4"|"Layer5"|"Layer6"|"Layer7"|"Layer8" Drawing layer: higher layers draw over lower ones (Layer8 is for UI).
+---@field z_index integer Draw order within the layer, added to the parent's: higher draws on top (-10, 0, 10...)...
+---@field zIndex integer Same as z_index (the Inspector's name)
+---@field y_sort boolean Draw the children by their Y position (lower on screen = in front), each with its child...
+---@field ySort boolean Same as y_sort (the Inspector's name)
+---@field y_sort_offset number Added to this node's Y when its parent Y-sorts: move the sorting line to the feet (e.g....
+---@field ySortOffset number Same as y_sort_offset (the Inspector's name)
+---@field pause_mode "Inherit"|"Pausable"|"Always" Inherit the parent's pausing, Pausable (stops when paused) or Always (keeps running, e....
+---@field pauseMode "Inherit"|"Pausable"|"Always" Same as pause_mode (the Inspector's name)
+---@field paused boolean Pauses this node and its children (except Always ones) while the game runs.
+---@field enabled boolean Disabled nodes (and their children) neither update nor draw.
+---@field visible boolean 
+---@field pixel_filter "Inherit"|"Sharp"|"Smooth" How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---@field pixelFilter "Inherit"|"Sharp"|"Smooth" Same as pixel_filter (the Inspector's name)
+---@field pixel_snap "Inherit"|"On"|"Off" Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
+---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
+---@field ambient number[] The colour of the unlit areas: white shows the scene as drawn, dark colours make lights...
+---@field overbright boolean Lights can make art up to twice as bright as drawn (energy above 1 overexposes): bright...
+---@field bloom boolean Bright parts of the picture glow past their edges (lights, emission, bright art).
+---@field bloom_threshold number How bright a pixel has to be to glow (0: everything, 1: only the brightest).
+---@field bloomThreshold number Same as bloom_threshold (the Inspector's name)
+---@field bloom_strength number How much glow is added.
+---@field bloomStrength number Same as bloom_strength (the Inspector's name)
+---@field bloom_radius number How far the glow spreads (px).
+---@field bloomRadius number Same as bloom_radius (the Inspector's name)
+---@field half_resolution boolean Build the light map at half the size: faster with many lights, a little softer.
+---@field halfResolution boolean Same as half_resolution (the Inspector's name)
+
+---@alias EnvironmentNodeProperty
+---| "position" # Vec2 - Position relative to the parent, in pixels (+y is down).
+---| "scale" # Vec2 - Size multiplier relative to the parent (1, 1 = as is; negative flips).
+---| "rotation" # number - Rotation relative to the parent, in degrees (clockwise).
+---| "layer" # "Layer1"|"Layer2"|"Layer3"|"Layer4"|"Layer5"|"Layer6"|"Layer7"|"Layer8" - Drawing layer: higher layers draw over lower ones (Layer8 is for UI).
+---| "z_index" # integer - Draw order within the layer, added to the parent's: higher draws on top (-10, 0, 10...)...
+---| "y_sort" # boolean - Draw the children by their Y position (lower on screen = in front), each with its child...
+---| "y_sort_offset" # number - Added to this node's Y when its parent Y-sorts: move the sorting line to the feet (e.g....
+---| "pause_mode" # "Inherit"|"Pausable"|"Always" - Inherit the parent's pausing, Pausable (stops when paused) or Always (keeps running, e....
+---| "paused" # boolean - Pauses this node and its children (except Always ones) while the game runs.
+---| "enabled" # boolean - Disabled nodes (and their children) neither update nor draw.
+---| "visible" # boolean
+---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
+---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
+---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---| "ambient" # number[] - The colour of the unlit areas: white shows the scene as drawn, dark colours make lights...
+---| "overbright" # boolean - Lights can make art up to twice as bright as drawn (energy above 1 overexposes): bright...
+---| "bloom" # boolean - Bright parts of the picture glow past their edges (lights, emission, bright art).
+---| "bloom_threshold" # number - How bright a pixel has to be to glow (0: everything, 1: only the brightest).
+---| "bloom_strength" # number - How much glow is added.
+---| "bloom_radius" # number - How far the glow spreads (px).
+---| "half_resolution" # boolean - Build the light map at half the size: faster with many lights, a little softer.
+
+---Reads an Inspector property by its path (vectors and colours as tables); "script.<name>" reads a field of the node's script.
+---
+---Example: `local value = self.node:get_property("ambient")`
+---@param path EnvironmentNodeProperty|string The property's path in snake_case ("position", "z_index", "emitter.amount"; the Inspector's camelCase names work too) or "script.<field>"
+---@return any value Its value: a number, boolean, string or enum name; vectors and colours as tables (nil when there's no such property)
+---@overload fun(self: EnvironmentNode, path: "position"): Vec2
+---@overload fun(self: EnvironmentNode, path: "scale"): Vec2
+---@overload fun(self: EnvironmentNode, path: "rotation"): number
+---@overload fun(self: EnvironmentNode, path: "layer"): "Layer1"|"Layer2"|"Layer3"|"Layer4"|"Layer5"|"Layer6"|"Layer7"|"Layer8"
+---@overload fun(self: EnvironmentNode, path: "z_index"): integer
+---@overload fun(self: EnvironmentNode, path: "y_sort"): boolean
+---@overload fun(self: EnvironmentNode, path: "y_sort_offset"): number
+---@overload fun(self: EnvironmentNode, path: "pause_mode"): "Inherit"|"Pausable"|"Always"
+---@overload fun(self: EnvironmentNode, path: "paused"): boolean
+---@overload fun(self: EnvironmentNode, path: "enabled"): boolean
+---@overload fun(self: EnvironmentNode, path: "visible"): boolean
+---@overload fun(self: EnvironmentNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
+---@overload fun(self: EnvironmentNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
+---@overload fun(self: EnvironmentNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: EnvironmentNode, path: "ignore_lighting"): boolean
+---@overload fun(self: EnvironmentNode, path: "emission"): number[]
+---@overload fun(self: EnvironmentNode, path: "emission_strength"): number
+---@overload fun(self: EnvironmentNode, path: "ambient"): number[]
+---@overload fun(self: EnvironmentNode, path: "overbright"): boolean
+---@overload fun(self: EnvironmentNode, path: "bloom"): boolean
+---@overload fun(self: EnvironmentNode, path: "bloom_threshold"): number
+---@overload fun(self: EnvironmentNode, path: "bloom_strength"): number
+---@overload fun(self: EnvironmentNode, path: "bloom_radius"): number
+---@overload fun(self: EnvironmentNode, path: "half_resolution"): boolean
+function EnvironmentNode:get_property(path) end
+
+---Sets an Inspector property by its path: vectors as {x, y} or x, y; colours as {r, g, b[, a]} 0..1 or "#rrggbb[aa]"; enums by name; "script.<name>" a field of the node's script.
+---
+---Example: `self.node:set_property("ambient", "#ff8800")`
+---@param path EnvironmentNodeProperty|string The property's path in snake_case (the Inspector's camelCase names work too), or "script.<field>"
+---@param value any The new value: a number, boolean, string or enum name; a vector as {x, y} (or x here and y next); a colour as {r, g, b[, a]} 0..1 or "#rrggbb[aa]"
+---@param y? number A vector's y when value is its x
+---@overload fun(self: EnvironmentNode, path: "position", x: number|Vec2|number[], y?: number)
+---@overload fun(self: EnvironmentNode, path: "scale", x: number|Vec2|number[], y?: number)
+---@overload fun(self: EnvironmentNode, path: "rotation", value: number)
+---@overload fun(self: EnvironmentNode, path: "layer", value: "Layer1"|"Layer2"|"Layer3"|"Layer4"|"Layer5"|"Layer6"|"Layer7"|"Layer8")
+---@overload fun(self: EnvironmentNode, path: "z_index", value: integer)
+---@overload fun(self: EnvironmentNode, path: "y_sort", value: boolean)
+---@overload fun(self: EnvironmentNode, path: "y_sort_offset", value: number)
+---@overload fun(self: EnvironmentNode, path: "pause_mode", value: "Inherit"|"Pausable"|"Always")
+---@overload fun(self: EnvironmentNode, path: "paused", value: boolean)
+---@overload fun(self: EnvironmentNode, path: "enabled", value: boolean)
+---@overload fun(self: EnvironmentNode, path: "visible", value: boolean)
+---@overload fun(self: EnvironmentNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
+---@overload fun(self: EnvironmentNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
+---@overload fun(self: EnvironmentNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: EnvironmentNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: EnvironmentNode, path: "emission", value: number[])
+---@overload fun(self: EnvironmentNode, path: "emission_strength", value: number)
+---@overload fun(self: EnvironmentNode, path: "ambient", value: number[])
+---@overload fun(self: EnvironmentNode, path: "overbright", value: boolean)
+---@overload fun(self: EnvironmentNode, path: "bloom", value: boolean)
+---@overload fun(self: EnvironmentNode, path: "bloom_threshold", value: number)
+---@overload fun(self: EnvironmentNode, path: "bloom_strength", value: number)
+---@overload fun(self: EnvironmentNode, path: "bloom_radius", value: number)
+---@overload fun(self: EnvironmentNode, path: "half_resolution", value: boolean)
+function EnvironmentNode:set_property(path, value, y) end
 
 ---@class JointNode
 ---@field position Vec2 Position relative to the parent, in pixels (+y is down).
@@ -5916,6 +6708,11 @@ function LightNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field debug_color number[] Colour of the line drawn between the anchors.
 ---@field debugColor number[] Same as debug_color (the Inspector's name)
 
@@ -5934,6 +6731,9 @@ function LightNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "joint.type" # "Distance"|"Filter"|"Motor"|"Mouse"|"Prismatic"|"Revolute"|"Weld"|"Wheel" - Kind of joint; only that kind's settings are shown.
 ---| "joint.distance.local_anchor_a" # Vec2 - Anchor on body A, relative to its origin (px).
 ---| "joint.distance.local_anchor_b" # Vec2 - Anchor on body B, relative to its origin (px).
@@ -6030,6 +6830,9 @@ function LightNode:set_property(path, value, y) end
 ---@overload fun(self: JointNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: JointNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: JointNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: JointNode, path: "ignore_lighting"): boolean
+---@overload fun(self: JointNode, path: "emission"): number[]
+---@overload fun(self: JointNode, path: "emission_strength"): number
 ---@overload fun(self: JointNode, path: "joint.type"): "Distance"|"Filter"|"Motor"|"Mouse"|"Prismatic"|"Revolute"|"Weld"|"Wheel"
 ---@overload fun(self: JointNode, path: "joint.distance.local_anchor_a"): Vec2
 ---@overload fun(self: JointNode, path: "joint.distance.local_anchor_b"): Vec2
@@ -6128,6 +6931,9 @@ function JointNode:get_property(path) end
 ---@overload fun(self: JointNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: JointNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: JointNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: JointNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: JointNode, path: "emission", value: number[])
+---@overload fun(self: JointNode, path: "emission_strength", value: number)
 ---@overload fun(self: JointNode, path: "joint.type", value: "Distance"|"Filter"|"Motor"|"Mouse"|"Prismatic"|"Revolute"|"Weld"|"Wheel")
 ---@overload fun(self: JointNode, path: "joint.distance.local_anchor_a", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: JointNode, path: "joint.distance.local_anchor_b", x: number|Vec2|number[], y?: number)
@@ -6229,6 +7035,11 @@ function JointNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field text string The text; rich text markup when Rich Text is on, a locale key when Localized.
 ---@field font string Project font (.ttf / .otf / .fnt; "" = the engine font).
 ---@field font_size number Text size (px).
@@ -6269,6 +7080,9 @@ function JointNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "text" # string - The text; rich text markup when Rich Text is on, a locale key when Localized.
 ---| "font" # string - Project font (.ttf / .otf / .fnt; "" = the engine font).
 ---| "font_size" # number - Text size (px).
@@ -6305,6 +7119,9 @@ function JointNode:set_property(path, value, y) end
 ---@overload fun(self: TextNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: TextNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: TextNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: TextNode, path: "ignore_lighting"): boolean
+---@overload fun(self: TextNode, path: "emission"): number[]
+---@overload fun(self: TextNode, path: "emission_strength"): number
 ---@overload fun(self: TextNode, path: "text"): string
 ---@overload fun(self: TextNode, path: "font"): string
 ---@overload fun(self: TextNode, path: "font_size"): number
@@ -6343,6 +7160,9 @@ function TextNode:get_property(path) end
 ---@overload fun(self: TextNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: TextNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: TextNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: TextNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: TextNode, path: "emission", value: number[])
+---@overload fun(self: TextNode, path: "emission_strength", value: number)
 ---@overload fun(self: TextNode, path: "text", value: string)
 ---@overload fun(self: TextNode, path: "font", value: string)
 ---@overload fun(self: TextNode, path: "font_size", value: number)
@@ -6382,6 +7202,11 @@ function TextNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -6427,6 +7252,9 @@ function TextNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "font" # string - Project font ("" = the engine font).
@@ -6464,6 +7292,9 @@ function TextNode:set_property(path, value, y) end
 ---@overload fun(self: DialogueNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: DialogueNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: DialogueNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: DialogueNode, path: "ignore_lighting"): boolean
+---@overload fun(self: DialogueNode, path: "emission"): number[]
+---@overload fun(self: DialogueNode, path: "emission_strength"): number
 ---@overload fun(self: DialogueNode, path: "size"): Vec2
 ---@overload fun(self: DialogueNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: DialogueNode, path: "font"): string
@@ -6503,6 +7334,9 @@ function DialogueNode:get_property(path) end
 ---@overload fun(self: DialogueNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: DialogueNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: DialogueNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: DialogueNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: DialogueNode, path: "emission", value: number[])
+---@overload fun(self: DialogueNode, path: "emission_strength", value: number)
 ---@overload fun(self: DialogueNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: DialogueNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: DialogueNode, path: "font", value: string)
@@ -6544,6 +7378,11 @@ function DialogueNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field mouth string The mouth: a Vector Shape whose group's frames are mouth shapes (path from this node, e...
 ---@field sound string The voice it plays (with Play, autoplay or lipsync_play).
 ---@field cues string Rhubarb Lip Sync's output (TSV or JSON); empty: the sound's .json / .tsv beside it.
@@ -6567,6 +7406,9 @@ function DialogueNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "mouth" # string - The mouth: a Vector Shape whose group's frames are mouth shapes (path from this node, e...
 ---| "sound" # string - The voice it plays (with Play, autoplay or lipsync_play).
 ---| "cues" # string - Rhubarb Lip Sync's output (TSV or JSON); empty: the sound's .json / .tsv beside it.
@@ -6594,6 +7436,9 @@ function DialogueNode:set_property(path, value, y) end
 ---@overload fun(self: LipSyncNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: LipSyncNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: LipSyncNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: LipSyncNode, path: "ignore_lighting"): boolean
+---@overload fun(self: LipSyncNode, path: "emission"): number[]
+---@overload fun(self: LipSyncNode, path: "emission_strength"): number
 ---@overload fun(self: LipSyncNode, path: "mouth"): string
 ---@overload fun(self: LipSyncNode, path: "sound"): string
 ---@overload fun(self: LipSyncNode, path: "cues"): string
@@ -6623,6 +7468,9 @@ function LipSyncNode:get_property(path) end
 ---@overload fun(self: LipSyncNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: LipSyncNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: LipSyncNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: LipSyncNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: LipSyncNode, path: "emission", value: number[])
+---@overload fun(self: LipSyncNode, path: "emission_strength", value: number)
 ---@overload fun(self: LipSyncNode, path: "mouth", value: string)
 ---@overload fun(self: LipSyncNode, path: "sound", value: string)
 ---@overload fun(self: LipSyncNode, path: "cues", value: string)
@@ -6655,6 +7503,11 @@ function LipSyncNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field shininess number Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---@field texture_path string Texture to slice.
 ---@field texturePath string Same as texture_path (the Inspector's name)
@@ -6681,6 +7534,9 @@ function LipSyncNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "shininess" # number - Lit by normal maps: a glint where lights hit it (0 matte .. 1 shiny). An image's <image...
 ---| "texture_path" # string - Texture to slice.
 ---| "size" # Vec2 - Drawn size (px); the borders keep their size, the middle stretches.
@@ -6708,6 +7564,9 @@ function LipSyncNode:set_property(path, value, y) end
 ---@overload fun(self: NineSliceNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: NineSliceNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: NineSliceNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: NineSliceNode, path: "ignore_lighting"): boolean
+---@overload fun(self: NineSliceNode, path: "emission"): number[]
+---@overload fun(self: NineSliceNode, path: "emission_strength"): number
 ---@overload fun(self: NineSliceNode, path: "shininess"): number
 ---@overload fun(self: NineSliceNode, path: "texture_path"): string
 ---@overload fun(self: NineSliceNode, path: "size"): Vec2
@@ -6737,6 +7596,9 @@ function NineSliceNode:get_property(path) end
 ---@overload fun(self: NineSliceNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: NineSliceNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: NineSliceNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: NineSliceNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: NineSliceNode, path: "emission", value: number[])
+---@overload fun(self: NineSliceNode, path: "emission_strength", value: number)
 ---@overload fun(self: NineSliceNode, path: "shininess", value: number)
 ---@overload fun(self: NineSliceNode, path: "texture_path", value: string)
 ---@overload fun(self: NineSliceNode, path: "size", x: number|Vec2|number[], y?: number)
@@ -6767,6 +7629,11 @@ function NineSliceNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field texture_path string Background texture.
 ---@field texturePath string Same as texture_path (the Inspector's name)
 ---@field factor Vec2 Movement relative to the camera: 1 moves with the world, 0 stays fixed on screen.
@@ -6793,6 +7660,9 @@ function NineSliceNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "texture_path" # string - Background texture.
 ---| "factor" # Vec2 - Movement relative to the camera: 1 moves with the world, 0 stays fixed on screen.
 ---| "repeat_x" # boolean - Tile horizontally to fill the view.
@@ -6819,6 +7689,9 @@ function NineSliceNode:set_property(path, value, y) end
 ---@overload fun(self: ParallaxNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: ParallaxNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: ParallaxNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: ParallaxNode, path: "ignore_lighting"): boolean
+---@overload fun(self: ParallaxNode, path: "emission"): number[]
+---@overload fun(self: ParallaxNode, path: "emission_strength"): number
 ---@overload fun(self: ParallaxNode, path: "texture_path"): string
 ---@overload fun(self: ParallaxNode, path: "factor"): Vec2
 ---@overload fun(self: ParallaxNode, path: "repeat_x"): boolean
@@ -6847,6 +7720,9 @@ function ParallaxNode:get_property(path) end
 ---@overload fun(self: ParallaxNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: ParallaxNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: ParallaxNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: ParallaxNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: ParallaxNode, path: "emission", value: number[])
+---@overload fun(self: ParallaxNode, path: "emission_strength", value: number)
 ---@overload fun(self: ParallaxNode, path: "texture_path", value: string)
 ---@overload fun(self: ParallaxNode, path: "factor", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: ParallaxNode, path: "repeat_x", value: boolean)
@@ -6877,6 +7753,11 @@ function ParallaxNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field width number Line thickness (px).
 ---@field color number[] Line colour.
 ---@field closed boolean Join the last point to the first.
@@ -6897,6 +7778,9 @@ function ParallaxNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "width" # number - Line thickness (px).
 ---| "color" # number[] - Line colour.
 ---| "closed" # boolean - Join the last point to the first.
@@ -6921,6 +7805,9 @@ function ParallaxNode:set_property(path, value, y) end
 ---@overload fun(self: LineNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: LineNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: LineNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: LineNode, path: "ignore_lighting"): boolean
+---@overload fun(self: LineNode, path: "emission"): number[]
+---@overload fun(self: LineNode, path: "emission_strength"): number
 ---@overload fun(self: LineNode, path: "width"): number
 ---@overload fun(self: LineNode, path: "color"): number[]
 ---@overload fun(self: LineNode, path: "closed"): boolean
@@ -6947,6 +7834,9 @@ function LineNode:get_property(path) end
 ---@overload fun(self: LineNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: LineNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: LineNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: LineNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: LineNode, path: "emission", value: number[])
+---@overload fun(self: LineNode, path: "emission_strength", value: number)
 ---@overload fun(self: LineNode, path: "width", value: number)
 ---@overload fun(self: LineNode, path: "color", value: number[])
 ---@overload fun(self: LineNode, path: "closed", value: boolean)
@@ -6975,6 +7865,11 @@ function LineNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field file string The SVG it draws (project path); empty: the preset. Reloads when the file is saved.
 ---@field group string A symbol: draw only this named group of the file (Inkscape layer, Illustrator group; "a...
 ---@field frame integer Part swapping: show only this child group of the group (mouths, hands, eyes); -1 shows ...
@@ -7059,6 +7954,9 @@ function LineNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "file" # string - The SVG it draws (project path); empty: the preset. Reloads when the file is saved.
 ---| "group" # string - A symbol: draw only this named group of the file (Inkscape layer, Illustrator group; "a...
 ---| "frame" # integer - Part swapping: show only this child group of the group (mouths, hands, eyes); -1 shows ...
@@ -7119,6 +8017,9 @@ function LineNode:set_property(path, value, y) end
 ---@overload fun(self: VectorShapeNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: VectorShapeNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: VectorShapeNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: VectorShapeNode, path: "ignore_lighting"): boolean
+---@overload fun(self: VectorShapeNode, path: "emission"): number[]
+---@overload fun(self: VectorShapeNode, path: "emission_strength"): number
 ---@overload fun(self: VectorShapeNode, path: "file"): string
 ---@overload fun(self: VectorShapeNode, path: "group"): string
 ---@overload fun(self: VectorShapeNode, path: "frame"): integer
@@ -7181,6 +8082,9 @@ function VectorShapeNode:get_property(path) end
 ---@overload fun(self: VectorShapeNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: VectorShapeNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: VectorShapeNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: VectorShapeNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: VectorShapeNode, path: "emission", value: number[])
+---@overload fun(self: VectorShapeNode, path: "emission_strength", value: number)
 ---@overload fun(self: VectorShapeNode, path: "file", value: string)
 ---@overload fun(self: VectorShapeNode, path: "group", value: string)
 ---@overload fun(self: VectorShapeNode, path: "frame", value: integer)
@@ -7245,6 +8149,11 @@ function VectorShapeNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field lifetime number Seconds a point of the trail lasts.
 ---@field width number Width at the head (it tapers to the tail; px).
 ---@field color number[] Colour at the head.
@@ -7269,6 +8178,9 @@ function VectorShapeNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "lifetime" # number - Seconds a point of the trail lasts.
 ---| "width" # number - Width at the head (it tapers to the tail; px).
 ---| "color" # number[] - Colour at the head.
@@ -7295,6 +8207,9 @@ function VectorShapeNode:set_property(path, value, y) end
 ---@overload fun(self: TrailNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: TrailNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: TrailNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: TrailNode, path: "ignore_lighting"): boolean
+---@overload fun(self: TrailNode, path: "emission"): number[]
+---@overload fun(self: TrailNode, path: "emission_strength"): number
 ---@overload fun(self: TrailNode, path: "lifetime"): number
 ---@overload fun(self: TrailNode, path: "width"): number
 ---@overload fun(self: TrailNode, path: "color"): number[]
@@ -7323,6 +8238,9 @@ function TrailNode:get_property(path) end
 ---@overload fun(self: TrailNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: TrailNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: TrailNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: TrailNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: TrailNode, path: "emission", value: number[])
+---@overload fun(self: TrailNode, path: "emission_strength", value: number)
 ---@overload fun(self: TrailNode, path: "lifetime", value: number)
 ---@overload fun(self: TrailNode, path: "width", value: number)
 ---@overload fun(self: TrailNode, path: "color", value: number[])
@@ -7353,6 +8271,11 @@ function TrailNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -7403,6 +8326,9 @@ function TrailNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "title" # string - Header text.
@@ -7443,6 +8369,9 @@ function TrailNode:set_property(path, value, y) end
 ---@overload fun(self: UIContainerNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: UIContainerNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: UIContainerNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: UIContainerNode, path: "ignore_lighting"): boolean
+---@overload fun(self: UIContainerNode, path: "emission"): number[]
+---@overload fun(self: UIContainerNode, path: "emission_strength"): number
 ---@overload fun(self: UIContainerNode, path: "size"): Vec2
 ---@overload fun(self: UIContainerNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UIContainerNode, path: "title"): string
@@ -7485,6 +8414,9 @@ function UIContainerNode:get_property(path) end
 ---@overload fun(self: UIContainerNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: UIContainerNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: UIContainerNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: UIContainerNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: UIContainerNode, path: "emission", value: number[])
+---@overload fun(self: UIContainerNode, path: "emission_strength", value: number)
 ---@overload fun(self: UIContainerNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UIContainerNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UIContainerNode, path: "title", value: string)
@@ -7529,6 +8461,11 @@ function UIContainerNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -7558,6 +8495,9 @@ function UIContainerNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "text" # string - Label text.
@@ -7586,6 +8526,9 @@ function UIContainerNode:set_property(path, value, y) end
 ---@overload fun(self: UILabelNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: UILabelNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: UILabelNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: UILabelNode, path: "ignore_lighting"): boolean
+---@overload fun(self: UILabelNode, path: "emission"): number[]
+---@overload fun(self: UILabelNode, path: "emission_strength"): number
 ---@overload fun(self: UILabelNode, path: "size"): Vec2
 ---@overload fun(self: UILabelNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UILabelNode, path: "text"): string
@@ -7616,6 +8559,9 @@ function UILabelNode:get_property(path) end
 ---@overload fun(self: UILabelNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: UILabelNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: UILabelNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: UILabelNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: UILabelNode, path: "emission", value: number[])
+---@overload fun(self: UILabelNode, path: "emission_strength", value: number)
 ---@overload fun(self: UILabelNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UILabelNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UILabelNode, path: "text", value: string)
@@ -7648,6 +8594,11 @@ function UILabelNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -7684,6 +8635,9 @@ function UILabelNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "text" # string - Button caption.
@@ -7716,6 +8670,9 @@ function UILabelNode:set_property(path, value, y) end
 ---@overload fun(self: UIButtonNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: UIButtonNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: UIButtonNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: UIButtonNode, path: "ignore_lighting"): boolean
+---@overload fun(self: UIButtonNode, path: "emission"): number[]
+---@overload fun(self: UIButtonNode, path: "emission_strength"): number
 ---@overload fun(self: UIButtonNode, path: "size"): Vec2
 ---@overload fun(self: UIButtonNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UIButtonNode, path: "text"): string
@@ -7750,6 +8707,9 @@ function UIButtonNode:get_property(path) end
 ---@overload fun(self: UIButtonNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: UIButtonNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: UIButtonNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: UIButtonNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: UIButtonNode, path: "emission", value: number[])
+---@overload fun(self: UIButtonNode, path: "emission_strength", value: number)
 ---@overload fun(self: UIButtonNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UIButtonNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UIButtonNode, path: "text", value: string)
@@ -7786,6 +8746,11 @@ function UIButtonNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -7821,6 +8786,9 @@ function UIButtonNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "label" # string - Caption shown next to the control.
@@ -7852,6 +8820,9 @@ function UIButtonNode:set_property(path, value, y) end
 ---@overload fun(self: UISliderNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: UISliderNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: UISliderNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: UISliderNode, path: "ignore_lighting"): boolean
+---@overload fun(self: UISliderNode, path: "emission"): number[]
+---@overload fun(self: UISliderNode, path: "emission_strength"): number
 ---@overload fun(self: UISliderNode, path: "size"): Vec2
 ---@overload fun(self: UISliderNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UISliderNode, path: "label"): string
@@ -7885,6 +8856,9 @@ function UISliderNode:get_property(path) end
 ---@overload fun(self: UISliderNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: UISliderNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: UISliderNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: UISliderNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: UISliderNode, path: "emission", value: number[])
+---@overload fun(self: UISliderNode, path: "emission_strength", value: number)
 ---@overload fun(self: UISliderNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UISliderNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UISliderNode, path: "label", value: string)
@@ -7920,6 +8894,11 @@ function UISliderNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -7947,6 +8926,9 @@ function UISliderNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "label" # string - Caption shown next to the control.
@@ -7974,6 +8956,9 @@ function UISliderNode:set_property(path, value, y) end
 ---@overload fun(self: UICheckboxNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: UICheckboxNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: UICheckboxNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: UICheckboxNode, path: "ignore_lighting"): boolean
+---@overload fun(self: UICheckboxNode, path: "emission"): number[]
+---@overload fun(self: UICheckboxNode, path: "emission_strength"): number
 ---@overload fun(self: UICheckboxNode, path: "size"): Vec2
 ---@overload fun(self: UICheckboxNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UICheckboxNode, path: "label"): string
@@ -8003,6 +8988,9 @@ function UICheckboxNode:get_property(path) end
 ---@overload fun(self: UICheckboxNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: UICheckboxNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: UICheckboxNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: UICheckboxNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: UICheckboxNode, path: "emission", value: number[])
+---@overload fun(self: UICheckboxNode, path: "emission_strength", value: number)
 ---@overload fun(self: UICheckboxNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UICheckboxNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UICheckboxNode, path: "label", value: string)
@@ -8034,6 +9022,11 @@ function UICheckboxNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -8064,6 +9057,9 @@ function UICheckboxNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "label" # string - Caption shown next to the control.
@@ -8093,6 +9089,9 @@ function UICheckboxNode:set_property(path, value, y) end
 ---@overload fun(self: UIProgressBarNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: UIProgressBarNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: UIProgressBarNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: UIProgressBarNode, path: "ignore_lighting"): boolean
+---@overload fun(self: UIProgressBarNode, path: "emission"): number[]
+---@overload fun(self: UIProgressBarNode, path: "emission_strength"): number
 ---@overload fun(self: UIProgressBarNode, path: "size"): Vec2
 ---@overload fun(self: UIProgressBarNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UIProgressBarNode, path: "label"): string
@@ -8124,6 +9123,9 @@ function UIProgressBarNode:get_property(path) end
 ---@overload fun(self: UIProgressBarNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: UIProgressBarNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: UIProgressBarNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: UIProgressBarNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: UIProgressBarNode, path: "emission", value: number[])
+---@overload fun(self: UIProgressBarNode, path: "emission_strength", value: number)
 ---@overload fun(self: UIProgressBarNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UIProgressBarNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UIProgressBarNode, path: "label", value: string)
@@ -8157,6 +9159,11 @@ function UIProgressBarNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -8183,6 +9190,9 @@ function UIProgressBarNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "label" # string - Caption shown next to the control.
@@ -8210,6 +9220,9 @@ function UIProgressBarNode:set_property(path, value, y) end
 ---@overload fun(self: UITextInputNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: UITextInputNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: UITextInputNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: UITextInputNode, path: "ignore_lighting"): boolean
+---@overload fun(self: UITextInputNode, path: "emission"): number[]
+---@overload fun(self: UITextInputNode, path: "emission_strength"): number
 ---@overload fun(self: UITextInputNode, path: "size"): Vec2
 ---@overload fun(self: UITextInputNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UITextInputNode, path: "label"): string
@@ -8239,6 +9252,9 @@ function UITextInputNode:get_property(path) end
 ---@overload fun(self: UITextInputNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: UITextInputNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: UITextInputNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: UITextInputNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: UITextInputNode, path: "emission", value: number[])
+---@overload fun(self: UITextInputNode, path: "emission_strength", value: number)
 ---@overload fun(self: UITextInputNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UITextInputNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UITextInputNode, path: "label", value: string)
@@ -8270,6 +9286,11 @@ function UITextInputNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -8299,6 +9320,9 @@ function UITextInputNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "label" # string - Caption shown next to the control.
@@ -8327,6 +9351,9 @@ function UITextInputNode:set_property(path, value, y) end
 ---@overload fun(self: UIDropdownNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: UIDropdownNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: UIDropdownNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: UIDropdownNode, path: "ignore_lighting"): boolean
+---@overload fun(self: UIDropdownNode, path: "emission"): number[]
+---@overload fun(self: UIDropdownNode, path: "emission_strength"): number
 ---@overload fun(self: UIDropdownNode, path: "size"): Vec2
 ---@overload fun(self: UIDropdownNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UIDropdownNode, path: "label"): string
@@ -8357,6 +9384,9 @@ function UIDropdownNode:get_property(path) end
 ---@overload fun(self: UIDropdownNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: UIDropdownNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: UIDropdownNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: UIDropdownNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: UIDropdownNode, path: "emission", value: number[])
+---@overload fun(self: UIDropdownNode, path: "emission_strength", value: number)
 ---@overload fun(self: UIDropdownNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UIDropdownNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UIDropdownNode, path: "label", value: string)
@@ -8389,6 +9419,11 @@ function UIDropdownNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -8417,6 +9452,9 @@ function UIDropdownNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "label" # string - Caption shown next to the control.
@@ -8445,6 +9483,9 @@ function UIDropdownNode:set_property(path, value, y) end
 ---@overload fun(self: UIRadioGroupNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: UIRadioGroupNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: UIRadioGroupNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: UIRadioGroupNode, path: "ignore_lighting"): boolean
+---@overload fun(self: UIRadioGroupNode, path: "emission"): number[]
+---@overload fun(self: UIRadioGroupNode, path: "emission_strength"): number
 ---@overload fun(self: UIRadioGroupNode, path: "size"): Vec2
 ---@overload fun(self: UIRadioGroupNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UIRadioGroupNode, path: "label"): string
@@ -8475,6 +9516,9 @@ function UIRadioGroupNode:get_property(path) end
 ---@overload fun(self: UIRadioGroupNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: UIRadioGroupNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: UIRadioGroupNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: UIRadioGroupNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: UIRadioGroupNode, path: "emission", value: number[])
+---@overload fun(self: UIRadioGroupNode, path: "emission_strength", value: number)
 ---@overload fun(self: UIRadioGroupNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UIRadioGroupNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UIRadioGroupNode, path: "label", value: string)
@@ -8507,6 +9551,11 @@ function UIRadioGroupNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -8528,6 +9577,9 @@ function UIRadioGroupNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "label" # string - Caption shown next to the control.
@@ -8552,6 +9604,9 @@ function UIRadioGroupNode:set_property(path, value, y) end
 ---@overload fun(self: UIToggleSwitchNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: UIToggleSwitchNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: UIToggleSwitchNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: UIToggleSwitchNode, path: "ignore_lighting"): boolean
+---@overload fun(self: UIToggleSwitchNode, path: "emission"): number[]
+---@overload fun(self: UIToggleSwitchNode, path: "emission_strength"): number
 ---@overload fun(self: UIToggleSwitchNode, path: "size"): Vec2
 ---@overload fun(self: UIToggleSwitchNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UIToggleSwitchNode, path: "label"): string
@@ -8578,6 +9633,9 @@ function UIToggleSwitchNode:get_property(path) end
 ---@overload fun(self: UIToggleSwitchNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: UIToggleSwitchNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: UIToggleSwitchNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: UIToggleSwitchNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: UIToggleSwitchNode, path: "emission", value: number[])
+---@overload fun(self: UIToggleSwitchNode, path: "emission_strength", value: number)
 ---@overload fun(self: UIToggleSwitchNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UIToggleSwitchNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UIToggleSwitchNode, path: "label", value: string)
@@ -8606,6 +9664,11 @@ function UIToggleSwitchNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -8633,6 +9696,9 @@ function UIToggleSwitchNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "label" # string - Caption shown next to the control.
@@ -8660,6 +9726,9 @@ function UIToggleSwitchNode:set_property(path, value, y) end
 ---@overload fun(self: UIKnobNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: UIKnobNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: UIKnobNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: UIKnobNode, path: "ignore_lighting"): boolean
+---@overload fun(self: UIKnobNode, path: "emission"): number[]
+---@overload fun(self: UIKnobNode, path: "emission_strength"): number
 ---@overload fun(self: UIKnobNode, path: "size"): Vec2
 ---@overload fun(self: UIKnobNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UIKnobNode, path: "label"): string
@@ -8689,6 +9758,9 @@ function UIKnobNode:get_property(path) end
 ---@overload fun(self: UIKnobNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: UIKnobNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: UIKnobNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: UIKnobNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: UIKnobNode, path: "emission", value: number[])
+---@overload fun(self: UIKnobNode, path: "emission_strength", value: number)
 ---@overload fun(self: UIKnobNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UIKnobNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UIKnobNode, path: "label", value: string)
@@ -8720,6 +9792,11 @@ function UIKnobNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -8752,6 +9829,9 @@ function UIKnobNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "label" # string - Caption shown next to the control.
@@ -8782,6 +9862,9 @@ function UIKnobNode:set_property(path, value, y) end
 ---@overload fun(self: UINotchedSliderNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: UINotchedSliderNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: UINotchedSliderNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: UINotchedSliderNode, path: "ignore_lighting"): boolean
+---@overload fun(self: UINotchedSliderNode, path: "emission"): number[]
+---@overload fun(self: UINotchedSliderNode, path: "emission_strength"): number
 ---@overload fun(self: UINotchedSliderNode, path: "size"): Vec2
 ---@overload fun(self: UINotchedSliderNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UINotchedSliderNode, path: "label"): string
@@ -8814,6 +9897,9 @@ function UINotchedSliderNode:get_property(path) end
 ---@overload fun(self: UINotchedSliderNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: UINotchedSliderNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: UINotchedSliderNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: UINotchedSliderNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: UINotchedSliderNode, path: "emission", value: number[])
+---@overload fun(self: UINotchedSliderNode, path: "emission_strength", value: number)
 ---@overload fun(self: UINotchedSliderNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UINotchedSliderNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UINotchedSliderNode, path: "label", value: string)
@@ -8848,6 +9934,11 @@ function UINotchedSliderNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -8876,6 +9967,9 @@ function UINotchedSliderNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "label" # string - Caption shown next to the control.
@@ -8903,6 +9997,9 @@ function UINotchedSliderNode:set_property(path, value, y) end
 ---@overload fun(self: UIVolumeFaderNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: UIVolumeFaderNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: UIVolumeFaderNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: UIVolumeFaderNode, path: "ignore_lighting"): boolean
+---@overload fun(self: UIVolumeFaderNode, path: "emission"): number[]
+---@overload fun(self: UIVolumeFaderNode, path: "emission_strength"): number
 ---@overload fun(self: UIVolumeFaderNode, path: "size"): Vec2
 ---@overload fun(self: UIVolumeFaderNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UIVolumeFaderNode, path: "label"): string
@@ -8932,6 +10029,9 @@ function UIVolumeFaderNode:get_property(path) end
 ---@overload fun(self: UIVolumeFaderNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: UIVolumeFaderNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: UIVolumeFaderNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: UIVolumeFaderNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: UIVolumeFaderNode, path: "emission", value: number[])
+---@overload fun(self: UIVolumeFaderNode, path: "emission_strength", value: number)
 ---@overload fun(self: UIVolumeFaderNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UIVolumeFaderNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UIVolumeFaderNode, path: "label", value: string)
@@ -8963,6 +10063,11 @@ function UIVolumeFaderNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -8992,6 +10097,9 @@ function UIVolumeFaderNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "label" # string - Caption shown next to the control.
@@ -9020,6 +10128,9 @@ function UIVolumeFaderNode:set_property(path, value, y) end
 ---@overload fun(self: UIVolumeMeterNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: UIVolumeMeterNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: UIVolumeMeterNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: UIVolumeMeterNode, path: "ignore_lighting"): boolean
+---@overload fun(self: UIVolumeMeterNode, path: "emission"): number[]
+---@overload fun(self: UIVolumeMeterNode, path: "emission_strength"): number
 ---@overload fun(self: UIVolumeMeterNode, path: "size"): Vec2
 ---@overload fun(self: UIVolumeMeterNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UIVolumeMeterNode, path: "label"): string
@@ -9050,6 +10161,9 @@ function UIVolumeMeterNode:get_property(path) end
 ---@overload fun(self: UIVolumeMeterNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: UIVolumeMeterNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: UIVolumeMeterNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: UIVolumeMeterNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: UIVolumeMeterNode, path: "emission", value: number[])
+---@overload fun(self: UIVolumeMeterNode, path: "emission_strength", value: number)
 ---@overload fun(self: UIVolumeMeterNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UIVolumeMeterNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UIVolumeMeterNode, path: "label", value: string)
@@ -9082,6 +10196,11 @@ function UIVolumeMeterNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -9104,6 +10223,9 @@ function UIVolumeMeterNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "label" # string - Text at the start of the line ("" = a plain line); with text it's at least 18 px tall.
@@ -9128,6 +10250,9 @@ function UIVolumeMeterNode:set_property(path, value, y) end
 ---@overload fun(self: UISeparatorNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: UISeparatorNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: UISeparatorNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: UISeparatorNode, path: "ignore_lighting"): boolean
+---@overload fun(self: UISeparatorNode, path: "emission"): number[]
+---@overload fun(self: UISeparatorNode, path: "emission_strength"): number
 ---@overload fun(self: UISeparatorNode, path: "size"): Vec2
 ---@overload fun(self: UISeparatorNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UISeparatorNode, path: "label"): string
@@ -9154,6 +10279,9 @@ function UISeparatorNode:get_property(path) end
 ---@overload fun(self: UISeparatorNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: UISeparatorNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: UISeparatorNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: UISeparatorNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: UISeparatorNode, path: "emission", value: number[])
+---@overload fun(self: UISeparatorNode, path: "emission_strength", value: number)
 ---@overload fun(self: UISeparatorNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UISeparatorNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UISeparatorNode, path: "label", value: string)
@@ -9182,6 +10310,11 @@ function UISeparatorNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -9237,6 +10370,9 @@ function UISeparatorNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "title" # string - Heading above the plot.
@@ -9278,6 +10414,9 @@ function UISeparatorNode:set_property(path, value, y) end
 ---@overload fun(self: UIXYPlotNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: UIXYPlotNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: UIXYPlotNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: UIXYPlotNode, path: "ignore_lighting"): boolean
+---@overload fun(self: UIXYPlotNode, path: "emission"): number[]
+---@overload fun(self: UIXYPlotNode, path: "emission_strength"): number
 ---@overload fun(self: UIXYPlotNode, path: "size"): Vec2
 ---@overload fun(self: UIXYPlotNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UIXYPlotNode, path: "title"): string
@@ -9321,6 +10460,9 @@ function UIXYPlotNode:get_property(path) end
 ---@overload fun(self: UIXYPlotNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: UIXYPlotNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: UIXYPlotNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: UIXYPlotNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: UIXYPlotNode, path: "emission", value: number[])
+---@overload fun(self: UIXYPlotNode, path: "emission_strength", value: number)
 ---@overload fun(self: UIXYPlotNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UIXYPlotNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UIXYPlotNode, path: "title", value: string)
@@ -9366,6 +10508,11 @@ function UIXYPlotNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -9390,6 +10537,9 @@ function UIXYPlotNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "items" # string[] - The rows, one a line.
@@ -9415,6 +10565,9 @@ function UIXYPlotNode:set_property(path, value, y) end
 ---@overload fun(self: UIListViewNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: UIListViewNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: UIListViewNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: UIListViewNode, path: "ignore_lighting"): boolean
+---@overload fun(self: UIListViewNode, path: "emission"): number[]
+---@overload fun(self: UIListViewNode, path: "emission_strength"): number
 ---@overload fun(self: UIListViewNode, path: "size"): Vec2
 ---@overload fun(self: UIListViewNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UIListViewNode, path: "items"): string[]
@@ -9442,6 +10595,9 @@ function UIListViewNode:get_property(path) end
 ---@overload fun(self: UIListViewNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: UIListViewNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: UIListViewNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: UIListViewNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: UIListViewNode, path: "emission", value: number[])
+---@overload fun(self: UIListViewNode, path: "emission_strength", value: number)
 ---@overload fun(self: UIListViewNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UIListViewNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UIListViewNode, path: "items", value: string[])
@@ -9471,6 +10627,11 @@ function UIListViewNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -9495,6 +10656,9 @@ function UIListViewNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "selected_id" # integer - Id of the selected item (-1 = none).
@@ -9520,6 +10684,9 @@ function UIListViewNode:set_property(path, value, y) end
 ---@overload fun(self: UITreeViewNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: UITreeViewNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: UITreeViewNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: UITreeViewNode, path: "ignore_lighting"): boolean
+---@overload fun(self: UITreeViewNode, path: "emission"): number[]
+---@overload fun(self: UITreeViewNode, path: "emission_strength"): number
 ---@overload fun(self: UITreeViewNode, path: "size"): Vec2
 ---@overload fun(self: UITreeViewNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UITreeViewNode, path: "selected_id"): integer
@@ -9547,6 +10714,9 @@ function UITreeViewNode:get_property(path) end
 ---@overload fun(self: UITreeViewNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: UITreeViewNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: UITreeViewNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: UITreeViewNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: UITreeViewNode, path: "emission", value: number[])
+---@overload fun(self: UITreeViewNode, path: "emission_strength", value: number)
 ---@overload fun(self: UITreeViewNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UITreeViewNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UITreeViewNode, path: "selected_id", value: integer)
@@ -9576,6 +10746,11 @@ function UITreeViewNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -9602,6 +10777,9 @@ function UITreeViewNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "selected_index" # integer - Index of the selected item (-1 = none).
@@ -9628,6 +10806,9 @@ function UITreeViewNode:set_property(path, value, y) end
 ---@overload fun(self: UIUnorderedListNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: UIUnorderedListNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: UIUnorderedListNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: UIUnorderedListNode, path: "ignore_lighting"): boolean
+---@overload fun(self: UIUnorderedListNode, path: "emission"): number[]
+---@overload fun(self: UIUnorderedListNode, path: "emission_strength"): number
 ---@overload fun(self: UIUnorderedListNode, path: "size"): Vec2
 ---@overload fun(self: UIUnorderedListNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UIUnorderedListNode, path: "selected_index"): integer
@@ -9656,6 +10837,9 @@ function UIUnorderedListNode:get_property(path) end
 ---@overload fun(self: UIUnorderedListNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: UIUnorderedListNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: UIUnorderedListNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: UIUnorderedListNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: UIUnorderedListNode, path: "emission", value: number[])
+---@overload fun(self: UIUnorderedListNode, path: "emission_strength", value: number)
 ---@overload fun(self: UIUnorderedListNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UIUnorderedListNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UIUnorderedListNode, path: "selected_index", value: integer)
@@ -9686,6 +10870,11 @@ function UIUnorderedListNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -9713,6 +10902,9 @@ function UIUnorderedListNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "selected_index" # integer - Index of the selected item (-1 = none).
@@ -9740,6 +10932,9 @@ function UIUnorderedListNode:set_property(path, value, y) end
 ---@overload fun(self: UIOrderedListNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: UIOrderedListNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: UIOrderedListNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: UIOrderedListNode, path: "ignore_lighting"): boolean
+---@overload fun(self: UIOrderedListNode, path: "emission"): number[]
+---@overload fun(self: UIOrderedListNode, path: "emission_strength"): number
 ---@overload fun(self: UIOrderedListNode, path: "size"): Vec2
 ---@overload fun(self: UIOrderedListNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UIOrderedListNode, path: "selected_index"): integer
@@ -9769,6 +10964,9 @@ function UIOrderedListNode:get_property(path) end
 ---@overload fun(self: UIOrderedListNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: UIOrderedListNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: UIOrderedListNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: UIOrderedListNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: UIOrderedListNode, path: "emission", value: number[])
+---@overload fun(self: UIOrderedListNode, path: "emission_strength", value: number)
 ---@overload fun(self: UIOrderedListNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UIOrderedListNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UIOrderedListNode, path: "selected_index", value: integer)
@@ -9800,6 +10998,11 @@ function UIOrderedListNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -9831,6 +11034,9 @@ function UIOrderedListNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "selected_row" # integer - Index of the selected row.
@@ -9860,6 +11066,9 @@ function UIOrderedListNode:set_property(path, value, y) end
 ---@overload fun(self: UITableNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: UITableNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: UITableNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: UITableNode, path: "ignore_lighting"): boolean
+---@overload fun(self: UITableNode, path: "emission"): number[]
+---@overload fun(self: UITableNode, path: "emission_strength"): number
 ---@overload fun(self: UITableNode, path: "size"): Vec2
 ---@overload fun(self: UITableNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UITableNode, path: "selected_row"): integer
@@ -9891,6 +11100,9 @@ function UITableNode:get_property(path) end
 ---@overload fun(self: UITableNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: UITableNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: UITableNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: UITableNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: UITableNode, path: "emission", value: number[])
+---@overload fun(self: UITableNode, path: "emission_strength", value: number)
 ---@overload fun(self: UITableNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UITableNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UITableNode, path: "selected_row", value: integer)
@@ -9924,6 +11136,11 @@ function UITableNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -9948,6 +11165,9 @@ function UITableNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "icon" # IconName - Icon shown (Font Awesome).
@@ -9974,6 +11194,9 @@ function UITableNode:set_property(path, value, y) end
 ---@overload fun(self: UIIconNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: UIIconNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: UIIconNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: UIIconNode, path: "ignore_lighting"): boolean
+---@overload fun(self: UIIconNode, path: "emission"): number[]
+---@overload fun(self: UIIconNode, path: "emission_strength"): number
 ---@overload fun(self: UIIconNode, path: "size"): Vec2
 ---@overload fun(self: UIIconNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UIIconNode, path: "icon"): IconName
@@ -10002,6 +11225,9 @@ function UIIconNode:get_property(path) end
 ---@overload fun(self: UIIconNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: UIIconNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: UIIconNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: UIIconNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: UIIconNode, path: "emission", value: number[])
+---@overload fun(self: UIIconNode, path: "emission_strength", value: number)
 ---@overload fun(self: UIIconNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UIIconNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UIIconNode, path: "icon", value: IconName)
@@ -10032,6 +11258,11 @@ function UIIconNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -10057,6 +11288,9 @@ function UIIconNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "active_toggle_id" # integer - Id of the pressed toggle button.
@@ -10083,6 +11317,9 @@ function UIIconNode:set_property(path, value, y) end
 ---@overload fun(self: UIToolbarNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: UIToolbarNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: UIToolbarNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: UIToolbarNode, path: "ignore_lighting"): boolean
+---@overload fun(self: UIToolbarNode, path: "emission"): number[]
+---@overload fun(self: UIToolbarNode, path: "emission_strength"): number
 ---@overload fun(self: UIToolbarNode, path: "size"): Vec2
 ---@overload fun(self: UIToolbarNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UIToolbarNode, path: "active_toggle_id"): integer
@@ -10111,6 +11348,9 @@ function UIToolbarNode:get_property(path) end
 ---@overload fun(self: UIToolbarNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: UIToolbarNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: UIToolbarNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: UIToolbarNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: UIToolbarNode, path: "emission", value: number[])
+---@overload fun(self: UIToolbarNode, path: "emission_strength", value: number)
 ---@overload fun(self: UIToolbarNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UIToolbarNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UIToolbarNode, path: "active_toggle_id", value: integer)
@@ -10141,6 +11381,11 @@ function UIToolbarNode:set_property(path, value, y) end
 ---@field pixelSnap "Inherit"|"On"|"Off" Same as pixel_snap (the Inspector's name)
 ---@field pixel_text "Default"|"Native"|"Pixel" Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
 ---@field pixelText "Default"|"Native"|"Pixel" Same as pixel_text (the Inspector's name)
+---@field ignore_lighting boolean Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---@field ignoreLighting boolean Same as ignore_lighting (the Inspector's name)
+---@field emission number[] The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---@field emission_strength number How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
+---@field emissionStrength number Same as emission_strength (the Inspector's name)
 ---@field size Vec2 Width and height (px).
 ---@field keyboard_focus boolean Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---@field keyboardFocus boolean Same as keyboard_focus (the Inspector's name)
@@ -10199,6 +11444,9 @@ function UIToolbarNode:set_property(path, value, y) end
 ---| "pixel_filter" # "Inherit"|"Sharp"|"Smooth" - How its textures are sampled when drawn scaled or between pixels: Inherit (each texture...
 ---| "pixel_snap" # "Inherit"|"On"|"Off" - Draw it on whole game pixels: Inherit (the project's Pixel Snap), On or Off.
 ---| "pixel_text" # "Default"|"Native"|"Pixel" - Text and UI when the game is scaled up: Native (crisp at the window's resolution, over ...
+---| "ignore_lighting" # boolean - Drawn at full brightness, whatever the lights and the ambient (signs, pickups, things t...
+---| "emission" # number[] - The colour it glows in the dark (with Emission Strength above 0): added after the light...
+---| "emission_strength" # number - How strongly it glows (0: not at all). An <image>_e.png emission map makes parts of its...
 ---| "size" # Vec2 - Width and height (px).
 ---| "keyboard_focus" # boolean - Tab and the arrow keys can move to it (then Enter presses it). Off: only the mouse, so ...
 ---| "title" # string - Header text.
@@ -10243,6 +11491,9 @@ function UIToolbarNode:set_property(path, value, y) end
 ---@overload fun(self: UITabContainerNode, path: "pixel_filter"): "Inherit"|"Sharp"|"Smooth"
 ---@overload fun(self: UITabContainerNode, path: "pixel_snap"): "Inherit"|"On"|"Off"
 ---@overload fun(self: UITabContainerNode, path: "pixel_text"): "Default"|"Native"|"Pixel"
+---@overload fun(self: UITabContainerNode, path: "ignore_lighting"): boolean
+---@overload fun(self: UITabContainerNode, path: "emission"): number[]
+---@overload fun(self: UITabContainerNode, path: "emission_strength"): number
 ---@overload fun(self: UITabContainerNode, path: "size"): Vec2
 ---@overload fun(self: UITabContainerNode, path: "keyboard_focus"): boolean
 ---@overload fun(self: UITabContainerNode, path: "title"): string
@@ -10289,6 +11540,9 @@ function UITabContainerNode:get_property(path) end
 ---@overload fun(self: UITabContainerNode, path: "pixel_filter", value: "Inherit"|"Sharp"|"Smooth")
 ---@overload fun(self: UITabContainerNode, path: "pixel_snap", value: "Inherit"|"On"|"Off")
 ---@overload fun(self: UITabContainerNode, path: "pixel_text", value: "Default"|"Native"|"Pixel")
+---@overload fun(self: UITabContainerNode, path: "ignore_lighting", value: boolean)
+---@overload fun(self: UITabContainerNode, path: "emission", value: number[])
+---@overload fun(self: UITabContainerNode, path: "emission_strength", value: number)
 ---@overload fun(self: UITabContainerNode, path: "size", x: number|Vec2|number[], y?: number)
 ---@overload fun(self: UITabContainerNode, path: "keyboard_focus", value: boolean)
 ---@overload fun(self: UITabContainerNode, path: "title", value: string)
@@ -12000,6 +13254,383 @@ function LightNode:light_get_energy() end
 ---Example: `local lamp = self.node:get_node("Lamp"); lamp:light_set_radius(200)`
 ---@param radius number How far the light reaches, in world px (negative counts as 0)
 function LightNode:light_set_radius(radius) end
+
+-- Every Light setting (lighting_lua.odin): light_get_<setting> / light_set_<setting>.
+
+---Gets Point, spot or directional (the sun).
+---
+---Example: `local v = lamp:light_get_kind()`
+---@return "point"|"spot"|"directional" value
+function LightNode:light_get_kind() end
+
+---Sets Point, spot or directional (the sun).
+---
+---Example: `lamp:light_set_kind("spot")`
+---@param value "point"|"spot"|"directional" The new value
+function LightNode:light_set_kind(value) end
+
+---Gets its colour {r, g, b, a} (0..1).
+---
+---Example: `local v = lamp:light_get_color()`
+---@return number[] value
+function LightNode:light_get_color() end
+
+---Gets how far it reaches (px).
+---
+---Example: `local v = lamp:light_get_radius()`
+---@return number value
+function LightNode:light_get_radius() end
+
+---Gets how it fades to the edge (1 linear, 2 smooth, higher tighter).
+---
+---Example: `local v = lamp:light_get_falloff()`
+---@return number value
+function LightNode:light_get_falloff() end
+
+---Sets how it fades to the edge (1 linear, 2 smooth, higher tighter).
+---
+---Example: `lamp:light_set_falloff(1.5)`
+---@param value number The new value
+function LightNode:light_set_falloff(value) end
+
+---Gets a spot's half-angle (degrees).
+---
+---Example: `local v = lamp:light_get_spread()`
+---@return number value
+function LightNode:light_get_spread() end
+
+---Sets a spot's half-angle (degrees).
+---
+---Example: `lamp:light_set_spread(25)`
+---@param value number The new value
+function LightNode:light_set_spread(value) end
+
+---Gets its light texture: a project image path, "builtin:ring", "builtin:window", "builtin:blinds", "builtin:noise", or "" for none.
+---
+---Example: `local v = lamp:light_get_texture()`
+---@return string value
+function LightNode:light_get_texture() end
+
+---Sets its light texture: a project image path, "builtin:ring", "builtin:window", "builtin:blinds", "builtin:noise", or "" for none.
+---
+---Example: `lamp:light_set_texture("builtin:window")`
+---@param value string The new value
+function LightNode:light_set_texture(value) end
+
+---Gets the light layers it lights (names).
+---
+---Example: `local v = lamp:light_get_layers()`
+---@return string[] value
+function LightNode:light_get_layers() end
+
+---Sets the light layers it lights (names).
+---
+---Example: `lamp:light_set_layers({"World", "Player"})`
+---@param value string|string[]|integer The new value
+function LightNode:light_set_layers(value) end
+
+---Gets whether it casts shadows.
+---
+---Example: `local v = lamp:light_get_shadows()`
+---@return boolean value
+function LightNode:light_get_shadows() end
+
+---Sets whether it casts shadows.
+---
+---Example: `lamp:light_set_shadows(false)`
+---@param value boolean The new value
+function LightNode:light_set_shadows(value) end
+
+---Gets its shadows' edge blur (px; 0 hard).
+---
+---Example: `local v = lamp:light_get_softness()`
+---@return number value
+function LightNode:light_get_softness() end
+
+---Sets its shadows' edge blur (px; 0 hard).
+---
+---Example: `lamp:light_set_softness(12)`
+---@param value number The new value
+function LightNode:light_set_softness(value) end
+
+---Gets how dark its shadows are (0..1).
+---
+---Example: `local v = lamp:light_get_shadow_strength()`
+---@return number value
+function LightNode:light_get_shadow_strength() end
+
+---Sets how dark its shadows are (0..1).
+---
+---Example: `lamp:light_set_shadow_strength(0.6)`
+---@param value number The new value
+function LightNode:light_set_shadow_strength(value) end
+
+---Gets whether the bodies it sits in are left out of its shadows.
+---
+---Example: `local v = lamp:light_get_ignore_parent_bodies()`
+---@return boolean value
+function LightNode:light_get_ignore_parent_bodies() end
+
+---Sets whether the bodies it sits in are left out of its shadows.
+---
+---Example: `lamp:light_set_ignore_parent_bodies(false)`
+---@param value boolean The new value
+function LightNode:light_set_ignore_parent_bodies(value) end
+
+---Gets its height above the ground for normal maps (px).
+---
+---Example: `local v = lamp:light_get_height()`
+---@return number value
+function LightNode:light_get_height() end
+
+---Sets its height above the ground for normal maps (px).
+---
+---Example: `lamp:light_set_height(120)`
+---@param value number The new value
+function LightNode:light_set_height(value) end
+
+---Gets a sun's angle above the ground (degrees).
+---
+---Example: `local v = lamp:light_get_elevation()`
+---@return number value
+function LightNode:light_get_elevation() end
+
+---Sets a sun's angle above the ground (degrees).
+---
+---Example: `lamp:light_set_elevation(30)`
+---@param value number The new value
+function LightNode:light_set_elevation(value) end
+
+---Gets how far a sun's shadows reach (px; 0 to the view's edge).
+---
+---Example: `local v = lamp:light_get_shadow_length()`
+---@return number value
+function LightNode:light_get_shadow_length() end
+
+---Sets how far a sun's shadows reach (px; 0 to the view's edge).
+---
+---Example: `lamp:light_set_shadow_length(200)`
+---@param value number The new value
+function LightNode:light_set_shadow_length(value) end
+
+---Gets how much it flickers (0..1).
+---
+---Example: `local v = lamp:light_get_flicker()`
+---@return number value
+function LightNode:light_get_flicker() end
+
+---Sets how much it flickers (0..1).
+---
+---Example: `lamp:light_set_flicker(0.4)`
+---@param value number The new value
+function LightNode:light_set_flicker(value) end
+
+---Gets how fast it flickers (changes a second).
+---
+---Example: `local v = lamp:light_get_flicker_speed()`
+---@return number value
+function LightNode:light_get_flicker_speed() end
+
+---Sets how fast it flickers (changes a second).
+---
+---Example: `lamp:light_set_flicker_speed(12)`
+---@param value number The new value
+function LightNode:light_set_flicker_speed(value) end
+
+---Gets how much it pulses (0..1).
+---
+---Example: `local v = lamp:light_get_pulse()`
+---@return number value
+function LightNode:light_get_pulse() end
+
+---Sets how much it pulses (0..1).
+---
+---Example: `lamp:light_set_pulse(0.5)`
+---@param value number The new value
+function LightNode:light_set_pulse(value) end
+
+---Gets pulses a second.
+---
+---Example: `local v = lamp:light_get_pulse_speed()`
+---@return number value
+function LightNode:light_get_pulse_speed() end
+
+---Sets pulses a second.
+---
+---Example: `lamp:light_set_pulse_speed(2)`
+---@param value number The new value
+function LightNode:light_set_pulse_speed(value) end
+
+---Fades the light's energy to a value over time (a tween; a light turned off or on smoothly).
+---
+---Example: `lamp:light_fade(0, 1.5, function() lamp:set_enabled(false) end)`
+---@param energy number The energy to reach (0 = dark)
+---@param seconds number How long the fade takes
+---@param on_done? fun(light: LightNode) Called when it gets there
+---@return integer id The tween's id (Tween.cancel stops it)
+function LightNode:light_fade(energy, seconds, on_done) end
+
+---Sets the light up as a preset: "Torch" (flickering, warm), "Lamp", "Flashlight" (a spot with a ring), "Sun" or "Neon" (pulsing).
+---
+---Example: `self.node:light_apply_preset("Torch")`
+---@param name "Torch"|"Lamp"|"Flashlight"|"Sun"|"Neon" The preset
+---@return boolean ok false when there's no such preset
+function LightNode:light_apply_preset(name) end
+
+-- ----------------------------------------------------------------------------
+-- EnvironmentNode Methods (the scene's ambient, overbright, bloom: Scene.get_environment)
+-- ----------------------------------------------------------------------------
+
+---Gets the ambient colour {r, g, b, a} (0..1).
+---
+---Example: `local v = Scene.get_environment():env_get_ambient()`
+---@return number[] value
+function EnvironmentNode:env_get_ambient() end
+
+---Sets the ambient colour {r, g, b, a} (0..1).
+---
+---Example: `Scene.get_environment():env_set_ambient("#20203a")`
+---@param value Color The new value
+function EnvironmentNode:env_set_ambient(value) end
+
+---Gets whether lights can reach twice the art's brightness.
+---
+---Example: `local v = Scene.get_environment():env_get_overbright()`
+---@return boolean value
+function EnvironmentNode:env_get_overbright() end
+
+---Sets whether lights can reach twice the art's brightness.
+---
+---Example: `Scene.get_environment():env_set_overbright(true)`
+---@param value boolean The new value
+function EnvironmentNode:env_set_overbright(value) end
+
+---Gets whether bright parts glow.
+---
+---Example: `local v = Scene.get_environment():env_get_bloom()`
+---@return boolean value
+function EnvironmentNode:env_get_bloom() end
+
+---Sets whether bright parts glow.
+---
+---Example: `Scene.get_environment():env_set_bloom(true)`
+---@param value boolean The new value
+function EnvironmentNode:env_set_bloom(value) end
+
+---Gets how bright a pixel must be to glow (0..1).
+---
+---Example: `local v = Scene.get_environment():env_get_bloom_threshold()`
+---@return number value
+function EnvironmentNode:env_get_bloom_threshold() end
+
+---Sets how bright a pixel must be to glow (0..1).
+---
+---Example: `Scene.get_environment():env_set_bloom_threshold(0.7)`
+---@param value number The new value
+function EnvironmentNode:env_set_bloom_threshold(value) end
+
+---Gets how much glow is added (0..4).
+---
+---Example: `local v = Scene.get_environment():env_get_bloom_strength()`
+---@return number value
+function EnvironmentNode:env_get_bloom_strength() end
+
+---Sets how much glow is added (0..4).
+---
+---Example: `Scene.get_environment():env_set_bloom_strength(1.5)`
+---@param value number The new value
+function EnvironmentNode:env_set_bloom_strength(value) end
+
+---Gets how far the glow spreads (px).
+---
+---Example: `local v = Scene.get_environment():env_get_bloom_radius()`
+---@return number value
+function EnvironmentNode:env_get_bloom_radius() end
+
+---Sets how far the glow spreads (px).
+---
+---Example: `Scene.get_environment():env_set_bloom_radius(16)`
+---@param value number The new value
+function EnvironmentNode:env_set_bloom_radius(value) end
+
+---Gets whether the light map is built at half size.
+---
+---Example: `local v = Scene.get_environment():env_get_half_resolution()`
+---@return boolean value
+function EnvironmentNode:env_get_half_resolution() end
+
+---Sets whether the light map is built at half size.
+---
+---Example: `Scene.get_environment():env_set_half_resolution(true)`
+---@param value boolean The new value
+function EnvironmentNode:env_set_half_resolution(value) end
+
+---Fades the ambient light to a colour over time (a tween): dusk falling, a cave getting dark.
+---
+---Example: `Scene.get_environment():env_fade_ambient("#101024", 3)`
+---@param color Color The ambient to reach ("#rrggbb", {r, g, b} 0..1)
+---@param seconds number How long the fade takes
+---@param on_done? fun(env: EnvironmentNode) Called when it gets there
+---@return integer id The tween's id (Tween.cancel stops it)
+function EnvironmentNode:env_fade_ambient(color, seconds, on_done) end
+
+-- ----------------------------------------------------------------------------
+-- LightOccluderNode Methods
+-- ----------------------------------------------------------------------------
+
+---Gets the light layers it blocks (names).
+---
+---Example: `local layers = wall:occluder_get_layers()`
+---@return string[] layers
+function LightOccluderNode:occluder_get_layers() end
+
+---Sets the light layers it blocks: a list of names, one name, or a number mask (bit 0 = Layer1).
+---
+---Example: `wall:occluder_set_layers({"World"})`
+---@param layers string|string[]|integer The layers
+function LightOccluderNode:occluder_set_layers(layers) end
+
+-- ----------------------------------------------------------------------------
+-- Lighting on any drawn node: emission, Ignore Lighting, Lit By layers
+-- ----------------------------------------------------------------------------
+
+---Makes the node glow: its colour is added after the lighting, so it shows in the dark (and Bloom catches it).
+---
+---Example: `self.node:set_emission("#ff4020", 2)`
+---@param color Color The glow's colour ("#rrggbb", {r, g, b} 0..1 or r, g, b)
+---@param strength? number How strong (0 = none); default: 1 when it didn't glow, else unchanged
+function Node:set_emission(color, strength) end
+
+---Gets the node's glow.
+---
+---Example: `local color, strength = self.node:get_emission()`
+---@return number[] color {r, g, b, a} 0..1
+---@return number strength 0 = it doesn't glow
+function Node:get_emission() end
+
+---Draws the node at full brightness whatever the lights and the ambient (true), or lit as usual (false).
+---
+---Example: `sign:set_ignore_lighting(true)`
+---@param on boolean Ignore the lighting
+function Node:set_ignore_lighting(on) end
+
+---Gets whether the node ignores the lighting.
+---
+---Example: `if sign:get_ignore_lighting() then return end`
+---@return boolean on
+function Node:get_ignore_lighting() end
+
+---Sets the light layers whose lights light the node: a list of names, one name, or a number mask (bit 0 = Layer1).
+---
+---Example: `self.node:set_lit_layers({"Player"})`
+---@param layers string|string[]|integer The layers
+function Node:set_lit_layers(layers) end
+
+---Gets the light layers whose lights light the node (names).
+---
+---Example: `local layers = self.node:get_lit_layers()`
+---@return string[] layers
+function Node:get_lit_layers() end
 
 -- ----------------------------------------------------------------------------
 -- Properties (any node) and collision layers (body nodes)
@@ -14409,6 +16040,38 @@ function Node:ldtk_referenced_by(field) end
 ---@field on_complete? fun(node: Node) Called when it finishes
 ---@field on_done? fun(node: Node) The same as on_complete (either name works)
 
+---@class LightingModule
+---The scene's 2D lighting: how lit a point is, the lights, on / off.
+local LightingModule = {}
+
+---How lit a point is now: the ambient plus every light that reaches it, shadows included (normal maps and light textures left out). For stealth games: is the player in the dark?
+---
+---Example: `if Lighting.brightness_at(player:get_global_position()) < 0.3 then self:hide() end`
+---@param x number|Vec2 The point's x (world px), or the point
+---@param y? number The point's y when x is a number
+---@param layers? string|string[]|integer Only the lights on these light layers (default: all)
+---@return number brightness 0 dark .. 1 fully lit (up to 2 with Overbright)
+---@return number[] color {r, g, b} the light there (0..1 per channel)
+function LightingModule.brightness_at(x, y, layers) end
+
+---Gets the scene's enabled lights, in tree order.
+---
+---Example: `for _, l in ipairs(Lighting.get_lights()) do l:light_set_energy(0.5) end`
+---@return LightNode[] lights
+function LightingModule.get_lights() end
+
+---Turns the lighting off (false: the scene as drawn - no ambient, lights, emission or bloom) or back on.
+---
+---Example: `Lighting.set_enabled(not Lighting.is_enabled())`
+---@param on boolean On or off
+function LightingModule.set_enabled(on) end
+
+---Gets whether the lighting is on.
+---
+---Example: `if Lighting.is_enabled() then Log.info("lit") end`
+---@return boolean on
+function LightingModule.is_enabled() end
+
 ---@class TweenModule
 ---Animates node properties over time with easing.
 local TweenModule = {}
@@ -16098,6 +17761,7 @@ function SceneModule.find_by_tag(tag) end
 
 ---Sets the scene's ambient light (0..1): the colour where no light reaches.
 ---White = an unlit scene. With LightNodes, the scene is lit by them on top.
+---With an Environment node in the scene, its ambient is the one set.
 ---
 ---Example: `Scene.set_ambient(0.2, 0.2, 0.35)`
 ---@param r number|Color Red, 0 to 1 - or the whole colour ("#33334d", {0.2, 0.2, 0.3})
@@ -16114,6 +17778,20 @@ function SceneModule.set_ambient(r, g, b, a) end
 ---@return number b Blue, 0 to 1
 ---@return number a Alpha, 0 to 1
 function SceneModule.get_ambient() end
+
+---Gets the scene's Environment node (the first enabled one), or nil: its ambient, overbright and bloom.
+---
+---Example: `local env = Scene.get_environment(); if env then env:env_set_bloom(true) end`
+---@return EnvironmentNode? env
+function SceneModule.get_environment() end
+
+---Creates a light, set up as a preset: "Torch", "Lamp", "Flashlight", "Sun", "Neon", or "" for a plain one.
+---
+---Example: `local torch = Scene.create_light("Torch", self.node)`
+---@param preset "Torch"|"Lamp"|"Flashlight"|"Sun"|"Neon"|"" The preset
+---@param parent? Node Where it goes (default: the scene's root)
+---@return LightNode light
+function SceneModule.create_light(preset, parent) end
 
 ---Gets the name of the currently active scene.
 ---
@@ -16597,6 +18275,7 @@ Gradient = GradientModule
 ---@type SceneModule
 Scene = SceneModule
 Tween = TweenModule
+Lighting = LightingModule
 
 ---@type PoolModule
 Pool = PoolModule

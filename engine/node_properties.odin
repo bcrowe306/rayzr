@@ -171,6 +171,12 @@ Node_BaseProperty :: proc(node: ^Node, name: string) -> (Node_Property, bool) {
 	case "pixelFilter": p.kind, p.ptr, p.type = .Enum, &node.pixelFilter, type_info_of(Pixel_Filter) // (pixel art, #409)
 	case "pixelSnap":   p.kind, p.ptr, p.type = .Enum, &node.pixelSnap, type_info_of(Pixel_Snap)
 	case "pixelText":   p.kind, p.ptr, p.type = .Enum, &node.pixelText, type_info_of(Pixel_Text)
+	case "litLayers":   p.kind, p.ptr, p.type = .Bit_Set, &node.litLayers, type_info_of(LightLayerSet) // (lighting.odin)
+	case "ignoreLighting": p.kind, p.ptr, p.type = .Bool, &node.ignoreLighting, type_info_of(bool)
+	case "emission":    p.kind, p.ptr, p.type = .Color, &node.emission, type_info_of(rl.Color)
+	case "emissionStrength":
+		p.kind, p.ptr, p.type = .Float, &node.emissionStrength, type_info_of(f32)
+		p.min, p.max, p.has_range = 0, 8, true
 	case "enabled":  p.kind, p.ptr, p.type = .Bool, &node.enabled, type_info_of(bool)
 	case "visible":  p.kind, p.ptr, p.type = .Bool, &node.renderable, type_info_of(bool) // (set_visible / is_visible)
 	case: return node_type_property(node, name)

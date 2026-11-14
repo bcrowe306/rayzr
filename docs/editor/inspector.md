@@ -139,6 +139,18 @@ Pixels**: **Native** draws crisp at the window's resolution over the scaled
 game (UI's default), **Pixel** in the game's own pixels (Text's default).
 See the [pixel-perfect guide](../../engine/docs/pixel_perfect.md#per-node-settings).
 
+### Lighting
+
+On every drawn node (closed unless something is set): how 2D lights treat
+it. **Lit By**: the light layers whose lights light it (Project Settings >
+Light Layers names them; all by default). **Ignore Lighting**: drawn at
+full brightness whatever the lights and the ambient. **Emission** and
+**Emission Strength**: the colour it glows in the dark (0: no glow). See
+the [Lighting guide](../../engine/docs/lighting.md#what-a-light-touches).
+
+Physics bodies have **Casts Shadows** among their properties: off, light
+passes through them (they still collide).
+
 ### Tags, Material, Script, Signals
 
 - **Tags**: type a tag and press Enter, or pick one used in the scene from

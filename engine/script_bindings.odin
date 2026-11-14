@@ -3150,7 +3150,7 @@ lua_scene_set_ambient :: proc "c" (L: ^lua.State) -> c.int {
 	amb, _, ok := Lua_ArgColor(L, 1)
 	if !ok do return 0
 	if amb == {} do amb.a = 1 // ({} means "not set": white)
-	sm.game.sceneManager.currentScene.ambient = amb
+	Scene_SetAmbient(sm.game.sceneManager.currentScene, amb) // (the Environment's, when there is one)
 	return 0
 }
 
@@ -3159,8 +3159,8 @@ lua_scene_get_ambient :: proc "c" (L: ^lua.State) -> c.int {
 	context = Script_Context(L)
 	sm := get_script_manager(L)
 	c := rl.Color{255, 255, 255, 255}
-	if sm != nil && sm.game != nil && sm.game.sceneManager.currentScene != nil && sm.game.sceneManager.currentScene.ambient != {} {
-		c = sm.game.sceneManager.currentScene.ambient
+	if sm != nil && sm.game != nil && sm.game.sceneManager.currentScene != nil {
+		c = Scene_Ambient(sm.game.sceneManager.currentScene) // (the Environment's, when there is one)
 	}
 	for v in ([4]u8{c.r, c.g, c.b, c.a}) do lua.pushnumber(L, lua.Number(f32(v) / 255))
 	return 4
@@ -4784,7 +4784,6 @@ Script_Problem :: proc(level: log.Level, format: string, args: ..any) {
 
 // script_warn_once: a warning about a call site, once per site + subject
 // (a script calling get_node every frame warns once).
-@(private="file")
 script_warn_once :: proc(L: ^lua.State, subject: string, format: string, args: ..any) {
 	@(static) warned: map[string]bool
 	lua.L_where(L, 1)
@@ -5067,6 +5066,7 @@ RegisterEngineLuaBindings :: proc(L: ^lua.State, sm: ^ScriptManager) {
 		lua.setfield(L, -2, "light_get_energy")
 		lua.pushcfunction(L, lua_light_set_radius)
 		lua.setfield(L, -2, "light_set_radius")
+		Lighting_RegisterNodeMethods(L) // (every light / environment / occluder setting: lighting_lua.odin)
 		lua.pushcfunction(L, lua_node_set_property)
 		lua.setfield(L, -2, "set_property")
 		lua.pushcfunction(L, lua_node_get_script)
@@ -5612,6 +5612,7 @@ RegisterEngineLuaBindings :: proc(L: ^lua.State, sm: ^ScriptManager) {
 	lua.setfield(L, -2, "set_ambient")
 	lua.pushcfunction(L, lua_scene_get_ambient)
 	lua.setfield(L, -2, "get_ambient")
+	Lighting_RegisterSceneFunctions(L) // get_environment, create_light (lighting_lua.odin)
 	lua.pushcfunction(L, lua_scene_get_name)
 	lua.setfield(L, -2, "get_name")
 	lua.pushcfunction(L, lua_scene_change_scene)
@@ -5645,6 +5646,7 @@ RegisterEngineLuaBindings :: proc(L: ^lua.State, sm: ^ScriptManager) {
 	lua.pushcfunction(L, lua_scene_set_draw_bounds)
 	lua.setfield(L, -2, "set_draw_bounds")
 	lua.setglobal(L, "Scene")
+	Lighting_RegisterModule(L) // the Lighting table (lighting_lua.odin)
 	Script_RegisterTweenModule(L)
 	Script_RegisterVectorModule(L)
 	Script_RegisterPoolModule(L)

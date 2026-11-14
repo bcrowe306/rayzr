@@ -13,6 +13,7 @@ StaticBodyNode :: struct {
 	bodyId: b2.BodyId,
 	shapes: [dynamic]PhysicsShape,
 	debugColor: rl.Color `gui:"true"`,
+	castsShadows: bool `gui:"true"`, // its shapes block light (lighting.odin)
 	// One way: bodies pass through from below and land on top (the
 	// node's rotation turns "top"); e.g. jump-through platforms.
 	oneWay: bool `gui:"true"`,
@@ -27,6 +28,7 @@ StaticBody :: StaticBodyNode
 
 StaticBodyNode_Create :: proc(scene: ^Scene, name: string = "StaticBody", parent: ^Node = nil) -> ^StaticBodyNode {
 	sb := CreateNode(scene.manager, StaticBodyNode)
+	sb.castsShadows = true
 	sb.name = strings.clone(name, sb.allocator) // owned: callers pass temp strings too
 	sb.position = {640, 620}
 	sb.debugColor = rl.Color{74, 222, 128, 255} // Green
@@ -180,6 +182,7 @@ DynamicBodyNode :: struct {
 	isBullet: bool `gui:"true"`,
 	allowFastRotation: bool `gui:"true"`,
 	debugColor: rl.Color `gui:"true"`,
+	castsShadows: bool `gui:"true"`, // its shapes block light (lighting.odin)
 	lastSyncedPos: [2]f32,
 	lastSyncedRot: f32,
 	lastSyncedVel: [2]f32,
@@ -195,6 +198,7 @@ DynamicBody :: DynamicBodyNode
 
 DynamicBodyNode_Create :: proc(scene: ^Scene, name: string = "DynamicBody", parent: ^Node = nil) -> ^DynamicBodyNode {
 	db := CreateNode(scene.manager, DynamicBodyNode)
+	db.castsShadows = true
 	db.name = strings.clone(name, db.allocator) // owned: callers pass temp strings too
 	db.position = {640, 200}
 	db.linearVelocity = {0, 0}
@@ -394,6 +398,7 @@ KinematicBodyNode :: struct {
 	oneWay: bool `gui:"true"`,
 	oneWayApplied: bool,
 	debugColor: rl.Color `gui:"true"`,
+	castsShadows: bool `gui:"true"`, // its shapes block light (lighting.odin)
 	lastSyncedPos: [2]f32,
 	lastSyncedRot: f32,
 	lastSyncedVel: [2]f32,
@@ -408,6 +413,7 @@ KinematicBody :: KinematicBodyNode
 
 KinematicBodyNode_Create :: proc(scene: ^Scene, name: string = "KinematicBody", parent: ^Node = nil) -> ^KinematicBodyNode {
 	kb := CreateNode(scene.manager, KinematicBodyNode)
+	kb.castsShadows = true
 	kb.name = strings.clone(name, kb.allocator)
 	kb.position = {640, 420}
 	kb.linearVelocity = {0, 0}
@@ -603,6 +609,7 @@ CharacterMoverNode :: struct {
 	categoryLayers: CollisionLayerSet `gui:"true"`,
 	maskLayers: CollisionLayerSet `gui:"true"`,
 	debugColor: rl.Color `gui:"true"`,
+	castsShadows: bool `gui:"true"`, // its shapes block light (lighting.odin)
 	// Built-in: the node moves itself (maxSpeed, acceleration, jumpSpeed,
 	// gravity, optional keyboard input). Script: like Godot's CharacterBody2D,
 	// the script sets the velocity and calls character_move_and_slide().
@@ -637,6 +644,7 @@ CharacterMover :: CharacterMoverNode
 
 CharacterMoverNode_Create :: proc(scene: ^Scene, name: string = "CharacterMover", parent: ^Node = nil) -> ^CharacterMoverNode {
 	cm := CreateNode(scene.manager, CharacterMoverNode)
+	cm.castsShadows = true
 	cm.name = strings.clone(name, cm.allocator) // owned: callers pass temp strings too
 	cm.position = {540, 300}
 	cm.radius = 14.0

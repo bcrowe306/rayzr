@@ -260,6 +260,7 @@ applied at once in the editor and when the game loads it - see
 | **Atlas** | Packed into a sprite atlas on export, so sprites on one atlas page draw in one batch. See [atlas](../../engine/docs/atlas.md). |
 | **Normal** | The normal map lights shade it by: *Auto (_n)* uses `<image>_n.png` next to it, *None* turns it off, or pick another image. See [Light](../nodes/LightNode.md#normal-maps). |
 | **Green Down** | The normal map's green channel points down (DirectX style); off for OpenGL style, which most 2D tools make. |
+| **Emission** | The parts of the image that glow in the dark (black: no glow): *Auto (_e)* uses `<image>_e.png` next to it, *None* turns it off, or pick another image. See the [Lighting guide](../../engine/docs/lighting.md#emission-glow). |
 | **Slice** | Shown when the sheet has a slicing preset (saved with **Save Preset** in the Sprite Sheet Slicer); the **x** forgets it. |
 
 An SVG shows its own two settings instead: **Scale** (document units to

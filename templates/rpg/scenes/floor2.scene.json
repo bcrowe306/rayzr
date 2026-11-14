@@ -156,6 +156,7 @@
           "categoryLayers": ["Layer2"],
           "maskLayers": ["Layer1"],
           "debugColor": "#facc15ff",
+          "castsShadows": true,
           "controlMode": "Script"
         },
         "script": {
@@ -226,6 +227,7 @@
           "categoryLayers": ["Layer2"],
           "maskLayers": ["Layer1"],
           "debugColor": "#facc15ff",
+          "castsShadows": true,
           "controlMode": "Script"
         },
         "script": {
@@ -296,6 +298,7 @@
           "categoryLayers": ["Layer2"],
           "maskLayers": ["Layer1"],
           "debugColor": "#facc15ff",
+          "castsShadows": true,
           "controlMode": "Script"
         },
         "script": {
@@ -366,6 +369,7 @@
           "categoryLayers": ["Layer2"],
           "maskLayers": ["Layer1"],
           "debugColor": "#facc15ff",
+          "castsShadows": true,
           "controlMode": "Script"
         },
         "script": {
@@ -436,6 +440,7 @@
           "categoryLayers": ["Layer2"],
           "maskLayers": ["Layer1"],
           "debugColor": "#facc15ff",
+          "castsShadows": true,
           "controlMode": "Script"
         },
         "script": {
@@ -820,6 +825,7 @@
         ],
         "properties": {
           "debugColor": "#4ade80ff",
+          "castsShadows": true,
           "oneWay": false
         },
         "script": {
@@ -941,6 +947,7 @@
           "categoryLayers": ["Layer2"],
           "maskLayers": ["Layer1"],
           "debugColor": "#facc15ff",
+          "castsShadows": true,
           "controlMode": "Script"
         },
         "script": {
