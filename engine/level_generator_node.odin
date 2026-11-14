@@ -1076,17 +1076,12 @@ levelgen_rebuild_edited :: proc(w: ^Gen_Chunk_World, sc: ^Scene, ctx: ^GameConte
 			done[c] = true
 			ch, ok := &w.chunks[c]
 			if !ok || !m.solid do continue
-			for &b, bi in ch.bodies {
+			for b in ch.bodies {
 				if b[0] != h[0] || b[1] != h[1] do continue
-				if old := Node_FromSlot(b[2], b[3]); old != nil && !old.removing do RemoveNode(sc.manager, old)
-				body := TileMapNode_BuildCollidersIn(m, c * w.size, (c + 1) * w.size, ctx)
-				if body == nil {
-					ordered_remove(&ch.bodies, bi)
-					break
+				// The chunk's body keeps going, its shapes made again.
+				if body := Node_FromSlot(b[2], b[3]); body != nil && !body.removing {
+					TileMapNode_RefillColliders(m, cast(^StaticBodyNode)body, c * w.size, (c + 1) * w.size, ctx)
 				}
-				bs, bg := Node_SlotOf(body)
-				for &n in ch.nodes do if n == {b[2], b[3]} do n = {bs, bg}
-				b[2], b[3] = bs, bg
 				break
 			}
 		}

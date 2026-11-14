@@ -583,7 +583,13 @@ TileMapNode_BuildColliders :: proc(tm: ^TileMapNode, ctx: ^GameContext) {
 	scene := ctx.scene if ctx != nil else nil
 	if scene == nil && tm.gameContext != nil do scene = tm.gameContext.scene
 	if scene == nil do return
-	if tm.staticBody != nil && Node_IsAlive(tm.staticBody) {
+	if tm.staticBody != nil && Node_IsAlive(tm.staticBody) && !tm.staticBody.removing {
+		if !tm.unbounded {
+			// The same body, its shapes made again (replacing the body node
+			// mid-frame lost colliders: a stale shape id hit a new shape).
+			TileMapNode_RefillColliders(tm, tm.staticBody, TileMapNode_Extent(tm), ctx)
+			return
+		}
 		RemoveNode(scene.manager, tm.staticBody)
 		ProcessNodeQueues(scene.manager, ctx)
 	}
@@ -596,6 +602,14 @@ TileMapNode_BuildColliders :: proc(tm: ^TileMapNode, ctx: ^GameContext) {
 	TileMapNode_WatchHits(tm, tm.staticBody) // (tile_hit: tile_runtime.odin)
 	lo, hi := TileMapNode_Extent(tm) // (tiles beyond the map are solid too)
 	tilemap_add_colliders(tm, tm.staticBody, lo, hi, ctx)
+}
+
+// TileMapNode_RefillColliders: a collider body's shapes made again for
+// the cells in lo .. hi (tiles changed; the body stays).
+TileMapNode_RefillColliders :: proc(tm: ^TileMapNode, body: ^StaticBodyNode, lo, hi: [2]int, ctx: ^GameContext) {
+	for &s in body.shapes do PhysicsShape_Destroy(&s)
+	clear(&body.shapes)
+	tilemap_add_colliders(tm, body, lo, hi, ctx)
 }
 
 // TileMapNode_BuildCollidersIn: a static body of its own (a transient
