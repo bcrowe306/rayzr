@@ -161,10 +161,61 @@ See the [pixel-perfect guide](../../engine/docs/pixel_perfect.md#per-node-settin
   method, with buttons to **open the handler** and **disconnect** (it
   removes the generated handler, asking first if you added code). A
   `self:on_<event>()` line means the node's own script handles it.
+  **Add Signal** declares one of the node's own (see [Your own
+  signals](#your-own-signals)): it is listed and connected like the
+  built-in ones.
 - **Component**: **Save as Component** saves this node and its children
   in `components/`.
 
 Plugins can add their own sections.
+
+### Your own signals
+
+Any node can have signals of its own, next to the events its type sends: a
+player's `health_changed`, a door's `opened`. **Add Signal** at the end of
+the Signals section asks for:
+
+- **Name**: what `emit` and `connect` use - lowercase, digits and `_`
+  (`health_changed`). A name the node already has is refused.
+- **Value**: the name of what it passes (`health`) and its type (`number`,
+  `integer`, `string`, `boolean`, `node`, `table`, `Vec2` or `any`); leave
+  the name empty for a signal with no value. Generated handlers are typed
+  with it, so the code editor checks them.
+- **Description**: shown when you hover it, and in the code editor.
+
+Raise it from a script with `self.node:emit("health_changed", self.health)`.
+It reaches the node script's `on_health_changed`, the connections made
+here and every `connect` handler, with `(value, source)`.
+
+Each signal's row shows where it comes from:
+
+| Icon | From | Buttons |
+|---|---|---|
+| Bolt (orange) | The node's type (`timeout`, `clicked`) | **+** connect |
+| Bolt (blue) | Declared on this node, saved with the scene | **Edit**, **Delete**, **+** |
+| Puzzle piece | Its [custom node type](../../engine/docs/custom_nodes.md#signals): every node of the type has it | **Lock**: opens the type to change it |
+| File | A `---@signal` line in its script | Opens the script at the line |
+
+- **Edit** changes the value, the description or the name. Renaming a
+  signal that is connected or used in scripts first shows what changes: the
+  connections (they follow the new name) and every script line that emits,
+  connects or handles it (`on_<name>`), each with a checkbox. Lines with
+  `Events.` are global events of the same name, unchecked to start.
+- **Delete** lists the connections it removes. Scripts that still emit it
+  are listed and left alone; an emit of it then warns.
+- A name the node's script emits that nothing declares is listed with a
+  warning and **Declare**, which opens the dialog with it filled in.
+- While you **Simulate**, each signal has a **play** button: it emits the
+  signal now (with a value you type when it has one) to test its
+  connections.
+
+Declared in a script instead, a signal comes with every node that runs the
+script (and every script that `extends` it):
+
+```lua
+---@signal health_changed(health: number) Health went up or down
+---@signal died
+```
 
 ### Reset buttons
 
@@ -215,7 +266,8 @@ key or to remove one.
   `self.node:get_node("<relative path>")` path to it (or `Scene.find_node`).
 - **An event** from the Signals section inserts
   `<node>:connect("timeout", function(value, source) ... end)` with the
-  cursor in the handler.
+  cursor in the handler. **One of your own signals** inserts its emit
+  instead: `self.node:emit("health_changed", health)`.
 - **A node** from the Scene panel inserts a reference typed for the
   language server (its class, so its own methods complete). On an empty
   line it becomes a declaration:

@@ -25,7 +25,7 @@ import rl "vendor:raylib"
 //   "type", "name", "uid" (stable id, unique in the file: given on load / save,
 //   kept through renames and moves - #328), "position", "scale", "rotation",
 //   "pivot" (the origin, nodes that draw a rectangle), "enabled", "visible", "layer"
-//   optional: "pause_mode", "paused", "tags", "editor_locked", "editor_hidden" (editor only),
+//   optional: "pause_mode", "paused", "tags", "signals" (declared: signal_decls.odin), "editor_locked", "editor_hidden" (editor only),
 //   "texture_filter" ("sharp" / "smooth"), "pixel_snap" ("on" / "off"), "text_pixels"
 //   ("native" / "pixel") - pixel art overrides, absent = inherit (pixel_perfect.odin, #409)
 //   a component's root: "exposed": [{"uid", "property", "label"}] (component_exposed.odin)
@@ -193,6 +193,10 @@ write_node :: proc(w: ^Json_Writer, node: ^Node, manager: ^NodeManager) {
 			Json_String(w, t)
 		}
 		strings.write_byte(&w.sb, ']')
+	}
+	if len(node.signals) > 0 { // (declared on the node: signal_decls.odin)
+		Json_Key(w, "signals", &first)
+		Signals_WriteJSON(w, node.signals[:])
 	}
 
 	// A linked component instance saves only its link: everything below the
@@ -1060,6 +1064,7 @@ read_node :: proc(scene: ^Scene, obj: json.Object, parent: ^Node, ctx: ^GameCont
 	node.editorLocked = sj_bool(obj, "editor_locked", false)
 	node.editorHidden = sj_bool(obj, "editor_hidden", false)
 	read_tags(node, obj)
+	read_signals(node, obj)
 	read_exposed(node, obj)
 
 	read_legacy_blocks(node, obj, ctx)
@@ -1778,6 +1783,12 @@ read_tags :: proc(node: ^Node, obj: json.Object) {
 }
 
 @(private = "file")
+read_signals :: proc(node: ^Node, obj: json.Object) {
+	clear(&node.signals)
+	for d in Signals_FromJSON(obj["signals"]) do Node_AddSignal(node, d)
+}
+
+@(private = "file")
 sj_arr :: proc(obj: json.Object, key: string) -> (json.Array, bool) {
 	a, ok := obj[key].(json.Array)
 	return a, ok
@@ -1860,6 +1871,7 @@ read_component_instance :: proc(scene: ^Scene, compPath: string, inst: json.Obje
 	node.editorLocked = sj_bool(inst, "editor_locked", false)
 	node.editorHidden = sj_bool(inst, "editor_hidden", false)
 	if "tags" in inst do read_tags(node, inst)
+	if "signals" in inst do read_signals(node, inst)
 	if sj_obj_has(inst, "connections") do read_connections(node, inst)
 	return node, ""
 }

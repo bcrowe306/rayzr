@@ -109,6 +109,9 @@ ScriptManager_Destroy :: proc(sm: ^ScriptManager = nil) {
 		if mod.goap != "" do delete(mod.goap)
 		for &p in mod.properties do ScriptProperty_Destroy(&p)
 		delete(mod.properties)
+		for sg in mod.signals do Signal_DeclDelete(sg)
+		delete(mod.signals)
+		delete(mod.signalLines)
 		free(mod)
 	}
 	delete(mgr.modules)
@@ -207,6 +210,7 @@ ScriptManager_LoadModule :: proc(path: string, sm: ^ScriptManager = nil) -> (^Sc
 	if mod.isResourceClass do script_warn_resource_props(mod)
 	Script_ParseBehaviorMarker(L, lua.gettop(L), mod)
 	Script_ParseGoapMarker(L, lua.gettop(L), mod)
+	script_module_set_signals(mod, code)
 	lua.pop(L, 1) // module table
 	ScriptModule_TrackFile(mgr, mod)
 

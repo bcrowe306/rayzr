@@ -413,8 +413,22 @@ Lua_ProjectTypesText :: proc(state: ^EditorState) -> string {
 		full, _ := filepath.join({state.projectPath, rel}, context.temp_allocator)
 		if data, err := os.read_entire_file(full, context.temp_allocator); err == nil do emitted_events(string(data), &custom)
 	}
-	alias(&sb, "ProjectEvent", "Custom events the project's scripts emit (node:emit, Events.emit)", sorted_unique(&custom))
+	// Declared signals (on nodes, custom node types, ---@signal): with their
+	// descriptions, and typed handlers below.
+	declared := declared_signals(state)
+	for d in declared do append(&custom, d.name)
 	customEvents := sorted_unique(&custom)
+	fmt.sbprintf(&sb, "\n-- Custom events: the signals the project declares and the names its scripts emit (node:emit, Events.emit)\n---@alias ProjectEvent")
+	if len(customEvents) == 0 do strings.write_string(&sb, " string\n")
+	else do strings.write_byte(&sb, '\n')
+	for ev in customEvents {
+		fmt.sbprintf(&sb, "---| %q", ev)
+		for d in declared do if d.name == ev {
+			if doc := signal_doc(d); doc != "" do fmt.sbprintf(&sb, " # %s", doc)
+			break
+		}
+		strings.write_byte(&sb, '\n')
+	}
 
 	// Script classes with their exported properties.
 	strings.write_string(&sb, "\n-- Script classes: exported properties (set in the Inspector) are fields of self.\n")
@@ -449,7 +463,17 @@ Lua_ProjectTypesText :: proc(state: ^EditorState) -> string {
 		// Its node's own events (the tree ones are on ScriptInstanceBase) and
 		// the project's custom events as optional methods.
 		if !isResource do for ev in node_type_events(types.customBase[nodeType] or_else nodeType)[6:] do fmt.sbprintf(&sb, "---@field on_%s? fun(self: %s, value: any) %s event of its node\n", ev, cls, ev)
-		if !isResource do for ev in customEvents do fmt.sbprintf(&sb, "---@field on_%s? fun(self: %s, value: any) custom event (emit)\n", ev, cls)
+		if !isResource do for ev in customEvents {
+			param, ptype, doc := "value", "any", "custom event (emit)"
+			for d in declared do if d.name == ev {
+				if d.param != "" do param = d.param
+				ptype = e.Signal_LuaType(d.type)
+				doc = signal_doc(d)
+				if doc == "" do doc = "declared signal"
+				break
+			}
+			fmt.sbprintf(&sb, "---@field on_%s? fun(self: %s, %s: %s) %s\n", ev, cls, param, ptype, doc)
+		}
 		// State machine callbacks for the project's states (on the machine's
 		// script or its parent's).
 		if !isResource do for st in sorted_unique(&smStates) {
@@ -559,6 +583,51 @@ string_args :: proc(text, fn: string, out: ^[dynamic]string) {
 		if len(t) < 2 || (t[0] != '"' && t[0] != '\'') do continue
 		if j := strings.index_byte(t[1:], t[0]); j > 0 do append(out, strings.clone(t[1:1 + j], context.temp_allocator))
 	}
+}
+
+// declared_signals: the signals the project declares - on nodes of its
+// scenes and components, in its custom node types, in its scripts' ---@signal
+// lines (a name once: the first).
+@(private = "file")
+declared_signals :: proc(state: ^EditorState) -> []e.Signal_Decl {
+	out := make([dynamic]e.Signal_Decl, context.temp_allocator)
+	add :: proc(out: ^[dynamic]e.Signal_Decl, d: e.Signal_Decl) {
+		for x in out do if x.name == d.name do return
+		append(out, d)
+	}
+	walk :: proc(v: json.Value, out: ^[dynamic]e.Signal_Decl) {
+		obj, isObj := v.(json.Object)
+		if !isObj do return
+		for d in e.Signals_FromJSON(obj["signals"]) do add(out, d)
+		if kids, has := obj["children"].(json.Array); has do for k in kids do walk(k, out)
+		if root, has := obj["root"]; has do walk(root, out)
+	}
+	for t in e.CustomNodes_All(&state.game.gameContext) {
+		for s in e.CustomNode_Signals(t, &state.game.gameContext, ownOnly = true) do add(&out, s.decl)
+	}
+	for rel in Editor_ListProjectFiles(state, "", {".scene.json", ".component.json"}) {
+		full, _ := filepath.join({state.projectPath, rel}, context.temp_allocator)
+		data, err := os.read_entire_file(full, context.temp_allocator)
+		if err != nil || !strings.contains(string(data), "\"signals\"") do continue
+		if val, perr := json.parse(data, allocator = context.temp_allocator); perr == .None do walk(val, &out)
+	}
+	for rel in Editor_ListProjectFiles(state, "", {".lua"}) {
+		if strings.has_prefix(rel, ".") do continue
+		full, _ := filepath.join({state.projectPath, rel}, context.temp_allocator)
+		data, err := os.read_entire_file(full, context.temp_allocator)
+		if err != nil || !strings.contains(string(data), "---@signal") do continue
+		for d in e.Script_ParseSignals(string(data), context.temp_allocator) do add(&out, d)
+	}
+	return out[:]
+}
+
+// signal_doc: a declared signal's description with its value.
+@(private = "file")
+signal_doc :: proc(d: e.Signal_Decl) -> string {
+	value := fmt.tprintf("(%s: %s)", d.param, e.Signal_LuaType(d.type)) if d.param != "" else ""
+	if d.description == "" do return value
+	if value == "" do return d.description
+	return fmt.tprintf("%s %s", d.description, value)
 }
 
 // emitted_events: the names a script passes to emit("...") / :emit('...')

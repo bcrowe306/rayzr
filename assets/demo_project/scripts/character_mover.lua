@@ -25,6 +25,8 @@
 -- node:connect): "jumped", "landed".
 
 ---@class CharacterMover : ScriptInstanceBase
+---@signal jumped Left the ground (a jump, a coyote jump or an air jump)
+---@signal landed Touched the floor again
 local CharacterMover = {}
 
 CharacterState = {

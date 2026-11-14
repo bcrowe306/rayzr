@@ -113,6 +113,9 @@ ScriptModule :: struct {
 	behavior: string,
 	// A GOAP script (`Class.goap = "action" / "sensor" / "goal"`): goap_node.odin.
 	goap: string,
+	// Its `---@signal` lines (signal_decls.odin) and their line numbers.
+	signals:     [dynamic]Signal_Decl,
+	signalLines: [dynamic]int,
 }
 
 // Forward declaration of ScriptManager

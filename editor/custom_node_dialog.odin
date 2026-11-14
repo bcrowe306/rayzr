@@ -478,6 +478,7 @@ custom_create :: proc(state: ^EditorState, name: string, parentType: ^e.CustomNo
 		Editor_RecordUndo(state, fmt.tprintf("Save as %s", name))
 		node.customType = strings.clone(rel, node.allocator)
 		node.customMissing = false
+		clear(&node.signals) // (its signals are the type's now)
 		if d.script != "" {
 			inst := cast(^e.ScriptInstance)node.scriptInstance
 			if inst == nil || asset_rel_editor(state, inst.modulePath) != d.script {

@@ -1,0 +1,134 @@
+# Declared signals: Add Signal on a node (name, value, type, description),
+# connected like a built-in event; renamed with a preview (its connection
+# follows); a script's ---@signal line listed; an undeclared emit declared
+# with one click; a custom type's signal on every node of the type; Emit
+# while simulating; Delete removes its connection.
+wait 5
+exec mkdir -p $PROJECT/nodes
+exec cp tests/drive/fixtures/HurtboxZz.node.json $PROJECT/nodes/HurtboxZz.node.json
+exec cp tests/drive/fixtures/signals_hurtbox_zz.lua $PROJECT/scripts/custom_hurtbox_zz.lua
+exec cp tests/drive/fixtures/custom_nodes_zz.scene.json $PROJECT/scenes/custom_nodes_zz.scene.json
+wait-until item:asset:scenes/custom_nodes_zz.scene.json == visible timeout=300
+dblclick @asset:scenes/custom_nodes_zz.scene.json
+wait 10
+click @hier:HurtA
+wait 2
+# Its script's signal and the name it emits undeclared.
+expect node:HurtA.signals == struck_hard:Script:number
+expect item:insp.signal-script:struck_hard == visible
+expect item:insp.signal-declare:boomed == visible
+
+# Add Signal.
+click @insp.signal-add
+expect item:signal-decl.name == visible
+type health_changed
+click @signal-decl.param
+type health
+click @signal-decl.type
+click @signal-decl.type:number
+click @signal-decl.description
+type Health went up or down
+screenshot add_signal_dialog
+click @signal-decl.ok
+wait 2
+expect node:HurtA.signals == health_changed:Node:number,struck_hard:Script:number
+expect item:insp.signal-event:health_changed == visible
+expect item:insp.signal-edit:health_changed == visible
+screenshot signals_declared
+
+# A name the node has already is refused.
+click @insp.signal-add
+type entered_tree
+click @signal-decl.ok
+expect item:signal-decl.name == visible
+click @signal-decl.cancel
+expect node:HurtA.signals == health_changed:Node:number,struck_hard:Script:number
+
+# Connected like a built-in event: the handler's value is typed.
+click @insp.signal-connect:health_changed
+click @signal.target:HurtB
+click @signal.connect
+wait 2
+expect node:HurtA.connections == health_changed->../HurtB:on_hurt_a_health_changed
+expect code.text contains ---@param health number
+expect code.text contains function HurtboxZz:on_hurt_a_health_changed(health, source)
+expect code.text contains Health went up or down
+
+# Rename: the preview shows the connection, which follows.
+click @hier:HurtA
+click @insp.signal-edit:health_changed
+key cmd+a
+type hp_changed
+click @signal-decl.ok
+expect item:signal-change.local == visible
+screenshot rename_preview
+click @signal-change.ok
+wait 2
+expect node:HurtA.signals == hp_changed:Node:number,struck_hard:Script:number
+expect node:HurtA.connections == hp_changed->../HurtB:on_hurt_a_health_changed
+
+# Declare what the script emits.
+click @insp.signal-declare:boomed
+expect item:signal-decl.name == visible
+click @signal-decl.ok
+wait 2
+expect node:HurtA.signals == hp_changed:Node:number,boomed:Node:any,struck_hard:Script:number
+expect item:insp.signal-declare:boomed == missing
+
+# Saved with the scene.
+key cmd+s
+wait 3
+expect file:scenes/custom_nodes_zz.scene.json contains "signals": [{"name": "hp_changed", "param": "health", "type": "number", "description": "Health went up or down"}, {"name": "boomed"}]
+expect file:scenes/custom_nodes_zz.scene.json contains "connections": [{"signal": "hp_changed", "target": "../HurtB", "method": "on_hurt_a_health_changed"}]
+
+# A signal of the type: declared in its document, every node of it has it.
+rclick @hier:HurtA
+click @ctx:edit-custom-type
+wait 10
+click @hier:HurtboxZz
+click @insp.signal-add
+type struck
+click @signal-decl.ok
+wait 2
+expect node:HurtboxZz.signals == struck:Node:any,struck_hard:Script:number
+click @toolbar.save
+wait 10
+expect file:nodes/HurtboxZz.node.json contains "signals": [{"name": "struck"}]
+# (Back to the viewport: the connect opened the Code tab.)
+key cmd+1
+wait 2
+click @scenetab:scenes/custom_nodes_zz.scene.json
+wait 10
+expect node:HurtB.signals == struck:Type:any,struck_hard:Script:number
+expect node:HurtA.signals == struck:Type:any,hp_changed:Node:number,boomed:Node:any,struck_hard:Script:number
+click @hier:HurtB
+wait 2
+expect item:insp.signal-type:struck == visible
+expect item:insp.signal-edit:struck == missing
+screenshot type_signal_locked
+
+# Emit while simulating.
+click @menu:Game
+click @menu:Game/Simulate in Editor
+wait 10
+click @hier:HurtA
+wait 2
+click @insp.signal-emit:hp_changed
+type 3
+click @signal-emit.ok
+wait 2
+expect log contains Emitted HurtA.hp_changed(3)
+screenshot emit_simulating
+click @menu:Game
+click @menu:Game/Simulate in Editor
+wait 10
+
+# Delete: the preview, then the signal and its connection go.
+click @hier:HurtA
+wait 2
+click @insp.signal-delete:hp_changed
+expect item:signal-change.local == visible
+click @signal-change.ok
+wait 2
+expect node:HurtA.signals == struck:Type:any,boomed:Node:any,struck_hard:Script:number
+expect node:HurtA.connections ==

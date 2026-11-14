@@ -38,6 +38,8 @@ CHARACTER_PLATFORMER_TEMPLATE :: `-- $NAME$: platformer movement for a Character
 -- node:connect): "jumped", "landed".
 
 ---@class $CLASS$ : ScriptInstanceBase
+---@signal jumped Left the ground (a jump, a coyote jump or an air jump)
+---@signal landed Touched the floor again
 local $CLASS$ = {}
 
 -- Exported properties appear in the Inspector.

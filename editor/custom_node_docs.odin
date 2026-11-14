@@ -90,6 +90,8 @@ custom_doc_build :: proc(state: ^EditorState, scene: ^e.Scene, t: ^e.CustomNodeT
 	ctx := &state.game.gameContext
 	node := e.Scene_CreateCustomNode(scene, t, scene.rootNode, ctx)
 	if node != nil do node.position = {0, 0}
+	// Its own signals are the type's (edited here, saved in its defaults).
+	if node != nil do for s in e.CustomNode_Signals(t, ctx, ownOnly = true) do e.Node_AddSignal(node, s.decl)
 	e.ProcessNodeQueues(scene.manager, ctx)
 	e.Node_SetGlobalPositions(scene.manager, scene.rootNode)
 	return node
