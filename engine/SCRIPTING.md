@@ -63,7 +63,7 @@ Each attached script has a private instance table (`self`) with `self.node` poin
 |---|---|---|
 | `ready` | `function M:ready(self)` | Invoked once when the node enters the active scene and becomes ready. |
 | `update` | `function M:update(self, dt)` | Invoked each frame with delta time in seconds. |
-| `on_draw` | `function M:on_draw(self)` | Invoked when the node draws (its layer / Z index / Y-sort order): draw vector shapes with the [`Vector` module](#10-vector-module-vector) in the node's local space. |
+| `on_draw` | `function M:on_draw(self)` | Invoked when the node draws (its layer / Z index / Y-sort order): draw vector shapes with the [`Vector` module](#10-vector-module-vector) in the node's local space. It also runs in the editor, to show the drawing while you edit, where `ready()` hasn't run: return early when what `ready()` sets isn't there. |
 | `on_destroy` | `function M:on_destroy(self)` | Invoked just before the node or script instance is destroyed. |
 
 ```lua

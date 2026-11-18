@@ -123,6 +123,8 @@ end
 -- on_draw: the hex under the mouse and the path still to walk - its steps
 -- past the limit in red (this node is at 0, 0: its space is the world's).
 function Island:on_draw()
+    -- (The editor draws it too, before ready() has run: nothing to show yet.)
+    if not self.unit then return end
     if self.cx and not self.done then
         local pts = self.walk:tilemap_cell_outline(self.cx, self.cy)
         Vector.begin_path()

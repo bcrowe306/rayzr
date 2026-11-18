@@ -93,6 +93,7 @@ project instead of the demo project (the tutorials' drives,
 | `lua_spawn.drive` | Scene.instantiate is typed per component: the generated overload returns the root type (DynamicBodyNode), so the result completes apply_impulse and queue_free. |
 | `script_globals.drive` | Global scripts: right-click > Make Global (globe and name in Assets, saved in project.json, listed in Project Settings > Globals); the global completes in another script; Simulate runs its ready and update; Remove Global. |
 | `script_templates.drive` | New Script dialog: Assets + creates from the picked template (Enemy Patrol, named); a Trigger Area's New Script picks Pickup and attaches it; Cancel creates nothing. |
+| `template_dungeon_editor.drive` / `template_hex_editor.drive` | The Isometric Dungeon's room1 and the Hex Island's island1 open in the editor without script errors (their on_draw() runs there before ready() has). |
 | `lua_snippets.drive` | Snippets: `method` + Tab (class filled, placeholders across lines), `connect` inside it (indented), `tween` with the completion list open (hint shown, Tab expands), `ready`; undo. |
 | `script_drop_tree.drive` | A script dragged from Assets onto a scene-tree row attaches it (node selected); another replaces it; undo restores each. |
 | `lua_console.drive` | The Console's Lua line: in Simulate an expression (a node), a statement then its value, an error, history (Up); in Play the game evaluates (`Scene.get_name()`, a Vec2). |
