@@ -1,0 +1,8 @@
+# The hex template in the editor: island1 opens without script errors (its
+# on_draw() runs in the editor too, before ready() has: it must cope).
+# drive: project templates/hex
+wait 6
+dblclick @asset:scenes/island1.scene.json
+wait 4
+expect scene contains island1
+expect log !contains Error

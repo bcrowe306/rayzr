@@ -18,6 +18,8 @@ function Cursor:update(dt)
 end
 
 function Cursor:on_draw()
+    -- (The editor draws it too, before ready() has run: nothing to show yet.)
+    if not self.agent then return end
     if self.cx then
         local pts = self.walk:tilemap_cell_outline(self.cx, self.cy)
         local open = self.walk:tilemap_get_tile(self.cx, self.cy) >= 0 or self.dungeon:what_at(self.cx, self.cy)
